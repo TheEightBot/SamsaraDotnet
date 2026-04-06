@@ -482,26 +482,34 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
 ##
 ## Secrets & local configuration overrides
 ##
+
 # .env variants (local/development may contain API keys)
 .env.local
 .env.development
 .env.development.local
 .env.test.local
 .env.production.local
+
 # ASP.NET Core / generic local appsettings overrides (may contain connection strings / API keys)
 appsettings.local.json
 appsettings.*.local.json
+
 # .NET user secrets directory (managed by `dotnet user-secrets`)
-# Per-project secrets.json should never be checked in
+# %APPDATA%\Microsoft\UserSecrets  /  ~/.microsoft/usersecrets
+# The per-project secrets.json should never be checked in
 secrets.json
+
 # Generic secrets files
 *.secrets.json
 .secrets/
 secrets/
+
 # HTTP request files that may contain Authorization headers / API keys
 # Uncomment if your .http / .rest files contain real tokens
 # *.http
 # *.rest
+
