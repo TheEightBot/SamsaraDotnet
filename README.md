@@ -6,8 +6,8 @@
 
 [![NuGet](https://img.shields.io/nuget/v/Samsara.Sdk.svg?label=NuGet&logo=nuget)](https://www.nuget.org/packages/Samsara.Sdk)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Samsara.Sdk.svg?label=Downloads&logo=nuget)](https://www.nuget.org/packages/Samsara.Sdk)
-[![CI](https://github.com/YOUR-ORG/SamsaraDotnet/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR-ORG/SamsaraDotnet/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/YOUR-ORG/SamsaraDotnet/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR-ORG/SamsaraDotnet)
+[![CI](https://github.com/TheEightBot/SamsaraDotnet/actions/workflows/ci.yml/badge.svg)](https://github.com/TheEightBot/SamsaraDotnet/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/TheEightBot/SamsaraDotnet/branch/main/graph/badge.svg)](https://codecov.io/gh/TheEightBot/SamsaraDotnet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **A modern, idiomatic .NET 8 client for the [Samsara Fleet Management API](https://developers.samsara.com/)**
@@ -403,4 +403,4 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for bu
 
 ## License
 
-[MIT](LICENSE) © Samsara.Dotnet Contributors
+[MIT](LICENSE)

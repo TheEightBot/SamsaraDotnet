@@ -32,5 +32,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Samsara.Cli` interactive terminal tool (Spectre.Console TUI)
 - XML documentation on all public API surface
 
-[Unreleased]: https://github.com/YOUR-ORG/SamsaraDotnet/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/YOUR-ORG/SamsaraDotnet/releases/tag/v0.1.0
+[Unreleased]: https://github.com/TheEightBot/SamsaraDotnet/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/TheEightBot/SamsaraDotnet/releases/tag/v0.1.0
