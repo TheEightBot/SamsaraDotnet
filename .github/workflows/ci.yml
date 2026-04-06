@@ -94,11 +94,14 @@ jobs:
       - name: Restore
         run: dotnet restore
 
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
       - name: Pack
         run: >
           dotnet pack src/Samsara.Sdk/Samsara.Sdk.csproj
-          --configuration Release
           --no-build
+          --configuration Release
           --output ./artifacts
 
       - name: Upload NuGet artifacts
