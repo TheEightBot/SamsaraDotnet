@@ -1,0 +1,81 @@
+# ─────────────────────────────────────────────────────────────
+# .gitattributes — line-ending normalization & binary detection
+# ─────────────────────────────────────────────────────────────
+
+# Default: auto-detect text files and normalize to LF in the repo
+* text=auto eol=lf
+
+# ── C# / .NET source ─────────────────────────────────────────
+*.cs        text eol=lf
+*.csx       text eol=lf
+*.cake      text eol=lf
+
+# ── Project / solution files ──────────────────────────────────
+*.csproj    text eol=lf
+*.vbproj    text eol=lf
+*.fsproj    text eol=lf
+*.sln       text eol=lf
+*.props     text eol=lf
+*.targets   text eol=lf
+*.ruleset   text eol=lf
+Directory.Build.props   text eol=lf
+Directory.Build.targets text eol=lf
+global.json             text eol=lf
+
+# ── Config / data ─────────────────────────────────────────────
+*.json      text eol=lf
+*.xml       text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.toml      text eol=lf
+*.ini       text eol=lf
+*.config    text eol=lf
+*.resx      text eol=lf
+
+# ── Docs / text ───────────────────────────────────────────────
+*.md        text eol=lf
+*.txt       text eol=lf
+*.rst       text eol=lf
+*.html      text eol=lf
+*.css       text eol=lf
+
+# ── Scripts ───────────────────────────────────────────────────
+*.sh        text eol=lf
+*.ps1       text eol=lf
+*.psm1      text eol=lf
+*.psd1      text eol=lf
+*.cmd       text eol=crlf
+*.bat       text eol=crlf
+
+# ── Git helpers ───────────────────────────────────────────────
+.gitignore      text eol=lf
+.gitattributes  text eol=lf
+.gitconfig      text eol=lf
+.editorconfig   text eol=lf
+
+# ── HTTP / REST client files ──────────────────────────────────
+*.http      text eol=lf
+*.rest      text eol=lf
+
+# ── Binary files — never diff or merge ───────────────────────
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.sketch    binary
+*.pdf       binary
+*.zip       binary
+*.tar       binary
+*.gz        binary
+*.dmg       binary
+*.dll       binary
+*.exe       binary
+*.pdb       binary
+*.nupkg     binary
+*.snupkg    binary
+
+# ── GitHub Linguist overrides ─────────────────────────────────
+# Don't count generated / tool code toward repo language stats
+tools/**    linguist-detectable=false
+
