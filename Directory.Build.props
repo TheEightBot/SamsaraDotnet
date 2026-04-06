@@ -1,0 +1,32 @@
+<Project>
+  <PropertyGroup>
+    <!-- Language & analysis -->
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningLevel>7</WarningLevel>
+    <LangVersion>12</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <!-- Common NuGet metadata (applied to all packable projects) -->
+    <Authors>Samsara.Dotnet Contributors</Authors>
+    <Copyright>Copyright © Samsara.Dotnet Contributors</Copyright>
+    <!--
+      Set RepositoryUrl to the canonical GitHub URL for your fork/org, e.g.:
+      <RepositoryUrl>https://github.com/YOUR-ORG/SamsaraDotnet</RepositoryUrl>
+    -->
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/YOUR-ORG/SamsaraDotnet</PackageProjectUrl>
+
+    <!-- Source Link & deterministic builds -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <Deterministic>true</Deterministic>
+
+    <!-- MinVer: treat untagged commits as pre-release of the next patch on 0.1 baseline -->
+    <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerDefaultPreReleaseIdentifiers>preview</MinVerDefaultPreReleaseIdentifiers>
+  </PropertyGroup>
+</Project>
