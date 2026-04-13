@@ -30,7 +30,7 @@ internal sealed class SamsaraAuthenticationHandler : DelegatingHandler
         }
         else if (!string.IsNullOrWhiteSpace(opts.ApiToken))
         {
-            token = opts.ApiToken;
+            token = opts.ApiToken!;
         }
         else
         {

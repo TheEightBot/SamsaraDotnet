@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0;netstandard2.0</TargetFrameworks>
     <RootNamespace>Samsara.Sdk</RootNamespace>
     <AssemblyName>Samsara.Sdk</AssemblyName>
     <PackageId>Samsara.Sdk</PackageId>
     <!-- Version is set automatically by MinVer from git tags (e.g. v1.0.0 → 1.0.0) -->
-    <Description>A modern, idiomatic .NET 8 client for the Samsara Fleet Management API. Typed domain clients, IAsyncEnumerable pagination, source-generated JSON, resilience, and DI-first design.</Description>
+    <Description>A modern, idiomatic .NET client for the Samsara Fleet Management API. Typed domain clients, IAsyncEnumerable pagination, source-generated JSON, resilience, and DI-first design. Targets net8.0 and netstandard2.0 (compatible with .NET Framework 4.6.1+).</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>samsara;fleet;telematics;iot;api;sdk;dotnet;csharp</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -35,13 +35,33 @@
     </PackageReference>
   </ItemGroup>
 
+  <!-- Packages available on all target frameworks -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+  </ItemGroup>
+
+  <!-- net8.0-only: resilience pipeline -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="8.0.0" />
+  </ItemGroup>
+
+  <!-- netstandard2.0-only: polyfills and backports -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <!-- C# language feature polyfills: IsExternalInit, RequiredMemberAttribute, etc. -->
+    <PackageReference Include="PolySharp" Version="1.14.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <!-- IAsyncEnumerable<T> and ValueTask<T> -->
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+    <!-- HttpContent.ReadFromJsonAsync / JsonContent.Create -->
+    <PackageReference Include="System.Net.Http.Json" Version="8.0.1" />
+    <!-- System.Text.Json with source-generation support -->
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
 </Project>
