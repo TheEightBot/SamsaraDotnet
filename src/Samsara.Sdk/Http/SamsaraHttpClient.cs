@@ -3,7 +3,6 @@ namespace Samsara.Sdk.Http;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Web;
 using Microsoft.Extensions.Logging;
 using Samsara.Sdk.Exceptions;
 using Samsara.Sdk.Models.Common;
@@ -19,6 +18,12 @@ internal sealed class SamsaraHttpClient
     private readonly HttpClient _httpClient;
     private readonly ILogger<SamsaraHttpClient> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
+
+#if NET5_0_OR_GREATER
+    private static readonly HttpMethod PatchMethod = HttpMethod.Patch;
+#else
+    private static readonly HttpMethod PatchMethod = new HttpMethod("PATCH");
+#endif
 
     public SamsaraHttpClient(HttpClient httpClient, ILogger<SamsaraHttpClient> logger)
     {
@@ -99,7 +104,7 @@ internal sealed class SamsaraHttpClient
     {
         var content = JsonContent.Create(body, options: _jsonOptions);
 
-        using var response = await SendAndValidateAsync(HttpMethod.Patch, path, content, cancellationToken)
+        using var response = await SendAndValidateAsync(PatchMethod, path, content, cancellationToken)
             .ConfigureAwait(false);
 
         var wrapper = await DeserializeAsync<SamsaraResponse<T>>(response, cancellationToken).ConfigureAwait(false);
@@ -195,7 +200,7 @@ internal sealed class SamsaraHttpClient
 
     private static string AppendPaginationParams(string path, string? cursor, int? limit)
     {
-        var separator = path.Contains('?') ? '&' : '?';
+        var separator = path.Contains("?") ? '&' : '?';
 
         if (cursor is not null)
         {
