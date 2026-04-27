@@ -202,3 +202,69 @@ public sealed record HosClocks
     [JsonPropertyName("shiftTimeLeftMs")]
     public long? ShiftTimeLeftMs { get; init; }
 }
+
+/// <summary>
+/// Represents an HOS daily log summary for a driver.
+/// </summary>
+public sealed record HosDailyLog
+{
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+
+    [JsonPropertyName("driverId")]
+    public string? DriverId { get; init; }
+
+    [JsonPropertyName("driverName")]
+    public string? DriverName { get; init; }
+
+    [JsonPropertyName("vehicleId")]
+    public string? VehicleId { get; init; }
+
+    [JsonPropertyName("vehicleName")]
+    public string? VehicleName { get; init; }
+
+    [JsonPropertyName("certificationState")]
+    public string? CertificationState { get; init; }
+
+    [JsonPropertyName("date")]
+    public string? Date { get; init; }
+
+    [JsonPropertyName("distanceDrivenMeters")]
+    public double? DistanceDrivenMeters { get; init; }
+}
+
+/// <summary>
+/// Represents an ELD event record from HOS data.
+/// </summary>
+public sealed record HosEldEvent
+{
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+
+    [JsonPropertyName("driverId")]
+    public string? DriverId { get; init; }
+
+    [JsonPropertyName("vehicleId")]
+    public string? VehicleId { get; init; }
+
+    [JsonPropertyName("eventType")]
+    public string? EventType { get; init; }
+
+    [JsonPropertyName("eventCode")]
+    public string? EventCode { get; init; }
+
+    [JsonPropertyName("eventTime")]
+    public DateTimeOffset? EventTime { get; init; }
+
+    [JsonPropertyName("latitude")]
+    public double? Latitude { get; init; }
+
+    [JsonPropertyName("longitude")]
+    public double? Longitude { get; init; }
+
+    [JsonPropertyName("odometer")]
+    public double? Odometer { get; init; }
+
+    [JsonPropertyName("engineHours")]
+    public double? EngineHours { get; init; }
+}

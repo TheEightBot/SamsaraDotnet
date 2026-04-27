@@ -15,8 +15,14 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
     public Task<Vehicle> GetAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<Vehicle>($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
 
+    public Task<Vehicle> CreateAsync(CreateVehicleRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<Vehicle>(BasePath, request, cancellationToken);
+
     public Task<Vehicle> UpdateAsync(string id, UpdateVehicleRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<Vehicle>($"{BasePath}/{Uri.EscapeDataString(id)}", request, cancellationToken);
+
+    public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
 
     public IAsyncEnumerable<VehicleLocation> ListLocationsAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<VehicleLocation>($"{BasePath}/locations", cancellationToken: cancellationToken);

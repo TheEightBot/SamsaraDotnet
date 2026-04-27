@@ -124,6 +124,36 @@ public sealed record UpdateVehicleRequest
 }
 
 /// <summary>
+/// Request body for creating a new vehicle.
+/// </summary>
+public sealed record CreateVehicleRequest
+{
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+
+    [JsonPropertyName("vin")]
+    public string? Vin { get; init; }
+
+    [JsonPropertyName("licensePlate")]
+    public string? LicensePlate { get; init; }
+
+    [JsonPropertyName("make")]
+    public string? Make { get; init; }
+
+    [JsonPropertyName("model")]
+    public string? Model { get; init; }
+
+    [JsonPropertyName("year")]
+    public string? Year { get; init; }
+
+    [JsonPropertyName("notes")]
+    public string? Notes { get; init; }
+
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
 /// Vehicle location snapshot.
 /// </summary>
 public sealed record VehicleLocation
@@ -277,6 +307,39 @@ public sealed record ReverseGeo
 {
     [JsonPropertyName("formattedLocation")]
     public string? FormattedLocation { get; init; }
+}
+
+/// <summary>
+/// Request body for creating new equipment.
+/// </summary>
+public sealed record CreateEquipmentRequest
+{
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+
+    [JsonPropertyName("serial")]
+    public string? Serial { get; init; }
+
+    [JsonPropertyName("notes")]
+    public string? Notes { get; init; }
+
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// Request body for updating existing equipment.
+/// </summary>
+public sealed record UpdateEquipmentRequest
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    [JsonPropertyName("notes")]
+    public string? Notes { get; init; }
+
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
 
 /// <summary>

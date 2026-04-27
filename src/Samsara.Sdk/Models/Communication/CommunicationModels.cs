@@ -124,3 +124,93 @@ public sealed record AlertConfiguration
     [JsonPropertyName("conditionType")]
     public string? ConditionType { get; init; }
 }
+
+/// <summary>
+/// Request body for creating a new alert.
+/// </summary>
+public sealed record CreateAlertRequest
+{
+    [JsonPropertyName("configurationId")]
+    public required string ConfigurationId { get; init; }
+
+    [JsonPropertyName("vehicleId")]
+    public string? VehicleId { get; init; }
+
+    [JsonPropertyName("driverId")]
+    public string? DriverId { get; init; }
+}
+
+/// <summary>
+/// Request body for updating an alert.
+/// </summary>
+public sealed record UpdateAlertRequest
+{
+    [JsonPropertyName("resolvedAtTime")]
+    public DateTimeOffset? ResolvedAtTime { get; init; }
+}
+
+/// <summary>
+/// Request body for creating an alert configuration.
+/// </summary>
+public sealed record CreateAlertConfigurationRequest
+{
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+
+    [JsonPropertyName("conditionType")]
+    public required string ConditionType { get; init; }
+
+    [JsonPropertyName("notificationSettings")]
+    public IReadOnlyList<AlertNotificationSetting>? NotificationSettings { get; init; }
+}
+
+/// <summary>
+/// Request body for updating an alert configuration.
+/// </summary>
+public sealed record UpdateAlertConfigurationRequest
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    [JsonPropertyName("notificationSettings")]
+    public IReadOnlyList<AlertNotificationSetting>? NotificationSettings { get; init; }
+}
+
+/// <summary>
+/// Notification setting for an alert configuration.
+/// </summary>
+public sealed record AlertNotificationSetting
+{
+    [JsonPropertyName("contactId")]
+    public string? ContactId { get; init; }
+
+    [JsonPropertyName("notificationType")]
+    public string? NotificationType { get; init; }
+}
+
+/// <summary>
+/// Represents an alert incident (a triggered alert event).
+/// </summary>
+public sealed record AlertIncident
+{
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+
+    [JsonPropertyName("alertId")]
+    public string? AlertId { get; init; }
+
+    [JsonPropertyName("configurationId")]
+    public string? ConfigurationId { get; init; }
+
+    [JsonPropertyName("triggeredAtTime")]
+    public DateTimeOffset? TriggeredAtTime { get; init; }
+
+    [JsonPropertyName("resolvedAtTime")]
+    public DateTimeOffset? ResolvedAtTime { get; init; }
+
+    [JsonPropertyName("vehicle")]
+    public AlertVehicle? Vehicle { get; init; }
+
+    [JsonPropertyName("driver")]
+    public AlertDriver? Driver { get; init; }
+}

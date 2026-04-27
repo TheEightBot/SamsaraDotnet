@@ -15,6 +15,15 @@ internal sealed class EquipmentClient : SamsaraServiceClientBase, IEquipmentClie
     public Task<Equipment> GetAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<Equipment>($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
 
+    public Task<Equipment> CreateAsync(CreateEquipmentRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<Equipment>(BasePath, request, cancellationToken);
+
+    public Task<Equipment> UpdateAsync(string id, UpdateEquipmentRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<Equipment>($"{BasePath}/{Uri.EscapeDataString(id)}", request, cancellationToken);
+
+    public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
+
     public IAsyncEnumerable<EquipmentLocation> ListLocationsAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<EquipmentLocation>($"{BasePath}/locations", cancellationToken: cancellationToken);
 }
