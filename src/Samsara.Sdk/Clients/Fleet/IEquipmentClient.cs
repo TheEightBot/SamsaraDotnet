@@ -9,5 +9,8 @@ public interface IEquipmentClient
 {
     IAsyncEnumerable<Equipment> ListAsync(CancellationToken cancellationToken = default);
     Task<Equipment> GetAsync(string id, CancellationToken cancellationToken = default);
+    Task<Equipment> CreateAsync(CreateEquipmentRequest request, CancellationToken cancellationToken = default);
+    Task<Equipment> UpdateAsync(string id, UpdateEquipmentRequest request, CancellationToken cancellationToken = default);
+    Task DeleteAsync(string id, CancellationToken cancellationToken = default);
     IAsyncEnumerable<EquipmentLocation> ListLocationsAsync(CancellationToken cancellationToken = default);
 }
