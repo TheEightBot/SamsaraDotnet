@@ -11,13 +11,12 @@
 
     <!-- Common NuGet metadata (applied to all packable projects) -->
     <Authors>Samsara.Dotnet Contributors</Authors>
-    <Copyright>Copyright © Samsara.Dotnet Contributors</Copyright>
     <!--
       Set RepositoryUrl to the canonical GitHub URL for your fork/org, e.g.:
-      <RepositoryUrl>https://github.com/YOUR-ORG/SamsaraDotnet</RepositoryUrl>
+      <RepositoryUrl>https://github.com/TheEightBot/SamsaraDotnet</RepositoryUrl>
     -->
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://github.com/YOUR-ORG/SamsaraDotnet</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/TheEightBot/SamsaraDotnet</PackageProjectUrl>
 
     <!-- Source Link & deterministic builds -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

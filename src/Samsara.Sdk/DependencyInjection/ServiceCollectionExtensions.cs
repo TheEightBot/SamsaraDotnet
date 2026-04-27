@@ -3,13 +3,15 @@ namespace Samsara.Sdk.DependencyInjection;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
-using Polly;
 using Samsara.Sdk.Authentication;
 using Samsara.Sdk.Clients;
 using Samsara.Sdk.Configuration;
 using Samsara.Sdk.Http;
+#if NET8_0_OR_GREATER
+using Microsoft.Extensions.Http.Resilience;
+using Polly;
+#endif
 
 /// <summary>
 /// Extension methods for registering the Samsara SDK with the .NET dependency injection container.
@@ -29,7 +31,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         Action<SamsaraClientOptions> configure)
     {
-        ArgumentNullException.ThrowIfNull(configure);
+        if (configure is null) throw new ArgumentNullException(nameof(configure));
 
         // Register and validate options
         services.AddOptions<SamsaraClientOptions>()
@@ -50,6 +52,7 @@ public static class ServiceCollectionExtensions
                 client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
             })
             .AddHttpMessageHandler<SamsaraAuthenticationHandler>()
+#if NET8_0_OR_GREATER
             .AddStandardResilienceHandler(options =>
             {
                 // Configure retry for transient errors + rate limits
@@ -58,6 +61,11 @@ public static class ServiceCollectionExtensions
                 options.Retry.BackoffType = DelayBackoffType.Exponential;
                 options.Retry.Delay = TimeSpan.FromMilliseconds(500);
             });
+#else
+            .AddHttpMessageHandler<SamsaraRetryHandler>();
+
+        services.TryAddTransient<SamsaraRetryHandler>();
+#endif
 
         // Register domain service clients
         services.TryAddScoped<ITagsClient, TagsClient>();

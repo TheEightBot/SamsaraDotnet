@@ -18,7 +18,7 @@ internal static class QueryBuilder
     /// </summary>
     public static string WithParams(string path, params (string Key, string? Value)[] parameters)
     {
-        var separator = path.Contains('?') ? '&' : '?';
+        var separator = path.Contains("?") ? '&' : '?';
         foreach (var (key, value) in parameters)
         {
             if (value is null) continue;

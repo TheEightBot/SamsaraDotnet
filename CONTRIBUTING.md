@@ -25,7 +25,7 @@ Thank you for your interest in contributing! This guide covers how to build the 
 Clone the repository:
 
 ```shell
-git clone https://github.com/YOUR-ORG/SamsaraDotnet.git
+git clone https://github.com/TheEightBot/SamsaraDotnet.git
 cd SamsaraDotnet
 ```
 
