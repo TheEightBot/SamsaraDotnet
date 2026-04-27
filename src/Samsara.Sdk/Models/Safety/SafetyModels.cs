@@ -149,3 +149,45 @@ public sealed record TimeRange
     [JsonPropertyName("endTime")]
     public DateTimeOffset? EndTime { get; init; }
 }
+
+/// <summary>
+/// Safety score aggregated by tag.
+/// </summary>
+public sealed record TagSafetyScore
+{
+    [JsonPropertyName("tagId")]
+    public required string TagId { get; init; }
+
+    [JsonPropertyName("tagName")]
+    public string? TagName { get; init; }
+
+    [JsonPropertyName("safetyScore")]
+    public double? SafetyScore { get; init; }
+
+    [JsonPropertyName("totalHarshEventCount")]
+    public int? TotalHarshEventCount { get; init; }
+
+    [JsonPropertyName("timeRange")]
+    public TimeRange? TimeRange { get; init; }
+}
+
+/// <summary>
+/// Safety score aggregated by tag group.
+/// </summary>
+public sealed record TagGroupSafetyScore
+{
+    [JsonPropertyName("tagGroupId")]
+    public required string TagGroupId { get; init; }
+
+    [JsonPropertyName("tagGroupName")]
+    public string? TagGroupName { get; init; }
+
+    [JsonPropertyName("safetyScore")]
+    public double? SafetyScore { get; init; }
+
+    [JsonPropertyName("totalHarshEventCount")]
+    public int? TotalHarshEventCount { get; init; }
+
+    [JsonPropertyName("timeRange")]
+    public TimeRange? TimeRange { get; init; }
+}

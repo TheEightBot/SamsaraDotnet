@@ -18,4 +18,10 @@ internal sealed class SafetyClient : SamsaraServiceClientBase, ISafetyClient
 
     public IAsyncEnumerable<DriverSafetyScore> ListDriverSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
         => PaginateAsync<DriverSafetyScore>(QueryBuilder.WithTimeRange("fleet/drivers/safety/scores", startTime, endTime), cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<TagSafetyScore> ListTagSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TagSafetyScore>(QueryBuilder.WithTimeRange("fleet/tags/safety/scores", startTime, endTime), cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<TagGroupSafetyScore> ListTagGroupSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TagGroupSafetyScore>(QueryBuilder.WithTimeRange("fleet/tag-groups/safety/scores", startTime, endTime), cancellationToken: cancellationToken);
 }

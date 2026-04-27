@@ -9,7 +9,9 @@ public interface IVehiclesClient
 {
     IAsyncEnumerable<Vehicle> ListAsync(CancellationToken cancellationToken = default);
     Task<Vehicle> GetAsync(string id, CancellationToken cancellationToken = default);
+    Task<Vehicle> CreateAsync(CreateVehicleRequest request, CancellationToken cancellationToken = default);
     Task<Vehicle> UpdateAsync(string id, UpdateVehicleRequest request, CancellationToken cancellationToken = default);
+    Task DeleteAsync(string id, CancellationToken cancellationToken = default);
     IAsyncEnumerable<VehicleLocation> ListLocationsAsync(CancellationToken cancellationToken = default);
     IAsyncEnumerable<VehicleStats> ListStatsAsync(string types, CancellationToken cancellationToken = default);
 }

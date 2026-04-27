@@ -16,6 +16,12 @@ internal sealed class ComplianceClient : SamsaraServiceClientBase, IComplianceCl
     public Task<HosClocks> GetHosClocksAsync(string driverId, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<HosClocks>($"fleet/drivers/{Uri.EscapeDataString(driverId)}/hos/clocks", cancellationToken);
 
+    public IAsyncEnumerable<HosDailyLog> ListHosDailyLogsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<HosDailyLog>(QueryBuilder.WithTimeRange("fleet/hos/daily-logs", startTime, endTime), cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<HosEldEvent> ListHosEldEventsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<HosEldEvent>(QueryBuilder.WithTimeRange("fleet/hos/eld-events", startTime, endTime), cancellationToken: cancellationToken);
+
     public IAsyncEnumerable<DvirEntry> ListDvirsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
         => PaginateAsync<DvirEntry>(QueryBuilder.WithTimeRange("fleet/dvirs", startTime, endTime), cancellationToken: cancellationToken);
 
