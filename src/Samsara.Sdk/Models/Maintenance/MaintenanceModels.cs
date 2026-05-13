@@ -122,16 +122,23 @@ public sealed record DefectType
 /// <summary>Request body for creating a DVIR.</summary>
 public sealed record CreateDvirRequest
 {
-    [JsonPropertyName("vehicleId")] public required string VehicleId { get; init; }
-    [JsonPropertyName("inspectorName")] public string? InspectorName { get; init; }
-    [JsonPropertyName("odometer")] public long? Odometer { get; init; }
-    [JsonPropertyName("trailerIds")] public IReadOnlyList<string>? TrailerIds { get; init; }
-    [JsonPropertyName("safeToOperate")] public bool? SafeToOperate { get; init; }
+    [JsonPropertyName("authorId")] public required string AuthorId { get; init; }
+    [JsonPropertyName("safetyStatus")] public required string SafetyStatus { get; init; }
+    [JsonPropertyName("type")] public required string Type { get; init; }
+    [JsonPropertyName("vehicleId")] public string? VehicleId { get; init; }
+    [JsonPropertyName("trailerId")] public string? TrailerId { get; init; }
+    [JsonPropertyName("licensePlate")] public string? LicensePlate { get; init; }
+    [JsonPropertyName("location")] public string? Location { get; init; }
+    [JsonPropertyName("mechanicNotes")] public string? MechanicNotes { get; init; }
+    [JsonPropertyName("odometerMeters")] public long? OdometerMeters { get; init; }
+    [JsonPropertyName("resolvedDefectIds")] public IReadOnlyList<string>? ResolvedDefectIds { get; init; }
 }
 
 /// <summary>Request body for updating a DVIR.</summary>
 public sealed record UpdateDvirRequest
 {
-    [JsonPropertyName("safeToOperate")] public bool? SafeToOperate { get; init; }
-    [JsonPropertyName("authorizedSignatoryId")] public string? AuthorizedSignatoryId { get; init; }
+    [JsonPropertyName("authorId")] public required string AuthorId { get; init; }
+    [JsonPropertyName("isResolved")] public required bool IsResolved { get; init; }
+    [JsonPropertyName("mechanicNotes")] public string? MechanicNotes { get; init; }
+    [JsonPropertyName("signedAtTime")] public DateTimeOffset? SignedAtTime { get; init; }
 }

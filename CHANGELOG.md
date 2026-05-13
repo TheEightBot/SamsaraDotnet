@@ -72,7 +72,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `SafetyClient` — corrected all API endpoint paths (were using old/incorrect paths)
+- **`CreateRouteRequest`** — removed non-existent `scheduledStartMs`/`scheduledEndMs` fields; added
+  `externalIds`, `recomputeScheduledTimes`, `tagIds`; made `driverId` optional; `stops` is now required
+- **`UpdateRouteRequest`** — same field corrections as above; added `stops` (was missing entirely)
+- **`Route`** response — replaced deprecated ms-epoch time fields with ISO string equivalents
+  (`scheduledRouteStartTime`, `scheduledRouteEndTime`, `actualRouteStartTime`, `actualRouteEndTime`);
+  added `externalIds`, `tagIds`, `orgLocalTimezone`, `createdAt`, `updatedAt`, `dispatchRouteId`,
+  `distanceMeters`, `durationSeconds`, `hubId`, `isEdited`, `isPinned`, `planId`, `type`, `quantities`
+- **`RouteStop`** response — removed `addressId`, `latitude`, `longitude`; added `sequenceNumber`,
+  `ontimeWindowAfterArrivalMs`, `ontimeWindowBeforeArrivalMs`, `enRouteTime`, `eta`, `skippedTime`,
+  `actualDistanceMeters`, `plannedDistanceMeters`, `liveSharingUrl`, `address`, `hubLocationId`, `orders`
+- **`RouteSettings`** — added `sequencingMethod`
+- **`CreateRouteStopRequest`** — removed `latitude`/`longitude`; added `sequenceNumber`, ontime window fields
+- **`UpdateRouteStopRequest`** — new class (was missing from the SDK entirely)
+- **`Asset`** response — fixed `assetType` → `type`; added `createdAtTime`, `updatedAtTime`, `vin`,
+  `readingsIngestionEnabled`, `regulationMode`, `serialNumber`
+- **`CreateAssetRequest`** — renamed `assetType` → `type`; added `serialNumber`, `vin`,
+  `readingsIngestionEnabled`, `regulationMode`, `attributes`
+- **`UpdateAssetRequest`** — removed `id` and `tagIds` (neither belongs in the PATCH body);
+  added `type`, `serialNumber`, `vin`, `readingsIngestionEnabled`, `regulationMode`
+- **`Driver`** response — removed fabricated fields (`password`, `status`, `vehicleId`, `currentVehicleId`);
+  added `isDeactivated`, `currentIdCardCode`, `profileImageUrl`, `attributes`, `eldSettings`,
+  `hasDrivingFeaturesHidden`, `hasVehicleUnpinningEnabled`, `peerGroupTag`, `trailerGroupTag`,
+  `vehicleGroupTag`, `usDriverRulesetOverride`, `waitingTimeDutyStatusEnabled`
+- **`CreateDriverRequest`** / **`UpdateDriverRequest`** — removed non-existent `vehicleId`; added 14+
+  missing fields including `staticAssignedVehicleId`, `currentIdCardCode`, `carrierSettings`, `hosSetting`,
+  `usDriverRulesetOverride`, `peerGroupTagId`, `trailerGroupTagId`, `vehicleGroupTagId`, and more
+- **`CreateDvirRequest`** — completely replaced v1 fields (`inspectorName`, `odometer`, `safeToOperate`,
+  `trailerIds`) with correct v2 fields: `authorId` (required), `safetyStatus` (required), `type` (required),
+  `vehicleId`, `trailerId`, `licensePlate`, `location`, `mechanicNotes`, `odometerMeters`, `resolvedDefectIds`
+- **`UpdateDvirRequest`** — completely replaced v1 fields (`authorizedSignatoryId`, `safeToOperate`) with
+  correct v2 fields: `authorId` (required), `isResolved` (required), `mechanicNotes`, `signedAtTime`
+- **`SafetyEvent`** — replaced `behaviorLabel` (singular) with `behaviorLabels` (array); removed v1-only
+  fields (`maxGForce`, `location`, `coachingState`, video download URLs); removed `SafetyEventLocation`
+- **`CreateTagRequest`** / **`UpdateTagRequest`** — added `assets`, `machines`, `sensors`, `externalIds`
+- **`CreateUserRequest`** — added `expireAt`
+- **`UpdateUserRequest`** — added `authType`, `expireAt`
+- **`UpdateVehicleRequest`** — added `auxInputType3`–`auxInputType13`, `engineHours`,
+  `grossVehicleWeight`, `gatewaySerial`, `vehicleType`, `attributes`, `odometerMeters`
+- **`WorkOrder`** / **`CreateWorkOrderRequest`** / **`UpdateWorkOrderRequest`** — completely rebuilt
+  all three with correct API fields (`assetId`, `serviceTaskInstances`, `items`, `discount`, `tax`, etc.)
+
+
 
 ## [0.1.0] - 2025-04-06
 

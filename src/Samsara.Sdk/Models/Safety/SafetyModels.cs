@@ -9,37 +9,19 @@ using Samsara.Sdk.Models.Common;
 public sealed record SafetyEvent
 {
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     [JsonPropertyName("time")]
     public DateTimeOffset? Time { get; init; }
 
-    [JsonPropertyName("behaviorLabel")]
-    public string? BehaviorLabel { get; init; }
-
-    [JsonPropertyName("maxGForce")]
-    public double? MaxGForce { get; init; }
+    [JsonPropertyName("behaviorLabels")]
+    public IReadOnlyList<string>? BehaviorLabels { get; init; }
 
     [JsonPropertyName("vehicle")]
     public SafetyEventVehicle? Vehicle { get; init; }
 
     [JsonPropertyName("driver")]
     public SafetyEventDriver? Driver { get; init; }
-
-    [JsonPropertyName("location")]
-    public SafetyEventLocation? Location { get; init; }
-
-    [JsonPropertyName("coachingState")]
-    public string? CoachingState { get; init; }
-
-    [JsonPropertyName("incidentReportUrl")]
-    public string? IncidentReportUrl { get; init; }
-
-    [JsonPropertyName("downloadForwardVideoUrl")]
-    public string? DownloadForwardVideoUrl { get; init; }
-
-    [JsonPropertyName("downloadInwardVideoUrl")]
-    public string? DownloadInwardVideoUrl { get; init; }
 }
 
 /// <summary>
@@ -64,18 +46,6 @@ public sealed record SafetyEventDriver
 
     [JsonPropertyName("name")]
     public string? Name { get; init; }
-}
-
-/// <summary>
-/// Location of a safety event.
-/// </summary>
-public sealed record SafetyEventLocation
-{
-    [JsonPropertyName("latitude")]
-    public double? Latitude { get; init; }
-
-    [JsonPropertyName("longitude")]
-    public double? Longitude { get; init; }
 }
 
 /// <summary>

@@ -1,46 +1,79 @@
 namespace Samsara.Sdk.Models.Maintenance;
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 /// <summary>Represents a maintenance work order.</summary>
 public sealed record WorkOrder
 {
     [JsonPropertyName("id")] public required string Id { get; init; }
-    [JsonPropertyName("title")] public string? Title { get; init; }
-    [JsonPropertyName("status")] public string? Status { get; init; }
-    [JsonPropertyName("vehicleId")] public string? VehicleId { get; init; }
-    [JsonPropertyName("vehicleName")] public string? VehicleName { get; init; }
+    [JsonPropertyName("assetId")] public required string AssetId { get; init; }
+    [JsonPropertyName("status")] public required string Status { get; init; }
+    [JsonPropertyName("createdAtTime")] public required DateTimeOffset CreatedAtTime { get; init; }
+    [JsonPropertyName("updatedAtTime")] public required DateTimeOffset UpdatedAtTime { get; init; }
     [JsonPropertyName("assignedUserId")] public string? AssignedUserId { get; init; }
-    [JsonPropertyName("dueDate")] public DateTimeOffset? DueDate { get; init; }
-    [JsonPropertyName("completedDate")] public DateTimeOffset? CompletedDate { get; init; }
-    [JsonPropertyName("notes")] public string? Notes { get; init; }
-    [JsonPropertyName("laborCostCents")] public long? LaborCostCents { get; init; }
-    [JsonPropertyName("partsCostCents")] public long? PartsCostCents { get; init; }
-    [JsonPropertyName("serviceTaskIds")] public IReadOnlyList<string>? ServiceTaskIds { get; init; }
-    [JsonPropertyName("createdAt")] public DateTimeOffset? CreatedAt { get; init; }
-    [JsonPropertyName("updatedAt")] public DateTimeOffset? UpdatedAt { get; init; }
+    [JsonPropertyName("archivedAtTime")] public DateTimeOffset? ArchivedAtTime { get; init; }
+    [JsonPropertyName("category")] public string? Category { get; init; }
+    [JsonPropertyName("closingNotes")] public string? ClosingNotes { get; init; }
+    [JsonPropertyName("completedAtTime")] public DateTimeOffset? CompletedAtTime { get; init; }
+    [JsonPropertyName("createdByUserId")] public string? CreatedByUserId { get; init; }
+    [JsonPropertyName("description")] public string? Description { get; init; }
+    [JsonPropertyName("discount")] public System.Text.Json.JsonElement? Discount { get; init; }
+    [JsonPropertyName("dueAtTime")] public DateTimeOffset? DueAtTime { get; init; }
+    [JsonPropertyName("engineHours")] public long? EngineHours { get; init; }
+    [JsonPropertyName("invoiceNumber")] public string? InvoiceNumber { get; init; }
+    [JsonPropertyName("items")] public IReadOnlyList<System.Text.Json.JsonElement>? Items { get; init; }
+    [JsonPropertyName("odometerMeters")] public long? OdometerMeters { get; init; }
+    [JsonPropertyName("poNumber")] public string? PoNumber { get; init; }
+    [JsonPropertyName("priority")] public string? Priority { get; init; }
+    [JsonPropertyName("serviceTaskInstances")] public IReadOnlyList<System.Text.Json.JsonElement>? ServiceTaskInstances { get; init; }
+    [JsonPropertyName("tax")] public System.Text.Json.JsonElement? Tax { get; init; }
+    [JsonPropertyName("unallocatedLabor")] public System.Text.Json.JsonElement? UnallocatedLabor { get; init; }
+    [JsonPropertyName("vendorUuid")] public string? VendorUuid { get; init; }
+    [JsonPropertyName("attachments")] public IReadOnlyList<System.Text.Json.JsonElement>? Attachments { get; init; }
 }
 
 /// <summary>Request body for creating a work order.</summary>
 public sealed record CreateWorkOrderRequest
 {
-    [JsonPropertyName("title")] public required string Title { get; init; }
-    [JsonPropertyName("vehicleId")] public string? VehicleId { get; init; }
+    [JsonPropertyName("assetId")] public required string AssetId { get; init; }
     [JsonPropertyName("assignedUserId")] public string? AssignedUserId { get; init; }
-    [JsonPropertyName("dueDate")] public DateTimeOffset? DueDate { get; init; }
-    [JsonPropertyName("notes")] public string? Notes { get; init; }
-    [JsonPropertyName("serviceTaskIds")] public IReadOnlyList<string>? ServiceTaskIds { get; init; }
+    [JsonPropertyName("category")] public string? Category { get; init; }
+    [JsonPropertyName("description")] public string? Description { get; init; }
+    [JsonPropertyName("discount")] public System.Text.Json.JsonElement? Discount { get; init; }
+    [JsonPropertyName("dueAtTime")] public DateTimeOffset? DueAtTime { get; init; }
+    [JsonPropertyName("engineHours")] public long? EngineHours { get; init; }
+    [JsonPropertyName("invoiceNumber")] public string? InvoiceNumber { get; init; }
+    [JsonPropertyName("items")] public IReadOnlyList<System.Text.Json.JsonElement>? Items { get; init; }
+    [JsonPropertyName("odometerMeters")] public long? OdometerMeters { get; init; }
+    [JsonPropertyName("poNumber")] public string? PoNumber { get; init; }
+    [JsonPropertyName("priority")] public string? Priority { get; init; }
+    [JsonPropertyName("serviceTaskInstances")] public IReadOnlyList<System.Text.Json.JsonElement>? ServiceTaskInstances { get; init; }
+    [JsonPropertyName("tax")] public System.Text.Json.JsonElement? Tax { get; init; }
+    [JsonPropertyName("vendorUuid")] public string? VendorUuid { get; init; }
 }
 
 /// <summary>Request body for updating a work order.</summary>
 public sealed record UpdateWorkOrderRequest
 {
     [JsonPropertyName("id")] public required string Id { get; init; }
-    [JsonPropertyName("title")] public string? Title { get; init; }
-    [JsonPropertyName("status")] public string? Status { get; init; }
     [JsonPropertyName("assignedUserId")] public string? AssignedUserId { get; init; }
-    [JsonPropertyName("dueDate")] public DateTimeOffset? DueDate { get; init; }
-    [JsonPropertyName("notes")] public string? Notes { get; init; }
+    [JsonPropertyName("category")] public string? Category { get; init; }
+    [JsonPropertyName("closingNotes")] public string? ClosingNotes { get; init; }
+    [JsonPropertyName("completedAtTime")] public DateTimeOffset? CompletedAtTime { get; init; }
+    [JsonPropertyName("description")] public string? Description { get; init; }
+    [JsonPropertyName("discount")] public System.Text.Json.JsonElement? Discount { get; init; }
+    [JsonPropertyName("dueAtTime")] public DateTimeOffset? DueAtTime { get; init; }
+    [JsonPropertyName("engineHours")] public long? EngineHours { get; init; }
+    [JsonPropertyName("invoiceNumber")] public string? InvoiceNumber { get; init; }
+    [JsonPropertyName("items")] public IReadOnlyList<System.Text.Json.JsonElement>? Items { get; init; }
+    [JsonPropertyName("odometerMeters")] public long? OdometerMeters { get; init; }
+    [JsonPropertyName("poNumber")] public string? PoNumber { get; init; }
+    [JsonPropertyName("priority")] public string? Priority { get; init; }
+    [JsonPropertyName("serviceTaskInstances")] public IReadOnlyList<System.Text.Json.JsonElement>? ServiceTaskInstances { get; init; }
+    [JsonPropertyName("status")] public string? Status { get; init; }
+    [JsonPropertyName("tax")] public System.Text.Json.JsonElement? Tax { get; init; }
+    [JsonPropertyName("vendorUuid")] public string? VendorUuid { get; init; }
 }
 
 /// <summary>Request body for deleting work orders.</summary>

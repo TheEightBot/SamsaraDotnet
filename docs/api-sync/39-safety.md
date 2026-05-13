@@ -68,14 +68,17 @@
 
 See `src/Samsara.Sdk/Models/Safety/SafetyModels.cs` for model definitions used by this domain.
 
-- [ ] All request models defined as `record` types
-- [ ] All response models defined as `record` types
+- [x] All request models defined as `record` types
+- [x] All response models defined as `record` types
 - [ ] All models have XML documentation
 - [ ] All enum values covered
-- [ ] Nullable reference types used correctly
+- [x] Nullable reference types used correctly
 
 ---
 
 ## Notes
 
-_Add any implementation notes, breaking changes, or special considerations here._
+**Model audit (2025-05-13):** `SafetyEvent` was using v1 fields that no longer exist in the v2 API.
+
+- `SafetyEvent`: replaced `behaviorLabel` (singular string) with `behaviorLabels` (array); removed v1-only fields `maxGForce`, `location`, `coachingState`, `incidentReportUrl`, `downloadForwardVideoUrl`, `downloadInwardVideoUrl`.
+- `SafetyEventLocation` class removed entirely (v1 only; v2 API does not surface location on the event object).

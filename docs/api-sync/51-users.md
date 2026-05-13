@@ -93,14 +93,17 @@
 
 See `src/Samsara.Sdk/Models/Organization/OrganizationModels.cs` for model definitions used by this domain.
 
-- [ ] All request models defined as `record` types
-- [ ] All response models defined as `record` types
+- [x] All request models defined as `record` types
+- [x] All response models defined as `record` types
 - [ ] All models have XML documentation
 - [ ] All enum values covered
-- [ ] Nullable reference types used correctly
+- [x] Nullable reference types used correctly
 
 ---
 
 ## Notes
 
-_Add any implementation notes, breaking changes, or special considerations here._
+**Model audit (2025-05-13):** User request models were missing fields present in the API.
+
+- `CreateUserRequest`: added `expireAt`.
+- `UpdateUserRequest`: added `authType`, `expireAt`.

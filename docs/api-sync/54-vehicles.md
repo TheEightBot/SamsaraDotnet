@@ -55,14 +55,16 @@
 
 See `src/Samsara.Sdk/Models/Fleet/FleetModels.cs` for model definitions used by this domain.
 
-- [ ] All request models defined as `record` types
-- [ ] All response models defined as `record` types
+- [x] All request models defined as `record` types
+- [x] All response models defined as `record` types
 - [ ] All models have XML documentation
 - [ ] All enum values covered
-- [ ] Nullable reference types used correctly
+- [x] Nullable reference types used correctly
 
 ---
 
 ## Notes
 
-_Add any implementation notes, breaking changes, or special considerations here._
+**Model audit (2025-05-13):** `UpdateVehicleRequest` was missing a large number of fields present in the API.
+
+- `UpdateVehicleRequest`: added `auxInputType3` through `auxInputType13`, `engineHours`, `grossVehicleWeight`, `gatewaySerial`, `vehicleType`, `attributes`, `odometerMeters`.

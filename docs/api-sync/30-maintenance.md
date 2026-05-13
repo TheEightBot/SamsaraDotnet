@@ -131,14 +131,17 @@
 
 See `src/Samsara.Sdk/Models/Maintenance/MaintenanceModels.cs` for model definitions used by this domain.
 
-- [ ] All request models defined as `record` types
-- [ ] All response models defined as `record` types
+- [x] All request models defined as `record` types
+- [x] All response models defined as `record` types
 - [ ] All models have XML documentation
 - [ ] All enum values covered
-- [ ] Nullable reference types used correctly
+- [x] Nullable reference types used correctly
 
 ---
 
 ## Notes
 
-_Add any implementation notes, breaking changes, or special considerations here._
+**Model audit (2025-05-13):** DVIR models were completely wrong (v1 API fields). Both models fully replaced.
+
+- `CreateDvirRequest`: replaced v1 fields (`inspectorName`, `odometer`, `safeToOperate`, `trailerIds`) with correct v2 fields: `authorId` (required), `safetyStatus` (required), `type` (required), plus optional `vehicleId`, `trailerId`, `licensePlate`, `location`, `mechanicNotes`, `odometerMeters`, `resolvedDefectIds`.
+- `UpdateDvirRequest`: replaced v1 fields (`authorizedSignatoryId`, `safeToOperate`) with correct v2 fields: `authorId` (required), `isResolved` (required), plus optional `mechanicNotes`, `signedAtTime`.

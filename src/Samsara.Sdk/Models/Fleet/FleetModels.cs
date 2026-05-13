@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Models.Fleet;
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Samsara.Sdk.Models.Common;
 
@@ -121,6 +122,57 @@ public sealed record UpdateVehicleRequest
 
     [JsonPropertyName("auxInputType2")]
     public string? AuxInputType2 { get; init; }
+
+    [JsonPropertyName("auxInputType3")]
+    public string? AuxInputType3 { get; init; }
+
+    [JsonPropertyName("auxInputType4")]
+    public string? AuxInputType4 { get; init; }
+
+    [JsonPropertyName("auxInputType5")]
+    public string? AuxInputType5 { get; init; }
+
+    [JsonPropertyName("auxInputType6")]
+    public string? AuxInputType6 { get; init; }
+
+    [JsonPropertyName("auxInputType7")]
+    public string? AuxInputType7 { get; init; }
+
+    [JsonPropertyName("auxInputType8")]
+    public string? AuxInputType8 { get; init; }
+
+    [JsonPropertyName("auxInputType9")]
+    public string? AuxInputType9 { get; init; }
+
+    [JsonPropertyName("auxInputType10")]
+    public string? AuxInputType10 { get; init; }
+
+    [JsonPropertyName("auxInputType11")]
+    public string? AuxInputType11 { get; init; }
+
+    [JsonPropertyName("auxInputType12")]
+    public string? AuxInputType12 { get; init; }
+
+    [JsonPropertyName("auxInputType13")]
+    public string? AuxInputType13 { get; init; }
+
+    [JsonPropertyName("engineHours")]
+    public long? EngineHours { get; init; }
+
+    [JsonPropertyName("grossVehicleWeight")]
+    public System.Text.Json.JsonElement? GrossVehicleWeight { get; init; }
+
+    [JsonPropertyName("gatewaySerial")]
+    public string? GatewaySerial { get; init; }
+
+    [JsonPropertyName("vehicleType")]
+    public string? VehicleType { get; init; }
+
+    [JsonPropertyName("attributes")]
+    public System.Text.Json.JsonElement? Attributes { get; init; }
+
+    [JsonPropertyName("odometerMeters")]
+    public long? OdometerMeters { get; init; }
 }
 
 /// <summary>
