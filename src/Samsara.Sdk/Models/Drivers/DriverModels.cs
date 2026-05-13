@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Models.Drivers;
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Samsara.Sdk.Models.Common;
 
@@ -16,9 +17,6 @@ public sealed record Driver
 
     [JsonPropertyName("username")]
     public string? Username { get; init; }
-
-    [JsonPropertyName("password")]
-    public string? Password { get; init; }
 
     [JsonPropertyName("phone")]
     public string? Phone { get; init; }
@@ -50,17 +48,17 @@ public sealed record Driver
     [JsonPropertyName("eldDayStartHour")]
     public int? EldDayStartHour { get; init; }
 
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    [JsonPropertyName("currentVehicleId")]
-    public string? CurrentVehicleId { get; init; }
-
-    [JsonPropertyName("status")]
-    public string? Status { get; init; }
-
     [JsonPropertyName("driverActivationStatus")]
     public string? DriverActivationStatus { get; init; }
+
+    [JsonPropertyName("isDeactivated")]
+    public bool? IsDeactivated { get; init; }
+
+    [JsonPropertyName("currentIdCardCode")]
+    public string? CurrentIdCardCode { get; init; }
+
+    [JsonPropertyName("profileImageUrl")]
+    public string? ProfileImageUrl { get; init; }
 
     [JsonPropertyName("tags")]
     public IReadOnlyList<TagReference>? Tags { get; init; }
@@ -91,6 +89,33 @@ public sealed record Driver
 
     [JsonPropertyName("updatedAtTime")]
     public DateTimeOffset? UpdatedAtTime { get; init; }
+
+    [JsonPropertyName("attributes")]
+    public System.Text.Json.JsonElement? Attributes { get; init; }
+
+    [JsonPropertyName("eldSettings")]
+    public System.Text.Json.JsonElement? EldSettings { get; init; }
+
+    [JsonPropertyName("hasDrivingFeaturesHidden")]
+    public System.Text.Json.JsonElement? HasDrivingFeaturesHidden { get; init; }
+
+    [JsonPropertyName("hasVehicleUnpinningEnabled")]
+    public System.Text.Json.JsonElement? HasVehicleUnpinningEnabled { get; init; }
+
+    [JsonPropertyName("peerGroupTag")]
+    public System.Text.Json.JsonElement? PeerGroupTag { get; init; }
+
+    [JsonPropertyName("trailerGroupTag")]
+    public System.Text.Json.JsonElement? TrailerGroupTag { get; init; }
+
+    [JsonPropertyName("vehicleGroupTag")]
+    public System.Text.Json.JsonElement? VehicleGroupTag { get; init; }
+
+    [JsonPropertyName("usDriverRulesetOverride")]
+    public System.Text.Json.JsonElement? UsDriverRulesetOverride { get; init; }
+
+    [JsonPropertyName("waitingTimeDutyStatusEnabled")]
+    public bool? WaitingTimeDutyStatusEnabled { get; init; }
 }
 
 /// <summary>
@@ -164,8 +189,8 @@ public sealed record CreateDriverRequest
     [JsonPropertyName("eldDayStartHour")]
     public int? EldDayStartHour { get; init; }
 
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
+    [JsonPropertyName("currentIdCardCode")]
+    public string? CurrentIdCardCode { get; init; }
 
     [JsonPropertyName("tagIds")]
     public IReadOnlyList<string>? TagIds { get; init; }
@@ -184,6 +209,45 @@ public sealed record CreateDriverRequest
 
     [JsonPropertyName("tachographCardNumber")]
     public string? TachographCardNumber { get; init; }
+
+    [JsonPropertyName("staticAssignedVehicleId")]
+    public string? StaticAssignedVehicleId { get; init; }
+
+    [JsonPropertyName("peerGroupTagId")]
+    public string? PeerGroupTagId { get; init; }
+
+    [JsonPropertyName("trailerGroupTagId")]
+    public string? TrailerGroupTagId { get; init; }
+
+    [JsonPropertyName("vehicleGroupTagId")]
+    public string? VehicleGroupTagId { get; init; }
+
+    [JsonPropertyName("waitingTimeDutyStatusEnabled")]
+    public bool? WaitingTimeDutyStatusEnabled { get; init; }
+
+    [JsonPropertyName("attributes")]
+    public System.Text.Json.JsonElement? Attributes { get; init; }
+
+    [JsonPropertyName("carrierSettings")]
+    public System.Text.Json.JsonElement? CarrierSettings { get; init; }
+
+    [JsonPropertyName("hasDrivingFeaturesHidden")]
+    public System.Text.Json.JsonElement? HasDrivingFeaturesHidden { get; init; }
+
+    [JsonPropertyName("hasVehicleUnpinningEnabled")]
+    public System.Text.Json.JsonElement? HasVehicleUnpinningEnabled { get; init; }
+
+    [JsonPropertyName("hosSetting")]
+    public System.Text.Json.JsonElement? HosSetting { get; init; }
+
+    [JsonPropertyName("profileImageBase64")]
+    public System.Text.Json.JsonElement? ProfileImageBase64 { get; init; }
+
+    [JsonPropertyName("profileImageUrl")]
+    public System.Text.Json.JsonElement? ProfileImageUrl { get; init; }
+
+    [JsonPropertyName("usDriverRulesetOverride")]
+    public System.Text.Json.JsonElement? UsDriverRulesetOverride { get; init; }
 }
 
 /// <summary>
@@ -212,6 +276,9 @@ public sealed record UpdateDriverRequest
     [JsonPropertyName("eldBigDayExemptionEnabled")]
     public bool? EldBigDayExemptionEnabled { get; init; }
 
+    [JsonPropertyName("eldAdverseWeatherExemptionEnabled")]
+    public bool? EldAdverseWeatherExemptionEnabled { get; init; }
+
     [JsonPropertyName("eldPcEnabled")]
     public bool? EldPcEnabled { get; init; }
 
@@ -221,11 +288,20 @@ public sealed record UpdateDriverRequest
     [JsonPropertyName("eldDayStartHour")]
     public int? EldDayStartHour { get; init; }
 
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
     [JsonPropertyName("driverActivationStatus")]
     public string? DriverActivationStatus { get; init; }
+
+    [JsonPropertyName("deactivatedAtTime")]
+    public DateTimeOffset? DeactivatedAtTime { get; init; }
+
+    [JsonPropertyName("currentIdCardCode")]
+    public string? CurrentIdCardCode { get; init; }
+
+    [JsonPropertyName("username")]
+    public string? Username { get; init; }
+
+    [JsonPropertyName("password")]
+    public string? Password { get; init; }
 
     [JsonPropertyName("tagIds")]
     public IReadOnlyList<string>? TagIds { get; init; }
@@ -244,6 +320,45 @@ public sealed record UpdateDriverRequest
 
     [JsonPropertyName("tachographCardNumber")]
     public string? TachographCardNumber { get; init; }
+
+    [JsonPropertyName("staticAssignedVehicleId")]
+    public string? StaticAssignedVehicleId { get; init; }
+
+    [JsonPropertyName("peerGroupTagId")]
+    public string? PeerGroupTagId { get; init; }
+
+    [JsonPropertyName("trailerGroupTagId")]
+    public string? TrailerGroupTagId { get; init; }
+
+    [JsonPropertyName("vehicleGroupTagId")]
+    public string? VehicleGroupTagId { get; init; }
+
+    [JsonPropertyName("waitingTimeDutyStatusEnabled")]
+    public bool? WaitingTimeDutyStatusEnabled { get; init; }
+
+    [JsonPropertyName("attributes")]
+    public System.Text.Json.JsonElement? Attributes { get; init; }
+
+    [JsonPropertyName("carrierSettings")]
+    public System.Text.Json.JsonElement? CarrierSettings { get; init; }
+
+    [JsonPropertyName("hasDrivingFeaturesHidden")]
+    public System.Text.Json.JsonElement? HasDrivingFeaturesHidden { get; init; }
+
+    [JsonPropertyName("hasVehicleUnpinningEnabled")]
+    public System.Text.Json.JsonElement? HasVehicleUnpinningEnabled { get; init; }
+
+    [JsonPropertyName("hosSetting")]
+    public System.Text.Json.JsonElement? HosSetting { get; init; }
+
+    [JsonPropertyName("profileImageBase64")]
+    public System.Text.Json.JsonElement? ProfileImageBase64 { get; init; }
+
+    [JsonPropertyName("profileImageUrl")]
+    public System.Text.Json.JsonElement? ProfileImageUrl { get; init; }
+
+    [JsonPropertyName("usDriverRulesetOverride")]
+    public System.Text.Json.JsonElement? UsDriverRulesetOverride { get; init; }
 }
 
 /// <summary>Request body for remotely signing out a driver.</summary>

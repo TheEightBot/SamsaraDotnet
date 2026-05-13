@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Models.Fleet;
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Samsara.Sdk.Models.Common;
 
@@ -8,43 +9,56 @@ public sealed record Asset
 {
     [JsonPropertyName("id")] public required string Id { get; init; }
     [JsonPropertyName("name")] public string? Name { get; init; }
-    [JsonPropertyName("assetType")] public string? AssetType { get; init; }
+    [JsonPropertyName("type")] public string? Type { get; init; }
     [JsonPropertyName("make")] public string? Make { get; init; }
     [JsonPropertyName("model")] public string? Model { get; init; }
     [JsonPropertyName("year")] public int? Year { get; init; }
     [JsonPropertyName("licensePlate")] public string? LicensePlate { get; init; }
-    [JsonPropertyName("serial")] public string? Serial { get; init; }
+    [JsonPropertyName("serialNumber")] public string? SerialNumber { get; init; }
+    [JsonPropertyName("vin")] public string? Vin { get; init; }
     [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
     [JsonPropertyName("tags")] public IReadOnlyList<TagReference>? Tags { get; init; }
     [JsonPropertyName("notes")] public string? Notes { get; init; }
+    [JsonPropertyName("readingsIngestionEnabled")] public bool? ReadingsIngestionEnabled { get; init; }
+    [JsonPropertyName("regulationMode")] public string? RegulationMode { get; init; }
+    [JsonPropertyName("createdAtTime")] public DateTimeOffset? CreatedAtTime { get; init; }
+    [JsonPropertyName("updatedAtTime")] public DateTimeOffset? UpdatedAtTime { get; init; }
 }
 
 /// <summary>Request body for creating an asset.</summary>
 public sealed record CreateAssetRequest
 {
     [JsonPropertyName("name")] public required string Name { get; init; }
-    [JsonPropertyName("assetType")] public string? AssetType { get; init; }
+    [JsonPropertyName("type")] public string? Type { get; init; }
     [JsonPropertyName("make")] public string? Make { get; init; }
     [JsonPropertyName("model")] public string? Model { get; init; }
     [JsonPropertyName("year")] public int? Year { get; init; }
     [JsonPropertyName("licensePlate")] public string? LicensePlate { get; init; }
+    [JsonPropertyName("serialNumber")] public string? SerialNumber { get; init; }
+    [JsonPropertyName("vin")] public string? Vin { get; init; }
     [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
     [JsonPropertyName("tagIds")] public IReadOnlyList<string>? TagIds { get; init; }
     [JsonPropertyName("notes")] public string? Notes { get; init; }
+    [JsonPropertyName("readingsIngestionEnabled")] public bool? ReadingsIngestionEnabled { get; init; }
+    [JsonPropertyName("regulationMode")] public string? RegulationMode { get; init; }
+    [JsonPropertyName("attributes")] public IReadOnlyList<System.Text.Json.JsonElement>? Attributes { get; init; }
 }
 
 /// <summary>Request body for updating an asset.</summary>
 public sealed record UpdateAssetRequest
 {
-    [JsonPropertyName("id")] public required string Id { get; init; }
     [JsonPropertyName("name")] public string? Name { get; init; }
+    [JsonPropertyName("type")] public string? Type { get; init; }
     [JsonPropertyName("make")] public string? Make { get; init; }
     [JsonPropertyName("model")] public string? Model { get; init; }
     [JsonPropertyName("year")] public int? Year { get; init; }
     [JsonPropertyName("licensePlate")] public string? LicensePlate { get; init; }
+    [JsonPropertyName("serialNumber")] public string? SerialNumber { get; init; }
+    [JsonPropertyName("vin")] public string? Vin { get; init; }
     [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
-    [JsonPropertyName("tagIds")] public IReadOnlyList<string>? TagIds { get; init; }
     [JsonPropertyName("notes")] public string? Notes { get; init; }
+    [JsonPropertyName("readingsIngestionEnabled")] public bool? ReadingsIngestionEnabled { get; init; }
+    [JsonPropertyName("regulationMode")] public string? RegulationMode { get; init; }
 }
 
 /// <summary>Request body for deleting assets.</summary>

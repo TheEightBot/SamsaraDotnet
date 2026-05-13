@@ -92,10 +92,13 @@ public sealed record CreateUserRequest
     public required string Email { get; init; }
 
     [JsonPropertyName("authType")]
-    public required string AuthType { get; init; }
+    public string? AuthType { get; init; }
 
     [JsonPropertyName("roles")]
     public IReadOnlyList<UserRole>? Roles { get; init; }
+
+    [JsonPropertyName("expireAt")]
+    public DateTimeOffset? ExpireAt { get; init; }
 }
 
 /// <summary>
@@ -108,4 +111,10 @@ public sealed record UpdateUserRequest
 
     [JsonPropertyName("roles")]
     public IReadOnlyList<UserRole>? Roles { get; init; }
+
+    [JsonPropertyName("authType")]
+    public string? AuthType { get; init; }
+
+    [JsonPropertyName("expireAt")]
+    public DateTimeOffset? ExpireAt { get; init; }
 }

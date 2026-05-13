@@ -67,6 +67,18 @@ public sealed record CreateTagRequest
 
     [JsonPropertyName("vehicles")]
     public IReadOnlyList<TaggedResourceId>? Vehicles { get; init; }
+
+    [JsonPropertyName("assets")]
+    public IReadOnlyList<TaggedResourceId>? Assets { get; init; }
+
+    [JsonPropertyName("machines")]
+    public IReadOnlyList<TaggedResourceId>? Machines { get; init; }
+
+    [JsonPropertyName("sensors")]
+    public IReadOnlyList<TaggedResourceId>? Sensors { get; init; }
+
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
 
 /// <summary>
@@ -88,6 +100,15 @@ public sealed record UpdateTagRequest
 
     [JsonPropertyName("vehicles")]
     public IReadOnlyList<TaggedResourceId>? Vehicles { get; init; }
+
+    [JsonPropertyName("assets")]
+    public IReadOnlyList<TaggedResourceId>? Assets { get; init; }
+
+    [JsonPropertyName("machines")]
+    public IReadOnlyList<TaggedResourceId>? Machines { get; init; }
+
+    [JsonPropertyName("sensors")]
+    public IReadOnlyList<TaggedResourceId>? Sensors { get; init; }
 }
 
 /// <summary>
