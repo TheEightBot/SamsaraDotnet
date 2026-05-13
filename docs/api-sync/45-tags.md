@@ -93,14 +93,17 @@
 
 See `src/Samsara.Sdk/Models/Tags/TagModels.cs` for model definitions used by this domain.
 
-- [ ] All request models defined as `record` types
-- [ ] All response models defined as `record` types
+- [x] All request models defined as `record` types
+- [x] All response models defined as `record` types
 - [ ] All models have XML documentation
 - [ ] All enum values covered
-- [ ] Nullable reference types used correctly
+- [x] Nullable reference types used correctly
 
 ---
 
 ## Notes
 
-_Add any implementation notes, breaking changes, or special considerations here._
+**Model audit (2025-05-13):** Tag request models were missing asset, machine, and sensor membership fields.
+
+- `CreateTagRequest`: added `assets`, `machines`, `sensors`, `externalIds`.
+- `UpdateTagRequest`: added `assets`, `machines`, `sensors`.

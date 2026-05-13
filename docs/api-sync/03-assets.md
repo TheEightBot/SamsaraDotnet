@@ -117,16 +117,20 @@
 
 ## Models
 
-See `src/Samsara.Sdk/Models/Assets/AssetModels.cs` for model definitions used by this domain.
+See `src/Samsara.Sdk/Models/Fleet/AssetModels.cs` for model definitions used by this domain.
 
-- [ ] All request models defined as `record` types
-- [ ] All response models defined as `record` types
+- [x] All request models defined as `record` types
+- [x] All response models defined as `record` types
 - [ ] All models have XML documentation
 - [ ] All enum values covered
-- [ ] Nullable reference types used correctly
+- [x] Nullable reference types used correctly
 
 ---
 
 ## Notes
 
-_Add any implementation notes, breaking changes, or special considerations here._
+**Model audit (2025-05-13):** Field name corrections applied.
+
+- `Asset` response: fixed JSON property name `assetType` → `type`; added `vin`, `readingsIngestionEnabled`, `regulationMode`, `createdAtTime`, `updatedAtTime`, `serialNumber`.
+- `CreateAssetRequest`: renamed `assetType` → `type`; added `serialNumber`, `vin`, `readingsIngestionEnabled`, `regulationMode`, `attributes`.
+- `UpdateAssetRequest`: removed `id` (goes in URL path, not body) and `tagIds` (not in update body); added `type`, `serialNumber`, `vin`, `readingsIngestionEnabled`, `regulationMode`.

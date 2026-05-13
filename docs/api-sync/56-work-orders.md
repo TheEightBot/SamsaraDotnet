@@ -102,16 +102,18 @@
 
 ## Models
 
-See `src/Samsara.Sdk/Models/Maintenance/MaintenanceModels.cs` for model definitions used by this domain.
+See `src/Samsara.Sdk/Models/Maintenance/WorkOrderModels.cs` for model definitions used by this domain.
 
-- [ ] All request models defined as `record` types
-- [ ] All response models defined as `record` types
+- [x] All request models defined as `record` types
+- [x] All response models defined as `record` types
 - [ ] All models have XML documentation
 - [ ] All enum values covered
-- [ ] Nullable reference types used correctly
+- [x] Nullable reference types used correctly
 
 ---
 
 ## Notes
 
-_Add any implementation notes, breaking changes, or special considerations here._
+**Model audit (2025-05-13):** All three Work Order models were rebuilt from scratch with correct API fields.
+
+- `WorkOrder`, `CreateWorkOrderRequest`, `UpdateWorkOrderRequest`: all replaced with correct schema fields including `assetId` (required on create), `serviceTaskInstances`, `items`, `discount`, `tax`, `assignedUserIds`, `dueDate`, `notes`, `status`, and related fields. Previous implementation did not match the API schema.

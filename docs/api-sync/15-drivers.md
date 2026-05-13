@@ -79,14 +79,18 @@
 
 See `src/Samsara.Sdk/Models/Drivers/DriverModels.cs` for model definitions used by this domain.
 
-- [ ] All request models defined as `record` types
-- [ ] All response models defined as `record` types
+- [x] All request models defined as `record` types
+- [x] All response models defined as `record` types
 - [ ] All models have XML documentation
 - [ ] All enum values covered
-- [ ] Nullable reference types used correctly
+- [x] Nullable reference types used correctly
 
 ---
 
 ## Notes
 
-_Add any implementation notes, breaking changes, or special considerations here._
+**Model audit (2025-05-13):** Significant corrections applied to align with v2 API schema.
+
+- `Driver` response: removed fabricated fields (`password`, `status`, `vehicleId`, `currentVehicleId`); added `isDeactivated`, `currentIdCardCode`, `profileImageUrl`, `attributes`, `eldSettings`, `hasDrivingFeaturesHidden`, `hasVehicleUnpinningEnabled`, `peerGroupTag`, `trailerGroupTag`, `vehicleGroupTag`, `usDriverRulesetOverride`, `waitingTimeDutyStatusEnabled`.
+- `CreateDriverRequest`: removed non-existent `vehicleId`; added `staticAssignedVehicleId`, `currentIdCardCode`, `carrierSettings`, `hosSetting`, `usDriverRulesetOverride`, `peerGroupTagId`, `trailerGroupTagId`, `vehicleGroupTagId`, `waitingTimeDutyStatusEnabled`, `attributes`, `hasDrivingFeaturesHidden`, `hasVehicleUnpinningEnabled`, `profileImageBase64`, `profileImageUrl`.
+- `UpdateDriverRequest`: same corrections as CreateDriverRequest; additionally added `deactivatedAtTime`, `username`, `password`.

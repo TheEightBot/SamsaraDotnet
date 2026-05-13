@@ -119,14 +119,22 @@
 
 See `src/Samsara.Sdk/Models/Routes/RouteModels.cs` for model definitions used by this domain.
 
-- [ ] All request models defined as `record` types
-- [ ] All response models defined as `record` types
+- [x] All request models defined as `record` types
+- [x] All response models defined as `record` types
 - [ ] All models have XML documentation
 - [ ] All enum values covered
-- [ ] Nullable reference types used correctly
+- [x] Nullable reference types used correctly
 
 ---
 
 ## Notes
 
-_Add any implementation notes, breaking changes, or special considerations here._
+**Model audit (2025-05-13):** Extensive corrections applied to align with the v2 API schema.
+
+- `CreateRouteRequest`: removed `scheduledStartMs`/`scheduledEndMs` (not in API), made `driverId` optional, added `externalIds`, `recomputeScheduledTimes`, `tagIds`; `stops` is required.
+- `UpdateRouteRequest`: same field corrections as above; added `stops` (was missing entirely).
+- `Route` response: replaced deprecated ms-epoch time fields (`scheduledStartMs`, `scheduledEndMs`, `actualStartMs`, `actualEndMs`) with ISO string equivalents (`scheduledRouteStartTime`, `scheduledRouteEndTime`, `actualRouteStartTime`, `actualRouteEndTime`); added 15+ new response fields.
+- `RouteStop` response: removed `addressId`, `latitude`, `longitude`; added `sequenceNumber`, ontime window fields, `enRouteTime`, `eta`, `skippedTime`, distance metrics, `liveSharingUrl`, `address`, `hubLocationId`, `orders`.
+- `RouteSettings`: added `sequencingMethod`.
+- `CreateRouteStopRequest`: removed `latitude`/`longitude`; added `sequenceNumber`, `ontimeWindowAfterArrivalMs`, `ontimeWindowBeforeArrivalMs`.
+- `UpdateRouteStopRequest`: new class — was missing from the SDK entirely.
