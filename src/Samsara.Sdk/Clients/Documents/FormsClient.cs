@@ -15,4 +15,13 @@ internal sealed class FormsClient : SamsaraServiceClientBase, IFormsClient
 
     public Task<FormSubmission> GetSubmissionAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<FormSubmission>($"fleet/forms/submissions/{Uri.EscapeDataString(id)}", cancellationToken);
+
+    public IAsyncEnumerable<FormSubmission> GetSubmissionsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<FormSubmission>(QueryBuilder.WithTimeRange("form-submissions/stream", startTime, endTime), cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<FormPdfExport> GetPdfExportsAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<FormPdfExport>("form-submissions/pdf-exports", cancellationToken: cancellationToken);
+
+    public Task<FormPdfExport> CreatePdfExportAsync(CreateFormPdfExportRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<FormPdfExport>("form-submissions/pdf-exports", request, cancellationToken);
 }

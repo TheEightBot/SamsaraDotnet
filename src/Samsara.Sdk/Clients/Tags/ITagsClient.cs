@@ -19,6 +19,9 @@ public interface ITagsClient
     /// <summary>Updates a tag.</summary>
     Task<Tag> UpdateAsync(string id, UpdateTagRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>Replaces (full update) a tag.</summary>
+    Task<Tag> ReplaceAsync(string id, CreateTagRequest request, CancellationToken cancellationToken = default);
+
     /// <summary>Deletes a tag.</summary>
     Task DeleteAsync(string id, CancellationToken cancellationToken = default);
 }

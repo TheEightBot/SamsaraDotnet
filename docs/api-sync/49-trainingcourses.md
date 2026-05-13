@@ -1,0 +1,42 @@
+# TrainingCourses — API Sync Checklist
+
+> **API Version**: `2025-10-23`  
+> **Status**: ✅ Complete (1/1 endpoints implemented)  
+> **SDK Client**: `ITrainingClient`  
+> **Implementation**: `src/Samsara.Sdk/Clients/.../TrainingClient.cs`  
+> **Models**: `src/Samsara.Sdk/Models/Training/TrainingModels.cs`  
+
+---
+
+## Endpoints
+
+### ✅ `GET /training-courses`
+**Operation ID**: `getTrainingCourses`  
+**Summary**: Get a list of filtered training courses.  
+**Parameters**: `after`, `courseIds`, `categoryIds`, `status`  
+**Request Body**: No  
+
+- [x] Method defined in `ITrainingClient`
+- [x] Method implemented in `TrainingClient.cs`
+- [x] Request model(s) defined (if applicable)
+- [x] Response model(s) defined
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [ ] Unit/integration test coverage
+
+---
+
+## Models
+
+See `src/Samsara.Sdk/Models/Training/TrainingModels.cs` for model definitions used by this domain.
+
+- [ ] All request models defined as `record` types
+- [ ] All response models defined as `record` types
+- [ ] All models have XML documentation
+- [ ] All enum values covered
+- [ ] Nullable reference types used correctly
+
+---
+
+## Notes
+
+_Add any implementation notes, breaking changes, or special considerations here._

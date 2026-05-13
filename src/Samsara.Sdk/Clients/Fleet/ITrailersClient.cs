@@ -12,4 +12,7 @@ public interface ITrailersClient
     Task<Trailer> CreateAsync(CreateTrailerRequest request, CancellationToken cancellationToken = default);
     Task<Trailer> UpdateAsync(string id, UpdateTrailerRequest request, CancellationToken cancellationToken = default);
     Task DeleteAsync(string id, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TrailerStats> GetStatsSnapshotAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TrailerStats> GetStatsFeedAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TrailerStats> GetStatsHistoryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
 }

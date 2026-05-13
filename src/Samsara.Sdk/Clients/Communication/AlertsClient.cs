@@ -41,4 +41,7 @@ internal sealed class AlertsClient : SamsaraServiceClientBase, IAlertsClient
 
     public Task<AlertIncident> GetIncidentAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<AlertIncident>($"alerts/incidents/{Uri.EscapeDataString(id)}", cancellationToken);
+
+    public IAsyncEnumerable<AlertIncident> GetIncidentsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<AlertIncident>(QueryBuilder.WithTimeRange("alerts/incidents/stream", startTime, endTime), cancellationToken: cancellationToken);
 }

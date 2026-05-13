@@ -43,3 +43,24 @@ public sealed record MediaFile
     [JsonPropertyName("durationMs")]
     public long? DurationMs { get; init; }
 }
+
+/// <summary>Represents a media retrieval job.</summary>
+public sealed record MediaRetrieval
+{
+    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("status")] public string? Status { get; init; }
+    [JsonPropertyName("url")] public string? Url { get; init; }
+    [JsonPropertyName("vehicleId")] public string? VehicleId { get; init; }
+    [JsonPropertyName("cameraId")] public string? CameraId { get; init; }
+    [JsonPropertyName("startTime")] public DateTimeOffset? StartTime { get; init; }
+    [JsonPropertyName("endTime")] public DateTimeOffset? EndTime { get; init; }
+}
+
+/// <summary>Request body for creating a media retrieval job.</summary>
+public sealed record CreateMediaRetrievalRequest
+{
+    [JsonPropertyName("vehicleId")] public required string VehicleId { get; init; }
+    [JsonPropertyName("cameraId")] public required string CameraId { get; init; }
+    [JsonPropertyName("startTime")] public required DateTimeOffset StartTime { get; init; }
+    [JsonPropertyName("endTime")] public required DateTimeOffset EndTime { get; init; }
+}

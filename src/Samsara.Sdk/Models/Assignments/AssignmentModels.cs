@@ -167,3 +167,27 @@ public sealed record UpdateCarrierProposedAssignmentRequest
     [JsonPropertyName("status")]
     public string? Status { get; init; }
 }
+
+/// <summary>Represents a driver-to-trailer assignment.</summary>
+public sealed record DriverTrailerAssignment
+{
+    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
+    [JsonPropertyName("trailerId")] public required string TrailerId { get; init; }
+    [JsonPropertyName("driverName")] public string? DriverName { get; init; }
+    [JsonPropertyName("trailerName")] public string? TrailerName { get; init; }
+    [JsonPropertyName("time")] public DateTimeOffset? Time { get; init; }
+}
+
+/// <summary>Request body for creating a driver-trailer assignment.</summary>
+public sealed record CreateDriverTrailerAssignmentRequest
+{
+    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
+    [JsonPropertyName("trailerId")] public required string TrailerId { get; init; }
+}
+
+/// <summary>Request body for updating a driver-trailer assignment.</summary>
+public sealed record UpdateDriverTrailerAssignmentRequest
+{
+    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
+    [JsonPropertyName("trailerId")] public string? TrailerId { get; init; }
+}

@@ -23,4 +23,10 @@ internal sealed class DocumentsClient : SamsaraServiceClientBase, IDocumentsClie
 
     public IAsyncEnumerable<DocumentType> ListTypesAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<DocumentType>("fleet/document-types", cancellationToken: cancellationToken);
+
+    public Task<DocumentPdfJob> GeneratePdfAsync(GenerateDocumentPdfRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<DocumentPdfJob>("fleet/documents/pdfs", request, cancellationToken);
+
+    public Task<DocumentPdfJob> GetPdfAsync(string id, CancellationToken cancellationToken = default)
+        => HttpClient.GetDataAsync<DocumentPdfJob>($"fleet/documents/pdfs/{Uri.EscapeDataString(id)}", cancellationToken);
 }

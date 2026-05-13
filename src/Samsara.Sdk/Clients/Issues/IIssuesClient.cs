@@ -10,4 +10,5 @@ public interface IIssuesClient
     IAsyncEnumerable<Issue> ListAsync(CancellationToken cancellationToken = default);
     Task<Issue> GetAsync(string id, CancellationToken cancellationToken = default);
     Task<Issue> UpdateAsync(string id, UpdateIssueRequest request, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<Issue> GetStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
 }

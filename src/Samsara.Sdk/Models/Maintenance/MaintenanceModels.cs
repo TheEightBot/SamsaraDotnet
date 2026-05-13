@@ -88,3 +88,50 @@ public sealed record CheckEngineLight
     [JsonPropertyName("protectIsOn")]
     public bool? ProtectIsOn { get; init; }
 }
+
+/// <summary>A defect record from the defects API.</summary>
+public sealed record DefectRecord
+{
+    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("vehicleId")] public string? VehicleId { get; init; }
+    [JsonPropertyName("vehicleName")] public string? VehicleName { get; init; }
+    [JsonPropertyName("driverId")] public string? DriverId { get; init; }
+    [JsonPropertyName("comment")] public string? Comment { get; init; }
+    [JsonPropertyName("defectType")] public string? DefectType { get; init; }
+    [JsonPropertyName("isResolved")] public bool? IsResolved { get; init; }
+    [JsonPropertyName("resolvedAt")] public DateTimeOffset? ResolvedAt { get; init; }
+    [JsonPropertyName("createdAt")] public DateTimeOffset? CreatedAt { get; init; }
+}
+
+/// <summary>Request body for updating a defect.</summary>
+public sealed record UpdateDefectRequest
+{
+    [JsonPropertyName("isResolved")] public bool? IsResolved { get; init; }
+    [JsonPropertyName("comment")] public string? Comment { get; init; }
+    [JsonPropertyName("resolvedAt")] public DateTimeOffset? ResolvedAt { get; init; }
+}
+
+/// <summary>Represents a defect type.</summary>
+public sealed record DefectType
+{
+    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("name")] public string? Name { get; init; }
+    [JsonPropertyName("category")] public string? Category { get; init; }
+}
+
+/// <summary>Request body for creating a DVIR.</summary>
+public sealed record CreateDvirRequest
+{
+    [JsonPropertyName("vehicleId")] public required string VehicleId { get; init; }
+    [JsonPropertyName("inspectorName")] public string? InspectorName { get; init; }
+    [JsonPropertyName("odometer")] public long? Odometer { get; init; }
+    [JsonPropertyName("trailerIds")] public IReadOnlyList<string>? TrailerIds { get; init; }
+    [JsonPropertyName("safeToOperate")] public bool? SafeToOperate { get; init; }
+}
+
+/// <summary>Request body for updating a DVIR.</summary>
+public sealed record UpdateDvirRequest
+{
+    [JsonPropertyName("safeToOperate")] public bool? SafeToOperate { get; init; }
+    [JsonPropertyName("authorizedSignatoryId")] public string? AuthorizedSignatoryId { get; init; }
+}

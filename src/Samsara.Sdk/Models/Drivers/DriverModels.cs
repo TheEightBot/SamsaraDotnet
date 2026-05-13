@@ -245,3 +245,37 @@ public sealed record UpdateDriverRequest
     [JsonPropertyName("tachographCardNumber")]
     public string? TachographCardNumber { get; init; }
 }
+
+/// <summary>Request body for remotely signing out a driver.</summary>
+public sealed record RemoteSignOutRequest
+{
+    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
+}
+
+/// <summary>An authentication token for a driver.</summary>
+public sealed record DriverAuthToken
+{
+    [JsonPropertyName("token")] public required string Token { get; init; }
+    [JsonPropertyName("expiresAt")] public DateTimeOffset? ExpiresAt { get; init; }
+    [JsonPropertyName("driverId")] public string? DriverId { get; init; }
+}
+
+/// <summary>Request body for creating a driver auth token.</summary>
+public sealed record CreateDriverAuthTokenRequest
+{
+    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
+}
+
+/// <summary>Represents a driver QR code.</summary>
+public sealed record DriverQrCode
+{
+    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
+    [JsonPropertyName("qrCodeUrl")] public string? QrCodeUrl { get; init; }
+    [JsonPropertyName("expiresAt")] public DateTimeOffset? ExpiresAt { get; init; }
+}
+
+/// <summary>Request body for creating a driver QR code.</summary>
+public sealed record CreateDriverQrCodeRequest
+{
+    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
+}

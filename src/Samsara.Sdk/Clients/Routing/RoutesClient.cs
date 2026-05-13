@@ -23,4 +23,7 @@ internal sealed class RoutesClient : SamsaraServiceClientBase, IRoutesClient
 
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
+
+    public IAsyncEnumerable<RouteAuditEvent> GetAuditLogFeedAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<RouteAuditEvent>(QueryBuilder.WithTimeRange("routes/audit-log", startTime, endTime), cancellationToken: cancellationToken);
 }

@@ -17,4 +17,7 @@ internal sealed class TripsClient : SamsaraServiceClientBase, ITripsClient
             ("driverId", driverId));
         return PaginateAsync<Trip>(path, cancellationToken: cancellationToken);
     }
+
+    public IAsyncEnumerable<Trip> GetStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<Trip>(QueryBuilder.WithTimeRange("trips/stream", startTime, endTime), cancellationToken: cancellationToken);
 }

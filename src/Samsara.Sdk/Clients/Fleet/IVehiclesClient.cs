@@ -14,4 +14,9 @@ public interface IVehiclesClient
     Task DeleteAsync(string id, CancellationToken cancellationToken = default);
     IAsyncEnumerable<VehicleLocation> ListLocationsAsync(CancellationToken cancellationToken = default);
     IAsyncEnumerable<VehicleStats> ListStatsAsync(string types, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<VehicleLocation> GetLocationsFeedAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<VehicleLocation> GetLocationsHistoryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<VehicleStats> GetStatsFeedAsync(string types, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<VehicleStats> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<SpeedingInterval> GetSpeedingIntervalsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
 }

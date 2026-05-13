@@ -100,3 +100,19 @@ public sealed record FormFieldValue
     [JsonPropertyName("value")]
     public object? Value { get; init; }
 }
+
+/// <summary>Represents a form PDF export job.</summary>
+public sealed record FormPdfExport
+{
+    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("status")] public string? Status { get; init; }
+    [JsonPropertyName("pdfUrl")] public string? PdfUrl { get; init; }
+    [JsonPropertyName("formSubmissionId")] public string? FormSubmissionId { get; init; }
+    [JsonPropertyName("createdAt")] public DateTimeOffset? CreatedAt { get; init; }
+}
+
+/// <summary>Request body for creating a form PDF export.</summary>
+public sealed record CreateFormPdfExportRequest
+{
+    [JsonPropertyName("formSubmissionId")] public required string FormSubmissionId { get; init; }
+}

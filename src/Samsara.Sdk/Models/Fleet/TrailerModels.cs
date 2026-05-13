@@ -109,3 +109,24 @@ public sealed record UpdateTrailerRequest
     [JsonPropertyName("externalIds")]
     public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
+
+/// <summary>Trailer statistics snapshot.</summary>
+public sealed record TrailerStats
+{
+    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("name")] public string? Name { get; init; }
+    [JsonPropertyName("location")] public TrailerLocation? Location { get; init; }
+    [JsonPropertyName("temperature")] public double? Temperature { get; init; }
+    [JsonPropertyName("time")] public DateTimeOffset? Time { get; init; }
+    [JsonPropertyName("engineHours")] public double? EngineHours { get; init; }
+    [JsonPropertyName("odometer")] public double? Odometer { get; init; }
+}
+
+/// <summary>Location info for a trailer.</summary>
+public sealed record TrailerLocation
+{
+    [JsonPropertyName("latitude")] public double? Latitude { get; init; }
+    [JsonPropertyName("longitude")] public double? Longitude { get; init; }
+    [JsonPropertyName("heading")] public double? Heading { get; init; }
+    [JsonPropertyName("speed")] public double? Speed { get; init; }
+}

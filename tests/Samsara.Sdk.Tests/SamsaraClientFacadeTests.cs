@@ -43,6 +43,15 @@ public sealed class SamsaraClientFacadeTests
         var sensors = Substitute.For<ISensorsClient>();
         var issues = Substitute.For<IIssuesClient>();
         var media = Substitute.For<IMediaClient>();
+        var assets = Substitute.For<IAssetsClient>();
+        var carbCtc = Substitute.For<ICarbCtcClient>();
+        var coaching = Substitute.For<ICoachingClient>();
+        var driverTrailerAssignments = Substitute.For<IDriverTrailerAssignmentsClient>();
+        var idling = Substitute.For<IIdlingClient>();
+        var liveSharingLinks = Substitute.For<ILiveSharingLinksClient>();
+        var readings = Substitute.For<IReadingsClient>();
+        var settings = Substitute.For<ISettingsClient>();
+        var workOrders = Substitute.For<IWorkOrdersClient>();
 
         var facade = new SamsaraClient(
             tags, addresses, vehicles, drivers, safety, routes,
@@ -50,7 +59,9 @@ public sealed class SamsaraClientFacadeTests
             organization, users, contacts, equipment, industrial, messages,
             trailers, gateways, userRoles, tachograph, ifta, hubs, trips, forms,
             attributes, driverVehicleAssignments, trailerAssignments,
-            carrierProposedAssignments, training, sensors, issues, media);
+            carrierProposedAssignments, training, sensors, issues, media,
+            assets, carbCtc, coaching, driverTrailerAssignments, idling,
+            liveSharingLinks, readings, settings, workOrders);
 
         facade.Tags.Should().BeSameAs(tags);
         facade.Addresses.Should().BeSameAs(addresses);
@@ -86,5 +97,14 @@ public sealed class SamsaraClientFacadeTests
         facade.Sensors.Should().BeSameAs(sensors);
         facade.Issues.Should().BeSameAs(issues);
         facade.Media.Should().BeSameAs(media);
+        facade.Assets.Should().BeSameAs(assets);
+        facade.CarbCtc.Should().BeSameAs(carbCtc);
+        facade.Coaching.Should().BeSameAs(coaching);
+        facade.DriverTrailerAssignments.Should().BeSameAs(driverTrailerAssignments);
+        facade.Idling.Should().BeSameAs(idling);
+        facade.LiveSharingLinks.Should().BeSameAs(liveSharingLinks);
+        facade.Readings.Should().BeSameAs(readings);
+        facade.Settings.Should().BeSameAs(settings);
+        facade.WorkOrders.Should().BeSameAs(workOrders);
     }
 }

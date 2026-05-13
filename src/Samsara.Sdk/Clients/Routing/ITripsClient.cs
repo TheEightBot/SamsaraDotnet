@@ -8,4 +8,5 @@ using Samsara.Sdk.Models.Routes;
 public interface ITripsClient
 {
     IAsyncEnumerable<Trip> ListAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, string? vehicleId = null, string? driverId = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<Trip> GetStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
 }

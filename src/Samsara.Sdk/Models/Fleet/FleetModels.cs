@@ -386,3 +386,30 @@ public sealed record EquipmentLocation
     [JsonPropertyName("time")]
     public DateTimeOffset? Time { get; init; }
 }
+
+/// <summary>Represents a speeding interval event.</summary>
+public sealed record SpeedingInterval
+{
+    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("vehicleId")] public string? VehicleId { get; init; }
+    [JsonPropertyName("vehicleName")] public string? VehicleName { get; init; }
+    [JsonPropertyName("driverId")] public string? DriverId { get; init; }
+    [JsonPropertyName("driverName")] public string? DriverName { get; init; }
+    [JsonPropertyName("startTime")] public DateTimeOffset? StartTime { get; init; }
+    [JsonPropertyName("endTime")] public DateTimeOffset? EndTime { get; init; }
+    [JsonPropertyName("maxSpeedMph")] public double? MaxSpeedMph { get; init; }
+    [JsonPropertyName("speedLimitMph")] public double? SpeedLimitMph { get; init; }
+    [JsonPropertyName("latitude")] public double? Latitude { get; init; }
+    [JsonPropertyName("longitude")] public double? Longitude { get; init; }
+}
+
+/// <summary>Equipment statistics snapshot.</summary>
+public sealed record EquipmentStats
+{
+    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("name")] public string? Name { get; init; }
+    [JsonPropertyName("engineState")] public EngineState? EngineState { get; init; }
+    [JsonPropertyName("fuelPercent")] public FuelPercent? FuelPercent { get; init; }
+    [JsonPropertyName("obdOdometer")] public ObdOdometer? ObdOdometer { get; init; }
+    [JsonPropertyName("time")] public DateTimeOffset? Time { get; init; }
+}

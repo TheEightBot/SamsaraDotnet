@@ -130,3 +130,18 @@ public sealed record CreateDocumentRequest
     [JsonPropertyName("notes")]
     public string? Notes { get; init; }
 }
+
+/// <summary>Represents a document PDF generation job.</summary>
+public sealed record DocumentPdfJob
+{
+    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("status")] public string? Status { get; init; }
+    [JsonPropertyName("pdfUrl")] public string? PdfUrl { get; init; }
+    [JsonPropertyName("documentId")] public string? DocumentId { get; init; }
+}
+
+/// <summary>Request body for generating a document PDF.</summary>
+public sealed record GenerateDocumentPdfRequest
+{
+    [JsonPropertyName("documentId")] public required string DocumentId { get; init; }
+}

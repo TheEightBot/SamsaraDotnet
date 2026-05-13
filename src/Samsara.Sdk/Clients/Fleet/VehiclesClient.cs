@@ -29,4 +29,19 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
 
     public IAsyncEnumerable<VehicleStats> ListStatsAsync(string types, CancellationToken cancellationToken = default)
         => PaginateAsync<VehicleStats>($"{BasePath}/stats?types={Uri.EscapeDataString(types)}", cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<VehicleLocation> GetLocationsFeedAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleLocation>($"{BasePath}/locations/feed", cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<VehicleLocation> GetLocationsHistoryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleLocation>(QueryBuilder.WithTimeRange($"{BasePath}/locations/history", startTime, endTime), cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<VehicleStats> GetStatsFeedAsync(string types, CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleStats>($"{BasePath}/stats/feed?types={Uri.EscapeDataString(types)}", cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<VehicleStats> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleStats>(QueryBuilder.WithTimeRange($"{BasePath}/stats/history?types={Uri.EscapeDataString(types)}", startTime, endTime), cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<SpeedingInterval> GetSpeedingIntervalsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<SpeedingInterval>(QueryBuilder.WithTimeRange("speeding-intervals/stream", startTime, endTime), cancellationToken: cancellationToken);
 }

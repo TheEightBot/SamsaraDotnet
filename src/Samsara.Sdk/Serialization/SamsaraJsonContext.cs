@@ -198,6 +198,92 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(UpdateIssueRequest))]
 // Media
 [JsonSerializable(typeof(MediaFile))]
+[JsonSerializable(typeof(MediaRetrieval))]
+[JsonSerializable(typeof(CreateMediaRetrievalRequest))]
+// Fleet - Assets
+[JsonSerializable(typeof(Asset))]
+[JsonSerializable(typeof(CreateAssetRequest))]
+[JsonSerializable(typeof(UpdateAssetRequest))]
+[JsonSerializable(typeof(DeleteAssetsRequest))]
+[JsonSerializable(typeof(AssetLocationAndSpeed))]
+[JsonSerializable(typeof(AssetLocation))]
+// Fleet - Idling
+[JsonSerializable(typeof(IdlingEvent))]
+// Fleet - LiveSharing
+[JsonSerializable(typeof(LiveSharingLink))]
+[JsonSerializable(typeof(CreateLiveSharingLinkRequest))]
+[JsonSerializable(typeof(UpdateLiveSharingLinkRequest))]
+// Fleet - Trailers (stats)
+[JsonSerializable(typeof(TrailerStats))]
+[JsonSerializable(typeof(TrailerLocation))]
+// Fleet - Equipment (stats)
+[JsonSerializable(typeof(SpeedingInterval))]
+[JsonSerializable(typeof(EquipmentStats))]
+// Compliance - CARB CTC
+[JsonSerializable(typeof(CarbCtcVehicle))]
+[JsonSerializable(typeof(CarbCtcVehicleHistory))]
+// Compliance - IFTA jobs
+[JsonSerializable(typeof(IftaDetailJob))]
+[JsonSerializable(typeof(CreateIftaDetailJobRequest))]
+// Safety - Coaching
+[JsonSerializable(typeof(DriverCoachAssignment))]
+[JsonSerializable(typeof(SetDriverCoachAssignmentRequest))]
+[JsonSerializable(typeof(CoachingSession))]
+// Assignments - Driver/Trailer
+[JsonSerializable(typeof(DriverTrailerAssignment))]
+[JsonSerializable(typeof(CreateDriverTrailerAssignmentRequest))]
+[JsonSerializable(typeof(UpdateDriverTrailerAssignmentRequest))]
+// Maintenance - DVIRs & Defects
+[JsonSerializable(typeof(DefectRecord))]
+[JsonSerializable(typeof(UpdateDefectRequest))]
+[JsonSerializable(typeof(DefectType))]
+[JsonSerializable(typeof(CreateDvirRequest))]
+[JsonSerializable(typeof(UpdateDvirRequest))]
+// Maintenance - Work Orders
+[JsonSerializable(typeof(WorkOrder))]
+[JsonSerializable(typeof(CreateWorkOrderRequest))]
+[JsonSerializable(typeof(UpdateWorkOrderRequest))]
+[JsonSerializable(typeof(DeleteWorkOrdersRequest))]
+[JsonSerializable(typeof(ServiceTask))]
+[JsonSerializable(typeof(InvoiceScan))]
+[JsonSerializable(typeof(PostInvoiceScanRequest))]
+// Documents - PDF jobs
+[JsonSerializable(typeof(DocumentPdfJob))]
+[JsonSerializable(typeof(GenerateDocumentPdfRequest))]
+// Documents - Form PDF exports
+[JsonSerializable(typeof(FormPdfExport))]
+[JsonSerializable(typeof(CreateFormPdfExportRequest))]
+// Drivers - auth/QR
+[JsonSerializable(typeof(RemoteSignOutRequest))]
+[JsonSerializable(typeof(DriverAuthToken))]
+[JsonSerializable(typeof(CreateDriverAuthTokenRequest))]
+[JsonSerializable(typeof(DriverQrCode))]
+[JsonSerializable(typeof(CreateDriverQrCodeRequest))]
+// Industrial - data input data points
+[JsonSerializable(typeof(DataInputDataPoint))]
+// Industrial - Readings
+[JsonSerializable(typeof(ReadingDefinition))]
+[JsonSerializable(typeof(ReadingHistory))]
+[JsonSerializable(typeof(ReadingSnapshot))]
+// Routes - audit log
+[JsonSerializable(typeof(RouteAuditEvent))]
+// Routes - Hubs extended
+[JsonSerializable(typeof(HubCapacity))]
+[JsonSerializable(typeof(HubCustomProperty))]
+[JsonSerializable(typeof(HubLocation))]
+[JsonSerializable(typeof(CreateHubLocationRequest))]
+[JsonSerializable(typeof(UpdateHubLocationRequest))]
+[JsonSerializable(typeof(HubSkill))]
+[JsonSerializable(typeof(HubPlan))]
+[JsonSerializable(typeof(CreateHubPlanRequest))]
+[JsonSerializable(typeof(HubPlanOrder))]
+[JsonSerializable(typeof(CreateHubPlanOrdersRequest))]
+// Organization - Settings
+[JsonSerializable(typeof(ComplianceSettings))]
+[JsonSerializable(typeof(UpdateComplianceSettingsRequest))]
+[JsonSerializable(typeof(DriverAppSettings))]
+[JsonSerializable(typeof(UpdateDriverAppSettingsRequest))]
+[JsonSerializable(typeof(SafetySettings))]
 internal sealed partial class SamsaraJsonContext : JsonSerializerContext
 {
 }
