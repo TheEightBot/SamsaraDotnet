@@ -12,4 +12,5 @@ public interface IRoutesClient
     Task<Route> CreateAsync(CreateRouteRequest request, CancellationToken cancellationToken = default);
     Task<Route> UpdateAsync(string id, UpdateRouteRequest request, CancellationToken cancellationToken = default);
     Task DeleteAsync(string id, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<RouteAuditEvent> GetAuditLogFeedAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
 }

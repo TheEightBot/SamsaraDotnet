@@ -112,6 +112,20 @@ internal sealed class SamsaraHttpClient
     }
 
     /// <summary>
+    /// Sends a PUT request with a JSON body and deserializes the <c>{ "data": T }</c> response.
+    /// </summary>
+    public async Task<T> PutDataAsync<T>(string path, object body, CancellationToken cancellationToken = default)
+    {
+        var content = JsonContent.Create(body, options: _jsonOptions);
+
+        using var response = await SendAndValidateAsync(HttpMethod.Put, path, content, cancellationToken)
+            .ConfigureAwait(false);
+
+        var wrapper = await DeserializeAsync<SamsaraResponse<T>>(response, cancellationToken).ConfigureAwait(false);
+        return wrapper.Data;
+    }
+
+    /// <summary>
     /// Sends a DELETE request.
     /// </summary>
     public async Task DeleteAsync(string path, CancellationToken cancellationToken = default)

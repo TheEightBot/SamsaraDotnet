@@ -26,4 +26,22 @@ internal sealed class EquipmentClient : SamsaraServiceClientBase, IEquipmentClie
 
     public IAsyncEnumerable<EquipmentLocation> ListLocationsAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<EquipmentLocation>($"{BasePath}/locations", cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<EquipmentLocation> GetLocationsFeedAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<EquipmentLocation>($"{BasePath}/locations/feed", cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<EquipmentLocation> GetLocationsHistoryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<EquipmentLocation>(QueryBuilder.WithTimeRange($"{BasePath}/locations/history", startTime, endTime), cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<EquipmentStats> GetStatsFeedAsync(string? types = null, CancellationToken cancellationToken = default)
+    {
+        var path = types is not null ? $"{BasePath}/stats/feed?types={Uri.EscapeDataString(types)}" : $"{BasePath}/stats/feed";
+        return PaginateAsync<EquipmentStats>(path, cancellationToken: cancellationToken);
+    }
+
+    public IAsyncEnumerable<EquipmentStats> GetStatsHistoryAsync(string? types = null, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+    {
+        var basePath = types is not null ? $"{BasePath}/stats/history?types={Uri.EscapeDataString(types)}" : $"{BasePath}/stats/history";
+        return PaginateAsync<EquipmentStats>(QueryBuilder.WithTimeRange(basePath, startTime, endTime), cancellationToken: cancellationToken);
+    }
 }

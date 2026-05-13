@@ -1,0 +1,183 @@
+name: Samsara API Sync Check
+
+on:
+  schedule:
+    # Every Monday at 08:00 UTC
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+    inputs:
+      update_baseline:
+        description: 'Update baseline after checking (use after implementing changes)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  contents: write   # needed to update baseline cache on main
+  issues: write     # needed to open drift issues
+
+jobs:
+  api-sync-check:
+    name: Check Samsara API for Changes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Use a PAT or the default GITHUB_TOKEN
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run API sync check
+        id: sync_check
+        run: |
+          python3 tools/check-api-sync.py \
+            --baseline .github/cache/samsara-api-baseline.json \
+            --output docs/api-sync/diff-report.md \
+            --fail-on-diff
+        continue-on-error: true
+
+      - name: Capture diff status
+        id: diff_status
+        run: |
+          EXIT_CODE=${{ steps.sync_check.outputs.exit_code || steps.sync_check.outcome == 'failure' && '1' || '0' }}
+          if [ "${{ steps.sync_check.outcome }}" = "failure" ]; then
+            echo "has_diff=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_diff=false" >> $GITHUB_OUTPUT
+          fi
+          # Extract versions from report
+          OLD_VER=$(grep -oP '(?<=Old version\*\*: `)[^`]+' docs/api-sync/diff-report.md || echo "unknown")
+          NEW_VER=$(grep -oP '(?<=New version\*\*: `)[^`]+' docs/api-sync/diff-report.md || echo "unknown")
+          echo "old_version=${OLD_VER}" >> $GITHUB_OUTPUT
+          echo "new_version=${NEW_VER}" >> $GITHUB_OUTPUT
+
+      - name: Upload diff report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-sync-diff-report
+          path: docs/api-sync/diff-report.md
+          retention-days: 90
+
+      - name: Read diff report for issue body
+        if: steps.diff_status.outputs.has_diff == 'true'
+        id: read_report
+        run: |
+          # Truncate to 60k chars (GitHub issue limit is 65536)
+          REPORT=$(head -c 60000 docs/api-sync/diff-report.md)
+          echo "report<<REPORT_DELIMITER" >> $GITHUB_OUTPUT
+          echo "${REPORT}" >> $GITHUB_OUTPUT
+          echo "REPORT_DELIMITER" >> $GITHUB_OUTPUT
+
+      - name: Check for existing open api-sync issue
+        if: steps.diff_status.outputs.has_diff == 'true'
+        id: existing_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'api-sync',
+              state: 'open',
+            });
+            if (issues.data.length > 0) {
+              core.setOutput('issue_number', issues.data[0].number);
+              core.setOutput('exists', 'true');
+            } else {
+              core.setOutput('exists', 'false');
+            }
+
+      - name: Create GitHub Issue for API drift
+        if: steps.diff_status.outputs.has_diff == 'true' && steps.existing_issue.outputs.exists == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const oldVer = '${{ steps.diff_status.outputs.old_version }}';
+            const newVer = '${{ steps.diff_status.outputs.new_version }}';
+            const versionNote = oldVer !== newVer
+              ? `**API version changed**: \`${oldVer}\` → \`${newVer}\``
+              : `**API version**: \`${newVer}\` (no version bump, but content changed)`;
+
+            const body = [
+              '## Samsara API Drift Detected',
+              '',
+              versionNote,
+              '',
+              'The weekly API sync check found differences between the cached baseline and the live Samsara API spec.',
+              'Review the diff report below and implement any necessary changes to the SDK.',
+              '',
+              '### Diff Report',
+              '',
+              '${{ steps.read_report.outputs.report }}',
+              '',
+              '---',
+              '',
+              '### Action Required',
+              '',
+              '1. Review the changes above',
+              '2. Create a branch `feature/api-sync-<new-version>` for the implementation',
+              '3. Update the relevant `docs/api-sync/*.md` checklist files',
+              '4. Implement new/changed endpoints, models, and serialization',
+              '5. Update `CHANGELOG.md`',
+              '6. After merging, update the baseline: `python3 tools/check-api-sync.py --update-baseline`',
+              '',
+              '*This issue was automatically created by the [api-sync-check workflow](.github/workflows/api-sync-check.yml)*',
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[api-sync] Samsara API updated: ${oldVer} → ${newVer}`,
+              body,
+              labels: ['api-sync'],
+            });
+            console.log('Created api-sync issue');
+
+      - name: Update existing issue with new diff
+        if: steps.diff_status.outputs.has_diff == 'true' && steps.existing_issue.outputs.exists == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumber = parseInt('${{ steps.existing_issue.outputs.issue_number }}');
+            const oldVer = '${{ steps.diff_status.outputs.old_version }}';
+            const newVer = '${{ steps.diff_status.outputs.new_version }}';
+            const runDate = new Date().toISOString().split('T')[0];
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: [
+                `## Updated Diff — ${runDate}`,
+                '',
+                '${{ steps.read_report.outputs.report }}',
+              ].join('\n'),
+            });
+            console.log(`Updated existing issue #${issueNumber}`);
+
+      - name: Update baseline if requested
+        if: github.event.inputs.update_baseline == 'true' || (steps.diff_status.outputs.has_diff == 'false')
+        run: |
+          python3 tools/check-api-sync.py \
+            --baseline .github/cache/samsara-api-baseline.json \
+            --output docs/api-sync/diff-report.md \
+            --update-baseline
+
+      - name: Commit updated baseline
+        if: github.event.inputs.update_baseline == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/cache/samsara-api-baseline.json
+          git diff --cached --quiet || git commit -m "chore: update Samsara API baseline to ${{ steps.diff_status.outputs.new_version }}"
+          git push

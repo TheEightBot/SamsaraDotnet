@@ -76,3 +76,13 @@ public sealed record MachineVibration
     [JsonPropertyName("time")]
     public long? Time { get; init; }
 }
+
+/// <summary>A data point for an industrial data input with entity context.</summary>
+public sealed record DataInputDataPoint
+{
+    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("name")] public string? Name { get; init; }
+    [JsonPropertyName("value")] public System.Text.Json.JsonElement? Value { get; init; }
+    [JsonPropertyName("time")] public DateTimeOffset? Time { get; init; }
+    [JsonPropertyName("assetId")] public string? AssetId { get; init; }
+}

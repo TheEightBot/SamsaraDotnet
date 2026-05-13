@@ -102,6 +102,15 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped<ISensorsClient, SensorsClient>();
         services.TryAddScoped<IIssuesClient, IssuesClient>();
         services.TryAddScoped<IMediaClient, MediaClient>();
+        services.TryAddScoped<IAssetsClient, AssetsClient>();
+        services.TryAddScoped<ICarbCtcClient, CarbCtcClient>();
+        services.TryAddScoped<ICoachingClient, CoachingClient>();
+        services.TryAddScoped<IDriverTrailerAssignmentsClient, DriverTrailerAssignmentsClient>();
+        services.TryAddScoped<IIdlingClient, IdlingClient>();
+        services.TryAddScoped<ILiveSharingLinksClient, LiveSharingLinksClient>();
+        services.TryAddScoped<IReadingsClient, ReadingsClient>();
+        services.TryAddScoped<ISettingsClient, SettingsClient>();
+        services.TryAddScoped<IWorkOrdersClient, WorkOrdersClient>();
 
         // Register the aggregate facade
         services.TryAddScoped<ISamsaraClient, SamsaraClient>();

@@ -12,4 +12,10 @@ internal sealed class IftaClient : SamsaraServiceClientBase, IIftaClient
 
     public Task<IReadOnlyList<IftaSummary>> GetSummaryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<IReadOnlyList<IftaSummary>>(QueryBuilder.WithTimeRange("fleet/reports/ifta/summary", startTime, endTime), cancellationToken);
+
+    public Task<IftaDetailJob> CreateDetailJobAsync(CreateIftaDetailJobRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<IftaDetailJob>("fleet/reports/ifta/detail/jobs", request, cancellationToken);
+
+    public Task<IftaDetailJob> GetDetailJobAsync(string id, CancellationToken cancellationToken = default)
+        => HttpClient.GetDataAsync<IftaDetailJob>($"fleet/reports/ifta/detail/jobs/{Uri.EscapeDataString(id)}", cancellationToken);
 }

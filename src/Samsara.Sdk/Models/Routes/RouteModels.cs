@@ -227,3 +227,14 @@ public sealed record UpdateRouteRequest
     [JsonPropertyName("settings")]
     public RouteSettings? Settings { get; init; }
 }
+
+/// <summary>Represents a route audit log event.</summary>
+public sealed record RouteAuditEvent
+{
+    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("routeId")] public string? RouteId { get; init; }
+    [JsonPropertyName("userId")] public string? UserId { get; init; }
+    [JsonPropertyName("eventType")] public string? EventType { get; init; }
+    [JsonPropertyName("time")] public DateTimeOffset? Time { get; init; }
+    [JsonPropertyName("description")] public string? Description { get; init; }
+}

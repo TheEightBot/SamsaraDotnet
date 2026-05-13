@@ -23,4 +23,31 @@ internal sealed class HubsClient : SamsaraServiceClientBase, IHubsClient
 
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
+
+    public IAsyncEnumerable<HubCapacity> ListCapacitiesAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<HubCapacity>("hub/capacities", cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<HubCustomProperty> ListCustomPropertiesAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<HubCustomProperty>("hub/customProperties", cancellationToken: cancellationToken);
+
+    public Task<HubLocation> UpdateLocationAsync(string id, UpdateHubLocationRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<HubLocation>($"hub/location/{Uri.EscapeDataString(id)}", request, cancellationToken);
+
+    public IAsyncEnumerable<HubLocation> ListLocationsAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<HubLocation>("hub/locations", cancellationToken: cancellationToken);
+
+    public Task<HubLocation> CreateLocationAsync(CreateHubLocationRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<HubLocation>("hub/locations", request, cancellationToken);
+
+    public IAsyncEnumerable<HubSkill> ListSkillsAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<HubSkill>("hub/skills", cancellationToken: cancellationToken);
+
+    public Task<HubPlan> CreatePlanAsync(CreateHubPlanRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<HubPlan>("hub/plan", request, cancellationToken);
+
+    public IAsyncEnumerable<HubPlan> ListPlansAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<HubPlan>("hub/plans", cancellationToken: cancellationToken);
+
+    public Task<HubPlanOrder> CreatePlanOrdersAsync(CreateHubPlanOrdersRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<HubPlanOrder>("hub/plan/orders", request, cancellationToken);
 }

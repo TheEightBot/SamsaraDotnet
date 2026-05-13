@@ -12,4 +12,6 @@ public interface IDocumentsClient
     Task<Document> CreateAsync(CreateDocumentRequest request, CancellationToken cancellationToken = default);
     Task DeleteAsync(string id, CancellationToken cancellationToken = default);
     IAsyncEnumerable<DocumentType> ListTypesAsync(CancellationToken cancellationToken = default);
+    Task<DocumentPdfJob> GeneratePdfAsync(GenerateDocumentPdfRequest request, CancellationToken cancellationToken = default);
+    Task<DocumentPdfJob> GetPdfAsync(string id, CancellationToken cancellationToken = default);
 }

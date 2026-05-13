@@ -23,4 +23,19 @@ internal sealed class DriversClient : SamsaraServiceClientBase, IDriversClient
 
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
+
+    public async Task RemoteSignOutAsync(RemoteSignOutRequest request, CancellationToken cancellationToken = default)
+        => await HttpClient.PostAsync("fleet/drivers/remote-sign-out", request, cancellationToken).ConfigureAwait(false);
+
+    public Task<DriverAuthToken> CreateAuthTokenAsync(CreateDriverAuthTokenRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<DriverAuthToken>("fleet/drivers/auth-token", request, cancellationToken);
+
+    public IAsyncEnumerable<DriverQrCode> ListQrCodesAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<DriverQrCode>("drivers/qr-codes", cancellationToken: cancellationToken);
+
+    public Task<DriverQrCode> CreateQrCodeAsync(CreateDriverQrCodeRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<DriverQrCode>("drivers/qr-codes", request, cancellationToken);
+
+    public Task DeleteQrCodeAsync(string driverId, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync($"drivers/qr-codes?driverId={Uri.EscapeDataString(driverId)}", cancellationToken);
 }

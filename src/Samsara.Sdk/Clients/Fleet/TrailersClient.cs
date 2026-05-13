@@ -23,4 +23,13 @@ internal sealed class TrailersClient : SamsaraServiceClientBase, ITrailersClient
 
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
+
+    public IAsyncEnumerable<TrailerStats> GetStatsSnapshotAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<TrailerStats>($"{BasePath}/stats", cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<TrailerStats> GetStatsFeedAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<TrailerStats>($"{BasePath}/stats/feed", cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<TrailerStats> GetStatsHistoryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TrailerStats>(QueryBuilder.WithTimeRange($"{BasePath}/stats/history", startTime, endTime), cancellationToken: cancellationToken);
 }

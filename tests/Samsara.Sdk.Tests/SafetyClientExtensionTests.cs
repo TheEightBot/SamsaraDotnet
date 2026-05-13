@@ -24,7 +24,7 @@ public sealed class SafetyClientExtensionTests
         scores.Should().HaveCount(1);
         scores[0].TagId.Should().Be("tag-1");
         scores[0].SafetyScore.Should().Be(88.5);
-        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("fleet/tags/safety/scores");
+        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("safety-scores/tags");
     }
 
     [Fact]
@@ -45,6 +45,6 @@ public sealed class SafetyClientExtensionTests
         scores.Should().HaveCount(1);
         scores[0].TagGroupId.Should().Be("tg-1");
         scores[0].SafetyScore.Should().Be(91.0);
-        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("fleet/tag-groups/safety/scores");
+        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("safety-scores/tag-group");
     }
 }

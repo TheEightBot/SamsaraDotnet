@@ -9,4 +9,6 @@ public interface IIftaClient
 {
     IAsyncEnumerable<IftaDetail> ListDetailsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<IftaSummary>> GetSummaryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    Task<IftaDetailJob> CreateDetailJobAsync(CreateIftaDetailJobRequest request, CancellationToken cancellationToken = default);
+    Task<IftaDetailJob> GetDetailJobAsync(string id, CancellationToken cancellationToken = default);
 }

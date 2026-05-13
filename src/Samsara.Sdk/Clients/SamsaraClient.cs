@@ -36,7 +36,16 @@ internal sealed class SamsaraClient : ISamsaraClient
         ITrainingClient training,
         ISensorsClient sensors,
         IIssuesClient issues,
-        IMediaClient media)
+        IMediaClient media,
+        IAssetsClient assets,
+        ICarbCtcClient carbCtc,
+        ICoachingClient coaching,
+        IDriverTrailerAssignmentsClient driverTrailerAssignments,
+        IIdlingClient idling,
+        ILiveSharingLinksClient liveSharingLinks,
+        IReadingsClient readings,
+        ISettingsClient settings,
+        IWorkOrdersClient workOrders)
     {
         Tags = tags;
         Addresses = addresses;
@@ -72,6 +81,15 @@ internal sealed class SamsaraClient : ISamsaraClient
         Sensors = sensors;
         Issues = issues;
         Media = media;
+        Assets = assets;
+        CarbCtc = carbCtc;
+        Coaching = coaching;
+        DriverTrailerAssignments = driverTrailerAssignments;
+        Idling = idling;
+        LiveSharingLinks = liveSharingLinks;
+        Readings = readings;
+        Settings = settings;
+        WorkOrders = workOrders;
     }
 
     public ITagsClient Tags { get; }
@@ -108,4 +126,13 @@ internal sealed class SamsaraClient : ISamsaraClient
     public ISensorsClient Sensors { get; }
     public IIssuesClient Issues { get; }
     public IMediaClient Media { get; }
+    public IAssetsClient Assets { get; }
+    public ICarbCtcClient CarbCtc { get; }
+    public ICoachingClient Coaching { get; }
+    public IDriverTrailerAssignmentsClient DriverTrailerAssignments { get; }
+    public IIdlingClient Idling { get; }
+    public ILiveSharingLinksClient LiveSharingLinks { get; }
+    public IReadingsClient Readings { get; }
+    public ISettingsClient Settings { get; }
+    public IWorkOrdersClient WorkOrders { get; }
 }

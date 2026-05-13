@@ -39,4 +39,13 @@ public interface ISamsaraClient
     ISensorsClient Sensors { get; }
     IIssuesClient Issues { get; }
     IMediaClient Media { get; }
+    IAssetsClient Assets { get; }
+    ICarbCtcClient CarbCtc { get; }
+    ICoachingClient Coaching { get; }
+    IDriverTrailerAssignmentsClient DriverTrailerAssignments { get; }
+    IIdlingClient Idling { get; }
+    ILiveSharingLinksClient LiveSharingLinks { get; }
+    IReadingsClient Readings { get; }
+    ISettingsClient Settings { get; }
+    IWorkOrdersClient WorkOrders { get; }
 }

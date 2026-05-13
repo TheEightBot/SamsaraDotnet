@@ -13,4 +13,8 @@ public interface IEquipmentClient
     Task<Equipment> UpdateAsync(string id, UpdateEquipmentRequest request, CancellationToken cancellationToken = default);
     Task DeleteAsync(string id, CancellationToken cancellationToken = default);
     IAsyncEnumerable<EquipmentLocation> ListLocationsAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<EquipmentLocation> GetLocationsFeedAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<EquipmentLocation> GetLocationsHistoryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<EquipmentStats> GetStatsFeedAsync(string? types = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<EquipmentStats> GetStatsHistoryAsync(string? types = null, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
 }

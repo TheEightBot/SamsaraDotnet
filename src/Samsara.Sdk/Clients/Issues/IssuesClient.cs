@@ -17,4 +17,7 @@ internal sealed class IssuesClient : SamsaraServiceClientBase, IIssuesClient
 
     public Task<Issue> UpdateAsync(string id, UpdateIssueRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<Issue>($"{BasePath}/{Uri.EscapeDataString(id)}", request, cancellationToken);
+
+    public IAsyncEnumerable<Issue> GetStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<Issue>(QueryBuilder.WithTimeRange("issues/stream", startTime, endTime), cancellationToken: cancellationToken);
 }

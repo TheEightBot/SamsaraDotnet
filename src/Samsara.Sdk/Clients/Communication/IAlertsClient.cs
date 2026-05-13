@@ -18,4 +18,5 @@ public interface IAlertsClient
     Task DeleteConfigurationAsync(string id, CancellationToken cancellationToken = default);
     IAsyncEnumerable<AlertIncident> ListIncidentsAsync(CancellationToken cancellationToken = default);
     Task<AlertIncident> GetIncidentAsync(string id, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<AlertIncident> GetIncidentsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
 }
