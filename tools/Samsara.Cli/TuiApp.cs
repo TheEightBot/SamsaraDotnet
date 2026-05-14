@@ -390,7 +390,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching drivers...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Drivers.ListAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Drivers", d => [d.Id, d.Name, d.Username ?? "", d.Status ?? ""], ["ID", "Name", "Username", "Status"]);
+                            ResultRenderer.RenderList(items, "Drivers", d => [d.Id, d.Name, d.Username ?? "", d.IsDeactivated == true ? "Inactive" : "Active"], ["ID", "Name", "Username", "Status"]);
                         });
                         break;
                     case "Get by ID":
@@ -1008,7 +1008,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching safety events...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Safety.ListEventsAsync(seStart, seEnd, Timeout60s()));
-                            ResultRenderer.RenderList(items, "Safety Events", e => [e.Id, e.BehaviorLabel ?? "", e.Vehicle?.Id ?? ""], ["ID", "Behavior", "Vehicle ID"]);
+                            ResultRenderer.RenderList(items, "Safety Events", e => [e.Id ?? "", string.Join(", ", e.BehaviorLabels ?? []), e.Vehicle?.Id ?? ""], ["ID", "Behavior", "Vehicle ID"]);
                         });
                         break;
                     case "Get Event by ID":
