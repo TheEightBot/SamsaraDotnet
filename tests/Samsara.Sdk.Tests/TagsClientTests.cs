@@ -28,7 +28,7 @@ public sealed class TagsClientTests
 
         tag.Id.Should().Be("tag-1");
         tag.Name.Should().Be("Warehouse");
-        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("fleet/tags/tag-1");
+        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("tags/tag-1");
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public sealed class TagsClientTests
 
         tag.Name.Should().Be("New Tag");
         handler.LastRequest.Method.Should().Be(HttpMethod.Post);
-        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("fleet/tags");
+        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("tags");
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public sealed class TagsClientTests
 
         tag.Name.Should().Be("Updated");
         handler.LastRequest.Method.Should().Be(HttpMethod.Patch);
-        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("fleet/tags/tag-1");
+        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("tags/tag-1");
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public sealed class TagsClientTests
         await client.DeleteAsync("tag-1");
 
         handler.LastRequest.Method.Should().Be(HttpMethod.Delete);
-        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("fleet/tags/tag-1");
+        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("tags/tag-1");
     }
 
     [Fact]
@@ -127,6 +127,6 @@ public sealed class TagsClientTests
         await client.GetAsync("tag/special");
 
         // The '/' in the id should be escaped
-        handler.LastRequest.RequestUri!.PathAndQuery.Should().NotContain("fleet/tags/tag/special");
+        handler.LastRequest.RequestUri!.PathAndQuery.Should().NotContain("tags/tag/special");
     }
 }

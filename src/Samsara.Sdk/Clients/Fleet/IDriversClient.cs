@@ -11,7 +11,6 @@ public interface IDriversClient
     Task<Driver> GetAsync(string id, CancellationToken cancellationToken = default);
     Task<Driver> CreateAsync(CreateDriverRequest request, CancellationToken cancellationToken = default);
     Task<Driver> UpdateAsync(string id, UpdateDriverRequest request, CancellationToken cancellationToken = default);
-    Task DeleteAsync(string id, CancellationToken cancellationToken = default);
     Task RemoteSignOutAsync(RemoteSignOutRequest request, CancellationToken cancellationToken = default);
     Task<DriverAuthToken> CreateAuthTokenAsync(CreateDriverAuthTokenRequest request, CancellationToken cancellationToken = default);
     IAsyncEnumerable<DriverQrCode> ListQrCodesAsync(CancellationToken cancellationToken = default);

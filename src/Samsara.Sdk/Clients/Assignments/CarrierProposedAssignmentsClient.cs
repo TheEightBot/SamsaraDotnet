@@ -15,9 +15,6 @@ internal sealed class CarrierProposedAssignmentsClient : SamsaraServiceClientBas
     public Task<CarrierProposedAssignment> CreateAsync(CreateCarrierProposedAssignmentRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<CarrierProposedAssignment>(BasePath, request, cancellationToken);
 
-    public Task<CarrierProposedAssignment> UpdateAsync(string id, UpdateCarrierProposedAssignmentRequest request, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<CarrierProposedAssignment>($"{BasePath}/{Uri.EscapeDataString(id)}", request, cancellationToken);
-
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
 }

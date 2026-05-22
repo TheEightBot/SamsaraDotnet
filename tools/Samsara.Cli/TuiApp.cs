@@ -330,7 +330,7 @@ internal sealed class TuiApp
     {
         while (true)
         {
-            var op = SubMenu("Gateways", "List All", "Get by ID");
+            var op = SubMenu("Gateways", "List All");
             if (op == "← Back") return;
             try
             {
@@ -341,14 +341,6 @@ internal sealed class TuiApp
                         {
                             var items = await CollectAsync(_client.Gateways.ListAsync(Timeout60s()));
                             ResultRenderer.RenderList(items, "Gateways", g => [g.Id, g.Serial ?? "", g.Model ?? ""], ["ID", "Serial", "Model"]);
-                        });
-                        break;
-                    case "Get by ID":
-                        var id = InputHelper.AskId("Gateway ID");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching gateway...[/]", async _ =>
-                        {
-                            var g = await _client.Gateways.GetAsync(id, Timeout60s());
-                            ResultRenderer.RenderObject(g, $"Gateway {id}");
                         });
                         break;
                 }
@@ -380,7 +372,7 @@ internal sealed class TuiApp
     {
         while (true)
         {
-            var op = SubMenu("Drivers", "List All", "Get by ID", "Create", "Update", "Delete");
+            var op = SubMenu("Drivers", "List All", "Get by ID", "Create", "Update");
             if (op == "← Back") return;
             try
             {
@@ -422,17 +414,6 @@ internal sealed class TuiApp
                                 var d = await _client.Drivers.UpdateAsync(uid, uReq, Timeout60s());
                                 ResultRenderer.RenderObject(d, "Updated Driver");
                             });
-                        }
-                        break;
-                    case "Delete":
-                        var did = InputHelper.AskId("Driver ID to delete");
-                        if (InputHelper.Confirm($"delete driver {did}"))
-                        {
-                            await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Deleting...[/]", async _ =>
-                            {
-                                await _client.Drivers.DeleteAsync(did, Timeout60s());
-                            });
-                            ResultRenderer.RenderSuccess("Driver deleted.");
                         }
                         break;
                 }
@@ -905,7 +886,6 @@ internal sealed class TuiApp
         {
             var sub = SubMenu("Compliance",
                 "HOS Logs", "HOS Violations", "HOS Clocks",
-                "DVIRs (Compliance)", "Get DVIR",
                 "Tachograph Activities", "Tachograph Files",
                 "IFTA Details", "IFTA Summary");
             if (sub == "← Back") return;
@@ -933,24 +913,8 @@ internal sealed class TuiApp
                         var driverId = InputHelper.AskId("Driver ID");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching HOS clocks...[/]", async _ =>
                         {
-                            var clocks = await _client.Compliance.GetHosClocksAsync(driverId, Timeout60s());
+                            var clocks = await _client.Compliance.GetHosClocksAsync(new[] { driverId }, Timeout60s());
                             ResultRenderer.RenderObject(clocks, $"HOS Clocks for {driverId}");
-                        });
-                        break;
-                    case "DVIRs (Compliance)":
-                        var (dvirStart, dvirEnd) = InputHelper.AskTimeRange("DVIRs");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching DVIRs...[/]", async _ =>
-                        {
-                            var items = await CollectAsync(_client.Compliance.ListDvirsAsync(dvirStart, dvirEnd, Timeout60s()));
-                            ResultRenderer.RenderList(items, "DVIRs", d => [d.Id, d.Vehicle?.Id ?? "", d.AuthorSignature?.DriverId ?? ""], ["ID", "Vehicle ID", "Driver ID"]);
-                        });
-                        break;
-                    case "Get DVIR":
-                        var dvirId = InputHelper.AskId("DVIR ID");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching DVIR...[/]", async _ =>
-                        {
-                            var d = await _client.Compliance.GetDvirAsync(dvirId, Timeout60s());
-                            ResultRenderer.RenderObject(d, $"DVIR {dvirId}");
                         });
                         break;
                     case "Tachograph Activities":
@@ -997,7 +961,7 @@ internal sealed class TuiApp
     {
         while (true)
         {
-            var op = SubMenu("Safety", "List Events", "Get Event by ID", "Vehicle Safety Scores", "Driver Safety Scores");
+            var op = SubMenu("Safety", "List Events", "Vehicle Safety Scores", "Driver Safety Scores");
             if (op == "← Back") return;
             try
             {
@@ -1009,14 +973,6 @@ internal sealed class TuiApp
                         {
                             var items = await CollectAsync(_client.Safety.ListEventsAsync(seStart, seEnd, Timeout60s()));
                             ResultRenderer.RenderList(items, "Safety Events", e => [e.Id ?? "", string.Join(", ", e.BehaviorLabels ?? []), e.Vehicle?.Id ?? ""], ["ID", "Behavior", "Vehicle ID"]);
-                        });
-                        break;
-                    case "Get Event by ID":
-                        var id = InputHelper.AskId("Safety Event ID");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching event...[/]", async _ =>
-                        {
-                            var e = await _client.Safety.GetEventAsync(id, Timeout60s());
-                            ResultRenderer.RenderObject(e, $"Safety Event {id}");
                         });
                         break;
                     case "Vehicle Safety Scores":
@@ -1047,17 +1003,17 @@ internal sealed class TuiApp
     {
         while (true)
         {
-            var op = SubMenu("Maintenance", "List DVIRs", "Get DVIR by ID", "List DTCs");
+            var op = SubMenu("Maintenance", "Stream DVIRs", "Get DVIR by ID");
             if (op == "← Back") return;
             try
             {
                 switch (op)
                 {
-                    case "List DVIRs":
+                    case "Stream DVIRs":
                         var (mDvirStart, mDvirEnd) = InputHelper.AskTimeRange("Maintenance DVIRs");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching maintenance DVIRs...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Maintenance.ListDvirsAsync(mDvirStart, mDvirEnd, Timeout60s()));
+                            var items = await CollectAsync(_client.Maintenance.GetDvirsStreamAsync(mDvirStart, mDvirEnd, Timeout60s()));
                             ResultRenderer.RenderList(items, "Maintenance DVIRs", d => [d.Id, d.VehicleId ?? "", d.Defects?.Count.ToString() ?? "0"], ["ID", "Vehicle ID", "Defects"]);
                         });
                         break;
@@ -1065,16 +1021,8 @@ internal sealed class TuiApp
                         var id = InputHelper.AskId("DVIR ID");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching DVIR...[/]", async _ =>
                         {
-                            var d = await _client.Maintenance.GetDvirAsync(id, Timeout60s());
+                            var d = await _client.Maintenance.GetDvirByIdAsync(id, Timeout60s());
                             ResultRenderer.RenderObject(d, $"Maintenance DVIR {id}");
-                        });
-                        break;
-                    case "List DTCs":
-                        var (dtcStart, dtcEnd) = InputHelper.AskTimeRange("DTCs");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching DTCs...[/]", async _ =>
-                        {
-                            var items = await CollectAsync(_client.Maintenance.ListDtcsAsync(dtcStart, dtcEnd, Timeout60s()));
-                            ResultRenderer.RenderList(items, "DTCs", d => [d.DtcId ?? "", d.VehicleId ?? "", d.DtcShortCode ?? ""], ["DTC ID", "Vehicle ID", "Code"]);
                         });
                         break;
                 }
@@ -1624,7 +1572,7 @@ internal sealed class TuiApp
     {
         while (true)
         {
-            var op = SubMenu("Carrier Proposed Assignments", "List All", "Create", "Update", "Delete");
+            var op = SubMenu("Carrier Proposed Assignments", "List All", "Create", "Delete");
             if (op == "← Back") return;
             try
             {
@@ -1645,18 +1593,6 @@ internal sealed class TuiApp
                             {
                                 var a = await _client.CarrierProposedAssignments.CreateAsync(cReq, Timeout60s());
                                 ResultRenderer.RenderObject(a, "Created Carrier Proposed Assignment");
-                            });
-                        }
-                        break;
-                    case "Update":
-                        var uid = InputHelper.AskId("Assignment ID to update");
-                        var uReq = DeserializePrompt<UpdateCarrierProposedAssignmentRequest>("UpdateCarrierProposedAssignmentRequest");
-                        if (uReq != null && InputHelper.Confirm("update carrier proposed assignment"))
-                        {
-                            await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Updating...[/]", async _ =>
-                            {
-                                var a = await _client.CarrierProposedAssignments.UpdateAsync(uid, uReq, Timeout60s());
-                                ResultRenderer.RenderObject(a, "Updated Carrier Proposed Assignment");
                             });
                         }
                         break;
@@ -1760,7 +1696,7 @@ internal sealed class TuiApp
     {
         while (true)
         {
-            var op = SubMenu("Media", "List All", "Get by ID");
+            var op = SubMenu("Media", "List All");
             if (op == "← Back") return;
             try
             {
@@ -1771,14 +1707,6 @@ internal sealed class TuiApp
                         {
                             var items = await CollectAsync(_client.Media.ListAsync(Timeout60s()));
                             ResultRenderer.RenderList(items, "Media Files", m => [m.Id, m.MediaType ?? "", m.VehicleId ?? ""], ["ID", "Type", "Vehicle ID"]);
-                        });
-                        break;
-                    case "Get by ID":
-                        var id = InputHelper.AskId("Media File ID");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching media file...[/]", async _ =>
-                        {
-                            var m = await _client.Media.GetAsync(id, Timeout60s());
-                            ResultRenderer.RenderObject(m, $"Media File {id}");
                         });
                         break;
                 }

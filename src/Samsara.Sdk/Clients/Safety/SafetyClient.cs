@@ -10,9 +10,6 @@ internal sealed class SafetyClient : SamsaraServiceClientBase, ISafetyClient
     public IAsyncEnumerable<SafetyEvent> ListEventsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
         => PaginateAsync<SafetyEvent>(QueryBuilder.WithTimeRange("safety-events", startTime, endTime), cancellationToken: cancellationToken);
 
-    public Task<SafetyEvent> GetEventAsync(string id, CancellationToken cancellationToken = default)
-        => HttpClient.GetDataAsync<SafetyEvent>($"safety-events/{Uri.EscapeDataString(id)}", cancellationToken);
-
     public IAsyncEnumerable<VehicleSafetyScore> ListVehicleSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
         => PaginateAsync<VehicleSafetyScore>(QueryBuilder.WithTimeRange("safety-scores/vehicles", startTime, endTime), cancellationToken: cancellationToken);
 

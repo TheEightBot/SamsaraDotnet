@@ -8,7 +8,6 @@ using Samsara.Sdk.Models.Media;
 public interface IMediaClient
 {
     IAsyncEnumerable<MediaFile> ListAsync(CancellationToken cancellationToken = default);
-    Task<MediaFile> GetAsync(string id, CancellationToken cancellationToken = default);
-    Task<MediaRetrieval> GetRetrievalAsync(string id, CancellationToken cancellationToken = default);
+    Task<MediaRetrieval> GetRetrievalAsync(string retrievalId, CancellationToken cancellationToken = default);
     Task<MediaRetrieval> CreateRetrievalAsync(CreateMediaRetrievalRequest request, CancellationToken cancellationToken = default);
 }

@@ -8,5 +8,4 @@ using Samsara.Sdk.Models.Fleet;
 public interface IGatewaysClient
 {
     IAsyncEnumerable<Gateway> ListAsync(CancellationToken cancellationToken = default);
-    Task<Gateway> GetAsync(string id, CancellationToken cancellationToken = default);
 }

@@ -43,6 +43,6 @@ public sealed class ComplianceClientTests
 
         events.Should().HaveCount(1);
         events[0].Id.Should().Be("eld-1");
-        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("fleet/hos/eld-events");
+        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("beta/fleet/hos/drivers/eld-events");
     }
 }

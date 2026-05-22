@@ -21,9 +21,6 @@ internal sealed class DriversClient : SamsaraServiceClientBase, IDriversClient
     public Task<Driver> UpdateAsync(string id, UpdateDriverRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<Driver>($"{BasePath}/{Uri.EscapeDataString(id)}", request, cancellationToken);
 
-    public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
-        => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
-
     public async Task RemoteSignOutAsync(RemoteSignOutRequest request, CancellationToken cancellationToken = default)
         => await HttpClient.PostAsync("fleet/drivers/remote-sign-out", request, cancellationToken).ConfigureAwait(false);
 

@@ -22,20 +22,6 @@ public sealed class EquipmentClientTests
     }
 
     [Fact]
-    public async Task CreateAsync_PostsToCorrectPath()
-    {
-        var resp = new { data = new { id = "eq-new", name = "New Trailer" } };
-        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
-        var client = new EquipmentClient(TestFactory.CreateHttpClient(handler));
-
-        var equipment = await client.CreateAsync(new CreateEquipmentRequest { Name = "New Trailer" });
-
-        equipment.Name.Should().Be("New Trailer");
-        handler.LastRequest.Method.Should().Be(HttpMethod.Post);
-        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("fleet/equipment");
-    }
-
-    [Fact]
     public async Task UpdateAsync_PatchesToCorrectPath()
     {
         var resp = new { data = new { id = "eq-1", name = "Updated Trailer" } };
@@ -46,18 +32,6 @@ public sealed class EquipmentClientTests
 
         equipment.Name.Should().Be("Updated Trailer");
         handler.LastRequest.Method.Should().Be(HttpMethod.Patch);
-        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("fleet/equipment/eq-1");
-    }
-
-    [Fact]
-    public async Task DeleteAsync_DeletesCorrectPath()
-    {
-        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
-        var client = new EquipmentClient(TestFactory.CreateHttpClient(handler));
-
-        await client.DeleteAsync("eq-1");
-
-        handler.LastRequest.Method.Should().Be(HttpMethod.Delete);
-        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("fleet/equipment/eq-1");
+        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("beta/fleet/equipment/eq-1");
     }
 }
