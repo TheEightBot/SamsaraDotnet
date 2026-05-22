@@ -5,7 +5,7 @@ using Samsara.Sdk.Models.Fleet;
 
 internal sealed class GatewaysClient : SamsaraServiceClientBase, IGatewaysClient
 {
-    private const string BasePath = "fleet/gateways";
+    private const string BasePath = "gateways";
 
     public GatewaysClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 

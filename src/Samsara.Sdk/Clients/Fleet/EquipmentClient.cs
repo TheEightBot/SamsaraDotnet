@@ -19,7 +19,7 @@ internal sealed class EquipmentClient : SamsaraServiceClientBase, IEquipmentClie
         => HttpClient.PostDataAsync<Equipment>(BasePath, request, cancellationToken);
 
     public Task<Equipment> UpdateAsync(string id, UpdateEquipmentRequest request, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<Equipment>($"{BasePath}/{Uri.EscapeDataString(id)}", request, cancellationToken);
+        => HttpClient.PatchDataAsync<Equipment>($"beta/fleet/equipment/{Uri.EscapeDataString(id)}", request, cancellationToken);
 
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);

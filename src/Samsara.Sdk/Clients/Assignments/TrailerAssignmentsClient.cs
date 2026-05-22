@@ -5,7 +5,7 @@ using Samsara.Sdk.Models.Assignments;
 
 internal sealed class TrailerAssignmentsClient : SamsaraServiceClientBase, ITrailerAssignmentsClient
 {
-    private const string BasePath = "fleet/trailer-assignments";
+    private const string BasePath = "v1/fleet/trailers/assignments";
 
     public TrailerAssignmentsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 

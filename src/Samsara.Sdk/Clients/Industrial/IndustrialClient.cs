@@ -11,10 +11,10 @@ internal sealed class IndustrialClient : SamsaraServiceClientBase, IIndustrialCl
         => PaginateAsync<IndustrialAsset>("industrial/assets", cancellationToken: cancellationToken);
 
     public IAsyncEnumerable<DataInput> ListDataInputsAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<DataInput>("industrial/data", cancellationToken: cancellationToken);
+        => PaginateAsync<DataInput>("industrial/data-inputs", cancellationToken: cancellationToken);
 
     public Task<DataInput> GetDataInputAsync(string id, CancellationToken cancellationToken = default)
-        => HttpClient.GetDataAsync<DataInput>($"industrial/data/{Uri.EscapeDataString(id)}", cancellationToken);
+        => HttpClient.GetDataAsync<DataInput>($"industrial/data-inputs?ids={Uri.EscapeDataString(id)}", cancellationToken);
 
     public IAsyncEnumerable<DataInputDataPoint> GetDataInputSnapshotAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<DataInputDataPoint>("industrial/data-inputs/data-points", cancellationToken: cancellationToken);

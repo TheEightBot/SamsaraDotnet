@@ -5,7 +5,7 @@ using Samsara.Sdk.Models.Communication;
 
 internal sealed class MessagesClient : SamsaraServiceClientBase, IMessagesClient
 {
-    private const string BasePath = "fleet/messages";
+    private const string BasePath = "v1/fleet/messages";
 
     public MessagesClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 

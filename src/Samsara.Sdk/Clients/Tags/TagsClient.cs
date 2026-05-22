@@ -8,7 +8,7 @@ using Samsara.Sdk.Models.Tags;
 /// </summary>
 internal sealed class TagsClient : SamsaraServiceClientBase, ITagsClient
 {
-    private const string BasePath = "fleet/tags";
+    private const string BasePath = "tags";
 
     public TagsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 

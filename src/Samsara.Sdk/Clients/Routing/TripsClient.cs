@@ -5,7 +5,7 @@ using Samsara.Sdk.Models.Routes;
 
 internal sealed class TripsClient : SamsaraServiceClientBase, ITripsClient
 {
-    private const string BasePath = "fleet/vehicles/trips";
+    private const string BasePath = "v1/fleet/trips";
 
     public TripsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 

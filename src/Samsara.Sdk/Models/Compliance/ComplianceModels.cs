@@ -168,39 +168,93 @@ public sealed record DvirDefect
 }
 
 /// <summary>
-/// HOS clocks (remaining drive time, etc.) for a driver.
+/// HOS clocks for a single driver — the response item of <c>GET /fleet/hos/clocks</c>.
+/// </summary>
+public sealed record HosClocksForDriver
+{
+    [JsonPropertyName("driver")]
+    public Samsara.Sdk.Models.Common.EntityReference? Driver { get; init; }
+
+    [JsonPropertyName("clocks")]
+    public HosClocks? Clocks { get; init; }
+
+    [JsonPropertyName("currentDutyStatus")]
+    public HosCurrentDutyStatus? CurrentDutyStatus { get; init; }
+
+    [JsonPropertyName("currentVehicle")]
+    public Samsara.Sdk.Models.Common.EntityReference? CurrentVehicle { get; init; }
+
+    [JsonPropertyName("violations")]
+    public HosViolationClocks? Violations { get; init; }
+}
+
+/// <summary>
+/// HOS remaining-duration clocks (break / cycle / drive / shift).
 /// </summary>
 public sealed record HosClocks
 {
-    [JsonPropertyName("driverId")]
-    public required string DriverId { get; init; }
+    [JsonPropertyName("break")]
+    public HosBreakClock? Break { get; init; }
 
-    [JsonPropertyName("timeUntilBreakMs")]
-    public long? TimeUntilBreakMs { get; init; }
+    [JsonPropertyName("cycle")]
+    public HosCycleClock? Cycle { get; init; }
 
-    [JsonPropertyName("drivingTimeMs")]
-    public long? DrivingTimeMs { get; init; }
+    [JsonPropertyName("drive")]
+    public HosDriveClock? Drive { get; init; }
 
-    [JsonPropertyName("dutyTimeMs")]
-    public long? DutyTimeMs { get; init; }
+    [JsonPropertyName("shift")]
+    public HosShiftClock? Shift { get; init; }
+}
 
-    [JsonPropertyName("cycleTimeMs")]
-    public long? CycleTimeMs { get; init; }
+/// <summary>Break clock.</summary>
+public sealed record HosBreakClock
+{
+    [JsonPropertyName("timeUntilBreakDurationMs")]
+    public double? TimeUntilBreakDurationMs { get; init; }
+}
 
-    [JsonPropertyName("shiftDriveTimeMs")]
-    public long? ShiftDriveTimeMs { get; init; }
+/// <summary>Cycle clock.</summary>
+public sealed record HosCycleClock
+{
+    [JsonPropertyName("cycleRemainingDurationMs")]
+    public double? CycleRemainingDurationMs { get; init; }
 
-    [JsonPropertyName("shiftTimeMs")]
-    public long? ShiftTimeMs { get; init; }
+    [JsonPropertyName("cycleStartedAtTime")]
+    public DateTimeOffset? CycleStartedAtTime { get; init; }
 
-    [JsonPropertyName("cycleTimeLeftMs")]
-    public long? CycleTimeLeftMs { get; init; }
+    [JsonPropertyName("cycleTomorrowDurationMs")]
+    public double? CycleTomorrowDurationMs { get; init; }
+}
 
-    [JsonPropertyName("shiftDriveTimeLeftMs")]
-    public long? ShiftDriveTimeLeftMs { get; init; }
+/// <summary>Drive clock.</summary>
+public sealed record HosDriveClock
+{
+    [JsonPropertyName("driveRemainingDurationMs")]
+    public double? DriveRemainingDurationMs { get; init; }
+}
 
-    [JsonPropertyName("shiftTimeLeftMs")]
-    public long? ShiftTimeLeftMs { get; init; }
+/// <summary>Shift clock.</summary>
+public sealed record HosShiftClock
+{
+    [JsonPropertyName("shiftRemainingDurationMs")]
+    public double? ShiftRemainingDurationMs { get; init; }
+}
+
+/// <summary>Current duty status for an HOS clock entry.</summary>
+public sealed record HosCurrentDutyStatus
+{
+    [JsonPropertyName("hosStatusType")]
+    public string? HosStatusType { get; init; }
+}
+
+/// <summary>Active HOS violation durations.</summary>
+public sealed record HosViolationClocks
+{
+    [JsonPropertyName("cycleViolationDurationMs")]
+    public double? CycleViolationDurationMs { get; init; }
+
+    [JsonPropertyName("shiftDrivingViolationDurationMs")]
+    public double? ShiftDrivingViolationDurationMs { get; init; }
 }
 
 /// <summary>
