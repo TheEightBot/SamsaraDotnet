@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Endpoint path corrections (API sync)** — fixed wrong URL paths that returned 404:
+  Tags `/fleet/tags`→`/tags`; Messages→`/v1/fleet/messages`; Forms→`/form-templates`,
+  `/form-submissions`; Tachograph +`/history`; Training→`/training-assignments/stream`,
+  `/training-courses`; Trailer Assignments→`/v1/fleet/trailers/assignments`; Routes audit
+  log→`/fleet/routes/audit-logs/feed`; Industrial→`/industrial/data-inputs`; Gateways→
+  `/gateways`; Trips list→`/v1/fleet/trips`; Maintenance DVIR/defect paths→`/dvirs/*`,
+  `/defects/*`, `/defect-types`; Compliance ELD events→`/beta/fleet/hos/drivers/eld-events`;
+  Equipment update→`/beta/fleet/equipment/{id}`; Media→`/cameras/media` + `/cameras/media/retrieval`.
+- **`IComplianceClient.GetHosClocksAsync`** — now takes `IReadOnlyList<string> driverIds` and
+  returns `IReadOnlyList<HosClocksForDriver>` (was single driver / flat `HosClocks`); path
+  corrected to `/fleet/hos/clocks`. `HosClocks` is now the nested break/cycle/drive/shift object.
+
+### Removed
+
+- **Fabricated operations** that have no Samsara API endpoint (breaking; all previously 404'd):
+  `Drivers.DeleteAsync`, `Vehicles.CreateAsync`/`DeleteAsync`, `Equipment.CreateAsync`/`DeleteAsync`,
+  `CarrierProposedAssignments.UpdateAsync`, `Gateways.GetAsync` (no get-by-id),
+  `Safety.GetEventAsync` (no get-by-id), `Media.GetAsync` (no get-by-id),
+  `Maintenance.ListDtcsAsync`. Duplicate DVIR methods removed from `IComplianceClient`
+  (DVIRs live on `IMaintenanceClient`).
+
 ### Added
 
 - **API sync documentation** — `docs/api-sync/` folder with 56 per-domain Markdown checklists
