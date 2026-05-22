@@ -75,6 +75,24 @@ jobs:
           flags: unittests
           fail_ci_if_error: false
 
+  sdk-sync:
+    name: SDK ↔ Spec endpoint check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify every SDK endpoint exists in the live spec
+        run: python3 tools/check-sdk-sync.py --fail-on-mismatch
+
   pack-check:
     name: NuGet Pack (dry-run)
     runs-on: ubuntu-latest
