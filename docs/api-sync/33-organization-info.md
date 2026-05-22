@@ -1,7 +1,8 @@
 # Organization Info — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (1/1 endpoints implemented)  
+> **Status**: ✅ Complete (1/1)  
+> **⚠️ 2026-05-21 audit**: model — `OrganizationInfo` has extra `address/city/state/zip/country` not in the spec. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IOrganizationClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../OrganizationClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Organization/OrganizationModels.cs`  

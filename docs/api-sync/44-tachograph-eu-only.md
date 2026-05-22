@@ -1,7 +1,8 @@
 # Tachograph (EU Only) — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (3/3 endpoints implemented)  
+> **Status**: 🔴 Broken (0/3)  
+> **⚠️ 2026-05-21 audit**: missing `/history` suffix (`/fleet/drivers/tachograph-{activity,files}/history`); add vehicle tachograph files; response is wrapped `{driver, activity[]}`. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `ITachographClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../TachographClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Compliance/TachographModels.cs`  

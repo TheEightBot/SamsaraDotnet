@@ -113,7 +113,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`WorkOrder`** / **`CreateWorkOrderRequest`** / **`UpdateWorkOrderRequest`** — completely rebuilt
   all three with correct API fields (`assetId`, `serviceTaskInstances`, `items`, `discount`, `tax`, etc.)
 
+### Documentation
 
+- **Full SDK-vs-spec audit (2026-05-21)** — added `docs/api-sync/full-sync-review-2026-05-21.md`,
+  a mechanical comparison of every wired SDK endpoint and model against the live OpenAPI spec.
+  Key finding: roughly **1 in 3 wired endpoints does not match the spec** (wrong URL path or
+  fabricated operation). Domains previously marked "Complete" — **Tags, Gateways, Media,
+  Messages, Sensors, Tachograph, Fuel and Energy, Training** — are mis-pathed and return 404.
+  Corrected the status table in `docs/api-sync/README.md` and added a per-domain audit banner to
+  33 checklist files. **No SDK runtime code has been changed yet** — fixes are pending review.
+- **Correction to the `SafetyEvent` note above** — the SDK's `SafetyEvent` targets the v2
+  endpoint (`getSafetyEventsV2`), whose schema *does* include `location` and
+  `maxAccelerationGForce` (these are not "v1-only" as the note implies). The current model is a
+  minimal v2 stub also missing `asset`, `eventState`, `media`, object-typed `behaviorLabels`, and
+  timestamps — see the full review, Part 2.
 
 ## [0.1.0] - 2025-04-06
 

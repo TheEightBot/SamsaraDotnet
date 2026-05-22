@@ -1,7 +1,8 @@
 # Hours of Service — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (4/6 endpoints implemented)  
+> **Status**: 🟡 Partial (3/6)  
+> **⚠️ 2026-05-21 audit**: `GetHosClocks`→`/fleet/hos/clocks` (driverIds query; returns a per-driver list, nested clocks); `ListHosEldEvents`→`/beta/fleet/hos/drivers/eld-events`. Missing v1 duty_status + auth-logs. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IComplianceClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../ComplianceClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Compliance/ComplianceModels.cs`  

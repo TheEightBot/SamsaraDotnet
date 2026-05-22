@@ -1,7 +1,8 @@
 # Driver-Vehicle Assignments — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (4/4 endpoints implemented)  
+> **Status**: 🔴 Broken (2/4)  
+> **⚠️ 2026-05-21 audit**: `UpdateAsync`/`DeleteAsync` put the id in the path; spec uses `/fleet/driver-vehicle-assignments` (id in query/body). GET list + DELETE ops missing. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IDriverVehicleAssignmentsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../DriverVehicleAssignmentsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Assignments/AssignmentModels.cs`  

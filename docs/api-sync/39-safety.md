@@ -1,7 +1,8 @@
 # Safety — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ❌ Not Started (0/4 endpoints implemented)  
+> **Status**: 🟡 Partial (2/4)  
+> **⚠️ 2026-05-21 audit**: `GetEventAsync` by-id is fabricated. `SafetyEvent` is a v2 stub — real schema `SafetyEventV2ObjectResponseBody` (asset not vehicle, object `behaviorLabels`, `eventState`, `location`, `maxAccelerationGForce`, `media`…). See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `ISafetyClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../SafetyClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Safety/SafetyModels.cs`  

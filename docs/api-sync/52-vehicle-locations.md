@@ -1,7 +1,8 @@
 # Vehicle Locations — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (1/3 endpoints implemented)  
+> **Status**: ✅ Complete (3/3)  
+> **⚠️ 2026-05-21 audit**: model — `VehicleLocation` missing `reverseGeo`; `latitude`/`longitude`/`time` should be required. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IVehiclesClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../VehiclesClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Fleet/FleetModels.cs`  

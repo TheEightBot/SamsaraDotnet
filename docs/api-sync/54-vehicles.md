@@ -1,7 +1,8 @@
 # Vehicles — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (3/3 endpoints implemented)  
+> **Status**: ✅ Complete (3/3 endpoints match the spec)  
+> **⚠️ 2026-05-21 audit**: `CreateAsync`/`DeleteAsync` are fabricated (no create/delete vehicle). `Vehicle` model missing ~17 fields (`attributes`, `vehicleType`, `esn`, `auxInputType3..13`, …). See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IVehiclesClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../VehiclesClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Fleet/FleetModels.cs`  

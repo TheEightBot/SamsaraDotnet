@@ -1,7 +1,8 @@
 # Trips — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (1/2 endpoints implemented)  
+> **Status**: 🟡 Partial (1/2)  
+> **⚠️ 2026-05-21 audit**: `ListAsync` hits `/fleet/vehicles/trips` (not in spec)→`/v1/fleet/trips`; `GetStreamAsync` (`/trips/stream`) is correct. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `ITripsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../TripsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Routes/TripModels.cs`  

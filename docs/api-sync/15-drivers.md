@@ -1,7 +1,8 @@
 # Drivers — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (4/5 endpoints implemented)  
+> **Status**: ✅ Complete (5/5 endpoints match the spec)  
+> **⚠️ 2026-05-21 audit**: `DeleteAsync` is fabricated (no `deleteDriver`; deactivate via PATCH `driverActivationStatus`). `CreateDriverRequest.username` should be required. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IDriversClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../DriversClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Drivers/DriverModels.cs`  

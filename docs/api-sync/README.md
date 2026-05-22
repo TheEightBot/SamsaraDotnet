@@ -6,74 +6,85 @@ This folder contains a checklist per API domain for tracking the sync state betw
 
 ## Current Status
 
-> **API Version**: `2025-10-23`  
-> **Last Sync**: 2026-05-13  
-> **Overall Progress**: 113 / 307 endpoints implemented (37%)
+> **⚠️ 2026-05-21 full-spec audit**: a mechanical SDK-vs-spec comparison found that the
+> statuses below were filled by *intent*, not verified against live URL paths. Roughly **1 in
+> 3 wired endpoints does not match the spec** (wrong path or fabricated). The table below has
+> been corrected; see **[full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md)** for
+> the authoritative findings and proposed changes. Per-endpoint checkboxes in the individual
+> files are *not* yet updated — they will be reconciled as fixes land.
 
-| # | Domain | Status | Implemented |
-|---|--------|--------|-------------|
-| 01 | [Addresses](01-addresses.md) | ✅ Complete | 5/5 |
-| 02 | [Alerts](02-alerts.md) | ❌ Not Started | 0/5 |
-| 03 | [Assets](03-assets.md) | ⚠️ Unverified | 0/8 |
-| 04 | [Attributes](04-attributes.md) | ✅ Complete | 5/5 |
-| 05 | [Auth Token for Driver](05-auth-token-for-driver.md) | ⚠️ Unverified | 0/1 |
-| 06 | [Beta APIs](06-beta-apis.md) | ⚠️ Unverified | 0/66 |
-| 07 | [CARB CTC](07-carb-ctc.md) | ⚠️ Unverified | 0/2 |
-| 08 | [Carrier Proposed Assignments](08-carrier-proposed-assignments.md) | ✅ Complete | 3/3 |
-| 09 | [Coaching](09-coaching.md) | ⚠️ Unverified | 0/3 |
-| 10 | [Contacts](10-contacts.md) | ✅ Complete | 5/5 |
-| 11 | [Documents](11-documents.md) | 🟡 Partial | 3/7 |
-| 12 | [Driver QR Codes](12-driver-qr-codes.md) | ⚠️ Unverified | 0/3 |
-| 13 | [Driver-Trailer Assignments](13-driver-trailer-assignments.md) | ⚠️ Unverified | 0/3 |
-| 14 | [Driver-Vehicle Assignments](14-driver-vehicle-assignments.md) | ✅ Complete | 4/4 |
-| 15 | [Drivers](15-drivers.md) | 🟡 Partial | 4/5 |
-| 16 | [Equipment](16-equipment.md) | 🟡 Partial | 4/8 |
-| 17 | [Forms](17-forms.md) | 🟡 Partial | 4/7 |
-| 18 | [Fuel and Energy](18-fuel-and-energy.md) | ✅ Complete | 5/5 |
-| 19 | [Gateways](19-gateways.md) | ✅ Complete | 3/3 |
-| 20 | [Hours of Service](20-hours-of-service.md) | 🟡 Partial | 4/6 |
-| 21 | [Hubs](21-hubs.md) | 🟡 Partial | 1/7 |
-| 22 | [IFTA](22-ifta.md) | 🟡 Partial | 2/4 |
-| 23 | [Idling](23-idling.md) | ⚠️ Unverified | 0/1 |
-| 24 | [Industrial](24-industrial.md) | 🟡 Partial | 5/17 |
-| 25 | [Issues](25-issues.md) | 🟡 Partial | 2/3 |
-| 26 | [Legacy](26-legacy.md) | ⚠️ Unverified | 0/1 |
-| 27 | [Legacy APIs](27-legacy-apis.md) | ⚠️ Unverified | 0/8 |
-| 28 | [Live Sharing Links](28-live-sharing-links.md) | ⚠️ Unverified | 0/4 |
-| 29 | [Location and Speed](29-location-and-speed.md) | ⚠️ Unverified | 0/1 |
-| 30 | [Maintenance](30-maintenance.md) | 🟡 Partial | 2/9 |
-| 31 | [Media](31-media.md) | 🟡 Partial | 1/3 |
-| 32 | [Messages](32-messages.md) | ✅ Complete | 2/2 |
-| 33 | [Organization Info](33-organization-info.md) | ✅ Complete | 1/1 |
-| 34 | [Plans](34-plans.md) | ⚠️ Unverified | 0/3 |
-| 35 | [Preview APIs](35-preview-apis.md) | ⚠️ Unverified | 0/4 |
-| 36 | [Readings](36-readings.md) | ⚠️ Unverified | 0/3 |
-| 37 | [Route Events](37-route-events.md) | ⚠️ Unverified | 0/1 |
-| 38 | [Routes](38-routes.md) | 🟡 Partial | 5/8 |
-| 39 | [Safety](39-safety.md) | ❌ Not Started | 0/4 |
-| 40 | [Safety Scores](40-safety-scores.md) | ❌ Not Started | 0/4 |
-| 41 | [Sensors](41-sensors.md) | ✅ Complete | 6/6 |
-| 42 | [Settings](42-settings.md) | ⚠️ Unverified | 0/5 |
-| 43 | [Speeding Intervals](43-speeding-intervals.md) | ⚠️ Unverified | 0/1 |
-| 44 | [Tachograph (EU Only)](44-tachograph-eu-only.md) | ✅ Complete | 3/3 |
-| 45 | [Tags](45-tags.md) | 🟡 Partial | 5/6 |
-| 46 | [Trailer Assignments](46-trailer-assignments.md) | ✅ Complete | 2/2 |
-| 47 | [Trailers](47-trailers.md) | 🟡 Partial | 5/8 |
-| 48 | [Training Assignments](48-trainingassignments.md) | ✅ Complete | 4/4 |
-| 49 | [Training Courses](49-trainingcourses.md) | ✅ Complete | 1/1 |
-| 50 | [Trips](50-trips.md) | 🟡 Partial | 1/2 |
-| 51 | [Users](51-users.md) | ✅ Complete | 6/6 |
-| 52 | [Vehicle Locations](52-vehicle-locations.md) | 🟡 Partial | 1/3 |
-| 53 | [Vehicle Stats](53-vehicle-stats.md) | 🟡 Partial | 1/3 |
-| 54 | [Vehicles](54-vehicles.md) | ✅ Complete | 3/3 |
-| 55 | [Webhooks](55-webhooks.md) | ✅ Complete | 5/5 |
-| 56 | [Work Orders](56-work-orders.md) | ⚠️ Unverified | 0/7 |
+> **API Version**: `2025-10-23`  
+> **Last Sync**: 2026-05-21 (full audit; spec content drifted since the cached baseline — see [full review](full-sync-review-2026-05-21.md) Part 4)  
+> **Overall Progress**: ~142 / 311 operations correctly wired (46%) — the spec has 311 operations (was counted as 307)
+
+> Status/`Matched` columns below are corrected as of the 2026-05-21 audit. `Matched` = SDK
+> endpoints whose verb+path exactly match a spec operation. "Notes" flags wrong-path,
+> fabricated, or model issues; see [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).
+
+| # | Domain | Status | Matched | Notes (2026-05-21 audit) |
+|---|--------|--------|---------|--------------------------|
+| 01 | [Addresses](01-addresses.md) | ✅ Complete | 5/5 | model: `CreateAddressRequest` required fields, missing `contacts` |
+| 02 | [Alerts](02-alerts.md) | 🔴 Broken | 3/5 | top-level `/alerts` CRUD + incidents list/get fabricated; spec is configurations-only |
+| 03 | [Assets](03-assets.md) | 🟡 Partial | 4/8 | missing v1 location/reefer ops; new `includeAttributes` param |
+| 04 | [Attributes](04-attributes.md) | ✅ Complete | 5/5 | model: required `attributeType`/`entityType`, missing `entities`/`unit` |
+| 05 | [Auth Token for Driver](05-auth-token-for-driver.md) | ✅ Complete | 1/1 | — |
+| 06 | [Beta APIs](06-beta-apis.md) | ❌ Not Started | 0/70 | incl. new **Places** domain |
+| 07 | [CARB CTC](07-carb-ctc.md) | ✅ Complete | 2/2 | — |
+| 08 | [Carrier Proposed Assignments](08-carrier-proposed-assignments.md) | 🔴 Broken | 3/3 | `UpdateAsync` fabricated; model flattened vs nested spec shape |
+| 09 | [Coaching](09-coaching.md) | ✅ Complete | 3/3 | — |
+| 10 | [Contacts](10-contacts.md) | 🟡 Partial | 2/5 | model: `Contact` required fields modelled optional |
+| 11 | [Documents](11-documents.md) | ✅ Complete | 7/7 | — |
+| 12 | [Driver QR Codes](12-driver-qr-codes.md) | ✅ Complete | 3/3 | — |
+| 13 | [Driver-Trailer Assignments](13-driver-trailer-assignments.md) | ✅ Complete | 3/3 | — |
+| 14 | [Driver-Vehicle Assignments](14-driver-vehicle-assignments.md) | 🔴 Broken | 2/4 | `Update`/`Delete` put id in path (spec: id in query/body); 2 ops missing |
+| 15 | [Drivers](15-drivers.md) | ✅ Complete | 5/5 | `DeleteAsync` fabricated; `CreateDriverRequest.username` required |
+| 16 | [Equipment](16-equipment.md) | 🟡 Partial | 7/8 | `Create`/`Delete` fabricated; `Update`→`/beta/...`; missing stats snapshot |
+| 17 | [Forms](17-forms.md) | 🟡 Partial | 3/7 | `fleet/forms/*`→`/form-*`; missing POST/PATCH submission |
+| 18 | [Fuel and Energy](18-fuel-and-energy.md) | 🔴 Broken | 0/5 | client hits non-existent `/fleet/vehicles/fuel/*`; needs rework |
+| 19 | [Gateways](19-gateways.md) | 🔴 Broken | 0/3 | `fleet/gateways`→`/gateways`; get-by-id fabricated; missing create/delete |
+| 20 | [Hours of Service](20-hours-of-service.md) | 🟡 Partial | 3/6 | `clocks`/`eld-events` wrong path; missing v1 duty_status/auth-logs |
+| 21 | [Hubs](21-hubs.md) | 🟡 Partial | 6/7 | 1 op missing |
+| 22 | [IFTA](22-ifta.md) | 🔴 Broken | 0/4 | detail/summary not in spec; jobs→`/ifta-detail/csv`; needs rework |
+| 23 | [Idling](23-idling.md) | ✅ Complete | 1/1 | — |
+| 24 | [Industrial](24-industrial.md) | 🟡 Partial | 4/17 | `industrial/data`→`/industrial/data-inputs`; many gaps |
+| 25 | [Issues](25-issues.md) | 🔴 Broken | 2/3 | `Get`/`Update` use `/issues/{id}`; spec is `/issues` (id as query/body) |
+| 26 | [Legacy](26-legacy.md) | ❌ Not Started | 0/1 | — |
+| 27 | [Legacy APIs](27-legacy-apis.md) | ❌ Not Started | 0/8 | — |
+| 28 | [Live Sharing Links](28-live-sharing-links.md) | ✅ Complete | 4/4 | — |
+| 29 | [Location and Speed](29-location-and-speed.md) | ✅ Complete | 1/1 | — |
+| 30 | [Maintenance](30-maintenance.md) | 🔴 Broken | 3/9 | most DVIR/defect paths wrong; DVIRs duplicated w/ Compliance; DTCs fabricated |
+| 31 | [Media](31-media.md) | 🔴 Broken | 0/3 | spec is `/cameras/media`; get-by-id fabricated |
+| 32 | [Messages](32-messages.md) | 🔴 Broken | 0/2 | `fleet/messages`→`/v1/fleet/messages` |
+| 33 | [Organization Info](33-organization-info.md) | ✅ Complete | 1/1 | model: extra address fields not in spec |
+| 34 | [Plans](34-plans.md) | ✅ Complete | 3/3 | — |
+| 35 | [Preview APIs](35-preview-apis.md) | ❌ Not Started | 0/4 | — |
+| 36 | [Readings](36-readings.md) | ✅ Complete | 3/3 | already correct (index previously understated) |
+| 37 | [Route Events](37-route-events.md) | ❌ Not Started | 0/1 | — |
+| 38 | [Routes](38-routes.md) | 🟡 Partial | 5/8 | `GetAuditLog`→`/fleet/routes/audit-logs/feed` |
+| 39 | [Safety](39-safety.md) | 🟡 Partial | 2/4 | `GetEvent` by-id fabricated; `SafetyEvent` model is a v2 stub |
+| 40 | [Safety Scores](40-safety-scores.md) | ✅ Complete | 4/4 | — |
+| 41 | [Sensors](41-sensors.md) | 🔴 Broken | 0/6 | spec sensors are v1 POST endpoints; client mis-pathed; needs rework |
+| 42 | [Settings](42-settings.md) | ✅ Complete | 5/5 | — |
+| 43 | [Speeding Intervals](43-speeding-intervals.md) | ✅ Complete | 1/1 | — |
+| 44 | [Tachograph (EU Only)](44-tachograph-eu-only.md) | 🔴 Broken | 0/3 | missing `/history` suffix; missing vehicle files |
+| 45 | [Tags](45-tags.md) | 🔴 Broken | 0/6 | all use `fleet/tags`; spec is `/tags`; model missing externalIds/parentTag |
+| 46 | [Trailer Assignments](46-trailer-assignments.md) | 🔴 Broken | 0/2 | `fleet/trailer-assignments`→`/v1/fleet/trailers/assignments` |
+| 47 | [Trailers](47-trailers.md) | ✅ Complete | 8/8 | — |
+| 48 | [Training Assignments](48-trainingassignments.md) | 🔴 Broken | 0/4 | `fleet/training/assignments`→`/training-assignments/stream`; 3 ops missing |
+| 49 | [Training Courses](49-trainingcourses.md) | 🔴 Broken | 0/1 | `fleet/training/courses`→`/training-courses` |
+| 50 | [Trips](50-trips.md) | 🟡 Partial | 1/2 | `ListAsync` hits `/fleet/vehicles/trips` (not in spec)→`/v1/fleet/trips` |
+| 51 | [Users](51-users.md) | ✅ Complete | 6/6 | model: required fields modelled optional |
+| 52 | [Vehicle Locations](52-vehicle-locations.md) | ✅ Complete | 3/3 | model: `VehicleLocation` missing `reverseGeo`, required lat/long/time |
+| 53 | [Vehicle Stats](53-vehicle-stats.md) | ✅ Complete | 3/3 | — |
+| 54 | [Vehicles](54-vehicles.md) | ✅ Complete | 3/3 | `Create`/`Delete` fabricated; `Vehicle` model missing ~17 fields |
+| 55 | [Webhooks](55-webhooks.md) | ✅ Complete | 5/5 | — |
+| 56 | [Work Orders](56-work-orders.md) | ✅ Complete | 7/7 | — |
 
 **Legend**:
-- ✅ Complete — all endpoints in this domain are implemented
-- 🟡 Partial — some endpoints are implemented, some are missing
-- ❌ Not Started — client exists but none of the current API endpoints are implemented
-- ⚠️ Unverified — no SDK client exists for this domain yet
+- ✅ Complete — all spec operations in this domain are correctly wired (may still have model drift; see Notes)
+- 🟡 Partial — some operations wired correctly, some missing
+- 🔴 Broken — endpoints are wired but the URL path is wrong or the method is fabricated (runtime 404/405); see full review
+- ❌ Not Started — no current spec endpoints implemented
 
 ---
 

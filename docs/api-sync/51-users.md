@@ -1,7 +1,8 @@
 # Users — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (6/6 endpoints implemented)  
+> **Status**: ✅ Complete (6/6 endpoints match the spec)  
+> **⚠️ 2026-05-21 audit**: model — `User`/`CreateUserRequest` required fields (`name`/`email`/`authType`/`roles`) modelled optional. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IUsersClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../UsersClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Organization/OrganizationModels.cs`  

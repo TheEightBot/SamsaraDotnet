@@ -1,7 +1,8 @@
 # Equipment — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (4/8 endpoints implemented)  
+> **Status**: 🟡 Partial (7/8 wired)  
+> **⚠️ 2026-05-21 audit**: `CreateAsync`/`DeleteAsync` are fabricated; `UpdateAsync`→`/beta/fleet/equipment/{id}`; missing `GET /fleet/equipment/stats` snapshot. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IEquipmentClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../EquipmentClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Fleet/FleetModels.cs`  

@@ -1,7 +1,8 @@
 # Alerts — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ❌ Not Started (0/5 endpoints implemented)  
+> **Status**: 🔴 Broken (3/5 match)  
+> **⚠️ 2026-05-21 audit**: top-level `/alerts` CRUD and `/alerts/incidents{/id}` are fabricated — spec exposes only `/alerts/configurations` (+ `/alerts/incidents/stream`). `UpdateConfiguration` must drop `/{id}`; add `DELETE /alerts/configurations`. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IAlertsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../AlertsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Communication/CommunicationModels.cs`  

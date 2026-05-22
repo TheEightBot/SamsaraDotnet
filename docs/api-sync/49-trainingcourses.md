@@ -1,7 +1,8 @@
 # TrainingCourses — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (1/1 endpoints implemented)  
+> **Status**: 🔴 Broken (0/1)  
+> **⚠️ 2026-05-21 audit**: `fleet/training/courses`→`/training-courses`. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `ITrainingClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../TrainingClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Training/TrainingModels.cs`  

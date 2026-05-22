@@ -1,7 +1,8 @@
 # Forms — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (4/7 endpoints implemented)  
+> **Status**: 🟡 Partial (3/7)  
+> **⚠️ 2026-05-21 audit**: `fleet/forms/templates`→`/form-templates`; `fleet/forms/submissions[/{id}]`→`/form-submissions`. Missing `POST`/`PATCH /form-submissions`. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IFormsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../FormsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Documents/FormModels.cs`  

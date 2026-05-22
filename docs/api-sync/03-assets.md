@@ -1,7 +1,8 @@
 # Assets — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ⚠️ Unverified (0/8 endpoints implemented)  
+> **Status**: 🟡 Partial (4/8)  
+> **⚠️ 2026-05-21 audit**: missing v1 asset location/reefer ops; `GET /assets` gained an optional `includeAttributes` param. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IAssetsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../AssetsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Assets/AssetModels.cs`  

@@ -1,7 +1,8 @@
 # Attributes — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (5/5 endpoints implemented)  
+> **Status**: ✅ Complete (5/5 endpoints match the spec)  
+> **⚠️ 2026-05-21 audit**: model — `CreateAttributeRequest.attributeType` / `UpdateAttributeRequest.entityType` should be required; missing `entities`, `unit`; `AttributeEntity` missing `entityId`/`values`. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IAttributesClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../AttributesClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Tags/AttributeModels.cs`  

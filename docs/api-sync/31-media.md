@@ -1,7 +1,8 @@
 # Media — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (1/3 endpoints implemented)  
+> **Status**: 🔴 Broken (0/3)  
+> **⚠️ 2026-05-21 audit**: spec uses `/cameras/media` and `/cameras/media/retrieval`; `GetAsync` by-id is fabricated. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IMediaClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../MediaClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Media/MediaModels.cs`  

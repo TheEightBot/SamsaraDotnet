@@ -1,7 +1,8 @@
 # Messages — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (2/2 endpoints implemented)  
+> **Status**: 🔴 Broken (0/2)  
+> **⚠️ 2026-05-21 audit**: `fleet/messages`→`/v1/fleet/messages` (`V1getMessages`/`V1createMessages`). See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IMessagesClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../MessagesClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Communication/CommunicationModels.cs`  

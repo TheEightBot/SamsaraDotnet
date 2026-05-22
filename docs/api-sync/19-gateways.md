@@ -1,7 +1,8 @@
 # Gateways — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (3/3 endpoints implemented)  
+> **Status**: 🔴 Broken (0/3)  
+> **⚠️ 2026-05-21 audit**: `fleet/gateways`→`/gateways`; `GetAsync` by-id has no spec op; missing `POST /gateways`, `DELETE /gateways/{id}`. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IGatewaysClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../GatewaysClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Fleet/GatewayModels.cs`  

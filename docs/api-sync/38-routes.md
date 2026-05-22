@@ -1,7 +1,8 @@
 # Routes — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (5/8 endpoints implemented)  
+> **Status**: 🟡 Partial (5/8)  
+> **⚠️ 2026-05-21 audit**: `GetAuditLog`→`/fleet/routes/audit-logs/feed`. 3 ops missing. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IRoutesClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../RoutesClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Routes/RouteModels.cs`  

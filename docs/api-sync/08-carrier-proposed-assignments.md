@@ -1,7 +1,8 @@
 # Carrier Proposed Assignments — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (3/3 endpoints implemented)  
+> **Status**: 🔴 Broken (3/3 ops, 1 fabricated method)  
+> **⚠️ 2026-05-21 audit**: `UpdateAsync` (PATCH /{id}) is fabricated — spec has list/create/delete only. `CarrierProposedAssignment` is flattened vs the nested spec shape (driver/vehicle/trailers/activeTime/shippingDocs). See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `ICarrierProposedAssignmentsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../CarrierProposedAssignmentsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Assignments/AssignmentModels.cs`  

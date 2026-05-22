@@ -1,7 +1,8 @@
 # Tags — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (5/6 endpoints implemented)  
+> **Status**: 🔴 Broken (0/6)  
+> **⚠️ 2026-05-21 audit**: all six methods use `fleet/tags`; spec is `/tags`. `Tag` model missing `externalIds`/`parentTag`. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `ITagsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../TagsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Tags/TagModels.cs`  

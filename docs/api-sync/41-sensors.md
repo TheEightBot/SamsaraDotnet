@@ -1,7 +1,8 @@
 # Sensors — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (6/6 endpoints implemented)  
+> **Status**: 🔴 Broken (0/6)  
+> **⚠️ 2026-05-21 audit**: client targets `/sensors*`; spec sensors are v1 POST endpoints (`/v1/sensors/list|cargo|door|humidity|temperature|history`). Needs rework. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `ISensorsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../SensorsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Industrial/SensorModels.cs`  

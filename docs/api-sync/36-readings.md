@@ -1,7 +1,8 @@
 # Readings — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ⚠️ Unverified (0/3 endpoints implemented)  
+> **Status**: ✅ Complete (3/3 endpoints match the spec)  
+> **⚠️ 2026-05-21 audit**: verified correct against the live spec (the index previously understated this domain). See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IReadingsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../ReadingsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Industrial/ReadingModels.cs`  

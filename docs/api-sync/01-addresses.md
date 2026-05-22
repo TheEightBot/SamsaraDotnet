@@ -1,7 +1,8 @@
 # Addresses — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (5/5 endpoints implemented)  
+> **Status**: ✅ Complete (5/5 endpoints match the spec)  
+> **⚠️ 2026-05-21 audit**: model — `CreateAddressRequest.formattedAddress`/`geofence` should be required; `Address` is missing `contacts`/`createdAtTime` and has an extra `contactIds`. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IAddressesClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../AddressesClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Addresses/AddressModels.cs`  
