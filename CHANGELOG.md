@@ -9,6 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Broken-domain reworks (API sync)** — five domains rebuilt to call the real spec endpoints:
+  - **Issues** — `getIssues` requires the `ids` query parameter (no true get-by-id);
+    `patchIssue` and `postIssue` exist; SDK now takes `ListAsync(IReadOnlyList<string> ids)`,
+    `UpdateAsync(UpdateIssueRequest)` with id in body, `CreateAsync(CreateIssueRequest)`.
+  - **Driver-Vehicle Assignments** — `Update` takes `UpdateDriverVehicleAssignmentRequest`
+    (driverId/vehicleId/startTime in body); `Delete` takes `DeleteDriverVehicleAssignmentsRequest`
+    in the body (DELETE with body); `List` requires `filterBy`.
+  - **Sensors** — rebuilt as the v1 POST API (`/v1/sensors/{list,history,cargo,door,humidity,temperature}`)
+    with proper long-int models and a new `PostAsync<T>` helper for v1's no-envelope responses.
+  - **Fuel** — replaced non-existent `/fleet/vehicles/fuel/*` with `ListVehicleFuelEnergyReports`,
+    `ListDriverFuelEnergyReports`, `GetDriverEfficiencyByDriver/ByVehicle`, and
+    `CreateFuelPurchase` (POST `/fuel-purchase`).
+  - **IFTA** — replaced non-existent detail/summary with `ListJurisdictionReports` and
+    `ListVehicleReports` (year-required); CSV jobs moved to `/ifta-detail/csv` with
+    spec-correct startHour/endHour/vehicleIds/vehicleTagIds/vehicleParentTagIds.
+  - **Alerts** — top-level `/alerts` CRUD removed (not in spec); `UpdateConfiguration` and
+    `DeleteConfiguration` move id to body/query respectively; `GetIncidentsStream` now requires
+    `startTime` and `configurationIds`. `CreateAlertConfigurationRequest` gains required
+    `isEnabled`/`scope`/`triggers`/`actions`.
+  - **Compliance** — `GetHosClocks` now returns `IReadOnlyList<HosClocksForDriver>` with the
+    correct nested `break`/`cycle`/`drive`/`shift` model.
+- **Request-body required fields tightened** (per spec): `CreateDriverRequest.username`,
+  `CreateUserRequest.authType`/`roles`, `CreateAddressRequest.formattedAddress`/`geofence`,
+  `CreateAttributeRequest.attributeType`, `UpdateAttributeRequest.entityType`.
+- **Response models corrected:**
+  - `Tag` — `parentTagId: string` → `parentTag: EntityReference`; added `externalIds`.
+  - `Address` — added `contacts: EntityReference[]` and `createdAtTime` (the v1-style
+    `contactIds: string[]` is not in the spec).
+  - `VehicleLocation` — `latitude`/`longitude`/`time` are now required; added `reverseGeo`.
+  - `Vehicle` — added `auxInputType3..13`, `attributes`, `vehicleType`, `esn`, `cameraSerial`,
+    `grossVehicleWeight`, `sensorConfiguration`, `engineHours`, `odometerMeters`, `gatewaySerial`.
+  - `AttributeEntity` — added `entityId` and `values`.
+
+### Status (as of these changes)
+
+**SDK ↔ spec mismatch count is now 0** — every endpoint the SDK calls exists in the live
+spec (verified via `tools/check-sdk-sync.py` against the 2025-10-23 spec). `dotnet build`
+and the 59-test suite pass. 124 spec operations remain unimplemented (full coverage of the
+Beta/v1 legacy/Plans/Vision/Machines/Ridership/Functions areas is the next phase).
+
 - **Endpoint path corrections (API sync)** — fixed wrong URL paths that returned 404:
   Tags `/fleet/tags`→`/tags`; Messages→`/v1/fleet/messages`; Forms→`/form-templates`,
   `/form-submissions`; Tachograph +`/history`; Training→`/training-assignments/stream`,
