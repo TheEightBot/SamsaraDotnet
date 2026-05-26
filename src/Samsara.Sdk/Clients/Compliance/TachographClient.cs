@@ -12,4 +12,12 @@ internal sealed class TachographClient : SamsaraServiceClientBase, ITachographCl
 
     public IAsyncEnumerable<TachographFile> ListFilesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
         => PaginateAsync<TachographFile>(QueryBuilder.WithTimeRange("fleet/drivers/tachograph-files/history", startTime, endTime), cancellationToken: cancellationToken);
+
+    /// <summary>Vehicle tachograph files history (<c>GET /fleet/vehicles/tachograph-files/history</c>).</summary>
+    public IAsyncEnumerable<TachographFile> ListVehicleFilesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TachographFile>(QueryBuilder.WithTimeRange("fleet/vehicles/tachograph-files/history", startTime, endTime), cancellationToken: cancellationToken);
+
+    /// <summary>Latest tachograph live-data (beta, <c>GET /fleet/tachograph-live-data/latest</c>).</summary>
+    public IAsyncEnumerable<object> ListLiveDataAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<object>("fleet/tachograph-live-data/latest", cancellationToken: cancellationToken);
 }

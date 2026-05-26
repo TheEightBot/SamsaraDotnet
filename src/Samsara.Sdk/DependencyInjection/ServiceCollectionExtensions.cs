@@ -111,6 +111,17 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped<IReadingsClient, ReadingsClient>();
         services.TryAddScoped<ISettingsClient, SettingsClient>();
         services.TryAddScoped<IWorkOrdersClient, WorkOrdersClient>();
+        // New clients for full spec parity (Beta, Legacy APIs, Preview, Route Events).
+        services.TryAddScoped<ILegacyApisClient, LegacyApisClient>();
+        services.TryAddScoped<IPreviewApisClient, PreviewApisClient>();
+        services.TryAddScoped<IRouteEventsClient, RouteEventsClient>();
+        services.TryAddScoped<IPlacesClient, PlacesClient>();
+        services.TryAddScoped<IPreferredStationsClient, PreferredStationsClient>();
+        services.TryAddScoped<IQualificationRecordsClient, QualificationRecordsClient>();
+        services.TryAddScoped<IRidershipClient, RidershipClient>();
+        services.TryAddScoped<IFunctionsClient, FunctionsClient>();
+        services.TryAddScoped<IReportsClient, ReportsClient>();
+        services.TryAddScoped<IBetaClient, BetaClient>();
 
         // Register the aggregate facade
         services.TryAddScoped<ISamsaraClient, SamsaraClient>();

@@ -12,6 +12,30 @@ internal sealed class HubsClient : SamsaraServiceClientBase, IHubsClient
     public IAsyncEnumerable<Hub> ListAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<Hub>(BasePath, cancellationToken: cancellationToken);
 
+    /// <summary>List hubs via the dedicated <c>GET /hubs</c> endpoint (listHubs).</summary>
+    public IAsyncEnumerable<Hub> ListHubsAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<Hub>("hubs", cancellationToken: cancellationToken);
+
+    /// <summary>List hub plan routes (<c>GET /hub/plan/routes</c>).</summary>
+    public IAsyncEnumerable<object> ListPlanRoutesAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<object>("hub/plan/routes", cancellationToken: cancellationToken);
+
+    /// <summary>List hub plan orders (<c>GET /hub/plan/orders</c>).</summary>
+    public IAsyncEnumerable<HubPlanOrder> ListPlanOrdersAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<HubPlanOrder>("hub/plan/orders", cancellationToken: cancellationToken);
+
+    /// <summary>Delete one or more hub plan orders (<c>DELETE /hub/plan/orders</c>).</summary>
+    public Task DeletePlanOrdersAsync(object request, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync("hub/plan/orders", request, cancellationToken);
+
+    /// <summary>List hub route templates (<c>GET /hub/route-templates</c>).</summary>
+    public IAsyncEnumerable<object> ListRouteTemplatesAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<object>("hub/route-templates", cancellationToken: cancellationToken);
+
+    /// <summary>Delete one or more hub route templates (<c>DELETE /hub/route-templates</c>).</summary>
+    public Task DeleteRouteTemplatesAsync(object request, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync("hub/route-templates", request, cancellationToken);
+
     public Task<Hub> GetAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<Hub>($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
 

@@ -16,6 +16,12 @@ internal sealed class FormsClient : SamsaraServiceClientBase, IFormsClient
     public Task<FormSubmission> GetSubmissionAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<FormSubmission>($"form-submissions?id={Uri.EscapeDataString(id)}", cancellationToken);
 
+    public Task<FormSubmission> CreateSubmissionAsync(CreateFormSubmissionRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<FormSubmission>("form-submissions", request, cancellationToken);
+
+    public Task<FormSubmission> UpdateSubmissionAsync(UpdateFormSubmissionRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<FormSubmission>("form-submissions", request, cancellationToken);
+
     public IAsyncEnumerable<FormSubmission> GetSubmissionsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
         => PaginateAsync<FormSubmission>(QueryBuilder.WithTimeRange("form-submissions/stream", startTime, endTime), cancellationToken: cancellationToken);
 

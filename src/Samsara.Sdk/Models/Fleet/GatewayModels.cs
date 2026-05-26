@@ -37,3 +37,9 @@ public sealed record Gateway
     [JsonPropertyName("tags")]
     public IReadOnlyList<Common.TagReference>? Tags { get; init; }
 }
+
+/// <summary>Request body for <c>POST /gateways</c>.</summary>
+public sealed record CreateGatewayRequest
+{
+    [JsonPropertyName("serial")] public required string Serial { get; init; }
+}

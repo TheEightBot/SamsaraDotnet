@@ -45,7 +45,17 @@ internal sealed class SamsaraClient : ISamsaraClient
         ILiveSharingLinksClient liveSharingLinks,
         IReadingsClient readings,
         ISettingsClient settings,
-        IWorkOrdersClient workOrders)
+        IWorkOrdersClient workOrders,
+        ILegacyApisClient legacyApis,
+        IPreviewApisClient previewApis,
+        IRouteEventsClient routeEvents,
+        IPlacesClient places,
+        IPreferredStationsClient preferredStations,
+        IQualificationRecordsClient qualificationRecords,
+        IRidershipClient ridership,
+        IFunctionsClient functions,
+        IReportsClient reports,
+        IBetaClient beta)
     {
         Tags = tags;
         Addresses = addresses;
@@ -90,6 +100,16 @@ internal sealed class SamsaraClient : ISamsaraClient
         Readings = readings;
         Settings = settings;
         WorkOrders = workOrders;
+        LegacyApis = legacyApis;
+        PreviewApis = previewApis;
+        RouteEvents = routeEvents;
+        Places = places;
+        PreferredStations = preferredStations;
+        QualificationRecords = qualificationRecords;
+        Ridership = ridership;
+        Functions = functions;
+        Reports = reports;
+        Beta = beta;
     }
 
     public ITagsClient Tags { get; }
@@ -135,4 +155,14 @@ internal sealed class SamsaraClient : ISamsaraClient
     public IReadingsClient Readings { get; }
     public ISettingsClient Settings { get; }
     public IWorkOrdersClient WorkOrders { get; }
+    public ILegacyApisClient LegacyApis { get; }
+    public IPreviewApisClient PreviewApis { get; }
+    public IRouteEventsClient RouteEvents { get; }
+    public IPlacesClient Places { get; }
+    public IPreferredStationsClient PreferredStations { get; }
+    public IQualificationRecordsClient QualificationRecords { get; }
+    public IRidershipClient Ridership { get; }
+    public IFunctionsClient Functions { get; }
+    public IReportsClient Reports { get; }
+    public IBetaClient Beta { get; }
 }

@@ -11,4 +11,10 @@ internal sealed class GatewaysClient : SamsaraServiceClientBase, IGatewaysClient
 
     public IAsyncEnumerable<Gateway> ListAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<Gateway>(BasePath, cancellationToken: cancellationToken);
+
+    public Task<Gateway> CreateAsync(CreateGatewayRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<Gateway>(BasePath, request, cancellationToken);
+
+    public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
 }

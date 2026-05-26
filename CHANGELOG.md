@@ -44,10 +44,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Status (as of these changes)
 
-**SDK ↔ spec mismatch count is now 0** — every endpoint the SDK calls exists in the live
-spec (verified via `tools/check-sdk-sync.py` against the 2025-10-23 spec). `dotnet build`
-and the 59-test suite pass. 124 spec operations remain unimplemented (full coverage of the
-Beta/v1 legacy/Plans/Vision/Machines/Ridership/Functions areas is the next phase).
+**SDK ↔ spec parity is complete** — all 317 spec operations have at least one matched SDK
+method (`tools/check-sdk-sync.py` reports `matched 324, mismatched 0, missing 0` against
+the 2025-10-23 spec). `dotnet build` and the 59-test suite pass.
+
+### Added
+
+- **10 new domain clients** for full coverage of the spec:
+  - `ILegacyApisClient` (v1 fleet/reports endpoints — `/fleet/defects/history`,
+    `/fleet/dvirs/history`, legacy safety events feed, vehicle harsh-event lookup, etc.)
+  - `IPreviewApisClient` (`/preview/*` — vehicle lock/unlock, gateway pairing,
+    driver auth-token preview)
+  - `IRouteEventsClient` (`/route-events/stream`)
+  - `IPlacesClient` (Beta — `/places` CRUD)
+  - `IPreferredStationsClient` (Beta — `/preferred-stations` CRUD)
+  - `IQualificationRecordsClient` (Beta — records CRUD + stream + types + archive/unarchive)
+  - `IRidershipClient` (Beta — passengers + route-setups CRUD)
+  - `IFunctionsClient` (Beta — Samsara Functions + Functions Storage)
+  - `IReportsClient` (Beta — `/reports/configs`, `/reports/datasets`, `/reports/runs*`)
+  - `IBetaClient` (Beta misc — industrial jobs, devices, detections stream, AEMP equipment,
+    driver-efficiency)
+- **Extensions to existing clients** covering the rest of the gaps:
+  - `IContactsClient` — Create / Update / Delete
+  - `IFormsClient` — Create / Update form submissions
+  - `IGatewaysClient` — Create / Delete
+  - `IHubsClient` — `ListHubsAsync` (the canonical `GET /hubs`), `ListPlanOrdersAsync`,
+    `ListPlanRoutesAsync`, `DeletePlanOrdersAsync`, `ListRouteTemplatesAsync`,
+    `DeleteRouteTemplatesAsync`
+  - `IEquipmentClient` — `GetStatsAsync` (snapshot)
+  - `ITachographClient` — `ListVehicleFilesAsync`, `ListLiveDataAsync`
+  - `ITrailerAssignmentsClient` — `GetByTrailerAsync`
+  - `ITrainingClient` — `CreateAssignmentsAsync` / `UpdateAssignmentsAsync` / `DeleteAssignmentsAsync`
+  - `IRoutesClient` — `V1DeleteDispatchRouteAsync`
+  - `IComplianceClient` — `V1ListHosAuthenticationLogsAsync`, `V1SetCurrentDutyStatusAsync`,
+    `UpdateShippingDocsAsync`
+  - `ISafetyClient` — `V1GetDriverSafetyScoreAsync`, `V1GetVehicleSafetyScoreAsync`,
+    `PatchEventsBatchAsync`
+  - `IMaintenanceClient` — `V1ListMaintenanceAsync`, `ListVendorsAsync`, `ListVendorCategoriesAsync`
+  - `IAssetsClient` — `V1GetAllAssetsAsync`, `V1GetAllAssetCurrentLocationsAsync`,
+    `V1GetAssetsReefersAsync`, `V1GetAssetLocationAsync`, `V1GetAssetReeferAsync`,
+    `GetDepreciationTransactionsAsync`, `GetInputsStreamAsync`,
+    `ListDeviceRecoveryMissingAsync`, `MarkAssetMissingAsync`, `RecoverAssetAsync`
+  - `IIndustrialClient` — `CreateAssetAsync` / `UpdateAssetAsync` / `UpdateAssetDataOutputsAsync` /
+    `DeleteAssetAsync` plus v1 Vision (`V1ListCamerasAsync`, runs, programs) and
+    v1 Machines (`V1ListMachinesAsync`, `V1GetMachineHistoryAsync`)
+  - `IReadingsClient` — `CreateAsync` (POST `/readings`)
+  - `IDriversClient` — `ListWorkflowsAsync`, `CreateWorkflowAssignmentAsync`,
+    `ResolveVoiceSignInAssignmentAsync`
+  - `IVehiclesClient` — `GetImmobilizerStreamAsync`, `UpdateImmobilizerStateAsync`
+- New request/response models: `CreateContactRequest`/`UpdateContactRequest`,
+  `CreateFormSubmissionRequest`/`UpdateFormSubmissionRequest`, `CreateGatewayRequest`.
+- **`tools/check-sdk-sync.py`** — extended to follow class-level `const string` aliases
+  inside interpolated strings, and to scan files that combine interface + impl declarations.
 
 - **Endpoint path corrections (API sync)** — fixed wrong URL paths that returned 404:
   Tags `/fleet/tags`→`/tags`; Messages→`/v1/fleet/messages`; Forms→`/form-templates`,

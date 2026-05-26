@@ -35,4 +35,18 @@ internal sealed class DriversClient : SamsaraServiceClientBase, IDriversClient
 
     public Task DeleteQrCodeAsync(string driverId, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"drivers/qr-codes?driverId={Uri.EscapeDataString(driverId)}", cancellationToken);
+
+    // ── Beta ─────────────────────────────────────────────────────────────────
+
+    /// <summary>List driver workflows (beta, <c>GET /fleet/drivers/workflows</c>).</summary>
+    public IAsyncEnumerable<object> ListWorkflowsAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<object>("fleet/drivers/workflows", cancellationToken: cancellationToken);
+
+    /// <summary>Assign a workflow to a driver (beta, <c>POST /fleet/drivers/workflow-assignments</c>).</summary>
+    public Task<object> CreateWorkflowAssignmentAsync(object request, CancellationToken cancellationToken = default)
+        => HttpClient.PostAsync<object>("fleet/drivers/workflow-assignments", request, cancellationToken);
+
+    /// <summary>Resolve a voice sign-in assignment (beta).</summary>
+    public Task<object> ResolveVoiceSignInAssignmentAsync(object request, CancellationToken cancellationToken = default)
+        => HttpClient.PostAsync<object>("fleet/drivers/voice-sign-in/resolve-assignment", request, cancellationToken);
 }

@@ -24,4 +24,16 @@ internal sealed class SafetyClient : SamsaraServiceClientBase, ISafetyClient
 
     public IAsyncEnumerable<SafetyEvent> GetEventsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
         => PaginateAsync<SafetyEvent>(QueryBuilder.WithTimeRange("safety-events/stream", startTime, endTime), cancellationToken: cancellationToken);
+
+    /// <summary>Driver safety score (v1 legacy, <c>GET /v1/fleet/drivers/{driverId}/safety/score</c>).</summary>
+    public Task<object> V1GetDriverSafetyScoreAsync(string driverId, CancellationToken cancellationToken = default)
+        => HttpClient.GetAsync<object>($"v1/fleet/drivers/{Uri.EscapeDataString(driverId)}/safety/score", cancellationToken);
+
+    /// <summary>Vehicle safety score (v1 legacy, <c>GET /v1/fleet/vehicles/{vehicleId}/safety/score</c>).</summary>
+    public Task<object> V1GetVehicleSafetyScoreAsync(string vehicleId, CancellationToken cancellationToken = default)
+        => HttpClient.GetAsync<object>($"v1/fleet/vehicles/{Uri.EscapeDataString(vehicleId)}/safety/score", cancellationToken);
+
+    /// <summary>Batch update safety events (beta, <c>PATCH /safety-events/batch</c>).</summary>
+    public Task<object> PatchEventsBatchAsync(object request, CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<object>("safety-events/batch", request, cancellationToken);
 }

@@ -8,6 +8,13 @@ using Samsara.Sdk.Models.Routes;
 public interface IHubsClient
 {
     IAsyncEnumerable<Hub> ListAsync(CancellationToken cancellationToken = default);
+    /// <summary>List hubs via the dedicated <c>GET /hubs</c> endpoint.</summary>
+    IAsyncEnumerable<Hub> ListHubsAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<object> ListPlanRoutesAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<HubPlanOrder> ListPlanOrdersAsync(CancellationToken cancellationToken = default);
+    Task DeletePlanOrdersAsync(object request, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<object> ListRouteTemplatesAsync(CancellationToken cancellationToken = default);
+    Task DeleteRouteTemplatesAsync(object request, CancellationToken cancellationToken = default);
     Task<Hub> GetAsync(string id, CancellationToken cancellationToken = default);
     Task<Hub> CreateAsync(CreateHubRequest request, CancellationToken cancellationToken = default);
     Task<Hub> UpdateAsync(string id, UpdateHubRequest request, CancellationToken cancellationToken = default);

@@ -19,4 +19,8 @@ internal sealed class ReadingsClient : SamsaraServiceClientBase, IReadingsClient
 
     public IAsyncEnumerable<ReadingSnapshot> GetSnapshotAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<ReadingSnapshot>("readings/latest", cancellationToken: cancellationToken);
+
+    /// <summary>Submit one or more readings (<c>POST /readings</c>, beta).</summary>
+    public Task<object> CreateAsync(object request, CancellationToken cancellationToken = default)
+        => HttpClient.PostAsync<object>("readings", request, cancellationToken);
 }

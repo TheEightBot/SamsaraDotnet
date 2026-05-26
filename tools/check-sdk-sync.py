@@ -133,25 +133,37 @@ def _first_arg(s: str) -> str:
     return s
 
 
-def _resolve_expr(expr: str, basepath: str | None, assigns: dict[str, str], depth: int = 0) -> str | None:
+def _resolve_expr(
+    expr: str,
+    basepath: str | None,
+    assigns: dict[str, str],
+    class_consts: dict[str, str] | None = None,
+    depth: int = 0,
+) -> str | None:
     """Resolve a path expression to a normalized path, or None if not a literal path."""
     if depth > 8:
         return None
     expr = expr.strip()
+    class_consts = class_consts or {}
     # Unwrap QueryBuilder.WithTimeRange( / WithParams( wrappers -> resolve their FIRST arg
     m = re.match(r"(?:QueryBuilder\.)?With(?:TimeRange|Params)\(\s*(.*)$", expr, re.S)
     if m:
-        return _resolve_expr(_first_arg(m.group(1)), basepath, assigns, depth + 1)
+        return _resolve_expr(_first_arg(m.group(1)), basepath, assigns, class_consts, depth + 1)
     # Bare identifier -> resolve via assignment in the same method
     # (covers both local vars like `path` and class consts like `ConfigurationsPath`).
     if re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", expr):
         if expr in assigns:
-            return _resolve_expr(assigns[expr], basepath, assigns, depth + 1)
+            return _resolve_expr(assigns[expr], basepath, assigns, class_consts, depth + 1)
+        if expr in class_consts:
+            return norm_path(class_consts[expr]) or None
         return None  # unresolved local (treated as unknown, not a literal)
     s = expr
     if basepath:
         s = s.replace("{BasePath}", basepath)
         s = re.sub(r"\bBasePath\b", basepath, s)
+    # Substitute class-level const aliases inside interpolated strings (e.g. {ConfigurationsPath}).
+    for name, lit in class_consts.items():
+        s = s.replace("{" + name + "}", lit)
     # ternary / concatenation: take the first quoted or interpolated string literal
     lit = re.search(r'\$?"([^"]*)"', s)
     if lit:
@@ -167,7 +179,8 @@ def sdk_endpoints() -> list[dict]:
     out: list[dict] = []
     for path in sorted(SDK_CLIENTS.rglob("*Client.cs")):
         text = path.read_text()
-        if re.search(r"\binterface\b", text):  # interface file, skip
+        # Skip files that only declare an interface (no concrete class with methods).
+        if "class " not in text:
             continue
         bp_m = BASEPATH_RE.search(text)
         basepath = bp_m.group(1) if bp_m else None
@@ -178,9 +191,6 @@ def sdk_endpoints() -> list[dict]:
             assigns: dict[str, str] = {}
             for am in re.finditer(r'(?:var\s+)?([a-z][A-Za-z0-9_]*)\s*=\s*([^;]+);', body):
                 assigns.setdefault(am.group(1), am.group(2))
-            # Inherit class-level const aliases (PascalCase, e.g. ConfigurationsPath).
-            for name, lit in class_consts.items():
-                assigns.setdefault(name, f'"{lit}"')
             # find terminal HTTP / Paginate call
             verb = arg = None
             cm = CALL_RE.search(body)
@@ -192,7 +202,7 @@ def sdk_endpoints() -> list[dict]:
                     verb, arg = "GET", pm.group(1)
             if not verb:
                 continue
-            np = _resolve_expr(arg, basepath, assigns)
+            np = _resolve_expr(arg, basepath, assigns, class_consts)
             out.append({
                 "file": path.name, "method": method_name,
                 "verb": verb, "path": np, "rawarg": arg.strip(),

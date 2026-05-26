@@ -38,4 +38,11 @@ internal sealed class EquipmentClient : SamsaraServiceClientBase, IEquipmentClie
         var basePath = types is not null ? $"{BasePath}/stats/history?types={Uri.EscapeDataString(types)}" : $"{BasePath}/stats/history";
         return PaginateAsync<EquipmentStats>(QueryBuilder.WithTimeRange(basePath, startTime, endTime), cancellationToken: cancellationToken);
     }
+
+    /// <summary>Equipment stats snapshot (<c>GET /fleet/equipment/stats</c>).</summary>
+    public IAsyncEnumerable<EquipmentStats> GetStatsAsync(string? types = null, CancellationToken cancellationToken = default)
+    {
+        var path = types is not null ? $"{BasePath}/stats?types={Uri.EscapeDataString(types)}" : $"{BasePath}/stats";
+        return PaginateAsync<EquipmentStats>(path, cancellationToken: cancellationToken);
+    }
 }

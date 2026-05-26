@@ -15,4 +15,6 @@ public interface IEquipmentClient
     IAsyncEnumerable<EquipmentLocation> GetLocationsHistoryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
     IAsyncEnumerable<EquipmentStats> GetStatsFeedAsync(string? types = null, CancellationToken cancellationToken = default);
     IAsyncEnumerable<EquipmentStats> GetStatsHistoryAsync(string? types = null, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    /// <summary>Equipment stats snapshot (<c>GET /fleet/equipment/stats</c>).</summary>
+    IAsyncEnumerable<EquipmentStats> GetStatsAsync(string? types = null, CancellationToken cancellationToken = default);
 }

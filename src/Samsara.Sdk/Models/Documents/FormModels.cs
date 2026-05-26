@@ -116,3 +116,19 @@ public sealed record CreateFormPdfExportRequest
 {
     [JsonPropertyName("formSubmissionId")] public required string FormSubmissionId { get; init; }
 }
+
+/// <summary>Request body for <c>POST /form-submissions</c>.</summary>
+public sealed record CreateFormSubmissionRequest
+{
+    [JsonPropertyName("formTemplateId")] public required string FormTemplateId { get; init; }
+    [JsonPropertyName("driver")] public object? Driver { get; init; }
+    [JsonPropertyName("vehicle")] public object? Vehicle { get; init; }
+    [JsonPropertyName("fieldValues")] public IReadOnlyList<object>? FieldValues { get; init; }
+}
+
+/// <summary>Request body for <c>PATCH /form-submissions</c>. The submission id is in the body.</summary>
+public sealed record UpdateFormSubmissionRequest
+{
+    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("fieldValues")] public IReadOnlyList<object>? FieldValues { get; init; }
+}
