@@ -126,54 +126,64 @@ public sealed record AlertConfiguration
 }
 
 /// <summary>
-/// Request body for creating a new alert.
-/// </summary>
-public sealed record CreateAlertRequest
-{
-    [JsonPropertyName("configurationId")]
-    public required string ConfigurationId { get; init; }
-
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
-}
-
-/// <summary>
-/// Request body for updating an alert.
-/// </summary>
-public sealed record UpdateAlertRequest
-{
-    [JsonPropertyName("resolvedAtTime")]
-    public DateTimeOffset? ResolvedAtTime { get; init; }
-}
-
-/// <summary>
-/// Request body for creating an alert configuration.
+/// Request body for <c>POST /alerts/configurations</c>. The spec requires
+/// <c>name</c>, <c>isEnabled</c>, <c>scope</c>, <c>actions</c>, and <c>triggers</c>.
 /// </summary>
 public sealed record CreateAlertConfigurationRequest
 {
     [JsonPropertyName("name")]
     public required string Name { get; init; }
 
-    [JsonPropertyName("conditionType")]
-    public required string ConditionType { get; init; }
+    [JsonPropertyName("isEnabled")]
+    public required bool IsEnabled { get; init; }
 
-    [JsonPropertyName("notificationSettings")]
-    public IReadOnlyList<AlertNotificationSetting>? NotificationSettings { get; init; }
+    /// <summary>Configuration scope (assets/tags/etc.) — see Samsara API docs.</summary>
+    [JsonPropertyName("scope")]
+    public required object Scope { get; init; }
+
+    /// <summary>Trigger conditions — see Samsara API docs.</summary>
+    [JsonPropertyName("triggers")]
+    public required IReadOnlyList<object> Triggers { get; init; }
+
+    /// <summary>Notification actions (webhook/email/SMS) — see Samsara API docs.</summary>
+    [JsonPropertyName("actions")]
+    public required IReadOnlyList<object> Actions { get; init; }
+
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
+    [JsonPropertyName("operationalSettings")]
+    public object? OperationalSettings { get; init; }
 }
 
 /// <summary>
-/// Request body for updating an alert configuration.
+/// Request body for <c>PATCH /alerts/configurations</c>. The id is sent here, not in the URL.
 /// </summary>
 public sealed record UpdateAlertConfigurationRequest
 {
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
-    [JsonPropertyName("notificationSettings")]
-    public IReadOnlyList<AlertNotificationSetting>? NotificationSettings { get; init; }
+    [JsonPropertyName("isEnabled")]
+    public bool? IsEnabled { get; init; }
+
+    [JsonPropertyName("scope")]
+    public object? Scope { get; init; }
+
+    [JsonPropertyName("triggers")]
+    public IReadOnlyList<object>? Triggers { get; init; }
+
+    [JsonPropertyName("actions")]
+    public IReadOnlyList<object>? Actions { get; init; }
+
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
+    [JsonPropertyName("operationalSettings")]
+    public object? OperationalSettings { get; init; }
 }
 
 /// <summary>

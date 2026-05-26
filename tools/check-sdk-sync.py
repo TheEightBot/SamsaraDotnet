@@ -52,6 +52,8 @@ METHOD_RE = re.compile(
     r'public\s+(?:async\s+)?[\w<>,\.\?\[\]\s]+?\s+([A-Za-z0-9_]+)Async\s*\(', re.M
 )
 BASEPATH_RE = re.compile(r'BasePath\s*=\s*"([^"]+)"')
+CONST_STRING_RE = re.compile(
+    r'(?:private|protected|internal|public)\s+const\s+string\s+(\w+)\s*=\s*"([^"]*)"\s*;')
 
 
 # ---------------------------------------------------------------- spec loading
@@ -141,7 +143,8 @@ def _resolve_expr(expr: str, basepath: str | None, assigns: dict[str, str], dept
     if m:
         return _resolve_expr(_first_arg(m.group(1)), basepath, assigns, depth + 1)
     # Bare identifier -> resolve via assignment in the same method
-    if re.fullmatch(r"[a-z][A-Za-z0-9_]*", expr):
+    # (covers both local vars like `path` and class consts like `ConfigurationsPath`).
+    if re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", expr):
         if expr in assigns:
             return _resolve_expr(assigns[expr], basepath, assigns, depth + 1)
         return None  # unresolved local (treated as unknown, not a literal)
@@ -168,11 +171,16 @@ def sdk_endpoints() -> list[dict]:
             continue
         bp_m = BASEPATH_RE.search(text)
         basepath = bp_m.group(1) if bp_m else None
+        # Class-level const string aliases (e.g. ConfigurationsPath, IncidentsStreamPath).
+        class_consts = {m.group(1): m.group(2) for m in CONST_STRING_RE.finditer(text)}
         for method_name, body in _iter_methods(text):
             # collect local assignments: `var x = <expr>;` and `x = <expr>;`
             assigns: dict[str, str] = {}
             for am in re.finditer(r'(?:var\s+)?([a-z][A-Za-z0-9_]*)\s*=\s*([^;]+);', body):
                 assigns.setdefault(am.group(1), am.group(2))
+            # Inherit class-level const aliases (PascalCase, e.g. ConfigurationsPath).
+            for name, lit in class_consts.items():
+                assigns.setdefault(name, f'"{lit}"')
             # find terminal HTTP / Paginate call
             verb = arg = None
             cm = CALL_RE.search(body)

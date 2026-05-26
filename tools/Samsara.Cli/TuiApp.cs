@@ -934,19 +934,19 @@ internal sealed class TuiApp
                         });
                         break;
                     case "IFTA Details":
-                        var (iftaStart, iftaEnd) = InputHelper.AskTimeRange("IFTA Details");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching IFTA details...[/]", async _ =>
+                        var iftaVehicleYear = AnsiConsole.Ask<int>("Year (required):");
+                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching IFTA vehicle reports...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Ifta.ListDetailsAsync(iftaStart, iftaEnd, Timeout60s()));
-                            ResultRenderer.RenderList(items, "IFTA Details", d => [d.VehicleId ?? "", d.Jurisdiction ?? ""], ["Vehicle ID", "Jurisdiction"]);
+                            var resp = await _client.Ifta.ListVehicleReportsAsync(iftaVehicleYear, cancellationToken: Timeout60s());
+                            ResultRenderer.RenderObject(resp, "IFTA Vehicle Reports");
                         });
                         break;
                     case "IFTA Summary":
-                        var (iftaSumStart, iftaSumEnd) = InputHelper.AskTimeRange("IFTA Summary");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching IFTA summary...[/]", async _ =>
+                        var iftaJurYear = AnsiConsole.Ask<int>("Year (required):");
+                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching IFTA jurisdiction reports...[/]", async _ =>
                         {
-                            var items = await _client.Ifta.GetSummaryAsync(iftaSumStart, iftaSumEnd, Timeout60s());
-                            ResultRenderer.RenderObject(items, "IFTA Summary");
+                            var resp = await _client.Ifta.ListJurisdictionReportsAsync(iftaJurYear, cancellationToken: Timeout60s());
+                            ResultRenderer.RenderObject(resp, "IFTA Jurisdiction Reports");
                         });
                         break;
                 }
@@ -1151,55 +1151,31 @@ internal sealed class TuiApp
     {
         while (true)
         {
-            var sub = SubMenu("Communication & Alerts", "Alerts", "Alert Configurations", "Messages");
+            var sub = SubMenu("Communication & Alerts", "Alert Configurations", "Incidents Stream", "Messages");
             if (sub == "← Back") return;
             try
             {
                 switch (sub)
                 {
-                    case "Alerts":
-                        await AlertsMenuAsync();
-                        break;
                     case "Alert Configurations":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching alert configurations...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Alerts.ListConfigurationsAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.Alerts.ListConfigurationsAsync(cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Alert Configurations", c => [c.Id, c.Name ?? ""], ["ID", "Name"]);
+                        });
+                        break;
+                    case "Incidents Stream":
+                        var since = AnsiConsole.Ask<DateTimeOffset>("Start time:");
+                        var cfgIdsCsv = AnsiConsole.Ask<string>("Configuration ids (comma-separated, required):");
+                        var cfgIds = cfgIdsCsv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Streaming incidents...[/]", async _ =>
+                        {
+                            var items = await CollectAsync(_client.Alerts.GetIncidentsStreamAsync(since, cfgIds, cancellationToken: Timeout60s()));
+                            ResultRenderer.RenderList(items, "Alert Incidents", i => [i.Id, i.ConfigurationId ?? ""], ["ID", "Configuration ID"]);
                         });
                         break;
                     case "Messages":
                         await MessagesMenuAsync();
-                        break;
-                }
-            }
-            catch (Exception ex) { ResultRenderer.RenderError(ex); }
-        }
-    }
-
-    private async Task AlertsMenuAsync()
-    {
-        while (true)
-        {
-            var op = SubMenu("Alerts", "List All", "Get by ID");
-            if (op == "← Back") return;
-            try
-            {
-                switch (op)
-                {
-                    case "List All":
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching alerts...[/]", async _ =>
-                        {
-                            var items = await CollectAsync(_client.Alerts.ListAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Alerts", a => [a.Id, a.ConfigurationId ?? ""], ["ID", "Configuration ID"]);
-                        });
-                        break;
-                    case "Get by ID":
-                        var id = InputHelper.AskId("Alert ID");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching alert...[/]", async _ =>
-                        {
-                            var a = await _client.Alerts.GetAsync(id, Timeout60s());
-                            ResultRenderer.RenderObject(a, $"Alert {id}");
-                        });
                         break;
                 }
             }
@@ -1247,26 +1223,26 @@ internal sealed class TuiApp
     {
         while (true)
         {
-            var op = SubMenu("Fuel & Energy", "List Fuel Purchases", "List Energy Levels");
+            var op = SubMenu("Fuel & Energy", "Vehicle Fuel Reports", "Driver Fuel Reports");
             if (op == "← Back") return;
             try
             {
                 switch (op)
                 {
-                    case "List Fuel Purchases":
-                        var (fpStart, fpEnd) = InputHelper.AskTimeRange("Fuel Purchases");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching fuel purchases...[/]", async _ =>
+                    case "Vehicle Fuel Reports":
+                        var (vfStart, vfEnd) = InputHelper.AskTimeRange("Fuel Energy (vehicles)");
+                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching vehicle fuel reports...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Fuel.ListPurchasesAsync(fpStart, fpEnd, Timeout60s()));
-                            ResultRenderer.RenderList(items, "Fuel Purchases", p => [p.Id, p.VehicleId ?? "", p.VolumeGallons?.ToString() ?? ""], ["ID", "Vehicle ID", "Gallons"]);
+                            var resp = await _client.Fuel.ListVehicleFuelEnergyReportsAsync(vfStart ?? DateTimeOffset.UtcNow.AddDays(-7), vfEnd ?? DateTimeOffset.UtcNow, cancellationToken: Timeout60s());
+                            ResultRenderer.RenderObject(resp, "Vehicle Fuel/Energy Reports");
                         });
                         break;
-                    case "List Energy Levels":
-                        var (elStart, elEnd) = InputHelper.AskTimeRange("Energy Levels");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching energy levels...[/]", async _ =>
+                    case "Driver Fuel Reports":
+                        var (dfStart, dfEnd) = InputHelper.AskTimeRange("Fuel Energy (drivers)");
+                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching driver fuel reports...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Fuel.ListEnergyLevelsAsync(elStart, elEnd, Timeout60s()));
-                            ResultRenderer.RenderList(items, "Energy Levels", e => [e.VehicleId ?? "", e.Percent?.ToString() ?? ""], ["Vehicle ID", "Charge %"]);
+                            var resp = await _client.Fuel.ListDriverFuelEnergyReportsAsync(dfStart ?? DateTimeOffset.UtcNow.AddDays(-7), dfEnd ?? DateTimeOffset.UtcNow, cancellationToken: Timeout60s());
+                            ResultRenderer.RenderObject(resp, "Driver Fuel/Energy Reports");
                         });
                         break;
                 }
@@ -1281,7 +1257,7 @@ internal sealed class TuiApp
     {
         while (true)
         {
-            var sub = SubMenu("Industrial & Sensors", "Industrial Assets", "Data Inputs", "Get Data Input", "Sensors", "Get Sensor", "Sensor History");
+            var sub = SubMenu("Industrial & Sensors", "Industrial Assets", "Data Inputs", "Get Data Input", "Sensors (v1)", "Sensor Temperature (v1)");
             if (sub == "← Back") return;
             try
             {
@@ -1309,28 +1285,21 @@ internal sealed class TuiApp
                             ResultRenderer.RenderObject(d, $"Data Input {diId}");
                         });
                         break;
-                    case "Sensors":
+                    case "Sensors (v1)":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching sensors...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Sensors.ListAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Sensors", s => [s.Id, s.Name ?? ""], ["ID", "Name"]);
+                            var resp = await _client.Sensors.ListAsync(Timeout60s());
+                            ResultRenderer.RenderObject(resp, "v1 Sensors");
                         });
                         break;
-                    case "Get Sensor":
-                        var sId = InputHelper.AskId("Sensor ID");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching sensor...[/]", async _ =>
+                    case "Sensor Temperature (v1)":
+                        var idsRaw = InputHelper.AskOptionalString("Sensor IDs (comma-separated long integers)");
+                        var sensorIds = idsRaw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                            .Select(long.Parse).ToList();
+                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching temperatures...[/]", async _ =>
                         {
-                            var s = await _client.Sensors.GetAsync(sId, Timeout60s());
-                            ResultRenderer.RenderObject(s, $"Sensor {sId}");
-                        });
-                        break;
-                    case "Sensor History":
-                        var idsRaw = InputHelper.AskOptionalString("Sensor IDs (comma-separated)");
-                        var sensorIds = idsRaw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching sensor history...[/]", async _ =>
-                        {
-                            var result = await _client.Sensors.GetHistoryAsync(sensorIds, Timeout60s());
-                            ResultRenderer.RenderObject(result, "Sensor History");
+                            var result = await _client.Sensors.GetTemperatureAsync(new Samsara.Sdk.Models.Industrial.V1SensorReadingsRequest { Sensors = sensorIds }, Timeout60s());
+                            ResultRenderer.RenderObject(result, "v1 Sensor Temperatures");
                         });
                         break;
                 }
@@ -1501,9 +1470,10 @@ internal sealed class TuiApp
                 switch (op)
                 {
                     case "List All":
+                        var filterBy = AnsiConsole.Ask<string>("filterBy (e.g. driverIds, vehicleIds):");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching assignments...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.DriverVehicleAssignments.ListAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.DriverVehicleAssignments.ListAsync(filterBy, cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Driver-Vehicle Assignments", a => [a.Id, a.DriverId ?? "", a.VehicleId ?? ""], ["ID", "Driver ID", "Vehicle ID"]);
                         });
                         break;
@@ -1519,26 +1489,25 @@ internal sealed class TuiApp
                         }
                         break;
                     case "Update":
-                        var uid = InputHelper.AskId("Assignment ID to update");
                         var uReq = DeserializePrompt<UpdateDriverVehicleAssignmentRequest>("UpdateDriverVehicleAssignmentRequest");
                         if (uReq != null && InputHelper.Confirm("update assignment"))
                         {
                             await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Updating...[/]", async _ =>
                             {
-                                var a = await _client.DriverVehicleAssignments.UpdateAsync(uid, uReq, Timeout60s());
+                                var a = await _client.DriverVehicleAssignments.UpdateAsync(uReq, Timeout60s());
                                 ResultRenderer.RenderObject(a, "Updated Assignment");
                             });
                         }
                         break;
                     case "Delete":
-                        var did = InputHelper.AskId("Assignment ID to delete");
-                        if (InputHelper.Confirm($"delete assignment {did}"))
+                        var dReq = DeserializePrompt<DeleteDriverVehicleAssignmentsRequest>("DeleteDriverVehicleAssignmentsRequest");
+                        if (dReq != null && InputHelper.Confirm($"end assignment for vehicle {dReq.VehicleId}"))
                         {
                             await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Deleting...[/]", async _ =>
                             {
-                                await _client.DriverVehicleAssignments.DeleteAsync(did, Timeout60s());
+                                await _client.DriverVehicleAssignments.DeleteAsync(dReq, Timeout60s());
                             });
-                            ResultRenderer.RenderSuccess("Assignment deleted.");
+                            ResultRenderer.RenderSuccess("Assignment ended.");
                         }
                         break;
                 }
@@ -1658,9 +1627,11 @@ internal sealed class TuiApp
                 switch (op)
                 {
                     case "List All":
+                        var idsCsv = AnsiConsole.Ask<string>("Issue ids (comma-separated, required by spec):");
+                        var ids = idsCsv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching issues...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Issues.ListAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.Issues.ListAsync(ids, cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Issues", i => [i.Id, i.Title ?? "", i.Status ?? ""], ["ID", "Title", "Status"]);
                         });
                         break;
@@ -1673,13 +1644,12 @@ internal sealed class TuiApp
                         });
                         break;
                     case "Update":
-                        var uid = InputHelper.AskId("Issue ID to update");
                         var uReq = DeserializePrompt<UpdateIssueRequest>("UpdateIssueRequest");
                         if (uReq != null && InputHelper.Confirm("update issue"))
                         {
                             await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Updating...[/]", async _ =>
                             {
-                                var i = await _client.Issues.UpdateAsync(uid, uReq, Timeout60s());
+                                var i = await _client.Issues.UpdateAsync(uReq, Timeout60s());
                                 ResultRenderer.RenderObject(i, "Updated Issue");
                             });
                         }

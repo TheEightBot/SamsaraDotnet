@@ -37,7 +37,7 @@ public sealed record DriverVehicleAssignment
 }
 
 /// <summary>
-/// Request body for creating or updating a driver-vehicle assignment.
+/// Request body for <c>POST /fleet/driver-vehicle-assignments</c>.
 /// </summary>
 public sealed record CreateDriverVehicleAssignmentRequest
 {
@@ -46,6 +46,9 @@ public sealed record CreateDriverVehicleAssignmentRequest
 
     [JsonPropertyName("vehicleId")]
     public required string VehicleId { get; init; }
+
+    [JsonPropertyName("assignedAtTime")]
+    public DateTimeOffset? AssignedAtTime { get; init; }
 
     [JsonPropertyName("startTime")]
     public DateTimeOffset? StartTime { get; init; }
@@ -56,15 +59,53 @@ public sealed record CreateDriverVehicleAssignmentRequest
     [JsonPropertyName("isPassenger")]
     public bool? IsPassenger { get; init; }
 
-    [JsonPropertyName("assignmentType")]
-    public string? AssignmentType { get; init; }
+    [JsonPropertyName("metadata")]
+    public IReadOnlyDictionary<string, string>? Metadata { get; init; }
 }
 
 /// <summary>
-/// Request body for updating a driver-vehicle assignment.
+/// Request body for <c>PATCH /fleet/driver-vehicle-assignments</c>. The composite identifier
+/// (driverId + vehicleId + startTime) lives in the body.
 /// </summary>
 public sealed record UpdateDriverVehicleAssignmentRequest
 {
+    [JsonPropertyName("driverId")]
+    public required string DriverId { get; init; }
+
+    [JsonPropertyName("vehicleId")]
+    public required string VehicleId { get; init; }
+
+    [JsonPropertyName("startTime")]
+    public required DateTimeOffset StartTime { get; init; }
+
+    [JsonPropertyName("assignedAtTime")]
+    public DateTimeOffset? AssignedAtTime { get; init; }
+
+    [JsonPropertyName("endTime")]
+    public DateTimeOffset? EndTime { get; init; }
+
+    [JsonPropertyName("isPassenger")]
+    public bool? IsPassenger { get; init; }
+
+    [JsonPropertyName("metadata")]
+    public IReadOnlyDictionary<string, string>? Metadata { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>DELETE /fleet/driver-vehicle-assignments</c>. Identifies the assignment
+/// to end via the vehicleId (and optional matching fields).
+/// </summary>
+public sealed record DeleteDriverVehicleAssignmentsRequest
+{
+    [JsonPropertyName("vehicleId")]
+    public required string VehicleId { get; init; }
+
+    [JsonPropertyName("assignedAtTime")]
+    public DateTimeOffset? AssignedAtTime { get; init; }
+
+    [JsonPropertyName("startTime")]
+    public DateTimeOffset? StartTime { get; init; }
+
     [JsonPropertyName("endTime")]
     public DateTimeOffset? EndTime { get; init; }
 

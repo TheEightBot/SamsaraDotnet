@@ -3,10 +3,35 @@ namespace Samsara.Sdk.Clients;
 using Samsara.Sdk.Models.Fuel;
 
 /// <summary>
-/// Client for Samsara fuel data.
+/// Client for Samsara fuel &amp; energy reports, driver-efficiency scores, and fuel purchases.
 /// </summary>
 public interface IFuelClient
 {
-    IAsyncEnumerable<FuelPurchase> ListPurchasesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<FuelEnergyLevel> ListEnergyLevelsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    /// <summary>Fuel/energy report per vehicle (<c>GET /fleet/reports/vehicles/fuel-energy</c>).</summary>
+    Task<FuelEnergyVehicleReportsResponse> ListVehicleFuelEnergyReportsAsync(
+        DateTimeOffset startDate,
+        DateTimeOffset endDate,
+        IReadOnlyList<string>? vehicleIds = null,
+        string? energyType = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Fuel/energy report per driver (<c>GET /fleet/reports/drivers/fuel-energy</c>).</summary>
+    Task<FuelEnergyDriverReportsResponse> ListDriverFuelEnergyReportsAsync(
+        DateTimeOffset startDate,
+        DateTimeOffset endDate,
+        IReadOnlyList<string>? driverIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Driver-efficiency scores per driver.</summary>
+    IAsyncEnumerable<DriverEfficiencyByDriver> GetDriverEfficiencyByDriverAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Driver-efficiency scores per vehicle.</summary>
+    IAsyncEnumerable<DriverEfficiencyByVehicle> GetDriverEfficiencyByVehicleAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Record a fuel purchase (<c>POST /fuel-purchase</c>).</summary>
+    Task<FuelPurchase> CreateFuelPurchaseAsync(CreateFuelPurchaseRequest request, CancellationToken cancellationToken = default);
 }
