@@ -38,8 +38,13 @@ public sealed record Address
     [JsonPropertyName("externalIds")]
     public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 
-    [JsonPropertyName("contactIds")]
-    public IReadOnlyList<string>? ContactIds { get; init; }
+    /// <summary>Contacts linked to this address (spec returns these as <c>{id,name}</c> objects;
+    /// the previously-modelled <c>contactIds</c> string array is not in the spec).</summary>
+    [JsonPropertyName("contacts")]
+    public IReadOnlyList<EntityReference>? Contacts { get; init; }
+
+    [JsonPropertyName("createdAtTime")]
+    public DateTimeOffset? CreatedAtTime { get; init; }
 }
 
 /// <summary>
@@ -99,7 +104,7 @@ public sealed record CreateAddressRequest
     public required string Name { get; init; }
 
     [JsonPropertyName("formattedAddress")]
-    public string? FormattedAddress { get; init; }
+    public required string FormattedAddress { get; init; }
 
     [JsonPropertyName("latitude")]
     public double? Latitude { get; init; }
@@ -111,7 +116,7 @@ public sealed record CreateAddressRequest
     public IReadOnlyList<string>? AddressTypes { get; init; }
 
     [JsonPropertyName("geofence")]
-    public Geofence? Geofence { get; init; }
+    public required Geofence Geofence { get; init; }
 
     [JsonPropertyName("notes")]
     public string? Notes { get; init; }

@@ -31,6 +31,9 @@ public sealed record AttributeEntity
     [JsonPropertyName("id")]
     public string? Id { get; init; }
 
+    [JsonPropertyName("entityId")]
+    public string? EntityId { get; init; }
+
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
@@ -42,6 +45,11 @@ public sealed record AttributeEntity
 
     [JsonPropertyName("stringValues")]
     public IReadOnlyList<string>? StringValues { get; init; }
+
+    /// <summary>Spec also returns a generic <c>values</c> array alongside the typed
+    /// <c>numberValues</c>/<c>stringValues</c> lists.</summary>
+    [JsonPropertyName("values")]
+    public IReadOnlyList<object>? Values { get; init; }
 }
 
 public sealed record CreateAttributeRequest
@@ -53,7 +61,7 @@ public sealed record CreateAttributeRequest
     public required string EntityType { get; init; }
 
     [JsonPropertyName("attributeType")]
-    public string? AttributeType { get; init; }
+    public required string AttributeType { get; init; }
 
     [JsonPropertyName("numberValues")]
     public IReadOnlyList<double>? NumberValues { get; init; }
@@ -68,7 +76,7 @@ public sealed record UpdateAttributeRequest
     public string? Name { get; init; }
 
     [JsonPropertyName("entityType")]
-    public string? EntityType { get; init; }
+    public required string EntityType { get; init; }
 
     [JsonPropertyName("attributeType")]
     public string? AttributeType { get; init; }

@@ -59,6 +59,66 @@ public sealed record Vehicle
 
     [JsonPropertyName("auxInputType2")]
     public string? AuxInputType2 { get; init; }
+
+    [JsonPropertyName("auxInputType3")]
+    public string? AuxInputType3 { get; init; }
+
+    [JsonPropertyName("auxInputType4")]
+    public string? AuxInputType4 { get; init; }
+
+    [JsonPropertyName("auxInputType5")]
+    public string? AuxInputType5 { get; init; }
+
+    [JsonPropertyName("auxInputType6")]
+    public string? AuxInputType6 { get; init; }
+
+    [JsonPropertyName("auxInputType7")]
+    public string? AuxInputType7 { get; init; }
+
+    [JsonPropertyName("auxInputType8")]
+    public string? AuxInputType8 { get; init; }
+
+    [JsonPropertyName("auxInputType9")]
+    public string? AuxInputType9 { get; init; }
+
+    [JsonPropertyName("auxInputType10")]
+    public string? AuxInputType10 { get; init; }
+
+    [JsonPropertyName("auxInputType11")]
+    public string? AuxInputType11 { get; init; }
+
+    [JsonPropertyName("auxInputType12")]
+    public string? AuxInputType12 { get; init; }
+
+    [JsonPropertyName("auxInputType13")]
+    public string? AuxInputType13 { get; init; }
+
+    [JsonPropertyName("attributes")]
+    public IReadOnlyList<Samsara.Sdk.Models.Tags.AttributeDefinition>? Attributes { get; init; }
+
+    [JsonPropertyName("vehicleType")]
+    public string? VehicleType { get; init; }
+
+    [JsonPropertyName("esn")]
+    public string? Esn { get; init; }
+
+    [JsonPropertyName("cameraSerial")]
+    public string? CameraSerial { get; init; }
+
+    [JsonPropertyName("grossVehicleWeight")]
+    public object? GrossVehicleWeight { get; init; }
+
+    [JsonPropertyName("sensorConfiguration")]
+    public object? SensorConfiguration { get; init; }
+
+    [JsonPropertyName("engineHours")]
+    public long? EngineHours { get; init; }
+
+    [JsonPropertyName("odometerMeters")]
+    public double? OdometerMeters { get; init; }
+
+    [JsonPropertyName("gatewaySerial")]
+    public string? GatewaySerial { get; init; }
 }
 
 /// <summary>
@@ -217,10 +277,10 @@ public sealed record VehicleLocation
     public string? Name { get; init; }
 
     [JsonPropertyName("latitude")]
-    public double? Latitude { get; init; }
+    public required double Latitude { get; init; }
 
     [JsonPropertyName("longitude")]
-    public double? Longitude { get; init; }
+    public required double Longitude { get; init; }
 
     [JsonPropertyName("heading")]
     public double? Heading { get; init; }
@@ -232,7 +292,11 @@ public sealed record VehicleLocation
     public string? FormattedAddress { get; init; }
 
     [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
+    public required DateTimeOffset Time { get; init; }
+
+    /// <summary>Reverse-geocoded location (returned by the location feeds).</summary>
+    [JsonPropertyName("reverseGeo")]
+    public ReverseGeo? ReverseGeo { get; init; }
 }
 
 /// <summary>

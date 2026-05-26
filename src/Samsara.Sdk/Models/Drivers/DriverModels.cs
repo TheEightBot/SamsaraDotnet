@@ -154,7 +154,7 @@ public sealed record CreateDriverRequest
     public required string Name { get; init; }
 
     [JsonPropertyName("username")]
-    public string? Username { get; init; }
+    public required string Username { get; init; }
 
     [JsonPropertyName("password")]
     public required string Password { get; init; }

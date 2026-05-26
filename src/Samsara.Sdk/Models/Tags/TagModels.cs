@@ -14,8 +14,13 @@ public sealed record Tag
     [JsonPropertyName("name")]
     public required string Name { get; init; }
 
-    [JsonPropertyName("parentTagId")]
-    public string? ParentTagId { get; init; }
+    /// <summary>The parent tag as a <c>{ id, name }</c> reference. Spec returns this as
+    /// an object, not the flat <c>parentTagId</c> string the SDK previously used.</summary>
+    [JsonPropertyName("parentTag")]
+    public EntityReference? ParentTag { get; init; }
+
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 
     [JsonPropertyName("addresses")]
     public IReadOnlyList<TaggedResource>? Addresses { get; init; }

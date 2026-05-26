@@ -206,7 +206,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching locations...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Vehicles.ListLocationsAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Vehicle Locations", l => [l.Id, l.Name ?? "", l.Latitude?.ToString() ?? "", l.Longitude?.ToString() ?? ""], ["ID", "Name", "Lat", "Lon"]);
+                            ResultRenderer.RenderList(items, "Vehicle Locations", l => [l.Id, l.Name ?? "", l.Latitude.ToString(), l.Longitude.ToString()], ["ID", "Name", "Lat", "Lon"]);
                         });
                         break;
                     case "List Stats":
@@ -590,7 +590,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching tags...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Tags.ListAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Tags", t => [t.Id, t.Name, t.ParentTagId ?? ""], ["ID", "Name", "Parent Tag ID"]);
+                            ResultRenderer.RenderList(items, "Tags", t => [t.Id, t.Name, t.ParentTag?.Id ?? ""], ["ID", "Name", "Parent Tag ID"]);
                         });
                         break;
                     case "Get by ID":
