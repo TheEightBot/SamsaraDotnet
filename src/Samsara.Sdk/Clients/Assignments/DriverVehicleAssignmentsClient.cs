@@ -11,7 +11,7 @@ internal sealed class DriverVehicleAssignmentsClient : SamsaraServiceClientBase,
 
     /// <summary>
     /// List driver-vehicle assignments. The spec's <c>getDriverVehicleAssignments</c> requires
-    /// <c>filterBy</c> (e.g. <c>"driverIds"</c>, <c>"vehicleIds"</c>) plus the matching id list.
+    /// <c>filterBy</c> (e.g. <c>"drivers"</c>, <c>"vehicles"</c>) plus the matching id list.
     /// </summary>
     public IAsyncEnumerable<DriverVehicleAssignment> ListAsync(
         string filterBy,
@@ -19,6 +19,8 @@ internal sealed class DriverVehicleAssignmentsClient : SamsaraServiceClientBase,
         DateTimeOffset? endTime = null,
         IReadOnlyList<string>? driverIds = null,
         IReadOnlyList<string>? vehicleIds = null,
+        string? driverTagIds = null,
+        string? vehicleTagIds = null,
         string? assignmentType = null,
         CancellationToken cancellationToken = default)
         => PaginateAsync<DriverVehicleAssignment>(
@@ -27,6 +29,8 @@ internal sealed class DriverVehicleAssignmentsClient : SamsaraServiceClientBase,
                 ("filterBy", filterBy),
                 ("driverIds", driverIds is null ? null : string.Join(",", driverIds)),
                 ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds)),
+                ("driverTagIds", driverTagIds),
+                ("vehicleTagIds", vehicleTagIds),
                 ("assignmentType", assignmentType)),
             cancellationToken: cancellationToken);
 

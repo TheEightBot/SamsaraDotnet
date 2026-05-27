@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 14-driver-vehicle-assignments (2026-05-27)** — applied the
+  per-domain remediation plan. `DriverVehicleAssignment` (response) now mirrors
+  the spec's nested shape: required `driver` (new
+  `DriverVehicleAssignmentDriver`, mirrors `GoaDriverTinyResponseResponseBody`),
+  required `vehicle` (new `DriverVehicleAssignmentVehicle`, mirrors
+  `GoaVehicleTinyResponseResponseBody`), required `isPassenger`, and required
+  `startTime`, plus optional `assignedAtTime`, `endTime`, `assignmentType`,
+  `metadata` (new typed `DriverVehicleAssignmentMetadata` with `sourceName`),
+  and `message` (POST/PATCH outcome). The legacy flat-scalar conveniences
+  `id`, `driverId`, `driverName`, `vehicleId`, and `vehicleName` are retained
+  as nullable, documented back-compat properties (not in spec inner schema).
+  `IDriverVehicleAssignmentsClient.ListAsync` now accepts optional
+  `driverTagIds` and `vehicleTagIds` query parameters per spec; the `filterBy`
+  doc string was corrected to the spec's `drivers`/`vehicles` valid values.
+  See `docs/api-sync/model-sync-plan-2026-05-27/14-driver-vehicle-assignments.md`.
 - **Model sync 13-driver-trailer-assignments (2026-05-27)** — applied the
   per-domain remediation plan. `DriverTrailerAssignment` (response) now mirrors
   the spec's nested shape: required `id`, `driver` (new

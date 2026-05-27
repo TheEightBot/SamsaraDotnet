@@ -9,7 +9,7 @@ public interface IDriverVehicleAssignmentsClient
 {
     /// <summary>
     /// List assignments. <paramref name="filterBy"/> is required by the spec
-    /// (e.g. <c>"driverIds"</c>, <c>"vehicleIds"</c>).
+    /// (e.g. <c>"drivers"</c>, <c>"vehicles"</c>).
     /// </summary>
     IAsyncEnumerable<DriverVehicleAssignment> ListAsync(
         string filterBy,
@@ -17,6 +17,8 @@ public interface IDriverVehicleAssignmentsClient
         DateTimeOffset? endTime = null,
         IReadOnlyList<string>? driverIds = null,
         IReadOnlyList<string>? vehicleIds = null,
+        string? driverTagIds = null,
+        string? vehicleTagIds = null,
         string? assignmentType = null,
         CancellationToken cancellationToken = default);
 

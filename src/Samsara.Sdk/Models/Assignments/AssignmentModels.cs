@@ -4,36 +4,159 @@ using System.Text.Json.Serialization;
 using Samsara.Sdk.Models.Common;
 
 /// <summary>
-/// Represents a driver-to-vehicle assignment.
+/// Represents a driver-to-vehicle assignment. Mirrors the spec's
+/// <c>DriverVehicleAssignmentV2ObjectResponseBody</c> for the GET list response,
+/// and is reused for the POST/PATCH responses whose payloads only carry
+/// <see cref="Message"/>.
 /// </summary>
 public sealed record DriverVehicleAssignment
 {
-    [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    /// <summary>
+    /// The driver this assignment is for (nested object per spec). Spec-required for GET.
+    /// </summary>
+    [JsonPropertyName("driver")]
+    public required DriverVehicleAssignmentDriver Driver { get; init; }
 
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
+    /// <summary>
+    /// The vehicle this assignment is for (nested object per spec). Spec-required for GET.
+    /// </summary>
+    [JsonPropertyName("vehicle")]
+    public required DriverVehicleAssignmentVehicle Vehicle { get; init; }
 
-    [JsonPropertyName("driverName")]
-    public string? DriverName { get; init; }
+    /// <summary>
+    /// Indicates whether the driver is a passenger. Spec-required for GET.
+    /// </summary>
+    [JsonPropertyName("isPassenger")]
+    public required bool IsPassenger { get; init; }
 
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    [JsonPropertyName("vehicleName")]
-    public string? VehicleName { get; init; }
-
+    /// <summary>
+    /// Start time of the assignment in RFC 3339 format (e.g., <c>2019-06-13T19:08:25Z</c>).
+    /// Spec-required for GET.
+    /// </summary>
     [JsonPropertyName("startTime")]
-    public DateTimeOffset? StartTime { get; init; }
+    public required DateTimeOffset StartTime { get; init; }
 
+    /// <summary>
+    /// Time at which the assignment was made, in RFC 3339 format. Optional.
+    /// </summary>
+    [JsonPropertyName("assignedAtTime")]
+    public string? AssignedAtTime { get; init; }
+
+    /// <summary>
+    /// End time of the assignment in RFC 3339 format. Omitted while the assignment is ongoing.
+    /// </summary>
     [JsonPropertyName("endTime")]
     public DateTimeOffset? EndTime { get; init; }
 
-    [JsonPropertyName("isPassenger")]
-    public bool? IsPassenger { get; init; }
-
+    /// <summary>
+    /// Name of the assigning source for the driver assignment record. Valid values:
+    /// <c>invalid</c>, <c>unknown</c>, <c>HOS</c>, <c>idCard</c>, <c>static</c>, <c>faceId</c>,
+    /// <c>tachograph</c>, <c>safetyManual</c>, <c>RFID</c>, <c>trailer</c>, <c>external</c>,
+    /// <c>qrCode</c>, <c>driverApp</c>, <c>voiceSignIn</c>, <c>smartAssign</c>.
+    /// </summary>
     [JsonPropertyName("assignmentType")]
     public string? AssignmentType { get; init; }
+
+    /// <summary>
+    /// Metadata object for external assignment source data.
+    /// </summary>
+    [JsonPropertyName("metadata")]
+    public DriverVehicleAssignmentMetadata? Metadata { get; init; }
+
+    /// <summary>
+    /// Outcome message returned by POST and PATCH responses (e.g., "Driver assignment was
+    /// successfully submitted"). Not present on GET payloads.
+    /// </summary>
+    [JsonPropertyName("message")]
+    public string? Message { get; init; }
+
+    /// <summary>
+    /// Convenience accessor for the assignment's Samsara ID. Retained for backward
+    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
+    /// </summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>
+    /// Convenience accessor for the assignment's driver ID. Retained alongside the nested
+    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes; not
+    /// part of the spec inner schema.
+    /// </summary>
+    [JsonPropertyName("driverId")]
+    public string? DriverId { get; init; }
+
+    /// <summary>
+    /// Convenience accessor for the assignment's driver name. Retained alongside the nested
+    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes; not
+    /// part of the spec inner schema.
+    /// </summary>
+    [JsonPropertyName("driverName")]
+    public string? DriverName { get; init; }
+
+    /// <summary>
+    /// Convenience accessor for the assignment's vehicle ID. Retained alongside the nested
+    /// <see cref="Vehicle"/> object for backward compatibility with earlier SDK shapes; not
+    /// part of the spec inner schema.
+    /// </summary>
+    [JsonPropertyName("vehicleId")]
+    public string? VehicleId { get; init; }
+
+    /// <summary>
+    /// Convenience accessor for the assignment's vehicle name. Retained alongside the nested
+    /// <see cref="Vehicle"/> object for backward compatibility with earlier SDK shapes; not
+    /// part of the spec inner schema.
+    /// </summary>
+    [JsonPropertyName("vehicleName")]
+    public string? VehicleName { get; init; }
+}
+
+/// <summary>
+/// Driver associated with a driver-vehicle assignment. Mirrors the spec's
+/// <c>GoaDriverTinyResponseResponseBody</c>.
+/// </summary>
+public sealed record DriverVehicleAssignmentDriver
+{
+    /// <summary>ID of the driver. Spec-required.</summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+
+    /// <summary>Name of the driver.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>Map of external IDs for the driver.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// Vehicle associated with a driver-vehicle assignment. Mirrors the spec's
+/// <c>GoaVehicleTinyResponseResponseBody</c>.
+/// </summary>
+public sealed record DriverVehicleAssignmentVehicle
+{
+    /// <summary>ID of the vehicle.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Name of the vehicle.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>Map of external IDs for the vehicle.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// Metadata about a driver-vehicle assignment. Mirrors the spec's
+/// <c>DriverAssignmentMetadataTinyObjectResponseBody</c>.
+/// </summary>
+public sealed record DriverVehicleAssignmentMetadata
+{
+    /// <summary>Assigned source name from an external source.</summary>
+    [JsonPropertyName("sourceName")]
+    public string? SourceName { get; init; }
 }
 
 /// <summary>
