@@ -1325,7 +1325,7 @@ internal sealed class TuiApp
                     case "List All":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching addresses...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Addresses.ListAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.Addresses.ListAsync(cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Addresses", a => [a.Id, a.Name ?? "", a.FormattedAddress ?? ""], ["ID", "Name", "Address"]);
                         });
                         break;

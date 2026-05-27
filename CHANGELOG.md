@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 01-addresses (2026-05-27)** — applied the per-domain remediation
+  plan: `Address.formattedAddress` and `Address.geofence` are now non-nullable
+  on the response (spec marks both REQUIRED); `IAddressesClient.ListAsync` now
+  exposes the spec's `parentTagIds`, `tagIds`, and `createdAfterTime` query
+  parameters. Remaining plan findings (`addressTypes`/`contacts`/`notes`/
+  `createdAtTime` on `Address`; `addressTypes`/`contactIds`/`notes`/`geofence`
+  on the create/update requests) were already present in the SDK and required
+  no edits. See `docs/api-sync/model-sync-plan-2026-05-27/01-addresses.md`.
 - **Broken-domain reworks (API sync)** — five domains rebuilt to call the real spec endpoints:
   - **Issues** — `getIssues` requires the `ids` query parameter (no true get-by-id);
     `patchIssue` and `postIssue` exist; SDK now takes `ListAsync(IReadOnlyList<string> ids)`,

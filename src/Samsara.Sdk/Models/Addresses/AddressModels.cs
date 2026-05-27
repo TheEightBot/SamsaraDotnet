@@ -15,7 +15,7 @@ public sealed record Address
     public required string Name { get; init; }
 
     [JsonPropertyName("formattedAddress")]
-    public string? FormattedAddress { get; init; }
+    public required string FormattedAddress { get; init; }
 
     [JsonPropertyName("latitude")]
     public double? Latitude { get; init; }
@@ -27,7 +27,7 @@ public sealed record Address
     public IReadOnlyList<string>? AddressTypes { get; init; }
 
     [JsonPropertyName("geofence")]
-    public Geofence? Geofence { get; init; }
+    public required Geofence Geofence { get; init; }
 
     [JsonPropertyName("notes")]
     public string? Notes { get; init; }
