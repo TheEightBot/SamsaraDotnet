@@ -3,6 +3,58 @@
 > Companion to [`docs/api-sync/19-gateways.md`](../19-gateways.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `483da83` on 2026-05-27**
+
+## Implementation notes
+
+All MEDIUM (6) findings were applied. LOW (8) findings on `Gateway` response
+extras were intentionally retained as nullable back-compat properties per
+the workflow precedent established in `08-carrier-proposed-assignments`,
+`13-driver-trailer-assignments`, `14-driver-vehicle-assignments`,
+`16-equipment`, `17-forms`, and `18-fuel-and-energy` (flat-scalar
+conveniences kept so existing consumers don't silently break).
+
+Files touched:
+
+- `src/Samsara.Sdk/Models/Fleet/GatewayModels.cs` — tightened
+  `Gateway.Model` and `Gateway.Serial` to non-nullable `required string`
+  (spec marks REQUIRED in the response). Added three typed nested records
+  — `GatewayAccessoryDevice` (`model` / `serial`), `GatewayConnectionStatus`
+  (`healthStatus` / `lastConnected`), and `GatewayDataUsage`
+  (`cellularDataUsageBytes` / `hotspotUsageBytes` as `long?`) — and
+  surfaced them on `Gateway.AccessoryDevices`,
+  `Gateway.ConnectionStatus`, and `Gateway.DataUsageLast30Days`. This
+  follows the higher-quality precedent of `16-equipment` (typed nested
+  records) rather than the plan's literal `object?` suggestion: the spec
+  schemas (`AccessoryResponseObjectResponseBody`,
+  `ConnectionStatusResponseObjectResponseBody`,
+  `DataUsageResponseObjectResponseBody`) are concrete shapes, so consumers
+  benefit from named properties instead of `object` boxes.
+- `src/Samsara.Sdk/Clients/Fleet/IGatewaysClient.cs` and
+  `src/Samsara.Sdk/Clients/Fleet/GatewaysClient.cs` — added an optional
+  `IReadOnlyList<string>? models = null` first parameter to `ListAsync`,
+  joined with `,` and appended via `QueryBuilder.WithParams`. This matches
+  the established pattern from `DriversClient`, `AssetsClient`, and the
+  recently-touched `EquipmentClient`.
+- `src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs` — registered the
+  three new nested records plus the existing `CreateGatewayRequest` (which
+  was previously unregistered).
+- `tools/Samsara.Cli/TuiApp.cs` — the `Gateways → List All` menu now
+  passes `cancellationToken` by name (`ListAsync` is no longer a single-
+  positional-arg method) and drops the `??""` fallbacks on `Serial` and
+  `Model` (both are now non-nullable per the spec).
+
+`Gateway.Asset` (typed `DriverReference?`) was left unchanged: the audit
+did not flag a weak-typing or drift finding on `asset`, and the spec
+schema (`GatewayAssetResponseObjectResponseBody`) actually shapes
+differently from `DriverReference` (`id` + `externalIds` rather than
+`id` + `name`). Retyping it would be out of scope for the plan.
+
+Verification:
+
+- `dotnet build Samsara.Dotnet.sln`: 0 errors, 0 warnings.
+- `dotnet test tests/Samsara.Sdk.Tests`: 59 passed.
+- `python3 tools/check-sdk-sync.py --fail-on-mismatch`: exit 0.
 
 ## Quick reference
 
