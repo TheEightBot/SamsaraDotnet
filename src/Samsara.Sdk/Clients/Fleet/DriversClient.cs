@@ -27,8 +27,13 @@ internal sealed class DriversClient : SamsaraServiceClientBase, IDriversClient
     public Task<DriverAuthToken> CreateAuthTokenAsync(CreateDriverAuthTokenRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<DriverAuthToken>("fleet/drivers/auth-token", request, cancellationToken);
 
-    public IAsyncEnumerable<DriverQrCode> ListQrCodesAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<DriverQrCode>("drivers/qr-codes", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<DriverQrCode> ListQrCodesAsync(
+        IReadOnlyList<string> driverIds,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<DriverQrCode>(
+            QueryBuilder.WithParams("drivers/qr-codes",
+                ("driverIds", string.Join(",", driverIds))),
+            cancellationToken: cancellationToken);
 
     public Task<DriverQrCode> CreateQrCodeAsync(CreateDriverQrCodeRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<DriverQrCode>("drivers/qr-codes", request, cancellationToken);

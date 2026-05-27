@@ -13,7 +13,10 @@ public interface IDriversClient
     Task<Driver> UpdateAsync(string id, UpdateDriverRequest request, CancellationToken cancellationToken = default);
     Task RemoteSignOutAsync(RemoteSignOutRequest request, CancellationToken cancellationToken = default);
     Task<DriverAuthToken> CreateAuthTokenAsync(CreateDriverAuthTokenRequest request, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<DriverQrCode> ListQrCodesAsync(CancellationToken cancellationToken = default);
+    /// <summary>Get driver QR codes (<c>GET /drivers/qr-codes</c>) — required <paramref name="driverIds"/>.</summary>
+    IAsyncEnumerable<DriverQrCode> ListQrCodesAsync(
+        IReadOnlyList<string> driverIds,
+        CancellationToken cancellationToken = default);
     Task<DriverQrCode> CreateQrCodeAsync(CreateDriverQrCodeRequest request, CancellationToken cancellationToken = default);
     Task DeleteQrCodeAsync(string driverId, CancellationToken cancellationToken = default);
     /// <summary>List driver workflows (beta).</summary>

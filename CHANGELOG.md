@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 12-driver-qr-codes (2026-05-27)** — applied the per-domain
+  remediation plan. `IDriversClient.ListQrCodesAsync` now requires
+  `IReadOnlyList<string> driverIds` (spec REQUIRED on `GET /drivers/qr-codes`)
+  and appends it via `QueryBuilder.WithParams`. `DriverQrCode` now uses
+  `long DriverId` (spec `integer/int64`) and exposes optional `qrCodeLink`;
+  removed SDK-only `qrCodeUrl` and `expiresAt` (not in spec inner schema).
+  `CreateDriverQrCodeRequest.DriverId` is now `required long` to match the
+  spec's required `integer/int64`. See
+  `docs/api-sync/model-sync-plan-2026-05-27/12-driver-qr-codes.md`.
 - **Model sync 11-documents (2026-05-27)** — applied the per-domain
   remediation plan. `Document` now exposes the spec-required `createdAtTime`,
   `documentType`, `driver`, `state`, and `fields` plus optional `vehicle`,

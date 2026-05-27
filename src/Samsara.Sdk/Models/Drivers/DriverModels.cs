@@ -396,13 +396,16 @@ public sealed record CreateDriverAuthTokenRequest
 /// <summary>Represents a driver QR code.</summary>
 public sealed record DriverQrCode
 {
-    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
-    [JsonPropertyName("qrCodeUrl")] public string? QrCodeUrl { get; init; }
-    [JsonPropertyName("expiresAt")] public DateTimeOffset? ExpiresAt { get; init; }
+    /// <summary>ID for the driver the QR code belongs to.</summary>
+    [JsonPropertyName("driverId")] public required long DriverId { get; init; }
+
+    /// <summary>URL link to the driver assignment QR code. Included if a QR code has been created for the driver.</summary>
+    [JsonPropertyName("qrCodeLink")] public string? QrCodeLink { get; init; }
 }
 
 /// <summary>Request body for creating a driver QR code.</summary>
 public sealed record CreateDriverQrCodeRequest
 {
-    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
+    /// <summary>Unique ID of the driver.</summary>
+    [JsonPropertyName("driverId")] public required long DriverId { get; init; }
 }
