@@ -900,15 +900,15 @@ internal sealed class TuiApp
                         var (hosLogStart, hosLogEnd) = InputHelper.AskTimeRange("HOS Logs");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching HOS logs...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Compliance.ListHosLogsAsync(hosLogStart, hosLogEnd, Timeout60s()));
-                            ResultRenderer.RenderList(items, "HOS Logs", l => [l.Id, l.DriverId ?? "", l.HosStatusType ?? ""], ["ID", "Driver ID", "Status"]);
+                            var items = await CollectAsync(_client.Compliance.ListHosLogsAsync(hosLogStart, hosLogEnd, cancellationToken: Timeout60s()));
+                            ResultRenderer.RenderList(items, "HOS Logs", l => [l.Id ?? "", l.DriverId ?? "", l.HosStatusType ?? ""], ["ID", "Driver ID", "Status"]);
                         });
                         break;
                     case "HOS Violations":
                         var (hosViolStart, hosViolEnd) = InputHelper.AskTimeRange("HOS Violations");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching HOS violations...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Compliance.ListHosViolationsAsync(hosViolStart, hosViolEnd, Timeout60s()));
+                            var items = await CollectAsync(_client.Compliance.ListHosViolationsAsync(hosViolStart, hosViolEnd, cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "HOS Violations", v => [v.DriverId ?? "", v.ViolationType ?? ""], ["Driver ID", "Type"]);
                         });
                         break;
@@ -916,7 +916,7 @@ internal sealed class TuiApp
                         var driverId = InputHelper.AskId("Driver ID");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching HOS clocks...[/]", async _ =>
                         {
-                            var clocks = await _client.Compliance.GetHosClocksAsync(new[] { driverId }, Timeout60s());
+                            var clocks = await _client.Compliance.GetHosClocksAsync(new[] { driverId }, cancellationToken: Timeout60s());
                             ResultRenderer.RenderObject(clocks, $"HOS Clocks for {driverId}");
                         });
                         break;

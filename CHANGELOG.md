@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 20-hours-of-service (2026-05-27)** — applied the per-domain
+  remediation plan. `HosLog` (response of `GET /fleet/hos/logs`) re-shaped to
+  the spec's per-driver shape (`driver` + `hosLogs[]`), backed by new typed
+  nested records `HosLogEntry` (with `logStartTime` required, codriver list,
+  vehicle ref) and `HosLogLocation` (latitude/longitude). `HosViolation`
+  (response of `GET /fleet/hos/violations`) re-shaped to spec's
+  `{ violations[]: HosViolationEntry }` form with required `violations`; new
+  `HosViolationEntry`, `HosViolationDay` (required start/end times), and
+  `HosViolationDriver` (required `id`). `HosDailyLog` (response of
+  `GET /fleet/hos/daily-logs`) tightens spec-required `driver`,
+  `startTime`, `endTime` to non-nullable `required`, and gains five new
+  typed nested records: `HosDailyLogDriver` (with timezone + ELD settings),
+  `HosDailyLogEldSettings`, `HosDailyLogDriverRuleset`,
+  `HosDailyLogDistanceTraveled` (drive/PC/yard-move distance meters),
+  `HosDailyLogDutyStatusDurations` (also used for pending durations),
+  `HosDailyLogMetaData` (carrier, home terminal, certification, shipping
+  docs, trailers, vehicles), and `HosDailyLogVehicle`. LOW extras
+  (`id`/`driverId`/`vehicleId`/etc. on `HosLog`, `HosViolation`,
+  `HosDailyLog`) are retained as nullable back-compat per the workflow
+  precedent. `IComplianceClient` query surfaces expanded:
+  `ListHosLogsAsync` gains `driverIds`/`tagIds`/`parentTagIds`;
+  `ListHosViolationsAsync` gains `driverIds`/`tagIds`/`parentTagIds`/`types`;
+  `GetHosClocksAsync` gains `tagIds`/`parentTagIds`/`after`/`limit`;
+  `ListHosDailyLogsAsync` gains
+  `driverIds`/`startDate`/`endDate`/`tagIds`/`parentTagIds`/`driverActivationStatus`/`expand`
+  (legacy `startTime`/`endTime` now fall through to `startDate`/`endDate`
+  when those are null); `V1ListHosAuthenticationLogsAsync` now requires
+  `long driverId` (spec REQUIRED) and converts the existing
+  `startTime`/`endTime` `DateTimeOffset`s to the v1 endpoint's `startMs`/`endMs`
+  query parameters. See `docs/api-sync/model-sync-plan-2026-05-27/20-hours-of-service.md`.
 - **Model sync 19-gateways (2026-05-27)** — applied the per-domain
   remediation plan. `Gateway` (response) tightens spec-required `model` and
   `serial` to non-nullable `required string`, and gains three typed nested
