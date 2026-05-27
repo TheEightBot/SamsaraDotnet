@@ -3,6 +3,100 @@
 > Companion to [`docs/api-sync/21-hubs.md`](../21-hubs.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `a48fb39` on 2026-05-27**
+
+## Implementation notes
+
+All CRITICAL, HIGH, and MEDIUM findings were applied. The two CRITICAL
+wrapper-drift bugs (`POST /hub/locations` and `PATCH /hub/location/{id}`)
+were the load-bearing items in this plan — both endpoints were
+runtime-broken because the SDK was posting an unwrapped body where the
+spec expected a `{ data: ... }` envelope.
+
+CRITICAL fixes:
+
+- **`POST /hub/locations`** — introduced new envelope record
+  `CreateHubLocationsRequest { data: IReadOnlyList<CreateHubLocationInput> }`.
+  The prior `CreateHubLocationRequest` was renamed to
+  `CreateHubLocationInput` and tightened to mark `address`,
+  `customerLocationId`, `hubId`, `isDepot`, and `name` as `required` per the
+  spec. The five missing optional fields (`driverInstructions`,
+  `plannerNotes`, `serviceTimeSeconds`, `serviceWindows`, `skillsRequired`)
+  were added. The spec-absent `notes` field was removed per the request-side
+  precedent for spec-absent extras. The client method
+  `CreateLocationAsync` now takes the envelope.
+- **`PATCH /hub/location/{id}`** — introduced new envelope record
+  `UpdateHubLocationEnvelopeRequest { data: UpdateHubLocationRequest }`.
+  The inner `UpdateHubLocationRequest` gained the nine missing optional
+  fields (`customerLocationId`, `driverInstructions`, `isDepot`, `latitude`,
+  `longitude`, `plannerNotes`, `serviceTimeSeconds`, `serviceWindows`,
+  `skillsRequired`) and dropped the spec-absent `notes` field. The client
+  method `UpdateLocationAsync` now takes the envelope.
+
+HIGH:
+
+- All four list endpoints (`ListCapacitiesAsync`,
+  `ListCustomPropertiesAsync`, `ListLocationsAsync`, `ListSkillsAsync`)
+  now require `hubId` (spec REQUIRED) as the first parameter. The optional
+  filter surface was extended at the same time so the query parameters
+  weren't half-implemented (see MEDIUM below).
+- `ListHubsAsync` (`GET /hubs`) accepts `hubIds`, `startTime`, and `endTime`
+  as optional parameters.
+- Spec-REQUIRED response fields tightened to non-nullable `required` on
+  `Hub` (`timeZone`, `createdAt`, `updatedAt`), `HubLocation` (`address`,
+  `name`, `customerLocationId`, `hubId`, `isDepot`, `latitude`, `longitude`,
+  `driverInstructions`, `plannerNotes`, `serviceTimeSeconds`,
+  `serviceWindows`, `skillsRequired`, `createdAt`, `updatedAt`),
+  `HubCapacity` (`id`, `name`, `unit`, `createdAt`, `updatedAt`),
+  `HubCustomProperty` (`hubId`, `name`, `csvColumns`, `createdAt`,
+  `updatedAt`), and `HubSkill` (`hubId`, `name`, `createdAt`, `updatedAt`).
+  Note: `serviceWindows` and `skillsRequired` use `IReadOnlyList<object>`
+  rather than the typed inner records (`ServiceWindowObjectResponseBody` /
+  `SkillObjectResponseBody`) to stay aligned with the plan's recommended
+  fix; tightening to typed nested records can follow in a future iteration.
+
+MEDIUM:
+
+- `ListCapacitiesAsync` adds optional `capacityIds`, `capacityNames`,
+  `startTime`, `endTime`.
+- `ListCustomPropertiesAsync` adds optional `customPropertyIds`,
+  `customPropertyNames`, `startTime`, `endTime`.
+- `ListLocationsAsync` adds optional `locationIds`, `customerLocationIds`,
+  `startTime`, `endTime`.
+- `ListSkillsAsync` adds optional `skillIds`, `skillNames`, `startTime`,
+  `endTime`.
+- `HubCustomProperty.Name`, `HubLocation.Address/Latitude/Longitude/Name`,
+  and `HubSkill.Name` tightened to non-nullable `required` (already covered
+  by the HIGH response-drift work above).
+
+LOW (conservative — workflow precedent):
+
+- Response-side spec-absent fields retained as nullable back-compat
+  properties: `Hub.externalIds`, `Hub.formattedAddress`, `Hub.geofence`,
+  `Hub.latitude`, `Hub.longitude`, `Hub.tags`, `HubCapacity.capacity`,
+  `HubCapacity.timeSlot`, `HubCapacity.usedCapacity`,
+  `HubCustomProperty.type`, and `HubLocation.notes`. These do not appear in
+  the spec inner schemas but may be returned by the API and removing them
+  would be a breaking change for consumers.
+- Request-side spec-absent fields removed:
+  `CreateHubLocationInput.notes` (the rename target) and
+  `UpdateHubLocationRequest.notes`. Request-side spec-absent fields are
+  removed per the precedent established in earlier domain syncs because
+  sending them risks API rejection.
+
+Files touched:
+`src/Samsara.Sdk/Models/Routes/HubModels.cs`,
+`src/Samsara.Sdk/Clients/Routing/HubsClient.cs`,
+`src/Samsara.Sdk/Clients/Routing/IHubsClient.cs`,
+`src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs`,
+`docs/api-sync/21-hubs.md`,
+`CHANGELOG.md`.
+
+Verification: `dotnet build` green (0 warnings, 0 errors), 59/59 unit
+tests pass, and `tools/check-sdk-sync.py --fail-on-mismatch` exits 0
+(323 SDK endpoints matched, 0 mismatched).
+
+
 
 ## Quick reference
 
