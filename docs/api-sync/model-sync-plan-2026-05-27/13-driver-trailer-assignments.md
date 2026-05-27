@@ -3,6 +3,73 @@
 > Companion to [`docs/api-sync/13-driver-trailer-assignments.md`](../13-driver-trailer-assignments.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `f2bdc2b` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH and MEDIUM findings were applied; LOW findings on the response were
+intentionally retained as nullable back-compat properties per the workflow
+precedent established in `08-carrier-proposed-assignments` (response-side
+flat-scalar conveniences kept; request-side spec-absent fields removed).
+
+Files touched: `src/Samsara.Sdk/Models/Assignments/AssignmentModels.cs`,
+`src/Samsara.Sdk/Clients/Assignments/DriverTrailerAssignmentsClient.cs`,
+`src/Samsara.Sdk/Clients/Assignments/IDriverTrailerAssignmentsClient.cs`,
+`src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs`.
+
+**HIGH (10)**
+
+- **`(no SDK type)` query — `driverIds` REQUIRED on GET**:
+  `IDriverTrailerAssignmentsClient.ListAsync` now takes
+  `IReadOnlyList<string> driverIds` (no default), appended via
+  `QueryBuilder.WithParams("driverIds", string.Join(",", driverIds))` —
+  same pattern as the prior `12-driver-qr-codes` and `08-carrier-proposed`
+  implementations.
+- **`(no SDK type)` query — `id` REQUIRED on PATCH**: `UpdateAsync` now takes
+  `string id` separately and appends it via
+  `QueryBuilder.WithParams(BasePath, ("id", id))`.
+- **`DriverTrailerAssignment` response — required `id`, `driver`, `trailer`,
+  `startTime`**: added all four as `required` properties. `driver` and
+  `trailer` are typed via new nested records
+  `DriverTrailerAssignmentDriver` (required `driverId` + optional
+  `externalIds`, mirrors spec `DriverWithExternalIdObjectResponseBody`) and
+  `DriverTrailerAssignmentTrailer` (required `trailerId`, mirrors spec
+  `TrailerObjectResponseBody`). Both nested records are registered in
+  `SamsaraJsonContext`. `startTime` is typed as `string` to match the spec
+  (RFC 3339 string with no `format` declared — matches the pattern used by
+  `CarrierProposedAssignment.activeTime`).
+- **`DriverTrailerAssignment` response — optional `createdAtTime`, `endTime`,
+  `updatedAtTime`**: added as `string?` per spec.
+- **`UpdateDriverTrailerAssignmentRequest` — required `endTime`**: added
+  `required string EndTime`. The body had previously carried SDK-only
+  `driverId`/`trailerId` properties which were not in the spec body; those
+  were dropped (they would have been silently ignored by the API).
+
+**MEDIUM (2)**
+
+- **`(no SDK type)` query — optional `includeExternalIds`**: added as
+  `bool? includeExternalIds = null` on `ListAsync`, serialized as
+  lowercase boolean string.
+- **`CreateDriverTrailerAssignmentRequest` — optional `startTime`**: added
+  `[JsonPropertyName("startTime")] public string? StartTime { get; init; }`
+  (RFC 3339 string per spec, defaults to "now" server-side).
+
+**LOW (7)**
+
+- **`DriverTrailerAssignment.driverId/driverName/trailerId/trailerName/time`
+  (response)**: kept as nullable back-compat properties with XML doc comments
+  noting they are not in the spec inner schema. Same approach as the
+  `08-carrier-proposed-assignments` workflow precedent: response-side flat
+  scalars that previously existed are preserved as a non-breaking convenience.
+- **`UpdateDriverTrailerAssignmentRequest.driverId/trailerId` (request)**:
+  REMOVED. These were never in the spec request body — the spec body only
+  has `endTime`. Removing them matches the
+  `08-carrier-proposed-assignments` precedent for request-side cleanup
+  (spec-absent body fields don't help callers and are misleading).
+
+Verification: `dotnet build` green (0 warnings, 0 errors), all 59 unit tests
+pass, `python3 tools/check-sdk-sync.py` exits 0 (matched=323/323,
+mismatched=0, unresolved=0, not implemented=0).
 
 ## Quick reference
 
