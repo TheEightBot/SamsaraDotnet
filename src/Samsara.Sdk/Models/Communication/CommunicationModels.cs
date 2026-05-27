@@ -59,13 +59,16 @@ public sealed record Contact
     public required string Phone { get; init; }
 }
 
-/// <summary>Request body for <c>POST /contacts</c>.</summary>
+/// <summary>
+/// Request body for <c>POST /contacts</c>. Per spec, all fields are optional
+/// (the schema declares no <c>required</c> properties).
+/// </summary>
 public sealed record CreateContactRequest
 {
-    [JsonPropertyName("firstName")] public required string FirstName { get; init; }
-    [JsonPropertyName("lastName")] public required string LastName { get; init; }
-    [JsonPropertyName("email")] public required string Email { get; init; }
-    [JsonPropertyName("phone")] public required string Phone { get; init; }
+    [JsonPropertyName("firstName")] public string? FirstName { get; init; }
+    [JsonPropertyName("lastName")] public string? LastName { get; init; }
+    [JsonPropertyName("email")] public string? Email { get; init; }
+    [JsonPropertyName("phone")] public string? Phone { get; init; }
 }
 
 /// <summary>Request body for <c>PATCH /contacts/{id}</c>.</summary>

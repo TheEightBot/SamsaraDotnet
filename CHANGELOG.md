@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 10-contacts (2026-05-27)** — applied the per-domain
+  remediation plan. Relaxed `CreateContactRequest.FirstName`, `LastName`,
+  `Email`, and `Phone` from `required` to optional (`string?`) — the spec
+  declares no required properties on `CreateContactRequest`, so the prior
+  `required` modifier blocked otherwise valid partial requests. The
+  `Contact` response (which DOES require all five fields per spec) and
+  `UpdateContactRequest` (already nullable) are unchanged. See
+  `docs/api-sync/model-sync-plan-2026-05-27/10-contacts.md`.
 - **Model sync 09-coaching (2026-05-27)** — applied the per-domain
   remediation plan. `CoachingSession` now exposes spec-required `behaviors`,
   `coachingType`, `driver`, `dueAtTime`, `sessionStatus`, `updatedAtTime` plus

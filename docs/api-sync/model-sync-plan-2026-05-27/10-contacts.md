@@ -3,6 +3,25 @@
 > Companion to [`docs/api-sync/10-contacts.md`](../10-contacts.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<pending>` on 2026-05-27**
+
+## Implementation notes
+
+All 4 LOW findings resolved by relaxing `CreateContactRequest.{FirstName,
+LastName, Email, Phone}` from `required string` to `string?` in
+`src/Samsara.Sdk/Models/Communication/CommunicationModels.cs`. The spec's
+`CreateContactRequest` schema declares no `required` array, so the previous
+`required` modifier was an over-tightening that blocked otherwise valid
+partial requests (e.g. creating a contact with only a phone number).
+
+The `Contact` response record was not touched — the spec's `Contact` schema
+DOES declare `id`, `firstName`, `lastName`, `email`, `phone` as required, so
+the SDK's `required` modifiers there remain correct. `UpdateContactRequest`
+was already fully nullable and required no change.
+
+Verification: `dotnet build` green (0 warnings, 0 errors); 59 unit tests
+pass; `tools/check-sdk-sync.py` reports `MISMATCHED: 0` and exits 0.
+
 
 ## Quick reference
 
