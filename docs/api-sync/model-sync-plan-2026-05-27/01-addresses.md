@@ -1,6 +1,6 @@
 # Addresses — Model Sync Plan (2026-05-27)
 
-> **✅ Implemented in commit `<pending>` on 2026-05-27**  
+> **✅ Implemented in commit `b5696c6` on 2026-05-27**  
 > Companion to [`docs/api-sync/01-addresses.md`](../01-addresses.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
