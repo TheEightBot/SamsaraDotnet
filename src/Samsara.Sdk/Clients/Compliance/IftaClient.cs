@@ -40,6 +40,7 @@ internal sealed class IftaClient : SamsaraServiceClientBase, IIftaClient
         IReadOnlyList<string>? vehicleIds = null,
         IReadOnlyList<string>? tagIds = null,
         IReadOnlyList<string>? parentTagIds = null,
+        string? after = null,
         CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<IftaVehicleReportsResponse>(
             QueryBuilder.WithParams("fleet/reports/ifta/vehicle",
@@ -50,7 +51,8 @@ internal sealed class IftaClient : SamsaraServiceClientBase, IIftaClient
                 ("fuelType", fuelType),
                 ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds)),
                 ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
-                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds))),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("after", after)),
             cancellationToken);
 
     /// <summary>Create an IFTA detail CSV export job (<c>POST /ifta-detail/csv</c>).</summary>

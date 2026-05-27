@@ -35,12 +35,12 @@ public sealed record IftaReportTroubleshooting
 /// <summary><c>data</c> wrapper for <c>GET /fleet/reports/ifta/jurisdiction</c>.</summary>
 public sealed record IftaJurisdictionReportsResponse
 {
-    [JsonPropertyName("year")] public int? Year { get; init; }
+    [JsonPropertyName("year")] public required int Year { get; init; }
     [JsonPropertyName("month")] public string? Month { get; init; }
     [JsonPropertyName("quarter")] public string? Quarter { get; init; }
 
     [JsonPropertyName("jurisdictionReports")]
-    public IReadOnlyList<IftaJurisdictionSummary>? JurisdictionReports { get; init; }
+    public required IReadOnlyList<IftaJurisdictionSummary> JurisdictionReports { get; init; }
 
     [JsonPropertyName("troubleshooting")]
     public IftaReportTroubleshooting? Troubleshooting { get; init; }
@@ -49,12 +49,12 @@ public sealed record IftaJurisdictionReportsResponse
 /// <summary><c>data</c> wrapper for <c>GET /fleet/reports/ifta/vehicle</c>.</summary>
 public sealed record IftaVehicleReportsResponse
 {
-    [JsonPropertyName("year")] public int? Year { get; init; }
+    [JsonPropertyName("year")] public required int Year { get; init; }
     [JsonPropertyName("month")] public string? Month { get; init; }
     [JsonPropertyName("quarter")] public string? Quarter { get; init; }
 
     [JsonPropertyName("vehicleReports")]
-    public IReadOnlyList<IftaVehicleReport>? VehicleReports { get; init; }
+    public required IReadOnlyList<IftaVehicleReport> VehicleReports { get; init; }
 
     [JsonPropertyName("troubleshooting")]
     public IftaReportTroubleshooting? Troubleshooting { get; init; }
@@ -84,13 +84,13 @@ public sealed record IftaDetailJobArgs
 public sealed record IftaDetailJob
 {
     [JsonPropertyName("jobId")] public required string JobId { get; init; }
-    [JsonPropertyName("jobStatus")] public string? JobStatus { get; init; }
-    [JsonPropertyName("requestedAtTime")] public DateTimeOffset? RequestedAtTime { get; init; }
+    [JsonPropertyName("jobStatus")] public required string JobStatus { get; init; }
+    [JsonPropertyName("requestedAtTime")] public required DateTimeOffset RequestedAtTime { get; init; }
     [JsonPropertyName("startedAtTime")] public DateTimeOffset? StartedAtTime { get; init; }
     [JsonPropertyName("completedAtTime")] public DateTimeOffset? CompletedAtTime { get; init; }
     [JsonPropertyName("failedAtTime")] public DateTimeOffset? FailedAtTime { get; init; }
     [JsonPropertyName("details")] public string? Details { get; init; }
-    [JsonPropertyName("args")] public IftaDetailJobArgs? Args { get; init; }
+    [JsonPropertyName("args")] public required IftaDetailJobArgs Args { get; init; }
     [JsonPropertyName("files")] public IReadOnlyList<IftaDetailJobOutput>? Files { get; init; }
 }
 

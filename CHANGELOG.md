@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 22-ifta (2026-05-27)** — applied the per-domain remediation
+  plan. `IftaJurisdictionReportsResponse.Year` /
+  `.JurisdictionReports`, `IftaVehicleReportsResponse.Year` /
+  `.VehicleReports`, and `IftaDetailJob.Args` / `.JobStatus` /
+  `.RequestedAtTime` tightened from nullable to non-nullable `required`
+  (all spec-REQUIRED on their response wrappers). `IIftaClient.ListVehicleReportsAsync`
+  gains the missing optional `after` query parameter for spec pagination.
+  See `docs/api-sync/model-sync-plan-2026-05-27/22-ifta.md`.
 - **Model sync 21-hubs (2026-05-27)** — applied the per-domain remediation
   plan, including two CRITICAL wrapper-drift fixes that previously broke the
   hub-location request bodies at runtime. **`POST /hub/locations`**: prior

@@ -29,6 +29,7 @@ public interface IIftaClient
         IReadOnlyList<string>? vehicleIds = null,
         IReadOnlyList<string>? tagIds = null,
         IReadOnlyList<string>? parentTagIds = null,
+        string? after = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>Create an IFTA detail CSV export job (<c>POST /ifta-detail/csv</c>).</summary>

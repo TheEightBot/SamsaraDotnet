@@ -3,6 +3,39 @@
 > Companion to [`docs/api-sync/22-ifta.md`](../22-ifta.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+## Implementation notes
+
+All 8 MEDIUM findings were applied (no CRITICAL/HIGH/LOW). The seven
+`response_required_drift` findings tighten spec-REQUIRED scalar / array
+fields from nullable to non-nullable `required` on three response records:
+
+- **`IftaDetailJob`**: `Args` (was `IftaDetailJobArgs?`), `JobStatus` (was
+  `string?`), and `RequestedAtTime` (was `DateTimeOffset?`) are now
+  non-nullable `required`. Spec marks all three REQUIRED on the
+  `IftaDetailJobResponseBody` inner schema for both `GET /ifta-detail/csv/{id}`
+  and `POST /ifta-detail/csv`. `JobId` was already `required`.
+- **`IftaJurisdictionReportsResponse`**: `Year` (was `int?`) and
+  `JurisdictionReports` (was `IReadOnlyList<IftaJurisdictionSummary>?`) are
+  now non-nullable `required`. Spec's `IftaJurisdictionReportDataObjectResponseBody`
+  marks both REQUIRED on the `data` wrapper for `GET /fleet/reports/ifta/jurisdiction`.
+- **`IftaVehicleReportsResponse`**: `Year` (was `int?`) and `VehicleReports`
+  (was `IReadOnlyList<IftaVehicleReport>?`) are now non-nullable `required`.
+  Spec's `IftaVehicleReportDataObjectResponseBody` marks both REQUIRED for
+  `GET /fleet/reports/ifta/vehicle`.
+
+The eighth MEDIUM is the missing optional `after` query parameter on
+`ListVehicleReportsAsync` (`GET /fleet/reports/ifta/vehicle`). Added as
+`string? after = null` (declared last among optionals, before
+`CancellationToken cancellationToken = default`) on both `IIftaClient`
+and `IftaClient`, with `("after", after)` appended to the existing
+`QueryBuilder.WithParams(...)` call.
+
+Files touched: `src/Samsara.Sdk/Models/Compliance/IftaModels.cs`,
+`src/Samsara.Sdk/Clients/Compliance/IftaClient.cs`,
+`src/Samsara.Sdk/Clients/Compliance/IIftaClient.cs`. No `SamsaraJsonContext`
+or test fixture updates required — the affected type registrations and
+test substitutes are unchanged because the responses are only consumed
+via deserialization (no SDK code constructs these records).
 
 ## Quick reference
 

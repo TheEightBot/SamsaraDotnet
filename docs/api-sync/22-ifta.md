@@ -3,6 +3,7 @@
 > **API Version**: `2025-10-23`  
 > **Status**: 🔴 Broken (0/4)  
 > **⚠️ 2026-05-21 audit**: `detail`/`summary` not in spec; jobs→`/ifta-detail/csv[/{id}]`; add `/fleet/reports/ifta/{jurisdiction,vehicle}`. Needs rework. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: see [`model-sync-plan-2026-05-27/22-ifta.md`](model-sync-plan-2026-05-27/22-ifta.md).  
 > **SDK Client**: `IIftaClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../IftaClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Compliance/IftaModels.cs`  
