@@ -1016,7 +1016,7 @@ internal sealed class TuiApp
                         var (mDvirStart, mDvirEnd) = InputHelper.AskTimeRange("Maintenance DVIRs");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching maintenance DVIRs...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Maintenance.GetDvirsStreamAsync(mDvirStart, mDvirEnd, Timeout60s()));
+                            var items = await CollectAsync(_client.Maintenance.GetDvirsStreamAsync(mDvirStart, mDvirEnd, cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Maintenance DVIRs", d => [d.Id, d.VehicleId ?? "", d.Defects?.Count.ToString() ?? "0"], ["ID", "Vehicle ID", "Defects"]);
                         });
                         break;
@@ -1024,7 +1024,7 @@ internal sealed class TuiApp
                         var id = InputHelper.AskId("DVIR ID");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching DVIR...[/]", async _ =>
                         {
-                            var d = await _client.Maintenance.GetDvirByIdAsync(id, Timeout60s());
+                            var d = await _client.Maintenance.GetDvirByIdAsync(id, cancellationToken: Timeout60s());
                             ResultRenderer.RenderObject(d, $"Maintenance DVIR {id}");
                         });
                         break;

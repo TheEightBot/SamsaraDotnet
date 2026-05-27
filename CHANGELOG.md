@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 30-maintenance (2026-05-27)** — applied the per-domain
+  remediation plan (9 HIGH, 40 MEDIUM, 16 LOW — 65 total). `MaintenanceDvir`
+  response rebuilt to match the spec `DvirStreamResponseDataResponseBody` /
+  `Dvir` schemas: required `authorSignature` (typed `JsonElement?`),
+  `dvirSubmissionBeginTime`, `dvirSubmissionTime`, `type`, and
+  `updatedAtTime` added, plus 16 optional spec fields (`defectIds`,
+  `endTime`, `formattedAddress`, `licensePlate`, `location`, `mechanicNotes`,
+  `odometerMeters`, `safetyStatus`, `secondSignature`, `startTime`,
+  `thirdSignature`, `trailer`, `trailerDefects`, `trailerName`, `vehicle`,
+  `vehicleDefects`, `walkaroundPhotos`). `DefectRecord` response rebuilt to
+  match `DefectsResponseDataResponseBody` / `Defect`: required `dvirId`
+  added; `comment` and `isResolved` tightened from nullable to non-nullable
+  `required`; 10 optional spec fields added (`createdAtTime`, `defectPhotos`,
+  `defectTypeId`, `mechanicNotes`, `mechanicNotesUpdatedAtTime`,
+  `resolvedAtTime`, `resolvedBy`, `trailer`, `updatedAtTime`, `vehicle`).
+  `DefectType` response rebuilt to match `DefectTypesResponseDataResponseBody`:
+  three required spec fields added as non-nullable (`createdAtTime`, `label`,
+  `sectionType`) plus optional `severity`. `UpdateDefectRequest` request body
+  rebuilt to match the spec `DefectPatch` schema: added `mechanicNotes`,
+  `resolvedAtTime`, `resolvedBy`; removed spec-absent `comment` and
+  `resolvedAt`. `IMaintenanceClient` gained the full spec query surface:
+  `includeExternalIds` (boolean) added to `GetDvirsStreamAsync`,
+  `GetDvirByIdAsync`, `GetDefectsStreamAsync`, `GetDefectAsync`; `isResolved`
+  (boolean) added to `GetDefectsStreamAsync`; `safetyStatus` (array,
+  comma-joined) added to `GetDvirsStreamAsync`; `ids` (array) added to
+  `ListDefectTypesAsync`. This is a breaking signature change for direct
+  positional callers of the previous `GetDvirsStreamAsync`,
+  `GetDvirByIdAsync`, `GetDefectsStreamAsync`, `GetDefectAsync`, and
+  `ListDefectTypesAsync` methods (all new parameters carry defaults, so
+  source compatibility is preserved for callers that name only the
+  cancellation token). SDK-only response flat-scalars across all three
+  response records retained as nullable back-compat conveniences per the
+  established workflow precedent (08, 13, 14, 28, 29). See
+  `docs/api-sync/model-sync-plan-2026-05-27/30-maintenance.md`.
 - **Model sync 29-location-and-speed (2026-05-27)** — applied the per-domain
   remediation plan (2 HIGH, 10 MEDIUM, 3 LOW — 15 total). `AssetLocationAndSpeed`
   rebuilt to match the spec `LocationAndSpeedResponseResponseBody` inner schema:
