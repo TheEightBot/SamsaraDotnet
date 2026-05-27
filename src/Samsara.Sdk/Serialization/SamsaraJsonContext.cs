@@ -119,6 +119,7 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(TripLocation))]
 // Communication
 [JsonSerializable(typeof(DriverMessage))]
+[JsonSerializable(typeof(V1MessageSender))]
 [JsonSerializable(typeof(SendDriverMessageRequest))]
 [JsonSerializable(typeof(Contact))]
 [JsonSerializable(typeof(Alert))]

@@ -1209,8 +1209,18 @@ internal sealed class TuiApp
                     case "List All":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching messages...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Messages.ListAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Driver Messages", m => [m.Id, m.DriverId ?? "", m.Body ?? ""], ["ID", "Driver ID", "Text"]);
+                            var items = await CollectAsync(_client.Messages.ListAsync(cancellationToken: Timeout60s()));
+                            ResultRenderer.RenderList(
+                                items,
+                                "Driver Messages",
+                                m => [
+                                    m.DriverId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                                    m.Sender.Name,
+                                    m.Sender.Type,
+                                    m.IsRead ? "yes" : "no",
+                                    m.Text,
+                                ],
+                                ["Driver ID", "Sender", "Sender Type", "Read", "Text"]);
                         });
                         break;
                     case "Send Message":

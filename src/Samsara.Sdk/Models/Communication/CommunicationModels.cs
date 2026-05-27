@@ -3,39 +3,61 @@ namespace Samsara.Sdk.Models.Communication;
 using System.Text.Json.Serialization;
 
 /// <summary>
-/// A message sent or received through the Samsara system.
+/// A driver message returned by the legacy v1 endpoint
+/// <c>GET /v1/fleet/messages</c> (spec <c>V1MessageResponse</c>). All fields below
+/// are spec-REQUIRED.
 /// </summary>
 public sealed record DriverMessage
 {
-    [JsonPropertyName("id")]
-    public required string Id { get; init; }
-
+    /// <summary>ID of the driver the message was sent to or sent by (spec <c>int64</c>).</summary>
     [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
+    public required long DriverId { get; init; }
 
-    [JsonPropertyName("senderType")]
-    public string? SenderType { get; init; }
+    /// <summary>True if the recipient has read the message.</summary>
+    [JsonPropertyName("isRead")]
+    public required bool IsRead { get; init; }
 
-    [JsonPropertyName("body")]
-    public string? Body { get; init; }
+    /// <summary>Sender of the message (name + type).</summary>
+    [JsonPropertyName("sender")]
+    public required V1MessageSender Sender { get; init; }
 
+    /// <summary>Time the message was sent to the recipient (Unix epoch milliseconds).</summary>
     [JsonPropertyName("sentAtMs")]
-    public long? SentAtMs { get; init; }
+    public required long SentAtMs { get; init; }
 
-    [JsonPropertyName("readAtMs")]
-    public long? ReadAtMs { get; init; }
+    /// <summary>Body of the message.</summary>
+    [JsonPropertyName("text")]
+    public required string Text { get; init; }
 }
 
 /// <summary>
-/// Request body for sending a message to a driver.
+/// Sender of a driver message (spec <c>V1MessageSender</c>). Both fields are
+/// spec-REQUIRED.
+/// </summary>
+public sealed record V1MessageSender
+{
+    /// <summary>Name of the user that sent the message.</summary>
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+
+    /// <summary>Type of sender — either <c>dispatch</c> or <c>driver</c>.</summary>
+    [JsonPropertyName("type")]
+    public required string Type { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>POST /v1/fleet/messages</c>: send the same text to a list
+/// of driver IDs. Both fields are spec-REQUIRED.
 /// </summary>
 public sealed record SendDriverMessageRequest
 {
-    [JsonPropertyName("driverId")]
-    public required string DriverId { get; init; }
+    /// <summary>IDs of the drivers the message should be sent to (spec items are <c>int64</c>).</summary>
+    [JsonPropertyName("driverIds")]
+    public required IReadOnlyList<string> DriverIds { get; init; }
 
-    [JsonPropertyName("body")]
-    public required string Body { get; init; }
+    /// <summary>Text of the message. Max 2500 characters.</summary>
+    [JsonPropertyName("text")]
+    public required string Text { get; init; }
 }
 
 /// <summary>
