@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 16-equipment (2026-05-27)** — applied the per-domain remediation
+  plan. `IEquipmentClient` now exposes the spec's optional `parentTagIds`,
+  `tagIds`, and `equipmentIds` query parameters across `ListAsync`,
+  `ListLocationsAsync`, `GetLocationsFeedAsync`, `GetLocationsHistoryAsync`,
+  `GetStatsAsync`, `GetStatsFeedAsync`, and `GetStatsHistoryAsync` (array
+  params joined by `,` per the spec's `style=form,explode=false`). `Equipment`
+  (response) now carries spec-defined `assetSerial` and a nested
+  `installedGateway` (new `EquipmentInstalledGateway`); the legacy
+  `equipmentSerialNumber` property is retained as nullable back-compat.
+  `EquipmentLocation` now exposes the required spec shape: `location` for
+  `GET /fleet/equipment/locations` and `locations` (array) for the
+  `/locations/feed` and `/locations/history` endpoints, both backed by a new
+  `EquipmentLocationPoint` record (required `latitude`/`longitude`/`time`,
+  optional `heading`/`speed`); `Name` is tightened to required, and the legacy
+  flat `latitude`/`longitude`/`time` properties are retained as nullable
+  back-compat. `EquipmentStats` (response) gains the 12 spec-defined nested
+  properties: `engineRpm`, `engineSeconds`, `engineTotalIdleTimeMinutes`,
+  `gatewayEngineSeconds`, `gatewayEngineState` (singular object on `/stats`),
+  `gatewayEngineStates` (array on `/feed`/`/history`),
+  `gatewayJ1939EngineSeconds`, `gps`, `gpsOdometerMeters`, `obdEngineSeconds`,
+  `obdEngineState` (singular), and `obdEngineStates` (array), plus
+  `engineStates` and `fuelPercents`. Because the spec serializes
+  `engineRpm`/`engineSeconds`/`engineTotalIdleTimeMinutes`/`gatewayEngineSeconds`/`gps`/`gpsOdometerMeters`/`obdEngineSeconds`
+  as a single object on the snapshot endpoint and as an array on the
+  feed/history endpoints, those fields are exposed as
+  `System.Text.Json.JsonElement?` so both shapes deserialize without error.
+  `Name` is tightened to required, and the legacy `engineState`,
+  `fuelPercent`, `obdOdometer`, and `time` flat-scalar conveniences are
+  retained as nullable back-compat. See
+  `docs/api-sync/model-sync-plan-2026-05-27/16-equipment.md`.
 - **Model sync 15-drivers (2026-05-27)** — applied the per-domain remediation
   plan. `IDriversClient.ListAsync` now accepts the 7 spec-defined optional
   query parameters (`driverActivationStatus`, `parentTagIds`, `tagIds`,

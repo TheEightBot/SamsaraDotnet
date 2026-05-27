@@ -1,7 +1,8 @@
 # Equipment — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (7/8 wired)  
+> **Status**: ✅ Complete (8/8 endpoints match the spec)  
+> **✅ Resolved 2026-05-27 (model-sync plan)** — Implemented HIGH (2) and MEDIUM (38) findings from `docs/api-sync/model-sync-plan-2026-05-27/16-equipment.md`: added `assetSerial` + `installedGateway` to `Equipment`; added `location`/`locations` (with new `EquipmentLocationPoint` nested record) and tightened `Name` to required on `EquipmentLocation`; added 12 spec-defined stats properties to `EquipmentStats` (using `JsonElement?` for shape-shifting fields like `gps`, `engineRpm`, `engineSeconds` that are object on `/stats` and array on `/feed`/`/history`) and tightened `Name` to required; added optional `parentTagIds`/`tagIds`/`equipmentIds` query parameters to the seven list/feed/history methods. LOW back-compat fields retained per workflow precedent.  
 > **⚠️ 2026-05-21 audit**: `CreateAsync`/`DeleteAsync` are fabricated; `UpdateAsync`→`/beta/fleet/equipment/{id}`; missing `GET /fleet/equipment/stats` snapshot. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IEquipmentClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../EquipmentClient.cs`  

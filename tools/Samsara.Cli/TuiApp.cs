@@ -301,7 +301,7 @@ internal sealed class TuiApp
                     case "List All":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching equipment...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Equipment.ListAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.Equipment.ListAsync(cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Equipment", e => [e.Id, e.Name ?? ""], ["ID", "Name"]);
                         });
                         break;
@@ -316,7 +316,7 @@ internal sealed class TuiApp
                     case "List Locations":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching locations...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Equipment.ListLocationsAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.Equipment.ListLocationsAsync(cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Equipment Locations", l => [l.Id, l.Name ?? ""], ["ID", "Name"]);
                         });
                         break;

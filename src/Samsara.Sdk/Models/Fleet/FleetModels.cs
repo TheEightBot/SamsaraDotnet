@@ -487,6 +487,15 @@ public sealed record Equipment
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
+    /// <summary>Asset serial number (spec property; preferred over legacy <c>equipmentSerialNumber</c>).</summary>
+    [JsonPropertyName("assetSerial")]
+    public string? AssetSerial { get; init; }
+
+    /// <summary>Information about the gateway installed on this equipment.</summary>
+    [JsonPropertyName("installedGateway")]
+    public EquipmentInstalledGateway? InstalledGateway { get; init; }
+
+    /// <summary>Legacy serial-number field retained for backward compatibility; prefer <see cref="AssetSerial"/>.</summary>
     [JsonPropertyName("equipmentSerialNumber")]
     public string? EquipmentSerialNumber { get; init; }
 
@@ -504,7 +513,21 @@ public sealed record Equipment
 }
 
 /// <summary>
-/// Equipment location snapshot.
+/// Information about the Samsara gateway installed on a unit of equipment.
+/// </summary>
+public sealed record EquipmentInstalledGateway
+{
+    [JsonPropertyName("serial")]
+    public string? Serial { get; init; }
+
+    [JsonPropertyName("model")]
+    public string? Model { get; init; }
+}
+
+/// <summary>
+/// Equipment location snapshot (returned by <c>GET /fleet/equipment/locations</c> as a single
+/// <see cref="Location"/>, and by <c>GET /fleet/equipment/locations/feed</c> /
+/// <c>GET /fleet/equipment/locations/history</c> as an array in <see cref="Locations"/>).
 /// </summary>
 public sealed record EquipmentLocation
 {
@@ -512,16 +535,48 @@ public sealed record EquipmentLocation
     public required string Id { get; init; }
 
     [JsonPropertyName("name")]
-    public string? Name { get; init; }
+    public required string Name { get; init; }
 
+    /// <summary>Most recent location for this equipment (populated by <c>GET /fleet/equipment/locations</c>).</summary>
+    [JsonPropertyName("location")]
+    public EquipmentLocationPoint? Location { get; init; }
+
+    /// <summary>Time-ordered locations for this equipment (populated by the locations feed and history endpoints).</summary>
+    [JsonPropertyName("locations")]
+    public IReadOnlyList<EquipmentLocationPoint>? Locations { get; init; }
+
+    /// <summary>Legacy flat latitude; retained for backward compatibility. Prefer <c>Location.Latitude</c>.</summary>
     [JsonPropertyName("latitude")]
     public double? Latitude { get; init; }
 
+    /// <summary>Legacy flat longitude; retained for backward compatibility. Prefer <c>Location.Longitude</c>.</summary>
     [JsonPropertyName("longitude")]
     public double? Longitude { get; init; }
 
+    /// <summary>Legacy flat timestamp; retained for backward compatibility. Prefer <c>Location.Time</c>.</summary>
     [JsonPropertyName("time")]
     public DateTimeOffset? Time { get; init; }
+}
+
+/// <summary>
+/// A single GPS reading included in an <see cref="EquipmentLocation"/> response.
+/// </summary>
+public sealed record EquipmentLocationPoint
+{
+    [JsonPropertyName("latitude")]
+    public required double Latitude { get; init; }
+
+    [JsonPropertyName("longitude")]
+    public required double Longitude { get; init; }
+
+    [JsonPropertyName("heading")]
+    public double? Heading { get; init; }
+
+    [JsonPropertyName("speed")]
+    public double? Speed { get; init; }
+
+    [JsonPropertyName("time")]
+    public required DateTimeOffset Time { get; init; }
 }
 
 /// <summary>Represents a speeding interval event.</summary>
@@ -540,13 +595,75 @@ public sealed record SpeedingInterval
     [JsonPropertyName("longitude")] public double? Longitude { get; init; }
 }
 
-/// <summary>Equipment statistics snapshot.</summary>
+/// <summary>
+/// Equipment statistics data point, returned by the equipment stats endpoints
+/// (<c>/fleet/equipment/stats</c>, <c>/feed</c>, and <c>/history</c>).
+/// </summary>
+/// <remarks>
+/// Several properties (e.g. <c>engineRpm</c>, <c>engineSeconds</c>, <c>gps</c>,
+/// <c>gpsOdometerMeters</c>) are serialized as a single object on the snapshot
+/// endpoint and as an array on the feed/history endpoints. They are exposed as
+/// <see cref="System.Text.Json.JsonElement"/> so callers can inspect either
+/// shape directly.
+/// </remarks>
 public sealed record EquipmentStats
 {
     [JsonPropertyName("id")] public required string Id { get; init; }
-    [JsonPropertyName("name")] public string? Name { get; init; }
+    [JsonPropertyName("name")] public required string Name { get; init; }
+
+    /// <summary>Engine RPM. Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
+    [JsonPropertyName("engineRpm")] public System.Text.Json.JsonElement? EngineRpm { get; init; }
+
+    /// <summary>Total engine seconds. Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
+    [JsonPropertyName("engineSeconds")] public System.Text.Json.JsonElement? EngineSeconds { get; init; }
+
+    /// <summary>Engine state samples (array, returned by <c>/feed</c> and <c>/history</c>).</summary>
+    [JsonPropertyName("engineStates")] public IReadOnlyList<object>? EngineStates { get; init; }
+
+    /// <summary>Engine total idle time, in minutes. Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
+    [JsonPropertyName("engineTotalIdleTimeMinutes")] public System.Text.Json.JsonElement? EngineTotalIdleTimeMinutes { get; init; }
+
+    /// <summary>Fuel percent samples (array, returned by <c>/feed</c> and <c>/history</c>).</summary>
+    [JsonPropertyName("fuelPercents")] public IReadOnlyList<object>? FuelPercents { get; init; }
+
+    /// <summary>Gateway-reported engine seconds. Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
+    [JsonPropertyName("gatewayEngineSeconds")] public System.Text.Json.JsonElement? GatewayEngineSeconds { get; init; }
+
+    /// <summary>Gateway engine state (single object, returned by <c>/stats</c>).</summary>
+    [JsonPropertyName("gatewayEngineState")] public object? GatewayEngineState { get; init; }
+
+    /// <summary>Gateway engine state samples (array, returned by <c>/feed</c> and <c>/history</c>).</summary>
+    [JsonPropertyName("gatewayEngineStates")] public IReadOnlyList<object>? GatewayEngineStates { get; init; }
+
+    /// <summary>Gateway J1939 engine seconds samples (array, returned by <c>/feed</c> and <c>/history</c>).</summary>
+    [JsonPropertyName("gatewayJ1939EngineSeconds")] public IReadOnlyList<object>? GatewayJ1939EngineSeconds { get; init; }
+
+    /// <summary>GPS reading. Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
+    [JsonPropertyName("gps")] public System.Text.Json.JsonElement? Gps { get; init; }
+
+    /// <summary>GPS-derived odometer (meters). Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
+    [JsonPropertyName("gpsOdometerMeters")] public System.Text.Json.JsonElement? GpsOdometerMeters { get; init; }
+
+    /// <summary>OBD-reported engine seconds. Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
+    [JsonPropertyName("obdEngineSeconds")] public System.Text.Json.JsonElement? ObdEngineSeconds { get; init; }
+
+    /// <summary>OBD engine state (single object, returned by <c>/stats</c>).</summary>
+    [JsonPropertyName("obdEngineState")] public object? ObdEngineState { get; init; }
+
+    /// <summary>OBD engine state samples (array, returned by <c>/feed</c> and <c>/history</c>).</summary>
+    [JsonPropertyName("obdEngineStates")] public IReadOnlyList<object>? ObdEngineStates { get; init; }
+
+    // -- Legacy back-compat aliases retained for downstream consumers. Not part of the spec response inner schema. --
+
+    /// <summary>Legacy engine state alias; retained for backward compatibility. Prefer <see cref="GatewayEngineState"/> / <see cref="EngineStates"/>.</summary>
     [JsonPropertyName("engineState")] public EngineState? EngineState { get; init; }
+
+    /// <summary>Legacy fuel percent alias; retained for backward compatibility. Prefer <see cref="FuelPercents"/>.</summary>
     [JsonPropertyName("fuelPercent")] public FuelPercent? FuelPercent { get; init; }
+
+    /// <summary>Legacy OBD odometer alias; retained for backward compatibility. Prefer <see cref="GpsOdometerMeters"/>.</summary>
     [JsonPropertyName("obdOdometer")] public ObdOdometer? ObdOdometer { get; init; }
+
+    /// <summary>Legacy flat timestamp; retained for backward compatibility. Each nested sample carries its own <c>time</c>.</summary>
     [JsonPropertyName("time")] public DateTimeOffset? Time { get; init; }
 }

@@ -9,8 +9,15 @@ internal sealed class EquipmentClient : SamsaraServiceClientBase, IEquipmentClie
 
     public EquipmentClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<Equipment> ListAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<Equipment>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<Equipment> ListAsync(
+        IReadOnlyList<string>? parentTagIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<Equipment>(
+            QueryBuilder.WithParams(BasePath,
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds))),
+            cancellationToken: cancellationToken);
 
     public Task<Equipment> GetAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<Equipment>($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
@@ -18,31 +25,86 @@ internal sealed class EquipmentClient : SamsaraServiceClientBase, IEquipmentClie
     public Task<Equipment> UpdateAsync(string id, UpdateEquipmentRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<Equipment>($"beta/fleet/equipment/{Uri.EscapeDataString(id)}", request, cancellationToken);
 
-    public IAsyncEnumerable<EquipmentLocation> ListLocationsAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<EquipmentLocation>($"{BasePath}/locations", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<EquipmentLocation> ListLocationsAsync(
+        IReadOnlyList<string>? parentTagIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? equipmentIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<EquipmentLocation>(
+            QueryBuilder.WithParams($"{BasePath}/locations",
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("equipmentIds", equipmentIds is null ? null : string.Join(",", equipmentIds))),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<EquipmentLocation> GetLocationsFeedAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<EquipmentLocation>($"{BasePath}/locations/feed", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<EquipmentLocation> GetLocationsFeedAsync(
+        IReadOnlyList<string>? parentTagIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? equipmentIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<EquipmentLocation>(
+            QueryBuilder.WithParams($"{BasePath}/locations/feed",
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("equipmentIds", equipmentIds is null ? null : string.Join(",", equipmentIds))),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<EquipmentLocation> GetLocationsHistoryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<EquipmentLocation>(QueryBuilder.WithTimeRange($"{BasePath}/locations/history", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<EquipmentLocation> GetLocationsHistoryAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? equipmentIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<EquipmentLocation>(
+            QueryBuilder.WithParams(QueryBuilder.WithTimeRange($"{BasePath}/locations/history", startTime, endTime),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("equipmentIds", equipmentIds is null ? null : string.Join(",", equipmentIds))),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<EquipmentStats> GetStatsFeedAsync(string? types = null, CancellationToken cancellationToken = default)
-    {
-        var path = types is not null ? $"{BasePath}/stats/feed?types={Uri.EscapeDataString(types)}" : $"{BasePath}/stats/feed";
-        return PaginateAsync<EquipmentStats>(path, cancellationToken: cancellationToken);
-    }
+    public IAsyncEnumerable<EquipmentStats> GetStatsFeedAsync(
+        string? types = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? equipmentIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<EquipmentStats>(
+            QueryBuilder.WithParams($"{BasePath}/stats/feed",
+                ("types", types),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("equipmentIds", equipmentIds is null ? null : string.Join(",", equipmentIds))),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<EquipmentStats> GetStatsHistoryAsync(string? types = null, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-    {
-        var basePath = types is not null ? $"{BasePath}/stats/history?types={Uri.EscapeDataString(types)}" : $"{BasePath}/stats/history";
-        return PaginateAsync<EquipmentStats>(QueryBuilder.WithTimeRange(basePath, startTime, endTime), cancellationToken: cancellationToken);
-    }
+    public IAsyncEnumerable<EquipmentStats> GetStatsHistoryAsync(
+        string? types = null,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? equipmentIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<EquipmentStats>(
+            QueryBuilder.WithParams(QueryBuilder.WithTimeRange($"{BasePath}/stats/history", startTime, endTime),
+                ("types", types),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("equipmentIds", equipmentIds is null ? null : string.Join(",", equipmentIds))),
+            cancellationToken: cancellationToken);
 
     /// <summary>Equipment stats snapshot (<c>GET /fleet/equipment/stats</c>).</summary>
-    public IAsyncEnumerable<EquipmentStats> GetStatsAsync(string? types = null, CancellationToken cancellationToken = default)
-    {
-        var path = types is not null ? $"{BasePath}/stats?types={Uri.EscapeDataString(types)}" : $"{BasePath}/stats";
-        return PaginateAsync<EquipmentStats>(path, cancellationToken: cancellationToken);
-    }
+    public IAsyncEnumerable<EquipmentStats> GetStatsAsync(
+        string? types = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? equipmentIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<EquipmentStats>(
+            QueryBuilder.WithParams($"{BasePath}/stats",
+                ("types", types),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("equipmentIds", equipmentIds is null ? null : string.Join(",", equipmentIds))),
+            cancellationToken: cancellationToken);
 }
