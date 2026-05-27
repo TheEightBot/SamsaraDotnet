@@ -3,6 +3,60 @@
 > Companion to [`docs/api-sync/17-forms.md`](../17-forms.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `d6615db` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH (20) and MEDIUM (40) findings were applied. LOW findings on the
+response and request types were intentionally retained as nullable back-compat
+properties per the workflow precedent established in
+`08-carrier-proposed-assignments`, `13-driver-trailer-assignments`,
+`14-driver-vehicle-assignments`, and `16-equipment` (flat-scalar conveniences
+kept so existing consumers don't silently break).
+
+Per the task guidance, `FormTemplate.Name` was kept alongside the new
+spec-correct `FormTemplate.Title` rather than removed. Both are decorated
+with `[JsonPropertyName]` so servers populating either form deserialize
+without warning; new code should read `Title` first and fall back to `Name`
+(the CLI was updated accordingly).
+
+Two endpoints required signature changes because the existing SDK methods
+were missing query parameters the spec marks REQUIRED:
+
+- `IFormsClient.GetPdfExportsAsync` now requires `string pdfId` (was no
+  parameters). The spec returns a single `{ data: FormPdfExport }` object,
+  not a list; the SDK interface still exposes `IAsyncEnumerable<>` for
+  source compatibility but the client yields exactly one element fetched
+  via `HttpClient.GetDataAsync<FormPdfExport>()`.
+- `IFormsClient.CreatePdfExportAsync` now takes `string id` and posts an
+  empty body. The spec models POST `/form-submissions/pdf-exports` with no
+  request body — the required `id` lives in the query string. The unused
+  `CreateFormPdfExportRequest` record was removed from
+  `src/Samsara.Sdk/Models/Documents/FormModels.cs` and from
+  `SamsaraJsonContext`.
+
+Files touched:
+- `src/Samsara.Sdk/Models/Documents/FormModels.cs` — reshaped `FormTemplate`,
+  `FormSubmission`, `FormPdfExport`, `CreateFormSubmissionRequest`, and
+  `UpdateFormSubmissionRequest`; removed `CreateFormPdfExportRequest`.
+- `src/Samsara.Sdk/Clients/Documents/IFormsClient.cs` and
+  `src/Samsara.Sdk/Clients/Documents/FormsClient.cs` — added required
+  `pdfId` to `GetPdfExportsAsync` and required `id` to
+  `CreatePdfExportAsync`; added optional `ids` to `ListTemplatesAsync` and
+  the five optional array filters (`formTemplateIds`, `userIds`,
+  `driverIds`, `assignedToRouteStopIds`, `include`) to
+  `GetSubmissionsStreamAsync`.
+- `src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs` — registered
+  `CreateFormSubmissionRequest` and `UpdateFormSubmissionRequest`; dropped
+  `CreateFormPdfExportRequest`.
+- `tools/Samsara.Cli/TuiApp.cs` — Forms menu now renders
+  `Title ?? Name ?? ""` on form templates and passes `cancellationToken`
+  by name now that `ListTemplatesAsync` takes optional `ids` first.
+
+Verification:
+- `dotnet build Samsara.Dotnet.sln`: 0 errors, 0 warnings.
+- `dotnet test tests/Samsara.Sdk.Tests`: 59 passed.
+- `python3 tools/check-sdk-sync.py --fail-on-mismatch`: exit 0.
 
 ## Quick reference
 
