@@ -1125,9 +1125,11 @@ internal sealed class TuiApp
                         });
                         break;
                     case "List Submissions":
+                        var subIdsCsv = AnsiConsole.Ask<string>("Submission ids (comma-separated, required by spec):");
+                        var subIds = subIdsCsv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching form submissions...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Forms.ListSubmissionsAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.Forms.ListSubmissionsAsync(subIds, cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Form Submissions", s => [s.Id, s.FormTemplateId ?? "", s.DriverId ?? ""], ["ID", "Template ID", "Driver ID"]);
                         });
                         break;

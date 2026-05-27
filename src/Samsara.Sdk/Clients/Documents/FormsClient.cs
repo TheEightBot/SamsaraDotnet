@@ -10,11 +10,26 @@ internal sealed class FormsClient : SamsaraServiceClientBase, IFormsClient
     public IAsyncEnumerable<FormTemplate> ListTemplatesAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<FormTemplate>("form-templates", cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<FormSubmission> ListSubmissionsAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<FormSubmission>("form-submissions", cancellationToken: cancellationToken);
+    /// <summary>
+    /// List form submissions filtered by id(s). The spec's <c>getFormSubmissions</c>
+    /// requires the <c>ids</c> query parameter — pass one or more ids.
+    /// </summary>
+    public IAsyncEnumerable<FormSubmission> ListSubmissionsAsync(IReadOnlyList<string> ids, string? include = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<FormSubmission>(
+            QueryBuilder.WithParams("form-submissions",
+                ("ids", string.Join(",", ids)),
+                ("include", include)),
+            cancellationToken: cancellationToken);
 
-    public Task<FormSubmission> GetSubmissionAsync(string id, CancellationToken cancellationToken = default)
-        => HttpClient.GetDataAsync<FormSubmission>($"form-submissions?id={Uri.EscapeDataString(id)}", cancellationToken);
+    /// <summary>Convenience: fetch a single form submission by id, returning the first match (or null).</summary>
+    public async Task<FormSubmission?> GetSubmissionAsync(string id, CancellationToken cancellationToken = default)
+    {
+        await foreach (var submission in ListSubmissionsAsync(new[] { id }, cancellationToken: cancellationToken).ConfigureAwait(false))
+        {
+            return submission;
+        }
+        return null;
+    }
 
     public Task<FormSubmission> CreateSubmissionAsync(CreateFormSubmissionRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<FormSubmission>("form-submissions", request, cancellationToken);
