@@ -1,7 +1,73 @@
 # Coaching — Model Sync Plan (2026-05-27)
 
+> **✅ Implemented in commit `PENDING` on 2026-05-27**
+
 > Companion to [`docs/api-sync/09-coaching.md`](../09-coaching.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
+
+## Implementation notes
+
+Resolved 2026-05-27. Counts implemented: CRITICAL=0, HIGH=10, MEDIUM=13, LOW=8.
+(LOW: 5 flat-scalar extras intentionally retained for back-compat — see below.)
+
+**`CoachingModels.cs`** — full rewrite of the three records plus two new
+nested helpers:
+
+- New `CoachingDriver` record mirrors the spec's
+  `DriverWithExternalIdObjectResponseBody` (`driverId` required, plus an
+  optional `externalIds` map). Used as the `driver` property on both
+  `DriverCoachAssignment` and `CoachingSession`.
+- New `CoachingBehavior` record mirrors `behaviorResponseBody` (id,
+  coachableBehaviorType, lastCoachedTime, updatedAtTime all required; note
+  + coachableEvents optional). `coachableEvents` is typed
+  `IReadOnlyList<object>?` because the spec's `coachableEventResponseBody`
+  is not strongly modeled in the SDK.
+- **`DriverCoachAssignment`**: spec-required nested `driver`,
+  `createdAtTime`, `updatedAtTime` added. `CoachId` tightened to non-nullable
+  `required string` per the response spec. Legacy flat scalars `driverId`,
+  `driverName`, `coachName` retained as nullable for back-compat (consistent
+  with the `08-carrier-proposed-assignments` precedent for flat scalars that
+  flatten nested objects).
+- **`CoachingSession`**: spec-required `behaviors`, `coachingType`, `driver`,
+  `dueAtTime`, `sessionStatus`, `updatedAtTime` added. Spec-optional
+  `assignedCoachId`, `completedCoachId`, `sessionNote` added. Legacy flat
+  scalars `driverId`, `coachId`, `status`, `scheduledAtTime`, `sessionType`
+  retained as nullable for back-compat. `completedAtTime` (already present in
+  the SDK) remains as an optional, matching the spec.
+
+**`ICoachingClient` / `CoachingClient`** — added the missing query params on
+all three methods and corrected the `PUT` to use query-string parameters
+(per the spec) instead of a JSON body:
+
+- `ListAssignmentsAsync` now takes optional `driverIds`, `coachIds`,
+  `includeExternalIds`. Array params are joined with `,` (matches the
+  `style: form, explode: false` precedent established by
+  `CarrierProposedAssignmentsClient`).
+- `SetAssignmentAsync` exposes a new primary overload
+  `(string driverId, string? coachId, CancellationToken)` that sends
+  `driverId` and `coachId` as query parameters (required driverId is
+  validated). The legacy `(SetDriverCoachAssignmentRequest, …)` overload is
+  retained as a non-breaking convenience that forwards to the primary
+  overload. Spec-compliant per `putDriverCoachAssignment` operation (which
+  has no request body).
+- `GetSessionsStreamAsync` now takes optional `driverIds`, `coachIds`,
+  `sessionStatuses`, `includeCoachableEvents`, `includeExternalIds`. The
+  existing `startTime` / `endTime` parameters are preserved.
+
+**`SamsaraJsonContext`** — registered `CoachingDriver` and
+`CoachingBehavior` for source-generation.
+
+## LOW findings retained (back-compat)
+
+Per the task brief, flat-scalar properties that flatten a nested spec object
+are kept alongside the nested object. The following remain as nullable
+properties on the SDK records (documented as legacy):
+
+- `CoachingSession.DriverId`, `CoachingSession.CoachId`,
+  `CoachingSession.Status`, `CoachingSession.ScheduledAtTime`,
+  `CoachingSession.SessionType`.
+- `DriverCoachAssignment.DriverId`, `DriverCoachAssignment.DriverName`,
+  `DriverCoachAssignment.CoachName`.
 
 
 ## Quick reference

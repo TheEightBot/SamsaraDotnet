@@ -258,6 +258,8 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(DriverCoachAssignment))]
 [JsonSerializable(typeof(SetDriverCoachAssignmentRequest))]
 [JsonSerializable(typeof(CoachingSession))]
+[JsonSerializable(typeof(CoachingDriver))]
+[JsonSerializable(typeof(CoachingBehavior))]
 // Assignments - Driver/Trailer
 [JsonSerializable(typeof(DriverTrailerAssignment))]
 [JsonSerializable(typeof(CreateDriverTrailerAssignmentRequest))]

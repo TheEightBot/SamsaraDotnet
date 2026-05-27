@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 09-coaching (2026-05-27)** — applied the per-domain
+  remediation plan. `CoachingSession` now exposes spec-required `behaviors`,
+  `coachingType`, `driver`, `dueAtTime`, `sessionStatus`, `updatedAtTime` plus
+  optional `assignedCoachId`, `completedCoachId`, `sessionNote`.
+  `DriverCoachAssignment` now exposes spec-required nested `driver`,
+  `createdAtTime`, `updatedAtTime`, and tightens `coachId` to non-nullable
+  (spec marks REQUIRED). Two new shared records, `CoachingDriver`
+  (`DriverWithExternalIdObjectResponseBody`) and `CoachingBehavior`
+  (`behaviorResponseBody`), back the nested `driver` and `behaviors`
+  properties. Legacy flat scalars (`CoachingSession.DriverId/CoachId/Status/
+  ScheduledAtTime/SessionType`, `DriverCoachAssignment.DriverId/DriverName/
+  CoachName`) retained for back-compat. `ICoachingClient.ListAssignmentsAsync`
+  gains optional `driverIds`, `coachIds`, `includeExternalIds`;
+  `GetSessionsStreamAsync` gains optional `driverIds`, `coachIds`,
+  `sessionStatuses`, `includeCoachableEvents`, `includeExternalIds`.
+  `SetAssignmentAsync` gains a primary `(string driverId, string? coachId)`
+  overload that sends both as query parameters (spec-compliant — no JSON
+  body); the legacy `(SetDriverCoachAssignmentRequest)` overload is preserved
+  and now forwards to the primary overload. See
+  `docs/api-sync/model-sync-plan-2026-05-27/09-coaching.md`.
 - **Model sync 08-carrier-proposed-assignments (2026-05-27)** — applied the
   per-domain remediation plan. `CarrierProposedAssignment` now exposes the
   spec-required `activeTime` plus optional `acceptedTime`, `firstSeenTime`,
