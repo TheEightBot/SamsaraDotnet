@@ -3,6 +3,72 @@
 > Companion to [`docs/api-sync/14-driver-vehicle-assignments.md`](../14-driver-vehicle-assignments.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `9ecf5d4` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH and MEDIUM findings were applied; LOW findings on the response were
+intentionally retained as nullable back-compat properties per the workflow
+precedent established in `08-carrier-proposed-assignments` and
+`13-driver-trailer-assignments` (response-side flat-scalar conveniences kept;
+request-side spec-absent fields are left untouched because this domain's
+existing request DTOs already match the spec body shape).
+
+Files touched: `src/Samsara.Sdk/Models/Assignments/AssignmentModels.cs`,
+`src/Samsara.Sdk/Clients/Assignments/DriverVehicleAssignmentsClient.cs`,
+`src/Samsara.Sdk/Clients/Assignments/IDriverVehicleAssignmentsClient.cs`,
+`src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs`, plus a one-line
+adjustment in `tools/Samsara.Cli/TuiApp.cs` to account for the now-nullable
+back-compat `Id` and to surface the new nested `Driver`/`Vehicle` IDs.
+
+**HIGH (2)**
+
+- **`DriverVehicleAssignment` response — required `driver`**: added as
+  `required DriverVehicleAssignmentDriver Driver` with a new nested record
+  mirroring the spec's `GoaDriverTinyResponseResponseBody` (required `id`,
+  optional `name` / `externalIds`).
+- **`DriverVehicleAssignment` response — required `vehicle`**: added as
+  `required DriverVehicleAssignmentVehicle Vehicle` with a new nested record
+  mirroring the spec's `GoaVehicleTinyResponseResponseBody` (optional `id` /
+  `name` / `externalIds` — the spec does not mark `id` required on this
+  sub-schema).
+
+**MEDIUM (7)**
+
+- **`(no SDK type)` query — optional `driverTagIds`**: added as
+  `string? driverTagIds = null` on `ListAsync` and appended via
+  `QueryBuilder.WithParams("driverTagIds", driverTagIds)`.
+- **`(no SDK type)` query — optional `vehicleTagIds`**: added as
+  `string? vehicleTagIds = null` on `ListAsync` and appended via
+  `QueryBuilder.WithParams("vehicleTagIds", vehicleTagIds)`.
+- **`DriverVehicleAssignment` response — optional `assignedAtTime`**: added
+  as `string? AssignedAtTime` (RFC 3339 string per spec — no `format`).
+- **`DriverVehicleAssignment` response — optional `message`**: added as
+  `string? Message`. POST and PATCH responses return only `{ "data": {
+  "message": "Driver assignment was successfully ..." } }`; the field is
+  reused on the shared SDK record.
+- **`DriverVehicleAssignment` response — optional `metadata`**: added as
+  `DriverVehicleAssignmentMetadata? Metadata`, a new nested record mirroring
+  the spec's `DriverAssignmentMetadataTinyObjectResponseBody` (optional
+  `sourceName`).
+- **`DriverVehicleAssignment.isPassenger` (response)**: tightened to
+  `required bool IsPassenger` (spec marks REQUIRED for the GET inner schema).
+- **`DriverVehicleAssignment.startTime` (response)**: tightened to
+  `required DateTimeOffset StartTime` (spec marks REQUIRED for the GET inner
+  schema). Type kept as `DateTimeOffset` per the plan's "drop the `?`"
+  instruction.
+
+**LOW (9)**
+
+- **`DriverVehicleAssignment.id/driverId/driverName/vehicleId/vehicleName`
+  (response)**: kept as nullable back-compat scalars (now relaxed to
+  `string? Id`) with XML doc comments noting they are not in the spec inner
+  schema. Same approach as the `13-driver-trailer-assignments` precedent.
+- **`DriverVehicleAssignment.assignmentType/endTime/isPassenger/startTime`
+  (response, "PATCH/POST only" findings)**: not removed. The shared SDK
+  record is reused across GET (where these are spec properties) and POST /
+  PATCH (whose response bodies only carry `message`). GET is the dominant
+  consumer; the fields stay so callers can deserialize list responses.
 
 ## Quick reference
 
