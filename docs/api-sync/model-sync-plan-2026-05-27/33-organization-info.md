@@ -3,6 +3,34 @@
 > Companion to [`docs/api-sync/33-organization-info.md`](../33-organization-info.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented on 2026-05-27**
+
+## Implementation notes
+
+All five LOW findings were on `OrganizationInfo` extras
+(`address`, `city`, `state`, `zip`, `country`) on the `GET /me` response.
+Per the established workflow precedent (`08-carrier-proposed-assignments`,
+`13-driver-trailer-assignments`, `14-driver-vehicle-assignments`,
+`28-live-sharing-links`, `29-location-and-speed`), each was retained as a
+nullable back-compat property and annotated with an XML doc comment that:
+
+1. Notes the field is **not part of the spec inner schema**.
+2. Points callers to the canonical replacement where one exists
+   (e.g. `Address` → `CarrierSettings.MainOfficeAddress`); for `city`,
+   `state`, `zip`, and `country` the spec exposes no direct replacement, so
+   the doc simply records that fact.
+
+No spec-required additions or type tightening were needed — the plan had
+zero CRITICAL / HIGH / MEDIUM findings. `OrganizationCarrierSettings`
+(which has unrelated drift around `carrierName` and the `dotNumber`
+`integer` vs `string` shape) is **out of scope** for this plan and was not
+touched.
+
+Files touched: `src/Samsara.Sdk/Models/Organization/OrganizationModels.cs`.
+
+Verification: `dotnet build` green (0 warnings, 0 errors); all 59 unit
+tests pass; `python3 tools/check-sdk-sync.py` exits 0
+(matched=323/323, mismatched=0, unresolved=0, not implemented=0).
 
 ## Quick reference
 
