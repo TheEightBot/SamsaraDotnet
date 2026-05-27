@@ -3,6 +3,98 @@
 > Companion to [`docs/api-sync/25-issues.md`](../25-issues.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `c126783` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH (3), MEDIUM (16), and LOW (6) findings were applied — 25 total.
+
+Files touched:
+
+- `src/Samsara.Sdk/Models/Issues/IssueModels.cs` — `Issue` rebuilt; four new
+  nested response records (`IssueAsset`, `IssueUser`, `IssueSource`,
+  `IssueMedia`); three new request records (`IssueAssetRequest`,
+  `IssueAssigneeRequest`, `IssueMediaItemRequest`); request DTOs retyped.
+- `src/Samsara.Sdk/Clients/Issues/IIssuesClient.cs` — `GetStreamAsync`
+  signature expanded from 2 to 7 parameters for the full spec query surface.
+- `src/Samsara.Sdk/Clients/Issues/IssuesClient.cs` — query-string composition
+  via `QueryBuilder.WithParams`, joining array params with `,` per the
+  `IndustrialClient` / `ReportsClient` precedent.
+- `src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs` — added seven new
+  `[JsonSerializable]` registrations (plus the previously-unregistered
+  `CreateIssueRequest`).
+
+**HIGH (3) — `Issue` (response) spec-REQUIRED additions**
+
+- **`issueSource`** → `required IssueSource IssueSource` (new nested
+  record mirroring `IssueSourceObjectResponseBody`: required `Type` plus
+  optional `Id`). Modelled as a typed sub-record rather than the plan's
+  recommended `object` placeholder, following the same precedent used in
+  `13`/`14`/`23`.
+- **`submittedAtTime`** → `required DateTimeOffset SubmittedAtTime`
+  (spec `string/date-time`).
+- **`submittedBy`** → `required IssueUser SubmittedBy` (new nested record
+  mirroring `FormsPolymorphicUserObjectResponseBody`: required `Id` and
+  `Type`). Reused for the optional `AssignedTo` field below since both
+  spec fields reference the same schema.
+
+**MEDIUM (16)**
+
+- **5 missing optional query parameters on `GetStreamAsync`** added to
+  `IIssuesClient` and `IssuesClient`: `status`, `assetIds`,
+  `assetExternalIds`, `include`, `assignedToRouteStopIds`. Each typed as
+  `IReadOnlyList<string>?` and joined with `,` via
+  `QueryBuilder.WithParams`. The plan suggested `IReadOnlyList<object>?`
+  for `include` and `status`; tightened to `string` because the spec
+  declares them as string arrays.
+- **`Issue.asset`** added as `IssueAsset? Asset` (new nested record
+  mirroring `FormsAssetObjectResponseBody`: required `EntryType`, optional
+  `Id`/`Name`/`ExternalIds`).
+- **`Issue.assignedTo`** added as `IssueUser? AssignedTo` (reuses the
+  `IssueUser` record introduced for the required `SubmittedBy` field).
+- **`Issue.dueDate`** added as `DateTimeOffset? DueDate`
+  (spec `string/date-time`).
+- **`Issue.mediaList`** added as `IReadOnlyList<IssueMedia>? MediaList`
+  (new nested record mirroring `FormsMediaRecordObjectResponseBody`:
+  required `Id`, `ProcessingStatus`; optional `Url`, `UrlExpiresAt`).
+- **`Issue.createdAtTime`** tightened from `DateTimeOffset?` to
+  `required DateTimeOffset` (spec-REQUIRED).
+- **`Issue.status`** tightened from `string?` to `required string`
+  (spec-REQUIRED). Kept as `string` rather than an enum to preserve
+  forward-compatibility with future Samsara status values.
+- **`Issue.title`** tightened from `string?` to `required string`
+  (spec-REQUIRED).
+- **`Issue.updatedAtTime`** tightened from `DateTimeOffset?` to
+  `required DateTimeOffset` (spec-REQUIRED).
+- **`CreateIssueRequest.asset`** retyped from weak `object` to
+  `required IssueAssetRequest Asset` (new request record mirroring
+  `PostIssueRequestBodyAssetRequestBody`: required `Id`).
+- **`CreateIssueRequest.assignedTo`** retyped from weak `object?` to
+  `IssueAssigneeRequest? AssignedTo` (new request record mirroring
+  `PostIssueRequestBodyAssignedToRequestBody`: required `Id`/`Type`).
+- **`UpdateIssueRequest.assignedTo`** retyped from weak `object?` to
+  `IssueAssigneeRequest? AssignedTo` (the spec's
+  `PatchIssueRequestBodyAssignedToRequestBody` is structurally identical
+  to the POST variant — the record is shared by both DTOs).
+- **`Create/UpdateIssueRequest.media`** retyped from
+  `IReadOnlyList<object>?` to `IReadOnlyList<IssueMediaItemRequest>?`
+  (new request record mirroring
+  `FormSubmissionRequestMediaItemObjectRequestBody`: required
+  `Base64Payload`/`MediaType`). Not enumerated in the plan because the
+  plan only flagged the top-level `object` properties, but applied here
+  as the natural companion fix.
+
+**LOW (6) — extra-property removals**
+
+All six SDK-only flat scalars absent from the spec inner schema were
+removed: `assigneeId`, `assigneeName`, `vehicleId`, `vehicleName`,
+`resolvedAtTime`, `type`. Same approach as `23-idling` — there are no
+test/TUI consumers of these fields (the TUI only reads `Id`/`Title`/`Status`,
+all of which remain). The new nested `AssignedTo`/`Asset` objects provide
+the same information through spec-aligned JSON property names.
+
+Build is green and `tools/check-sdk-sync.py` reports `mismatched=0` /
+`not implemented=0`. All 59 unit tests pass.
 
 ## Quick reference
 
