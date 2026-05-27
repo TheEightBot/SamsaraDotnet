@@ -3,6 +3,98 @@
 > Companion to [`docs/api-sync/28-live-sharing-links.md`](../28-live-sharing-links.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `8bcde86` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH and MEDIUM findings were applied. LOW findings were treated
+consistently with the workflow precedent established in
+`08-carrier-proposed-assignments`, `13-driver-trailer-assignments`, and
+`14-driver-vehicle-assignments`: response-side flat-scalar conveniences
+preserved as nullable back-compat; request-side spec-absent body fields
+removed because the API silently ignores them and they mislead callers.
+
+Files touched: `src/Samsara.Sdk/Models/Fleet/LiveSharingModels.cs`,
+`src/Samsara.Sdk/Clients/Fleet/ILiveSharingLinksClient.cs`,
+`src/Samsara.Sdk/Clients/Fleet/LiveSharingLinksClient.cs`,
+`src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs`.
+
+**HIGH (3)**
+
+- **`(no SDK type)` query — `id` REQUIRED on PATCH**:
+  `ILiveSharingLinksClient.UpdateAsync` now takes `string id` separately and
+  appends it via `QueryBuilder.WithParams(BasePath, ("id", id))` — same
+  pattern as the prior `13-driver-trailer-assignments` and
+  `14-driver-vehicle-assignments` implementations. This is a breaking
+  signature change for direct callers of the previous body-only
+  `UpdateAsync(UpdateLiveSharingLinkRequest, ...)`.
+- **`LiveSharingLink` response — REQUIRED `liveSharingUrl`**: added as
+  `required string LiveSharingUrl` with `[JsonPropertyName("liveSharingUrl")]`.
+  This is the canonical spec name; the legacy `Url` flat scalar remains as
+  nullable back-compat.
+- **`UpdateLiveSharingLinkRequest.name` REQUIRED**: tightened from
+  `string?` to `required string` matching the spec body schema.
+
+**MEDIUM (16)**
+
+- **`(no SDK type)` query — optional `ids`**: added as
+  `IReadOnlyList<string>? ids = null` on `ListAsync`, serialized via
+  `string.Join(",", ids)` per the precedent in `AssetsClient.ListAsync`.
+- **`(no SDK type)` query — optional `type`**: added as `string? type = null`
+  on `ListAsync` and appended via `QueryBuilder.WithParams("type", type)`.
+- **`CreateLiveSharingLinkRequest` — optional `description`,
+  `expiresAtTime`, `assetsLocationLinkConfig`,
+  `assetsNearLocationLinkConfig`, `assetsOnRouteLinkConfig`**: added as
+  typed properties. `description`/`expiresAtTime` are nullable `string?` per
+  spec (RFC 3339 string with no `format` keyword). The three `*LinkConfig`
+  properties are typed via dedicated request records to match the spec's
+  request-side schemas — `CreateAssetsLocationLinkConfig` mirrors
+  `AssetsLocationLinkRequestConfigObject` (with `tagIds` instead of the
+  response-side resolved `tags`); the near-location and on-route configs
+  reuse the same nested records as the response side (the request and
+  response shapes are identical for those two).
+- **`LiveSharingLink` response — optional `description`, `expiresAtTime`,
+  `assetsLocationLinkConfig`, `assetsNearLocationLinkConfig`,
+  `assetsOnRouteLinkConfig`**: added as nullable typed properties.
+  `assetsLocationLinkConfig` is typed via
+  `LiveSharingLinkAssetsLocationLinkConfig`, which mirrors the spec's
+  `AssetsLocationLinkResponseConfigObjectResponseBody` (with the resolved
+  `tags` array typed as `LiveSharingLinkTag` — a minified tag record that
+  mirrors `GoaTagTinyResponseResponseBody`). The `location` sub-object is
+  typed as `LiveSharingLinkLocation` mirroring the spec's address-details
+  schema.
+- **`LiveSharingLink.name` / `LiveSharingLink.type` REQUIRED**: tightened
+  from `string?` to `required string` for each — both are spec REQUIRED on
+  the response inner schema.
+- **`UpdateLiveSharingLinkRequest` — optional `description`,
+  `expiresAtTime`**: added as nullable `string?` per spec.
+
+**LOW (8)**
+
+- **`LiveSharingLink.url`, `LiveSharingLink.expiresAt`,
+  `LiveSharingLink.entityId`, `LiveSharingLink.entityType` (response)**:
+  kept as nullable back-compat properties with XML doc comments noting they
+  are not in the spec inner schema and pointing callers to the canonical
+  spec fields (`liveSharingUrl`, `expiresAtTime`) or typed
+  `*LinkConfig` records (for `entityId`/`entityType`). Same approach as
+  `08-carrier-proposed-assignments`, `13-driver-trailer-assignments`, and
+  `14-driver-vehicle-assignments`.
+- **`CreateLiveSharingLinkRequest.entityId`,
+  `CreateLiveSharingLinkRequest.expiresAt` (request)**: REMOVED. The spec
+  request body does not declare these. `entityId` was previously declared
+  `required` in the SDK — its removal is a breaking change for direct
+  callers, but the body field was never honored by the API (the typed
+  `*LinkConfig.assetId` / `addressId` / `recurringRouteId` paths are the
+  real wire shape).
+- **`UpdateLiveSharingLinkRequest.id`,
+  `UpdateLiveSharingLinkRequest.expiresAt` (request)**: REMOVED. The `id`
+  is now passed as the spec-required query parameter on
+  `UpdateAsync(string id, ...)`; placing it in the body was incorrect.
+  `expiresAt` is not in the spec body — the legacy alias was unused.
+
+Verification: `dotnet build` green (0 warnings, 0 errors); all 59 unit
+tests pass; `python3 tools/check-sdk-sync.py` exits 0 (matched=323/323,
+mismatched=0, unresolved=0, not implemented=0).
 
 ## Quick reference
 
