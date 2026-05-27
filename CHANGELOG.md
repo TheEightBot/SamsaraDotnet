@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 04-attributes (2026-05-27)** — applied the per-domain
+  remediation plan. `IAttributesClient.ListAsync`, `GetAsync`, and `DeleteAsync`
+  now take the spec-required `entityType` query parameter. `AttributeDefinition`
+  response adds `unit` (string) and `values` (`IReadOnlyList<object>?`) and
+  tightens `entities` to non-nullable (defaults to an empty list). Request
+  bodies gain `entities` (`CreateAttributeRequest` and `UpdateAttributeRequest`)
+  and `unit` (`CreateAttributeRequest`). CLI menu updated to prompt for entity
+  type on list/get/delete. See
+  `docs/api-sync/model-sync-plan-2026-05-27/04-attributes.md`.
 - **Model sync 03-assets (2026-05-27)** — applied the per-domain remediation
   plan. `Asset` response now exposes `attributes` (raw `JsonElement` list,
   matching the spec inner `GoaAttributeTinyResponseBody`) and tightens

@@ -652,17 +652,19 @@ internal sealed class TuiApp
                 switch (op)
                 {
                     case "List All":
+                        var listEntityType = InputHelper.AskId("Entity Type (driver or asset)");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching attributes...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Attributes.ListAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.Attributes.ListAsync(listEntityType, Timeout60s()));
                             ResultRenderer.RenderList(items, "Attributes", a => [a.Id, a.Name ?? "", a.EntityType ?? ""], ["ID", "Name", "Entity Type"]);
                         });
                         break;
                     case "Get by ID":
                         var id = InputHelper.AskId("Attribute ID");
+                        var getEntityType = InputHelper.AskId("Entity Type (driver or asset)");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching attribute...[/]", async _ =>
                         {
-                            var a = await _client.Attributes.GetAsync(id, Timeout60s());
+                            var a = await _client.Attributes.GetAsync(id, getEntityType, Timeout60s());
                             ResultRenderer.RenderObject(a, $"Attribute {id}");
                         });
                         break;
@@ -691,11 +693,12 @@ internal sealed class TuiApp
                         break;
                     case "Delete":
                         var did = InputHelper.AskId("Attribute ID to delete");
+                        var delEntityType = InputHelper.AskId("Entity Type (driver or asset)");
                         if (InputHelper.Confirm($"delete attribute {did}"))
                         {
                             await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Deleting...[/]", async _ =>
                             {
-                                await _client.Attributes.DeleteAsync(did, Timeout60s());
+                                await _client.Attributes.DeleteAsync(did, delEntityType, Timeout60s());
                             });
                             ResultRenderer.RenderSuccess("Attribute deleted.");
                         }
