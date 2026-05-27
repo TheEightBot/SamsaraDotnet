@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 32-messages (2026-05-27)** — applied the per-domain remediation
+  plan (5 HIGH, 5 MEDIUM, 6 LOW — 16 total). `DriverMessage` response rebuilt
+  to match spec `V1MessageResponse`: added required `isRead`, `text`, and a
+  typed `V1MessageSender` (with required `name`/`type`); tightened
+  `driverId` from `string?` to required `long` (spec `integer/int64` type
+  fix) and `sentAtMs` from `long?` to required `long`; removed SDK-only
+  `id`, `senderType`, `body`, `readAtMs` (not present in the spec inner
+  schema). `SendDriverMessageRequest` rebuilt to match the spec request
+  body: required `IReadOnlyList<string> DriverIds` and `string Text`
+  replace the legacy single-driver `DriverId`/`Body` fields. Both shapes
+  are breaking signature changes for direct callers of the previous
+  records. `IMessagesClient.ListAsync` gained the spec's two optional
+  query parameters (`long? endMs`, `long? durationMs`). See
+  `docs/api-sync/model-sync-plan-2026-05-27/32-messages.md`.
 - **Model sync 31-media (2026-05-27)** — applied the per-domain remediation
   plan (14 HIGH, 15 MEDIUM, 19 LOW — 48 total). `MediaFile` response rebuilt
   to match the spec `UploadedMediaObjectResponseBody`: seven spec-REQUIRED

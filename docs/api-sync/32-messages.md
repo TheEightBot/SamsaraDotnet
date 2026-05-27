@@ -3,6 +3,7 @@
 > **API Version**: `2025-10-23`  
 > **Status**: 🔴 Broken (0/2)  
 > **⚠️ 2026-05-21 audit**: `fleet/messages`→`/v1/fleet/messages` (`V1getMessages`/`V1createMessages`). See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
+> **Resolved 2026-05-27 (model-sync plan)**: applied [`model-sync-plan-2026-05-27/32-messages.md`](model-sync-plan-2026-05-27/32-messages.md) — 5 HIGH, 5 MEDIUM, 6 LOW findings implemented. `DriverMessage` response rebuilt to match spec `V1MessageResponse`: added required `isRead`, `text`, and a typed `V1MessageSender` (`name`, `type`); tightened `driverId` to non-nullable `long` (type fix), `sentAtMs` to non-nullable `long`; removed SDK-only `id`, `senderType`, `body`, `readAtMs` (not in spec inner schema). `SendDriverMessageRequest` rebuilt to match spec request body: required `driverIds: IReadOnlyList<string>` and `text: string`; removed legacy `driverId`/`body`. `IMessagesClient.ListAsync` gained spec `endMs`/`durationMs` query params.  
 > **SDK Client**: `IMessagesClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../MessagesClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Communication/CommunicationModels.cs`  

@@ -3,6 +3,40 @@
 > Companion to [`docs/api-sync/32-messages.md`](../32-messages.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented on 2026-05-27**
+
+## Implementation notes
+
+All HIGH, MEDIUM, and LOW findings were applied — the legacy v1 messages
+domain was small enough that the LOW spec-absent extras (`id`, `senderType`,
+`body`, `readAtMs` on the response; `driverId`, `body` on the request) could
+be removed cleanly without leaving back-compat conveniences behind. Notes:
+
+- `DriverMessage` response rebuilt to mirror the spec `V1MessageResponse`
+  inner schema. All five spec-REQUIRED fields are marked `required` since
+  the spec guarantees them. `driverId` shifts type from `string?` to `long`
+  (spec `integer/int64`) — this is a breaking signature change for direct
+  callers of the previous nullable `string`.
+- `Sender` is typed as a new `V1MessageSender` record (with required `name`
+  and `type`) rather than the literal `object` the plan recommends, because
+  the spec defines the inner shape concretely and the precedent (e.g.
+  `MaintenanceDvir`'s typed `MediaUrlInfo`) is to surface known shapes
+  typed.
+- `SendDriverMessageRequest` rebuilt to mirror the spec inline request
+  body. `driverIds` uses `IReadOnlyList<string>` per the plan's exact
+  recommendation, even though the spec items are `number/int64` — this
+  keeps consistency with the rest of the SDK, which models Samsara IDs as
+  strings throughout.
+- `IMessagesClient.ListAsync` gained the spec's two optional query
+  parameters (`endMs`, `durationMs`). The existing `CancellationToken`
+  parameter is now named explicitly at the CLI call site.
+
+Files touched: `src/Samsara.Sdk/Models/Communication/CommunicationModels.cs`,
+`src/Samsara.Sdk/Clients/Communication/IMessagesClient.cs`,
+`src/Samsara.Sdk/Clients/Communication/MessagesClient.cs`,
+`src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs` (registered the new
+`V1MessageSender`), `tools/Samsara.Cli/TuiApp.cs` (CLI list rendering
+updated for the new field set).
 
 ## Quick reference
 
