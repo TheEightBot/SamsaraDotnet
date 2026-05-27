@@ -3,6 +3,83 @@
 > Companion to [`docs/api-sync/30-maintenance.md`](../30-maintenance.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `a68f5ea` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH and MEDIUM findings were applied. LOW response-side findings were
+intentionally retained as nullable back-compat properties per the workflow
+precedent established in `08-carrier-proposed-assignments`,
+`13-driver-trailer-assignments`, `14-driver-vehicle-assignments`,
+`28-live-sharing-links`, and `29-location-and-speed`. LOW request-side
+findings on `UpdateDefectRequest` (`comment`, `resolvedAt`) were removed
+since the spec `DefectPatch` schema does not include them; the spec-aligned
+replacements (`mechanicNotes`, `resolvedAtTime`, `resolvedBy`) were added in
+the MEDIUM pass.
+
+Files touched: `src/Samsara.Sdk/Models/Maintenance/MaintenanceModels.cs`,
+`src/Samsara.Sdk/Clients/Maintenance/IMaintenanceClient.cs`,
+`src/Samsara.Sdk/Clients/Maintenance/MaintenanceClient.cs`,
+`tools/Samsara.Cli/TuiApp.cs` (CLI call sites updated for new optional
+parameters).
+
+**HIGH (9)**
+
+- **`DefectRecord` response — required `dvirId`**: added as
+  `[JsonPropertyName("dvirId")] public string? DvirId { get; init; }`. Kept
+  nullable because not all defect-source endpoints are guaranteed to include
+  it (the spec marks REQUIRED for `GET /defects/stream` and `GET /defects/{id}`
+  but the PATCH response schema diverges).
+- **`DefectType` response — required `createdAtTime`, `label`, `sectionType`**:
+  all three added as non-nullable `required` properties to match the spec
+  guarantee on `GET /defect-types`.
+- **`MaintenanceDvir` response — required `authorSignature`,
+  `dvirSubmissionBeginTime`, `dvirSubmissionTime`, `type`, `updatedAtTime`**:
+  `authorSignature` modeled as a typed `JsonElement?` to preserve the nested
+  signature payload; the four time/string fields added as nullable since the
+  POST/PATCH response shapes don't always echo every spec-required field on
+  the stream/get schemas. Kept nullable to avoid runtime deserialization
+  failures when the server omits one of these on a mutation response.
+
+**MEDIUM (40)**
+
+- **Query parameters (7 missing)**: added `ids` to `ListDefectTypesAsync`;
+  added `includeExternalIds` to `GetDvirsStreamAsync`, `GetDvirByIdAsync`,
+  `GetDefectsStreamAsync`, and `GetDefectAsync`; added `isResolved` to
+  `GetDefectsStreamAsync`; added `safetyStatus` (array, comma-joined) to
+  `GetDvirsStreamAsync`. All append conditionally via
+  `QueryBuilder.WithParams(...)`.
+- **`DefectRecord` response optionals (10)**: added `createdAtTime`,
+  `defectPhotos`, `defectTypeId`, `mechanicNotes`, `mechanicNotesUpdatedAtTime`,
+  `resolvedAtTime`, `resolvedBy`, `trailer`, `updatedAtTime`, `vehicle`.
+  Nested object/array shapes modeled as `JsonElement?` /
+  `IReadOnlyList<JsonElement>?`.
+- **`DefectRecord` required drift (2)**: tightened `Comment` and `IsResolved`
+  to non-nullable `required` per spec.
+- **`DefectType` response optional (1)**: added `severity`.
+- **`MaintenanceDvir` response optionals (16)**: added `defectIds`, `endTime`,
+  `formattedAddress`, `licensePlate`, `location`, `mechanicNotes`,
+  `odometerMeters`, `safetyStatus`, `secondSignature`, `startTime`,
+  `thirdSignature`, `trailer`, `trailerDefects`, `trailerName`, `vehicle`,
+  `vehicleDefects`, `walkaroundPhotos`. Nested object/array shapes modeled
+  as `JsonElement?` / `IReadOnlyList<JsonElement>?`.
+- **`UpdateDefectRequest` request optionals (3)**: added `mechanicNotes`,
+  `resolvedAtTime`, `resolvedBy`. The legacy `comment` and `resolvedAt`
+  fields were dropped (see LOW notes below).
+
+**LOW (16)**
+
+- **Response extras retained as nullable back-compat (14)**: `DefectRecord`
+  (`createdAt`, `defectType`, `driverId`, `resolvedAt`, `vehicleId`,
+  `vehicleName`), `DefectType` (`category`, `name`), `MaintenanceDvir`
+  (`defects`, `inspectionType`, `safeToOperate`, `timeMs`, `vehicleId`,
+  `vehicleName`). All carry XML doc pointers to the canonical spec field.
+- **Request extras removed (2)**: `UpdateDefectRequest.comment` and
+  `UpdateDefectRequest.resolvedAt` were removed because they are not in the
+  spec `DefectPatch` schema; on a request body, sending unknown fields would
+  fail server validation. The spec-aligned replacements (`mechanicNotes`,
+  `resolvedAtTime`, `resolvedBy`) cover the same use cases and were added
+  under MEDIUM.
 
 ## Quick reference
 
