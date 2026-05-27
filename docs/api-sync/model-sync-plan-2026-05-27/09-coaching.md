@@ -1,6 +1,6 @@
 # Coaching — Model Sync Plan (2026-05-27)
 
-> **✅ Implemented in commit `PENDING` on 2026-05-27**
+> **✅ Implemented in commit `3d7fff6` on 2026-05-27**
 
 > Companion to [`docs/api-sync/09-coaching.md`](../09-coaching.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
