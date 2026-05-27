@@ -1,6 +1,6 @@
 # Beta APIs — Model Sync Plan (2026-05-27)
 
-> **✅ Implemented in commit `pending` on 2026-05-27**
+> **✅ Implemented in commit `542aeda` on 2026-05-27**
 
 > Companion to [`docs/api-sync/06-beta-apis.md`](../06-beta-apis.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
