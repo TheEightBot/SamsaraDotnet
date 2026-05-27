@@ -3,6 +3,36 @@
 > Companion to [`docs/api-sync/12-driver-qr-codes.md`](../12-driver-qr-codes.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `d3100e0` on 2026-05-27**
+
+## Implementation notes
+
+All 6 findings (HIGH=1, MEDIUM=3, LOW=2) were applied across
+`src/Samsara.Sdk/Clients/Fleet/IDriversClient.cs`,
+`src/Samsara.Sdk/Clients/Fleet/DriversClient.cs`, and
+`src/Samsara.Sdk/Models/Drivers/DriverModels.cs`:
+
+- **HIGH — missing required `driverIds` query**: `IDriversClient.ListQrCodesAsync`
+  now takes `IReadOnlyList<string> driverIds` (no default), and the
+  implementation appends it via
+  `QueryBuilder.WithParams("drivers/qr-codes", ("driverIds", string.Join(",", driverIds)))`
+  — same pattern used elsewhere for required list-style query params (e.g.
+  `QualificationRecordsClient.ListAsync`).
+- **MEDIUM — `CreateDriverQrCodeRequest.DriverId` type**: changed from
+  `required string` to `required long` (spec `integer/int64`, required).
+- **MEDIUM — `DriverQrCode.driverId` type**: changed from
+  `required string` to `required long` (spec `integer/int64`, required).
+- **MEDIUM — add `DriverQrCode.qrCodeLink`**: added
+  `[JsonPropertyName("qrCodeLink")] public string? QrCodeLink { get; init; }`
+  per `QrCodeResponseObjectResponseBody` inner schema.
+- **LOW — drop SDK-only `qrCodeUrl`**: removed (not in spec inner schema).
+- **LOW — drop SDK-only `expiresAt`**: removed (not in spec inner schema).
+
+No JSON-context registrations needed updating — `DriverQrCode` and
+`CreateDriverQrCodeRequest` were already listed in
+`SamsaraJsonContext.cs`. No tests referenced these types, so none needed
+updating. Build is green and the SDK↔spec endpoint check passes
+(`mismatched=0`, `not implemented=0`).
 
 ## Quick reference
 
