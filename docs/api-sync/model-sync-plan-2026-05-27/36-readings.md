@@ -3,6 +3,101 @@
 > Companion to [`docs/api-sync/36-readings.md`](../36-readings.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `49caf9e` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH and MEDIUM findings were applied. LOW response-side findings were
+intentionally retained as nullable back-compat properties per the workflow
+precedent established in `08-carrier-proposed-assignments`,
+`13-driver-trailer-assignments`, `14-driver-vehicle-assignments`,
+`28-live-sharing-links`, `29-location-and-speed`, and `30-maintenance` —
+response-side flat-scalar conveniences kept with XML doc pointers to the
+canonical spec fields rather than removed outright.
+
+Files touched: `src/Samsara.Sdk/Models/Industrial/ReadingModels.cs`,
+`src/Samsara.Sdk/Clients/Industrial/IReadingsClient.cs`,
+`src/Samsara.Sdk/Clients/Industrial/ReadingsClient.cs`,
+`src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs`.
+
+**HIGH (9)**
+
+- **`(no SDK type)` query — `GetHistoryAsync` required `entityType`**: added
+  as a required positional `string entityType` parameter (no default),
+  appended via `QueryBuilder.WithParams("entityType", entityType)`. Breaking
+  signature change.
+- **`(no SDK type)` query — `GetSnapshotAsync` required `entityType` and
+  `readingIds`**: both added as required positional parameters
+  (`string readingIds`, `string entityType` — readings ids first to match the
+  spec parameter order). `GetSnapshotAsync()` was previously a no-argument
+  call; this is a breaking signature change but necessary because the spec
+  marks both query parameters REQUIRED.
+- **`ReadingDefinition` response — required `category`, `ingestionEnabled`,
+  `label`, `readingId`, `type`**: all five added as `required` non-nullable
+  properties. `type` is modeled as `JsonElement` per the spec (which
+  describes it as a free-form object containing `dataType`, `unit`,
+  `enumValues`, `fields`, etc.). This matches the precedent in
+  `29-location-and-speed` of preferring typed shapes for the well-known
+  required fields while keeping a `JsonElement` escape hatch for documented
+  free-form schemas.
+- **`ReadingSnapshot` response — required `readingId`**: added as `required
+  string ReadingId`. Spec marks REQUIRED on the inner schema.
+
+**MEDIUM (19)**
+
+- **Query parameters (10 missing across three endpoints)**:
+  - `ListDefinitionsAsync`: added optional `ids`, `entityTypes`.
+  - `GetHistoryAsync`: added optional `entityIds`, `externalIds`, `feed`
+    (bool, lowercased), `includeExternalIds` (bool, lowercased).
+  - `GetSnapshotAsync`: added optional `entityIds`, `externalIds`,
+    `asOfTime` (RFC 3339 string), `includeExternalIds` (bool, lowercased).
+  All append conditionally via `QueryBuilder.WithParams(...)`. Booleans use
+  the established `?.ToString().ToLowerInvariant()` pattern from
+  `AssetsClient.ListAsync`.
+- **`ReadingDefinition` response — required drift `description`,
+  `entityType`**: tightened both to non-nullable `required` per spec
+  guarantee.
+- **`ReadingDefinition` response — optional `enumValues`**: added as
+  `IReadOnlyList<EnumValue>?` with a new nested `EnumValue` record
+  (mirrors the spec's `EnumValueResponseBody` — required `label`,
+  `symbol`). Preferred a typed record over the plan's literal
+  `IReadOnlyList<object>?` recommendation to match the precedent in
+  `14-driver-vehicle-assignments` and `29-location-and-speed`.
+- **`ReadingHistory` response — required drift `entityId`**: tightened to
+  non-nullable `required` per spec guarantee.
+- **`ReadingHistory` response — optional `externalIds`, `happenedAtTime`**:
+  added as `IReadOnlyDictionary<string, string>?` and `DateTimeOffset?`
+  respectively. The spec describes `externalIds` as a free-form
+  `additionalProperties: string` map, which matches the established
+  `IReadOnlyDictionary<string, string>?` shape used across the SDK.
+  `happenedAtTime` is the canonical RFC 3339 timestamp; modeled as
+  `DateTimeOffset?` per the SDK convention.
+- **`ReadingSnapshot` response — required drift `entityId`**: tightened to
+  non-nullable `required` per spec guarantee.
+- **`ReadingSnapshot` response — optional `externalIds`, `happenedAtTime`**:
+  added with the same shapes as on `ReadingHistory`.
+
+**LOW (9)**
+
+- **`ReadingDefinition.id`, `ReadingDefinition.name`,
+  `ReadingDefinition.dataType`, `ReadingDefinition.units` (response)**: kept
+  as nullable back-compat properties with XML doc comments noting they are
+  not in the spec inner schema and pointing callers to the canonical spec
+  fields (`ReadingId` / `Label` / `Type`). The previous `required string Id`
+  was dropped to nullable since the spec response never emits an `id` field
+  (only `readingId`) and the `required` modifier would otherwise prevent
+  deserialization.
+- **`ReadingHistory.id`, `ReadingHistory.time` (response)**: kept as nullable
+  back-compat with XML doc pointing callers to `HappenedAtTime` for the
+  canonical timestamp.
+- **`ReadingSnapshot.id`, `ReadingSnapshot.entityName`,
+  `ReadingSnapshot.time` (response)**: kept as nullable back-compat with XML
+  doc pointing callers to `ReadingId` / a separate entity lookup for the
+  name / `HappenedAtTime`.
+
+Verification: `dotnet build` green (0 warnings, 0 errors); all 59 unit
+tests pass; `python3 tools/check-sdk-sync.py` exits 0 (matched=323/323,
+mismatched=0, unresolved=0, not implemented=0).
 
 ## Quick reference
 
