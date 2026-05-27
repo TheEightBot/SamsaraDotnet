@@ -369,6 +369,7 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(DataInputDataPoint))]
 // Industrial - Readings
 [JsonSerializable(typeof(ReadingDefinition))]
+[JsonSerializable(typeof(EnumValue))]
 [JsonSerializable(typeof(ReadingHistory))]
 [JsonSerializable(typeof(ReadingSnapshot))]
 // Routes - audit log

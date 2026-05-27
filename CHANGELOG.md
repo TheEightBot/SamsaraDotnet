@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 36-readings (2026-05-27)** — applied the per-domain remediation
+  plan (0 CRIT / 9 HIGH / 19 MED / 9 LOW — 37 total). `ReadingDefinition`
+  response record rebuilt to match the spec inner schema: five new
+  spec-REQUIRED fields (`category`, `ingestionEnabled`, `label`, `readingId`,
+  `type`) added as `required`, plus the optional `enumValues` array typed
+  through a new `EnumValue` nested record mirroring the spec's
+  `EnumValueResponseBody`. `Description` / `EntityType` tightened to
+  non-nullable per spec guarantee. `ReadingHistory` and `ReadingSnapshot`
+  records gained `externalIds` (`IReadOnlyDictionary<string, string>?`) and
+  `happenedAtTime` (`DateTimeOffset?`) and tightened `EntityId` to
+  non-nullable; `ReadingSnapshot` further gained the spec-REQUIRED
+  `ReadingId`. `IReadingsClient.ListDefinitionsAsync` gained two optional
+  query parameters (`ids`, `entityTypes`). `IReadingsClient.GetHistoryAsync`
+  gained the spec-REQUIRED `entityType` positional parameter and four
+  optional parameters (`entityIds`, `externalIds`, `feed`,
+  `includeExternalIds`). `IReadingsClient.GetSnapshotAsync` gained the
+  spec-REQUIRED `readingIds` and `entityType` positional parameters and four
+  optional parameters (`entityIds`, `externalIds`, `asOfTime`,
+  `includeExternalIds`). Breaking signature changes for direct callers of
+  `GetHistoryAsync` and `GetSnapshotAsync`. Spec-absent SDK-only extras
+  (`Id`, `Name`, `DataType`, `Units` on `ReadingDefinition`; `Id`, `Time` on
+  `ReadingHistory`; `Id`, `EntityName`, `Time` on `ReadingSnapshot`) retained
+  as nullable back-compat properties per the precedent in plans 08, 13, 14,
+  28, 29, 30. The previous `required` modifier on `Id` was dropped to
+  nullable since the spec response never emits an `id` field and `required`
+  would otherwise prevent deserialization. See
+  `docs/api-sync/model-sync-plan-2026-05-27/36-readings.md`.
 - **Model sync 34-plans (2026-05-27)** — applied the per-domain remediation
   plan (1 CRIT / 8 HIGH / 12 MED / 4 LOW — 25 total). The load-bearing fix
   was a wrapper-drift bug on `POST /hub/plan/orders`: the SDK previously
