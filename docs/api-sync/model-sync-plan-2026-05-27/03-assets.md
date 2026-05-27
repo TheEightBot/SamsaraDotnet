@@ -1,5 +1,6 @@
 # Assets — Model Sync Plan (2026-05-27)
 
+> **✅ Implemented in commit `<short-hash>` on 2026-05-27**  
 > Companion to [`docs/api-sync/03-assets.md`](../03-assets.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
@@ -119,4 +120,41 @@
 - **[required_drift_over]** CreateAssetRequest.name: SDK marks `required` but spec is optional.
   - Endpoints: `POST /assets`
   - Recommended fix: Drop `required` on `CreateAssetRequest.Name` (spec marks it optional) — make nullable.
+
+## Implementation notes
+
+All 29 findings landed in `src/Samsara.Sdk/Models/Fleet/AssetModels.cs`,
+`src/Samsara.Sdk/Clients/Fleet/IAssetsClient.cs`, and
+`src/Samsara.Sdk/Clients/Fleet/AssetsClient.cs`. Highlights:
+
+- **`Asset.attributes`**: typed as `IReadOnlyList<JsonElement>?` to match the
+  existing `CreateAssetRequest.Attributes` shape rather than the
+  `IReadOnlyList<object>?` suggested in the recommendation. Spec inner type is
+  `GoaAttributeTinyResponseBody` (free-form `dateValues`/`stringValues`/
+  `numberValues`); preserving the raw JSON avoids cascading a typed model that
+  is not used elsewhere in the SDK.
+- **`Asset.createdAtTime` / `updatedAtTime`**: tightened to non-nullable
+  `DateTimeOffset` (dropped `?`). Source-compatible — there are no SDK call
+  sites that construct `Asset` directly; deserialization populates the fields
+  for every spec-conformant response.
+- **`CreateAssetRequest.Name`**: dropped `required` and made nullable
+  (`string?`). The 2025-05-13 model audit had added `required` on this field
+  even though the spec marks it optional. No callers in tests or CLI rely on
+  it.
+- **`IAssetsClient.ListAsync(...)`**: signature change adds 11 optional query
+  parameters (defaulted to `null`), so existing call sites (none in this repo
+  beyond the facade test) continue to compile.
+- **`UpdateAsync` and `DeleteAsync`**: now require a `string id` parameter
+  (passed via `QueryBuilder.WithParams`). The previous `DeleteAsync` signature
+  accepted `string[] ids` and hand-built an `ids[]` query string — this never
+  matched the spec, which only documents a singular `id` query parameter.
+  This is a binary-breaking change at the SDK surface, but there are no
+  callers in tests or the CLI.
+- **`V1GetAssetLocationAsync` / `V1GetAssetReeferAsync` / `V1GetAssetsReefersAsync`**:
+  added the spec-required `startMs` and `endMs` (typed as `long` since the
+  spec calls them integers and they are Unix epoch milliseconds). Plus the
+  three optional pagination parameters (`startingAfter`, `endingBefore`,
+  `limit`) on `V1GetAssetsReefersAsync` and `V1GetAllAssetCurrentLocationsAsync`.
+
+No findings were skipped or downgraded.
 

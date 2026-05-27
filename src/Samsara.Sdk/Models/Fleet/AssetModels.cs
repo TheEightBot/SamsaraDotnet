@@ -18,17 +18,24 @@ public sealed record Asset
     [JsonPropertyName("vin")] public string? Vin { get; init; }
     [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
     [JsonPropertyName("tags")] public IReadOnlyList<TagReference>? Tags { get; init; }
+    /// <summary>List of attributes associated with the asset (raw JSON; shape per spec
+    /// <c>GoaAttributeTinyResponseBody</c>).</summary>
+    [JsonPropertyName("attributes")] public IReadOnlyList<JsonElement>? Attributes { get; init; }
     [JsonPropertyName("notes")] public string? Notes { get; init; }
     [JsonPropertyName("readingsIngestionEnabled")] public bool? ReadingsIngestionEnabled { get; init; }
     [JsonPropertyName("regulationMode")] public string? RegulationMode { get; init; }
-    [JsonPropertyName("createdAtTime")] public DateTimeOffset? CreatedAtTime { get; init; }
-    [JsonPropertyName("updatedAtTime")] public DateTimeOffset? UpdatedAtTime { get; init; }
+    /// <summary>Time the asset was created (RFC 3339). Spec marks REQUIRED on the
+    /// response.</summary>
+    [JsonPropertyName("createdAtTime")] public DateTimeOffset CreatedAtTime { get; init; }
+    /// <summary>Time the asset was last updated (RFC 3339). Spec marks REQUIRED on
+    /// the response.</summary>
+    [JsonPropertyName("updatedAtTime")] public DateTimeOffset UpdatedAtTime { get; init; }
 }
 
 /// <summary>Request body for creating an asset.</summary>
 public sealed record CreateAssetRequest
 {
-    [JsonPropertyName("name")] public required string Name { get; init; }
+    [JsonPropertyName("name")] public string? Name { get; init; }
     [JsonPropertyName("type")] public string? Type { get; init; }
     [JsonPropertyName("make")] public string? Make { get; init; }
     [JsonPropertyName("model")] public string? Model { get; init; }

@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 03-assets (2026-05-27)** — applied the per-domain remediation
+  plan. `Asset` response now exposes `attributes` (raw `JsonElement` list,
+  matching the spec inner `GoaAttributeTinyResponseBody`) and tightens
+  `createdAtTime`/`updatedAtTime` to non-nullable `DateTimeOffset` (both marked
+  REQUIRED by the spec). `CreateAssetRequest.Name` is no longer `required`
+  (spec marks it optional). `IAssetsClient.ListAsync` now exposes all 11
+  documented optional query parameters (`type`, `updatedAfterTime`,
+  `includeExternalIds`, `includeTags`, `includeAttributes`, `tagIds`,
+  `parentTagIds`, `ids`, `externalIds`, `attributeValueIds`, `attributes`).
+  `UpdateAsync(string id, ...)` and `DeleteAsync(string id, ...)` now thread
+  the spec-required `id` query parameter (the previous `DeleteAsync` accepted
+  `string[] ids` and hand-built a non-spec `ids[]=` query string). Legacy v1
+  reefer/location operations now take their spec-required `startMs`/`endMs`
+  (Unix epoch milliseconds, `long`); reefer-list and current-locations also
+  surface the optional `startingAfter`/`endingBefore`/`limit` pagination
+  parameters. See `docs/api-sync/model-sync-plan-2026-05-27/03-assets.md`.
 - **Model sync 02-alerts (2026-05-27)** — applied the per-domain remediation
   plan. `AlertConfiguration` and `AlertIncident` response records now expose
   every spec-required field with the correct `required`/non-nullable typing

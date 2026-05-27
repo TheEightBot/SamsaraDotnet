@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Globalization;
 using Samsara.Sdk.Http;
 using Samsara.Sdk.Models.Fleet;
 
@@ -9,17 +10,42 @@ internal sealed class AssetsClient : SamsaraServiceClientBase, IAssetsClient
 
     public AssetsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<Asset> ListAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<Asset>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<Asset> ListAsync(
+        string? type = null,
+        string? updatedAfterTime = null,
+        bool? includeExternalIds = null,
+        bool? includeTags = null,
+        bool? includeAttributes = null,
+        string? tagIds = null,
+        string? parentTagIds = null,
+        IReadOnlyList<string>? ids = null,
+        IReadOnlyList<string>? externalIds = null,
+        string? attributeValueIds = null,
+        IReadOnlyList<string>? attributes = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<Asset>(
+            QueryBuilder.WithParams(BasePath,
+                ("type", type),
+                ("updatedAfterTime", updatedAfterTime),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant()),
+                ("includeTags", includeTags?.ToString().ToLowerInvariant()),
+                ("includeAttributes", includeAttributes?.ToString().ToLowerInvariant()),
+                ("tagIds", tagIds),
+                ("parentTagIds", parentTagIds),
+                ("ids", ids is null ? null : string.Join(",", ids)),
+                ("externalIds", externalIds is null ? null : string.Join(",", externalIds)),
+                ("attributeValueIds", attributeValueIds),
+                ("attributes", attributes is null ? null : string.Join(",", attributes))),
+            cancellationToken: cancellationToken);
 
     public Task<Asset> CreateAsync(CreateAssetRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<Asset>(BasePath, request, cancellationToken);
 
-    public Task<Asset> UpdateAsync(UpdateAssetRequest request, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<Asset>(BasePath, request, cancellationToken);
+    public Task<Asset> UpdateAsync(string id, UpdateAssetRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<Asset>(QueryBuilder.WithParams(BasePath, ("id", id)), request, cancellationToken);
 
-    public Task DeleteAsync(string[] ids, CancellationToken cancellationToken = default)
-        => HttpClient.DeleteAsync($"{BasePath}?ids={string.Join("&ids=", ids.Select(Uri.EscapeDataString))}", cancellationToken);
+    public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync(QueryBuilder.WithParams(BasePath, ("id", id)), cancellationToken);
 
     public IAsyncEnumerable<AssetLocationAndSpeed> GetLocationAndSpeedStreamAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<AssetLocationAndSpeed>($"{BasePath}/location-and-speed/stream", cancellationToken: cancellationToken);
@@ -29,20 +55,58 @@ internal sealed class AssetsClient : SamsaraServiceClientBase, IAssetsClient
         => HttpClient.GetAsync<object>("v1/fleet/assets", cancellationToken);
 
     /// <summary>All assets' current locations (v1, <c>GET /v1/fleet/assets/locations</c>).</summary>
-    public Task<object> V1GetAllAssetCurrentLocationsAsync(CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>("v1/fleet/assets/locations", cancellationToken);
+    public Task<object> V1GetAllAssetCurrentLocationsAsync(
+        string? startingAfter = null,
+        string? endingBefore = null,
+        double? limit = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.GetAsync<object>(
+            QueryBuilder.WithParams("v1/fleet/assets/locations",
+                ("startingAfter", startingAfter),
+                ("endingBefore", endingBefore),
+                ("limit", limit?.ToString(CultureInfo.InvariantCulture))),
+            cancellationToken);
 
     /// <summary>All assets' reefer states (v1, <c>GET /v1/fleet/assets/reefers</c>).</summary>
-    public Task<object> V1GetAssetsReefersAsync(CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>("v1/fleet/assets/reefers", cancellationToken);
+    public Task<object> V1GetAssetsReefersAsync(
+        long startMs,
+        long endMs,
+        string? startingAfter = null,
+        string? endingBefore = null,
+        double? limit = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.GetAsync<object>(
+            QueryBuilder.WithParams("v1/fleet/assets/reefers",
+                ("startMs", startMs.ToString(CultureInfo.InvariantCulture)),
+                ("endMs", endMs.ToString(CultureInfo.InvariantCulture)),
+                ("startingAfter", startingAfter),
+                ("endingBefore", endingBefore),
+                ("limit", limit?.ToString(CultureInfo.InvariantCulture))),
+            cancellationToken);
 
     /// <summary>Per-asset location history (v1, <c>GET /v1/fleet/assets/{asset_id}/locations</c>).</summary>
-    public Task<object> V1GetAssetLocationAsync(string assetId, CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>($"v1/fleet/assets/{Uri.EscapeDataString(assetId)}/locations", cancellationToken);
+    public Task<object> V1GetAssetLocationAsync(
+        string assetId,
+        long startMs,
+        long endMs,
+        CancellationToken cancellationToken = default)
+        => HttpClient.GetAsync<object>(
+            QueryBuilder.WithParams($"v1/fleet/assets/{Uri.EscapeDataString(assetId)}/locations",
+                ("startMs", startMs.ToString(CultureInfo.InvariantCulture)),
+                ("endMs", endMs.ToString(CultureInfo.InvariantCulture))),
+            cancellationToken);
 
     /// <summary>Per-asset reefer state (v1, <c>GET /v1/fleet/assets/{asset_id}/reefer</c>).</summary>
-    public Task<object> V1GetAssetReeferAsync(string assetId, CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>($"v1/fleet/assets/{Uri.EscapeDataString(assetId)}/reefer", cancellationToken);
+    public Task<object> V1GetAssetReeferAsync(
+        string assetId,
+        long startMs,
+        long endMs,
+        CancellationToken cancellationToken = default)
+        => HttpClient.GetAsync<object>(
+            QueryBuilder.WithParams($"v1/fleet/assets/{Uri.EscapeDataString(assetId)}/reefer",
+                ("startMs", startMs.ToString(CultureInfo.InvariantCulture)),
+                ("endMs", endMs.ToString(CultureInfo.InvariantCulture))),
+            cancellationToken);
 
     // ── Beta ─────────────────────────────────────────────────────────────────
 
