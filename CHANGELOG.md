@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 11-documents (2026-05-27)** — applied the per-domain
+  remediation plan. `Document` now exposes the spec-required `createdAtTime`,
+  `documentType`, `driver`, `state`, and `fields` plus optional `vehicle`,
+  `route`, `routeStop`, `updatedAtTime`, and `conditionalFieldSections`. The
+  nested objects are backed by new typed records — `DocumentTypeRef`,
+  `DriverRef`, `VehicleRef`, `RouteRef`, `RouteStopRef`, and
+  `ConditionalFieldSection` — mirroring the spec's `Goa*TinyResponse` shapes.
+  Removed the SDK-only flat scalars `documentTypeId`, `driverId`, `vehicleId`,
+  `createdAtMs`, and `updatedAtMs` (not in spec; superseded by the nested
+  references). `CreateDocumentRequest.DriverId` is now `required` (spec
+  marks it REQUIRED) and gains optional `name`, `vehicleId`, `routeStopId`,
+  `state`. `DocumentPdfJob` gains optional `jobStatus`, `requestedAtTime`,
+  `completedAtTime`, `downloadDocumentPdfUrl` and drops SDK-only `status` and
+  `pdfUrl`. `DocumentType` gains optional `conditionalFieldSections`.
+  `IDocumentsClient.ListAsync` now requires `startTime` and `endTime`
+  (spec REQUIRED) and accepts optional `documentTypeId` and `queryBy`. See
+  `docs/api-sync/model-sync-plan-2026-05-27/11-documents.md`.
 - **Model sync 10-contacts (2026-05-27)** — applied the per-domain
   remediation plan. Relaxed `CreateContactRequest.FirstName`, `LastName`,
   `Email`, and `Phone` from `required` to optional (`string?`) — the spec

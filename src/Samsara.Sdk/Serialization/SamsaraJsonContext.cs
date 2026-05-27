@@ -154,6 +154,12 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(CheckEngineLight))]
 // Documents
 [JsonSerializable(typeof(Document))]
+[JsonSerializable(typeof(DocumentTypeRef))]
+[JsonSerializable(typeof(DriverRef))]
+[JsonSerializable(typeof(VehicleRef))]
+[JsonSerializable(typeof(RouteRef))]
+[JsonSerializable(typeof(RouteStopRef))]
+[JsonSerializable(typeof(ConditionalFieldSection))]
 [JsonSerializable(typeof(DocumentField))]
 [JsonSerializable(typeof(DocumentPhoto))]
 [JsonSerializable(typeof(DocumentType))]

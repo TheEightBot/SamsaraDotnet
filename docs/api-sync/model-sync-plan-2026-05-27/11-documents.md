@@ -3,6 +3,56 @@
 > Companion to [`docs/api-sync/11-documents.md`](../11-documents.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<pending>` on 2026-05-27**
+
+## Implementation notes
+
+All 31 findings (HIGH=6, MEDIUM=18, LOW=7) were applied in
+`src/Samsara.Sdk/Models/Documents/DocumentModels.cs`,
+`src/Samsara.Sdk/Clients/Documents/IDocumentsClient.cs`, and
+`src/Samsara.Sdk/Clients/Documents/DocumentsClient.cs`. Notes on the
+decisions worth calling out:
+
+- **Typed nested references**: rather than typing `Document.documentType`,
+  `driver`, `vehicle`, `route`, and `routeStop` as bare `object` (as the
+  plan's recommended fix suggested), the implementation adds light typed
+  records — `DocumentTypeRef`, `DriverRef`, `VehicleRef`, `RouteRef`,
+  `RouteStopRef` — mirroring the spec's `Goa*TinyResponseResponseBody`
+  shapes (`id`, `name`, `externalIds`). This matches the existing
+  `AlertScope`/`Geofence` precedent (typed wrappers in
+  `01-addresses`/`02-alerts`) and gives consumers something to bind to
+  without ballooning the scope of the change.
+- **`Document.createdAtTime` / `updatedAtTime`**: typed as `DateTimeOffset`
+  (required) and `DateTimeOffset?` (optional) rather than `string`. The
+  spec describes them as `string`/`format: date-time`; using
+  `DateTimeOffset` matches existing SDK convention (`Address`,
+  `AlertConfiguration`, `Asset`).
+- **LOW `extra_property` removals**: dropped `Document.DocumentTypeId`,
+  `DriverId`, `VehicleId`, `CreatedAtMs`, `UpdatedAtMs`, and
+  `DocumentPdfJob.Status`/`PdfUrl` — none are in the spec inner schemas. The
+  CLI (`tools/Samsara.Cli/TuiApp.cs`) was updated to use
+  `d.DocumentType.Id` and `d.Driver.Id` instead. No other call sites
+  referenced the removed scalars.
+- **`DocumentPdfJob`**: dropped `Status` (renamed to spec's `jobStatus`)
+  and `PdfUrl` (renamed to spec's `downloadDocumentPdfUrl`). Added
+  `requestedAtTime` and `completedAtTime`. The properties are kept as
+  `string?` matching the spec's `type=string` (the spec does NOT mark them
+  as `format: date-time`, unlike `Document.createdAtTime`).
+- **`CreateDocumentRequest.DriverId`** is now `required` (spec marks
+  REQUIRED). The previously optional shape blocked the spec's documented
+  contract on `POST /fleet/documents`. Added optional `name`, `vehicleId`,
+  `routeStopId`, `state` from the spec.
+- **`IDocumentsClient.ListAsync(...)`**: signature change — now requires
+  positional `DateTimeOffset startTime, DateTimeOffset endTime` (spec
+  REQUIRED) plus optional `string? documentTypeId, string? queryBy`. The
+  prior signature accepted only a `CancellationToken`, which silently
+  omitted the spec-required time-range parameters. Binary-breaking at the
+  SDK surface — only the CLI used this API; updated to pass a 7-day
+  trailing window by default.
+
+Verification: `dotnet build` clean (0 warnings, 0 errors); 59 unit tests
+pass; `tools/check-sdk-sync.py` reports `MISMATCHED: 0` and exits 0.
+
 
 ## Quick reference
 

@@ -1063,8 +1063,10 @@ internal sealed class TuiApp
                     case "List All":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching documents...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Documents.ListAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Documents", d => [d.Id, d.DocumentTypeId ?? "", d.DriverId ?? ""], ["ID", "Type ID", "Driver ID"]);
+                            var endTime = DateTimeOffset.UtcNow;
+                            var startTime = endTime.AddDays(-7);
+                            var items = await CollectAsync(_client.Documents.ListAsync(startTime, endTime, cancellationToken: Timeout60s()));
+                            ResultRenderer.RenderList(items, "Documents", d => [d.Id, d.DocumentType.Id ?? "", d.Driver.Id], ["ID", "Type ID", "Driver ID"]);
                         });
                         break;
                     case "Get by ID":
