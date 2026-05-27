@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 29-location-and-speed (2026-05-27)** — applied the per-domain
+  remediation plan (2 HIGH, 10 MEDIUM, 3 LOW — 15 total). `AssetLocationAndSpeed`
+  rebuilt to match the spec `LocationAndSpeedResponseResponseBody` inner schema:
+  two spec-REQUIRED fields (`asset`, `happenedAtTime`) added as non-nullable
+  `required`, and `location` tightened from nullable to `required`. Two new
+  typed nested response records replace the previous `double? speed` mismatch
+  and untyped placeholders — `AssetLocationAndSpeedAsset` mirrors the spec's
+  `AssetResponseResponseBody` (required `id`, optional `externalIds`), and
+  `AssetLocationAndSpeedSpeed` mirrors `SpeedResponseResponseBody`
+  (`ecuSpeedMetersPerSecond`, `gpsSpeedMetersPerSecond`). The pre-existing
+  SDK-only flat scalars (`id`, `name`, `time`) are retained as nullable
+  back-compat conveniences with XML doc pointers to the canonical spec
+  fields, matching the precedent set in `08-carrier-proposed-assignments`,
+  `13-driver-trailer-assignments`, `14-driver-vehicle-assignments`, and
+  `28-live-sharing-links`. `IAssetsClient.GetLocationAndSpeedStreamAsync`
+  gained the full spec query surface: `startTime`/`endTime` (RFC 3339 via the
+  shared `WithTimeRange` helper), comma-joined `ids`, and five optional
+  booleans (`includeSpeed`, `includeReverseGeo`, `includeGeofenceLookup`,
+  `includeHighFrequencyLocations`, `includeExternalIds`). This is a breaking
+  signature change for direct callers of the previous parameterless
+  `GetLocationAndSpeedStreamAsync(CancellationToken)` (all eight new
+  parameters carry defaults, so source compatibility is preserved for callers
+  that named only the cancellation token). See
+  `docs/api-sync/model-sync-plan-2026-05-27/29-location-and-speed.md`.
 - **Model sync 28-live-sharing-links (2026-05-27)** — applied the per-domain
   remediation plan (3 HIGH, 16 MEDIUM, 8 LOW — 27 total). `LiveSharingLink`
   response rebuilt to match the spec

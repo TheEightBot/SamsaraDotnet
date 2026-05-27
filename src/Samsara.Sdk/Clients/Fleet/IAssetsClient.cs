@@ -49,7 +49,31 @@ public interface IAssetsClient
     /// <param name="cancellationToken">Token to cancel the request.</param>
     Task DeleteAsync(string id, CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<AssetLocationAndSpeed> GetLocationAndSpeedStreamAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Stream asset location-and-speed readings
+    /// (<c>GET /assets/location-and-speed/stream</c>). Results are paginated;
+    /// omit <paramref name="endTime"/> to poll real-time data with the
+    /// returned end-cursor.
+    /// </summary>
+    /// <param name="startTime">Optional start time (RFC 3339). Defaults to now if not provided.</param>
+    /// <param name="endTime">Optional end time (RFC 3339). Defaults to never if not provided; if omitted, pagination will not cease and a valid cursor is always returned.</param>
+    /// <param name="ids">Optional list of asset IDs to filter by.</param>
+    /// <param name="includeSpeed">When <c>true</c>, returns the <c>speed</c> object on each reading.</param>
+    /// <param name="includeReverseGeo">When <c>true</c>, returns the <c>address</c> object; not returned for high-frequency locations.</param>
+    /// <param name="includeGeofenceLookup">When <c>true</c>, returns the <c>geofence</c> object. Cannot be combined with <paramref name="includeHighFrequencyLocations"/>.</param>
+    /// <param name="includeHighFrequencyLocations">When <c>true</c>, returns high-frequency location data (up to 1Hz). Cannot be combined with <paramref name="includeGeofenceLookup"/>.</param>
+    /// <param name="includeExternalIds">When <c>true</c>, returns external IDs on supported entities.</param>
+    /// <param name="cancellationToken">Token to cancel enumeration.</param>
+    IAsyncEnumerable<AssetLocationAndSpeed> GetLocationAndSpeedStreamAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? ids = null,
+        bool? includeSpeed = null,
+        bool? includeReverseGeo = null,
+        bool? includeGeofenceLookup = null,
+        bool? includeHighFrequencyLocations = null,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>Legacy v1 list of all assets.</summary>
     Task<object> V1GetAllAssetsAsync(CancellationToken cancellationToken = default);

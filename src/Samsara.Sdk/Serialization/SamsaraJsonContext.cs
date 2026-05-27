@@ -291,6 +291,8 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(UpdateAssetRequest))]
 [JsonSerializable(typeof(DeleteAssetsRequest))]
 [JsonSerializable(typeof(AssetLocationAndSpeed))]
+[JsonSerializable(typeof(AssetLocationAndSpeedAsset))]
+[JsonSerializable(typeof(AssetLocationAndSpeedSpeed))]
 [JsonSerializable(typeof(AssetLocation))]
 // Fleet - Idling
 [JsonSerializable(typeof(IdlingEvent))]

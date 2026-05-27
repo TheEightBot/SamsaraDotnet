@@ -47,8 +47,26 @@ internal sealed class AssetsClient : SamsaraServiceClientBase, IAssetsClient
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync(QueryBuilder.WithParams(BasePath, ("id", id)), cancellationToken);
 
-    public IAsyncEnumerable<AssetLocationAndSpeed> GetLocationAndSpeedStreamAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<AssetLocationAndSpeed>($"{BasePath}/location-and-speed/stream", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<AssetLocationAndSpeed> GetLocationAndSpeedStreamAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? ids = null,
+        bool? includeSpeed = null,
+        bool? includeReverseGeo = null,
+        bool? includeGeofenceLookup = null,
+        bool? includeHighFrequencyLocations = null,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<AssetLocationAndSpeed>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange($"{BasePath}/location-and-speed/stream", startTime, endTime),
+                ("ids", ids is null ? null : string.Join(",", ids)),
+                ("includeSpeed", includeSpeed?.ToString().ToLowerInvariant()),
+                ("includeReverseGeo", includeReverseGeo?.ToString().ToLowerInvariant()),
+                ("includeGeofenceLookup", includeGeofenceLookup?.ToString().ToLowerInvariant()),
+                ("includeHighFrequencyLocations", includeHighFrequencyLocations?.ToString().ToLowerInvariant()),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
 
     /// <summary>Legacy v1 list of all assets (<c>GET /v1/fleet/assets</c>).</summary>
     public Task<object> V1GetAllAssetsAsync(CancellationToken cancellationToken = default)

@@ -74,14 +74,62 @@ public sealed record DeleteAssetsRequest
     [JsonPropertyName("ids")] public required IReadOnlyList<string> Ids { get; init; }
 }
 
-/// <summary>Asset location and speed snapshot.</summary>
+/// <summary>Asset location and speed snapshot from the
+/// <c>GET /assets/location-and-speed/stream</c> endpoint.</summary>
 public sealed record AssetLocationAndSpeed
 {
-    [JsonPropertyName("id")] public required string Id { get; init; }
+    /// <summary>Asset that the location readings are tied to. Spec marks
+    /// REQUIRED on the inner response schema (mirrors
+    /// <c>AssetResponseResponseBody</c>).</summary>
+    [JsonPropertyName("asset")] public required AssetLocationAndSpeedAsset Asset { get; init; }
+
+    /// <summary>UTC timestamp in RFC 3339 format of the event. Spec marks
+    /// REQUIRED on the response.</summary>
+    [JsonPropertyName("happenedAtTime")] public required DateTimeOffset HappenedAtTime { get; init; }
+
+    /// <summary>Location object. Spec marks REQUIRED on the response.</summary>
+    [JsonPropertyName("location")] public required AssetLocation Location { get; init; }
+
+    /// <summary>Speed object (optional in the spec — present only when
+    /// <c>includeSpeed=true</c> is passed on the request).</summary>
+    [JsonPropertyName("speed")] public AssetLocationAndSpeedSpeed? Speed { get; init; }
+
+    /// <summary>Asset id, hoisted from <see cref="Asset"/>. Not part of the
+    /// spec inner schema; retained as a nullable back-compat convenience —
+    /// callers should prefer <c>Asset.Id</c>.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>Asset name. Not part of the spec inner schema; retained as a
+    /// nullable back-compat convenience — callers should look up the name via
+    /// the <c>Assets</c> endpoint.</summary>
     [JsonPropertyName("name")] public string? Name { get; init; }
-    [JsonPropertyName("location")] public AssetLocation? Location { get; init; }
-    [JsonPropertyName("speed")] public double? Speed { get; init; }
+
+    /// <summary>Event time. Not part of the spec inner schema; retained as a
+    /// nullable back-compat convenience — callers should prefer
+    /// <see cref="HappenedAtTime"/>.</summary>
     [JsonPropertyName("time")] public DateTimeOffset? Time { get; init; }
+}
+
+/// <summary>Minified asset reference attached to a location-and-speed
+/// reading. Mirrors the spec's <c>AssetResponseResponseBody</c>.</summary>
+public sealed record AssetLocationAndSpeedAsset
+{
+    /// <summary>Asset id. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")] public required string Id { get; init; }
+
+    /// <summary>Map of external ids associated with the asset.</summary>
+    [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>Speed details attached to a location-and-speed reading. Mirrors
+/// the spec's <c>SpeedResponseResponseBody</c>.</summary>
+public sealed record AssetLocationAndSpeedSpeed
+{
+    /// <summary>Speed of the asset based on ECU data (meters per second).</summary>
+    [JsonPropertyName("ecuSpeedMetersPerSecond")] public double? EcuSpeedMetersPerSecond { get; init; }
+
+    /// <summary>Speed of the asset based on GPS data (meters per second).</summary>
+    [JsonPropertyName("gpsSpeedMetersPerSecond")] public double? GpsSpeedMetersPerSecond { get; init; }
 }
 
 /// <summary>Asset location details.</summary>
