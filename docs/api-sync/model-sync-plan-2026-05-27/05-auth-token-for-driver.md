@@ -1,5 +1,6 @@
 # Auth Token for Driver — Model Sync Plan (2026-05-27)
 
+> **✅ Implemented in commit `18eacd7` on 2026-05-27**  
 > Companion to [`docs/api-sync/05-auth-token-for-driver.md`](../05-auth-token-for-driver.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
