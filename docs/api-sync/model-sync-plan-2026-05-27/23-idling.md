@@ -3,6 +3,8 @@
 > Companion to [`docs/api-sync/23-idling.md`](../23-idling.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `814f98e` on 2026-05-27**
+
 ## Implementation notes
 
 All HIGH (8), MEDIUM (15), and LOW (8) findings were applied — 31 total.
