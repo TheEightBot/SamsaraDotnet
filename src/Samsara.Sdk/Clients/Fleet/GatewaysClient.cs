@@ -9,8 +9,13 @@ internal sealed class GatewaysClient : SamsaraServiceClientBase, IGatewaysClient
 
     public GatewaysClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<Gateway> ListAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<Gateway>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<Gateway> ListAsync(
+        IReadOnlyList<string>? models = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<Gateway>(
+            QueryBuilder.WithParams(BasePath,
+                ("models", models is null ? null : string.Join(",", models))),
+            cancellationToken: cancellationToken);
 
     public Task<Gateway> CreateAsync(CreateGatewayRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<Gateway>(BasePath, request, cancellationToken);

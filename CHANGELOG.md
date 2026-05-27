@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 19-gateways (2026-05-27)** — applied the per-domain
+  remediation plan. `Gateway` (response) tightens spec-required `model` and
+  `serial` to non-nullable `required string`, and gains three typed nested
+  records: `GatewayAccessoryDevice` (`accessoryDevices`),
+  `GatewayConnectionStatus` (`connectionStatus` — `healthStatus`,
+  `lastConnected`), and `GatewayDataUsage` (`dataUsageLast30Days` —
+  `cellularDataUsageBytes`, `hotspotUsageBytes`). `IGatewaysClient.ListAsync`
+  adds an optional `models` (`IReadOnlyList<string>?`) query filter for
+  `GET /gateways`, joined with `,`. LOW extras (`id`, `name`, `mainBus`,
+  `firmwareVersion`, `wifiMacAddress`, `simCardId`, `vehicle`, `tags`) are
+  retained as nullable back-compat per the workflow precedent. See
+  `docs/api-sync/model-sync-plan-2026-05-27/19-gateways.md`.
 - **Model sync 18-fuel-and-energy (2026-05-27)** — applied the per-domain
   remediation plan. `FuelEnergyVehicleReport` and `FuelEnergyDriverReport`
   (response rows) tighten `distanceTraveledMeters`, `efficiencyMpge`,

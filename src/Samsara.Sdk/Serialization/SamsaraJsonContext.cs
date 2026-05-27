@@ -82,6 +82,10 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(CreateTrailerRequest))]
 [JsonSerializable(typeof(UpdateTrailerRequest))]
 [JsonSerializable(typeof(Gateway))]
+[JsonSerializable(typeof(GatewayAccessoryDevice))]
+[JsonSerializable(typeof(GatewayConnectionStatus))]
+[JsonSerializable(typeof(GatewayDataUsage))]
+[JsonSerializable(typeof(CreateGatewayRequest))]
 // Drivers
 [JsonSerializable(typeof(Driver))]
 [JsonSerializable(typeof(DriverCarrierSettings))]
