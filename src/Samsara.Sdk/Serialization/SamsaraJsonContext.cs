@@ -214,6 +214,9 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(UpdateDriverVehicleAssignmentRequest))]
 [JsonSerializable(typeof(TrailerAssignment))]
 [JsonSerializable(typeof(CarrierProposedAssignment))]
+[JsonSerializable(typeof(CarrierProposedAssignmentDriver))]
+[JsonSerializable(typeof(CarrierProposedAssignmentVehicle))]
+[JsonSerializable(typeof(CarrierProposedAssignmentTrailer))]
 [JsonSerializable(typeof(CreateCarrierProposedAssignmentRequest))]
 [JsonSerializable(typeof(UpdateCarrierProposedAssignmentRequest))]
 // Training

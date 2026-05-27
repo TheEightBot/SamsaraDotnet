@@ -1561,7 +1561,7 @@ internal sealed class TuiApp
                     case "List All":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching carrier proposed assignments...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.CarrierProposedAssignments.ListAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.CarrierProposedAssignments.ListAsync(cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Carrier Proposed Assignments", a => [a.Id, a.DriverId ?? ""], ["ID", "Driver ID"]);
                         });
                         break;

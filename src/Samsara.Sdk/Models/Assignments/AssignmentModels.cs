@@ -148,32 +148,142 @@ public sealed record TrailerAssignment
 /// </summary>
 public sealed record CarrierProposedAssignment
 {
+    /// <summary>Samsara ID for the assignment.</summary>
     [JsonPropertyName("id")]
     public required string Id { get; init; }
 
+    /// <summary>
+    /// Time after which this assignment will be active and visible to the driver on the mobile app.
+    /// RFC 3339 format (e.g., <c>2020-01-27T07:06:25Z</c>). Spec-required.
+    /// </summary>
+    [JsonPropertyName("activeTime")]
+    public required string ActiveTime { get; init; }
+
+    /// <summary>
+    /// Time when the driver accepted this assignment in the mobile app. Omitted if not yet accepted.
+    /// RFC 3339 format.
+    /// </summary>
+    [JsonPropertyName("acceptedTime")]
+    public string? AcceptedTime { get; init; }
+
+    /// <summary>
+    /// Time when the driver first saw this assignment in the mobile app. Omitted if not yet seen.
+    /// RFC 3339 format.
+    /// </summary>
+    [JsonPropertyName("firstSeenTime")]
+    public string? FirstSeenTime { get; init; }
+
+    /// <summary>
+    /// Time when the driver rejected this assignment in the mobile app. Omitted if not rejected.
+    /// RFC 3339 format.
+    /// </summary>
+    [JsonPropertyName("rejectedTime")]
+    public string? RejectedTime { get; init; }
+
+    /// <summary>Shipping documents proposed to the driver. Maximum length 40 characters.</summary>
+    [JsonPropertyName("shippingDocs")]
+    public string? ShippingDocs { get; init; }
+
+    /// <summary>The driver this assignment is for (nested object per spec).</summary>
+    [JsonPropertyName("driver")]
+    public CarrierProposedAssignmentDriver? Driver { get; init; }
+
+    /// <summary>The vehicle proposed to the driver (nested object per spec).</summary>
+    [JsonPropertyName("vehicle")]
+    public CarrierProposedAssignmentVehicle? Vehicle { get; init; }
+
+    /// <summary>The trailers proposed to the driver (nested array per spec).</summary>
+    [JsonPropertyName("trailers")]
+    public IReadOnlyList<CarrierProposedAssignmentTrailer>? Trailers { get; init; }
+
+    /// <summary>
+    /// Convenience accessor for the assignment's driver ID. Retained alongside the nested
+    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes; not
+    /// part of the spec inner schema.
+    /// </summary>
     [JsonPropertyName("driverId")]
     public string? DriverId { get; init; }
 
+    /// <summary>
+    /// Convenience accessor for the assignment's driver name. Retained alongside the nested
+    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes; not
+    /// part of the spec inner schema.
+    /// </summary>
     [JsonPropertyName("driverName")]
     public string? DriverName { get; init; }
 
+    /// <summary>
+    /// Convenience accessor for the assignment's vehicle ID. Retained alongside the nested
+    /// <see cref="Vehicle"/> object for backward compatibility with earlier SDK shapes; not
+    /// part of the spec inner schema.
+    /// </summary>
     [JsonPropertyName("vehicleId")]
     public string? VehicleId { get; init; }
 
+    /// <summary>
+    /// Convenience accessor for the assignment's vehicle name. Retained alongside the nested
+    /// <see cref="Vehicle"/> object for backward compatibility with earlier SDK shapes; not
+    /// part of the spec inner schema.
+    /// </summary>
     [JsonPropertyName("vehicleName")]
     public string? VehicleName { get; init; }
+}
 
-    [JsonPropertyName("shippingId")]
-    public string? ShippingId { get; init; }
+/// <summary>
+/// Driver associated with a carrier-proposed assignment. Mirrors the spec's
+/// <c>CarrierProposedAssignmentDriver</c> (<c>driverTinyResponse</c> + external IDs).
+/// </summary>
+public sealed record CarrierProposedAssignmentDriver
+{
+    /// <summary>ID of the driver.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
 
-    [JsonPropertyName("startTime")]
-    public DateTimeOffset? StartTime { get; init; }
+    /// <summary>Name of the driver.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
 
-    [JsonPropertyName("endTime")]
-    public DateTimeOffset? EndTime { get; init; }
+    /// <summary>External IDs for the driver.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
 
-    [JsonPropertyName("status")]
-    public string? Status { get; init; }
+/// <summary>
+/// Vehicle associated with a carrier-proposed assignment. Mirrors the spec's
+/// <c>CarrierProposedAssignmentVehicle</c> (<c>vehicleTinyResponse</c>).
+/// </summary>
+public sealed record CarrierProposedAssignmentVehicle
+{
+    /// <summary>ID of the vehicle.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Name of the vehicle.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>External IDs for the vehicle. Spec spells this property with a capital E.</summary>
+    [JsonPropertyName("ExternalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// Trailer associated with a carrier-proposed assignment. Mirrors the spec's
+/// <c>CarrierProposedAssignmentTrailer</c> (<c>trailerTinyResponse</c> + external IDs).
+/// </summary>
+public sealed record CarrierProposedAssignmentTrailer
+{
+    /// <summary>ID of the trailer.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Name of the trailer.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>External IDs for the trailer.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
 
 /// <summary>
@@ -181,20 +291,43 @@ public sealed record CarrierProposedAssignment
 /// </summary>
 public sealed record CreateCarrierProposedAssignmentRequest
 {
+    /// <summary>
+    /// ID for the driver this assignment is for. Spec-required. May be a Samsara ID or external ID.
+    /// </summary>
     [JsonPropertyName("driverId")]
     public required string DriverId { get; init; }
 
+    /// <summary>
+    /// ID for the vehicle to propose. Spec-required. May be a Samsara ID or external ID.
+    /// </summary>
     [JsonPropertyName("vehicleId")]
     public required string VehicleId { get; init; }
 
-    [JsonPropertyName("shippingId")]
-    public string? ShippingId { get; init; }
+    /// <summary>
+    /// Time after which this assignment will be active and visible to the driver. Not setting it
+    /// makes it active immediately. RFC 3339 format (e.g., <c>2020-01-27T07:06:25Z</c>).
+    /// </summary>
+    [JsonPropertyName("activeTime")]
+    public string? ActiveTime { get; init; }
 
-    [JsonPropertyName("startTime")]
-    public DateTimeOffset? StartTime { get; init; }
+    /// <summary>
+    /// Shipping documents proposed to the driver. Maximum length 40 characters.
+    /// </summary>
+    [JsonPropertyName("shippingDocs")]
+    public string? ShippingDocs { get; init; }
 
-    [JsonPropertyName("endTime")]
-    public DateTimeOffset? EndTime { get; init; }
+    /// <summary>
+    /// IDs of trailers to propose. Each may be a Samsara ID or external ID.
+    /// Forbidden if <see cref="TrailerNames"/> is set.
+    /// </summary>
+    [JsonPropertyName("trailerIds")]
+    public IReadOnlyList<string>? TrailerIds { get; init; }
+
+    /// <summary>
+    /// Names of trailers to propose. Forbidden if <see cref="TrailerIds"/> is set.
+    /// </summary>
+    [JsonPropertyName("trailerNames")]
+    public IReadOnlyList<string>? TrailerNames { get; init; }
 }
 
 /// <summary>

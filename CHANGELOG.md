@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 08-carrier-proposed-assignments (2026-05-27)** — applied the
+  per-domain remediation plan. `CarrierProposedAssignment` now exposes the
+  spec-required `activeTime` plus optional `acceptedTime`, `firstSeenTime`,
+  `rejectedTime`, `shippingDocs`, and nested `driver` / `vehicle` / `trailers`
+  objects (new `CarrierProposedAssignmentDriver`,
+  `CarrierProposedAssignmentVehicle`, `CarrierProposedAssignmentTrailer`
+  records mirroring the spec's tiny-response composition). Removed SDK-only
+  `endTime`, `startTime`, `status`, `shippingId` (not in spec); retained the
+  flat-scalar `driverId`, `driverName`, `vehicleId`, `vehicleName` properties
+  alongside the new nested objects for back-compat.
+  `CreateCarrierProposedAssignmentRequest` gains optional `activeTime`,
+  `shippingDocs`, `trailerIds`, `trailerNames`; removed SDK-only `endTime`,
+  `startTime`, `shippingId`. `ICarrierProposedAssignmentsClient.ListAsync`
+  gains optional `driverIds` and `activeTime` query parameters. See
+  `docs/api-sync/model-sync-plan-2026-05-27/08-carrier-proposed-assignments.md`.
 - **Model sync 07-carb-ctc (2026-05-27)** — applied the per-domain
   remediation plan. `CarbCtcVehicle` now exposes spec-required
   `enrollmentId`, `enrollmentVin`, `testStatus` plus optional

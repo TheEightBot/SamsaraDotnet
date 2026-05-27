@@ -1,7 +1,65 @@
 # Carrier Proposed Assignments — Model Sync Plan (2026-05-27)
 
+> **✅ Implemented in commit `<pending>` on 2026-05-27**
+
 > Companion to [`docs/api-sync/08-carrier-proposed-assignments.md`](../08-carrier-proposed-assignments.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
+
+## Implementation notes
+
+Resolved 2026-05-27. Counts implemented: CRITICAL=0, HIGH=1, MEDIUM=13, LOW=7.
+(LOW remaining: 4 flat-scalar extras intentionally retained for back-compat — see below.)
+
+**`CarrierProposedAssignment` (response)** — now mirrors the nested spec shape
+`CarrierProposedAssignment`:
+
+- Added spec-required `activeTime` (`required string`, RFC 3339 string per spec).
+- Added optional `acceptedTime`, `firstSeenTime`, `rejectedTime`, `shippingDocs`
+  (all `string?`, RFC 3339 strings or shipping-doc text).
+- Added nested objects `driver`, `vehicle`, `trailers` as new records
+  `CarrierProposedAssignmentDriver`, `CarrierProposedAssignmentVehicle`,
+  `CarrierProposedAssignmentTrailer`. These mirror the spec's
+  `driverTinyResponse` / `vehicleTinyResponse` / `trailerTinyResponse`
+  composition plus `externalIds`. `Vehicle.ExternalIds` is serialized with a
+  capital `E` to match the spec's `vehicleTinyResponse` (spec idiosyncrasy).
+- Removed SDK-only extras `endTime`, `startTime`, `status`, `shippingId`
+  (not in spec).
+- **Retained** flat-scalar convenience properties `driverId`, `driverName`,
+  `vehicleId`, `vehicleName` alongside the nested `driver` / `vehicle`
+  objects. These were called out as LOW "extra_property — Remove" in the
+  plan, but the model-sync workflow directs preferring an additive
+  shape for flat scalars that mirror nested objects (useful for back-compat;
+  the live API may also continue to emit them as conveniences). They are
+  documented as legacy on the model.
+
+**`CreateCarrierProposedAssignmentRequest`** — now matches the spec request body:
+
+- Added optional `activeTime` (`string?`, RFC 3339 timestamp).
+- Added optional `shippingDocs` (`string?`, max 40 chars per spec).
+- Added optional `trailerIds` (`IReadOnlyList<string>?`).
+- Added optional `trailerNames` (`IReadOnlyList<string>?`). The plan called for
+  `IReadOnlyList<object>?` but the spec defines the items as `string`, so the
+  stronger type is used (consistent with the sibling `trailerIds`).
+- Removed SDK-only `endTime`, `startTime`, `shippingId` (not in spec).
+- Kept `driverId` / `vehicleId` as `required string` (spec marks both
+  `required: true`).
+
+**`ICarrierProposedAssignmentsClient.ListAsync`** — added the two missing query
+parameters from the spec:
+
+- `IReadOnlyList<string>? driverIds = null` — serialized via
+  `string.Join(",", ...)`, consistent with comma-separated array params on
+  other clients (e.g. `BetaClient`, `CarbCtcClient.ListVehiclesAsync`).
+- `string? activeTime = null` — passed through as the RFC 3339 string.
+
+Updated `tools/Samsara.Cli/TuiApp.cs` to use the named-argument form
+`ListAsync(cancellationToken: Timeout60s())` to preserve call-site behaviour
+with the new optional parameter list.
+
+The `UpdateCarrierProposedAssignmentRequest` record and its
+`SamsaraJsonContext` registration are out of scope for this plan and left in
+place; the `Update` operation is fabricated (no PATCH /{id} in spec) and was
+already removed from the interface in an earlier sync pass.
 
 
 ## Quick reference
