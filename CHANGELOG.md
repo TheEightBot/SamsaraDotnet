@@ -44,9 +44,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Status (as of these changes)
 
-**SDK ↔ spec parity is complete** — all 317 spec operations have at least one matched SDK
-method (`tools/check-sdk-sync.py` reports `matched 324, mismatched 0, missing 0` against
-the 2025-10-23 spec). `dotnet build` and the 59-test suite pass.
+**SDK ↔ spec parity is complete and independently verified** — all 317 spec operations
+have at least one matched SDK method. `tools/check-sdk-sync.py` reports
+`matched=323, mismatched=0, missing=0` against the 2025-10-23 spec; a separate
+independent agent verification on 2026-05-27 reached the same conclusion.
+`dotnet build` and the 59-test suite pass. The cached baseline has been refreshed.
+
+### Fixed (post-parity)
+
+- **`IFormsClient.ListSubmissionsAsync` / `GetSubmissionAsync`** — the spec's
+  `getFormSubmissions` requires an `ids[]` query parameter (plural, array). The
+  prior signatures (no-arg list, `?id=` get) would have 400'd at runtime. List now
+  takes `IReadOnlyList<string> ids`; `GetSubmissionAsync` is a convenience wrapper
+  that calls list with a single id and returns the first match (mirrors
+  `Issues.GetAsync`). Caught by independent agent verification.
 
 ### Added
 

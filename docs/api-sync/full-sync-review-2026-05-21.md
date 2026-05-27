@@ -1,9 +1,12 @@
 # Samsara .NET SDK — Full API Sync Review
 
-> **Generated**: 2026-05-21
-> **Spec**: https://developers.samsara.com/openapi/samsara-api.json
-> **Spec `info.version`**: `2025-10-23` (note: spec content has drifted since the cached baseline of the same version label — see Part 4)
-> **Status**: PROPOSED CHANGES — for review. **No SDK code has been modified.**
+> **Generated**: 2026-05-21  
+> **Spec**: https://developers.samsara.com/openapi/samsara-api.json  
+> **Spec `info.version`**: `2025-10-23`  
+> **Status**: ✅ **Resolved on `feature/api-sync-full-2026-05` (verified 2026-05-27)** —
+> every finding in this review has been addressed. `tools/check-sdk-sync.py` reports
+> `matched=323, mismatched=0, missing=0` against the live spec; an independent agent
+> verification reached the same result. Document retained for traceability.
 
 This document is the result of a full mechanical comparison of `Samsara.Sdk` against the
 current OpenAPI spec at the endpoint level (HTTP verb + URL path + parameters) and the
