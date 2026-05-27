@@ -1,7 +1,47 @@
 # CARB CTC — Model Sync Plan (2026-05-27)
 
+> **✅ Implemented in commit `7ce489a` on 2026-05-27**
+
 > Companion to [`docs/api-sync/07-carb-ctc.md`](../07-carb-ctc.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
+
+## Implementation notes
+
+Resolved 2026-05-27. Counts implemented: CRITICAL=0, HIGH=8, MEDIUM=7, LOW=10.
+
+**CarbCtcVehicle (response)** — fully aligned to spec inner schema
+`CarbCtcVehicleObjectResponseBody`:
+
+- Added required: `enrollmentId` (string/uuid), `enrollmentVin` (string),
+  `testStatus` (string enum).
+- Added optional: `testStatusDetails` (string), `lastCollectionAtTime`
+  (DateTimeOffset?), `nextCollectionAtTime` (DateTimeOffset?).
+- Removed SDK-only extras: `name`, `vin`, `licensePlate`, `complianceStatus`,
+  `modelYear`, `fuelType`. These were carried over from an earlier draft and
+  do not appear in the spec object; removed to bring the model into strict
+  parity (consistent with LOW-finding direction "remove" in the plan).
+
+**CarbCtcVehicleHistory (response)** — fully aligned to spec inner schema
+`CarbCtcVehicleHistoryObjectResponseBody`:
+
+- Added required: `enrollmentId` (string/uuid), `enrollmentVin` (string),
+  `happenedAtTime` (DateTimeOffset), `testResult` (string enum).
+- Added optional: `testResultDetails` (string).
+- Removed SDK-only extras: `vehicleId`, `time`, `event`, `details`. Same
+  rationale as the vehicle model — drift from an earlier shape that the spec
+  no longer documents.
+
+**Client queries** — both endpoints now match the spec parameter set:
+
+- `ListVehiclesAsync(tagIds, parentTagIds, testStatus, ...)` — added all three
+  optional query params; `testStatus` is `IReadOnlyList<string>?` and serialized
+  via `string.Join(",", ...)` consistent with other array-typed query params
+  in the SDK (e.g. `BetaClient`).
+- `ListVehicleHistoryAsync(vehicleIds, startTime, endTime, ...)` — promoted
+  `vehicleIds` to a required `string` parameter (no default), per the spec
+  marking it `required: true`. This is a breaking change at the call site, but
+  the SDK previously omitted the parameter entirely so calls would have failed
+  against the live API.
 
 
 ## Quick reference

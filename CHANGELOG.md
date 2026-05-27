@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 07-carb-ctc (2026-05-27)** — applied the per-domain
+  remediation plan. `CarbCtcVehicle` now exposes spec-required
+  `enrollmentId`, `enrollmentVin`, `testStatus` plus optional
+  `testStatusDetails`, `lastCollectionAtTime`, `nextCollectionAtTime`;
+  removed SDK-only `name`, `vin`, `licensePlate`, `complianceStatus`,
+  `modelYear`, `fuelType` (not in spec). `CarbCtcVehicleHistory` now
+  exposes spec-required `enrollmentId`, `enrollmentVin`, `happenedAtTime`,
+  `testResult` plus optional `testResultDetails`; removed SDK-only
+  `vehicleId`, `time`, `event`, `details`. `ICarbCtcClient.ListVehiclesAsync`
+  gains optional `tagIds`, `parentTagIds`, `testStatus` query parameters;
+  `ListVehicleHistoryAsync` promotes `vehicleIds` to a required parameter
+  (spec marks `required: true`). See
+  `docs/api-sync/model-sync-plan-2026-05-27/07-carb-ctc.md`.
 - **Model sync 06-beta-apis (2026-05-27)** — applied the per-domain
   remediation plan. Added spec-required and spec-optional query parameters
   across all Beta clients (`BetaClient`, `FunctionsClient`, `PlacesClient`,
