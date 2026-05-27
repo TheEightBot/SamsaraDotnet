@@ -3,6 +3,102 @@
 > Companion to [`docs/api-sync/16-equipment.md`](../16-equipment.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `300db08` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH and MEDIUM findings were applied; LOW findings on the response were
+intentionally retained as nullable back-compat properties per the workflow
+precedent established in `08-carrier-proposed-assignments`,
+`13-driver-trailer-assignments`, and `14-driver-vehicle-assignments`
+(response-side flat-scalar conveniences kept so existing consumers don't
+silently break).
+
+Files touched:
+- `src/Samsara.Sdk/Models/Fleet/FleetModels.cs` — added
+  `EquipmentInstalledGateway` and `EquipmentLocationPoint` records; reshaped
+  `Equipment`, `EquipmentLocation`, and `EquipmentStats`.
+- `src/Samsara.Sdk/Clients/Fleet/IEquipmentClient.cs` and
+  `src/Samsara.Sdk/Clients/Fleet/EquipmentClient.cs` — added optional
+  `parentTagIds`, `tagIds`, and `equipmentIds` query parameters across the
+  seven list/feed/history methods.
+- `src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs` — registered the new
+  nested records.
+- `tools/Samsara.Cli/TuiApp.cs` — passed `cancellationToken` by name in the
+  two equipment menu call sites (`ListAsync` / `ListLocationsAsync`) now that
+  those methods take optional tag filters positionally.
+
+**HIGH (2)** — `EquipmentLocation`
+
+- **`location` required (response, snapshot endpoint)**: added
+  `EquipmentLocationPoint? Location` (nullable because the property is only
+  populated by `GET /fleet/equipment/locations`; on `/feed` and `/history`
+  it is the array variant `Locations`).
+- **`locations` required (response, feed/history endpoints)**: added
+  `IReadOnlyList<EquipmentLocationPoint>? Locations` (nullable for the
+  symmetric reason — only populated by `/feed` and `/history`).
+- Introduced a new nested record `EquipmentLocationPoint` (required
+  `latitude` / `longitude` / `time`, optional `heading` / `speed`) shared
+  by both representations.
+
+**MEDIUM (38)**
+
+Query parameters (20 findings; 7 methods × 3 array params, modulo the
+methods that do not accept all three):
+
+- Added optional `parentTagIds`, `tagIds`, and `equipmentIds`
+  (`IReadOnlyList<string>?`) to `IEquipmentClient.ListAsync`,
+  `ListLocationsAsync`, `GetLocationsFeedAsync`,
+  `GetLocationsHistoryAsync`, `GetStatsAsync`, `GetStatsFeedAsync`, and
+  `GetStatsHistoryAsync`. Arrays are joined with `,` (the spec uses
+  `style=form, explode=false`), matching the established pattern from
+  `DriversClient` and `AssetsClient`. `ListAsync` only takes
+  `parentTagIds`/`tagIds` because the spec does not define an
+  `equipmentIds` parameter on `GET /fleet/equipment`.
+
+`Equipment` (response):
+
+- **`assetSerial`**: added as `string? AssetSerial`.
+- **`installedGateway`**: added as `EquipmentInstalledGateway?
+  InstalledGateway` (new nested record with `serial` / `model`).
+
+`EquipmentLocation` (response):
+
+- **`name` required-drift**: tightened to non-nullable `required string Name`.
+
+`EquipmentStats` (response):
+
+- **`name` required-drift**: tightened to non-nullable `required string Name`.
+- Added 14 spec-defined nested properties (covering all 15 EquipmentStats
+  MEDIUMs):
+  - Strictly array (returned only by `/feed`/`/history`):
+    `engineStates`, `fuelPercents`, `gatewayEngineStates`,
+    `gatewayJ1939EngineSeconds`, `obdEngineStates` →
+    `IReadOnlyList<object>?`.
+  - Strictly singular object (returned only by `/stats`):
+    `gatewayEngineState`, `obdEngineState` → `object?`.
+  - Shape-shifting (singular on `/stats`, array on `/feed`/`/history`):
+    `engineRpm`, `engineSeconds`, `engineTotalIdleTimeMinutes`,
+    `gatewayEngineSeconds`, `gps`, `gpsOdometerMeters`, `obdEngineSeconds`
+    → `System.Text.Json.JsonElement?`.
+  - Using `JsonElement?` for the shape-shifters lets a single typed
+    response record deserialize successfully from all three endpoints
+    without invalid-cast errors. This is the same precedent used in
+    `DriverModels` (`eldSettings`, `hosSetting`, etc.) and
+    `FleetModels.Vehicle` (`grossVehicleWeight`).
+
+**LOW (8)** — intentionally retained as nullable back-compat extras (not in
+spec inner schema, but present on the SDK record today; removing them would
+be a breaking change for downstream consumers):
+
+- `Equipment.EquipmentSerialNumber` — superseded by the new `AssetSerial`
+  but kept as a legacy alias.
+- `EquipmentLocation.Latitude`, `EquipmentLocation.Longitude`,
+  `EquipmentLocation.Time` — superseded by `Location.Latitude /
+  Longitude / Time` but kept as flat-scalar convenience aliases.
+- `EquipmentStats.EngineState`, `EquipmentStats.FuelPercent`,
+  `EquipmentStats.ObdOdometer`, `EquipmentStats.Time` — superseded by the
+  new typed/plural counterparts but kept as legacy aliases.
 
 ## Quick reference
 
