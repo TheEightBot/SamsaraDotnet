@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 02-alerts (2026-05-27)** — applied the per-domain remediation
+  plan. `AlertConfiguration` and `AlertIncident` response records now expose
+  every spec-required field with the correct `required`/non-nullable typing
+  (`actions`/`triggers`/`scope`/`createdAtTime`/`lastModifiedAtTime`/`isEnabled`
+  on configs; `conditions`/`happenedAtTime`/`incidentUrl`/`isResolved`/
+  `updatedAtTime` on incidents). SDK-only extras absent from the spec inner
+  schema were removed (`AlertConfiguration.ConditionType`;
+  `AlertIncident.{Id,AlertId,Driver,Vehicle,TriggeredAtTime}`). Weak `object?`
+  on `scope`/`operationalSettings`/`triggers`/`actions` replaced with new typed
+  wrappers `AlertScope`, `AlertTrigger`, `AlertAction`,
+  `AlertOperationalSettings`, and `AlertIncidentCondition`. CLI rendering
+  updated to surface incident `ConfigurationId`/`HappenedAtTime`/`IncidentUrl`
+  (the prior `Id` column is not in the spec). See
+  `docs/api-sync/model-sync-plan-2026-05-27/02-alerts.md`.
 - **Model sync 01-addresses (2026-05-27)** — applied the per-domain remediation
   plan: `Address.formattedAddress` and `Address.geofence` are now non-nullable
   on the response (spec marks both REQUIRED); `IAddressesClient.ListAsync` now

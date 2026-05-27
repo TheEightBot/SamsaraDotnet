@@ -11,7 +11,24 @@ public sealed class AlertsClientTests
     [Fact]
     public async Task CreateConfigurationAsync_PostsToCorrectPath()
     {
-        var resp = new { data = new { id = "cfg-new", name = "Speed Alert" } };
+        // Spec marks id, name, isEnabled, scope, actions, triggers, createdAtTime,
+        // and lastModifiedAtTime as REQUIRED on the response payload — the mock
+        // payload must include all of them or System.Text.Json's `required` check
+        // throws on deserialization.
+        var resp = new
+        {
+            data = new
+            {
+                id = "cfg-new",
+                name = "Speed Alert",
+                isEnabled = true,
+                scope = new { all = true },
+                actions = new[] { new { actionTypeId = 1 } },
+                triggers = new[] { new { triggerTypeId = 1000 } },
+                createdAtTime = "2024-01-01T00:00:00Z",
+                lastModifiedAtTime = "2024-01-01T00:00:00Z",
+            },
+        };
         var handler = MockHttpMessageHandler.WithJsonResponse(resp);
         var client = new AlertsClient(TestFactory.CreateHttpClient(handler));
 
@@ -19,9 +36,9 @@ public sealed class AlertsClientTests
         {
             Name = "Speed Alert",
             IsEnabled = true,
-            Scope = new { },
-            Triggers = new object[] { new { } },
-            Actions = new object[] { new { } },
+            Scope = new AlertScope { All = true },
+            Triggers = new[] { new AlertTrigger { TriggerTypeId = 1000 } },
+            Actions = new[] { new AlertAction { ActionTypeId = 1 } },
         });
 
         cfg.Name.Should().Be("Speed Alert");
@@ -32,7 +49,20 @@ public sealed class AlertsClientTests
     [Fact]
     public async Task UpdateConfigurationAsync_PatchesToCorrectPathWithIdInBody()
     {
-        var resp = new { data = new { id = "cfg-1", name = "Updated Alert" } };
+        var resp = new
+        {
+            data = new
+            {
+                id = "cfg-1",
+                name = "Updated Alert",
+                isEnabled = true,
+                scope = new { all = true },
+                actions = new[] { new { actionTypeId = 1 } },
+                triggers = new[] { new { triggerTypeId = 1000 } },
+                createdAtTime = "2024-01-01T00:00:00Z",
+                lastModifiedAtTime = "2024-01-02T00:00:00Z",
+            },
+        };
         var handler = MockHttpMessageHandler.WithJsonResponse(resp);
         var client = new AlertsClient(TestFactory.CreateHttpClient(handler));
 

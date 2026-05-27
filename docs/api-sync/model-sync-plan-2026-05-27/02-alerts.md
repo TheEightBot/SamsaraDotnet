@@ -121,3 +121,38 @@
   - Endpoints: `GET /alerts/incidents/stream`
   - Recommended fix: Remove `AlertIncident.Vehicle` (not in spec).
 
+## Implementation notes
+
+All 25 findings (HIGH=11, MEDIUM=8, LOW=6) were addressed. A few decisions and
+partial implementations are worth calling out:
+
+- **Date-time fields**: `createdAtTime`, `lastModifiedAtTime`, `happenedAtTime`,
+  and `updatedAtTime` are typed as `DateTimeOffset` rather than `string`. The
+  spec describes them as `string` with RFC 3339 format; using `DateTimeOffset`
+  matches the existing SDK convention (see e.g. `Address.createdAtTime`).
+- **Typed nested models — `weak_typing` MEDIUM findings**: instead of leaving
+  `scope` and `operationalSettings` as bare `object?`, the implementation adds
+  light typed wrappers `AlertScope`, `AlertTrigger`, `AlertAction`, and
+  `AlertOperationalSettings`. The inner Sub-arrays (`scope.assets`/`drivers`/
+  `tags`/`widgets`, `triggerParams`, `actionParams`, `timeRanges`,
+  `incidentCondition.details`) remain `object`/`IReadOnlyList<object>` because
+  the spec defines dozens of trigger/action/details-specific shapes — fully
+  typing them would balloon the scope of this change well beyond the Alerts
+  domain. The required surface (`scope.all`, `trigger.triggerTypeId`,
+  `action.actionTypeId`, `timeRangeType`/`timeRanges`) is now properly typed.
+- **`AlertConfiguration.externalIds`**: spec models it as `object` with
+  `additionalProperties: {type: string}`, so the SDK uses
+  `IReadOnlyDictionary<string, string>?` (already present on the request
+  records; added on the response).
+- **`AlertIncident.{Id,AlertId,Driver,Vehicle,TriggeredAtTime}` removed (LOW)**:
+  these are not in the spec's inner incident schema. CLI rendering in
+  `tools/Samsara.Cli/TuiApp.cs` updated to surface `ConfigurationId` +
+  `HappenedAtTime` + `IncidentUrl` instead of the removed `Id`.
+- **`AlertConfiguration.ConditionType` removed (LOW)**: not in the spec.
+- **Tests updated**: `AlertsClientTests` mocks expanded to include all spec-
+  required response fields (the SDK's `required` properties cause STJ to throw
+  on incomplete payloads). The create/update payloads now construct the new
+  typed `AlertScope`/`AlertTrigger`/`AlertAction` records.
+
+No findings were skipped.
+

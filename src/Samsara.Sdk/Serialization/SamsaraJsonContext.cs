@@ -123,6 +123,11 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(UpdateAlertConfigurationRequest))]
 [JsonSerializable(typeof(AlertNotificationSetting))]
 [JsonSerializable(typeof(AlertIncident))]
+[JsonSerializable(typeof(AlertScope))]
+[JsonSerializable(typeof(AlertTrigger))]
+[JsonSerializable(typeof(AlertAction))]
+[JsonSerializable(typeof(AlertOperationalSettings))]
+[JsonSerializable(typeof(AlertIncidentCondition))]
 // Compliance
 [JsonSerializable(typeof(HosLog))]
 [JsonSerializable(typeof(HosViolation))]

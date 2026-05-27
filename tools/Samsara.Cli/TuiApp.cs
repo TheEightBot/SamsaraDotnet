@@ -1163,7 +1163,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching alert configurations...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Alerts.ListConfigurationsAsync(cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Alert Configurations", c => [c.Id, c.Name ?? ""], ["ID", "Name"]);
+                            ResultRenderer.RenderList(items, "Alert Configurations", c => [c.Id, c.Name], ["ID", "Name"]);
                         });
                         break;
                     case "Incidents Stream":
@@ -1173,7 +1173,13 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Streaming incidents...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Alerts.GetIncidentsStreamAsync(since, cfgIds, cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Alert Incidents", i => [i.Id, i.ConfigurationId ?? ""], ["ID", "Configuration ID"]);
+                            // Spec inner schema doesn't expose an `id` for incidents — surface
+                            // configurationId + happenedAtTime + incidentUrl instead.
+                            ResultRenderer.RenderList(
+                                items,
+                                "Alert Incidents",
+                                i => [i.ConfigurationId, i.HappenedAtTime.ToString("u"), i.IncidentUrl],
+                                ["Configuration ID", "Happened At", "URL"]);
                         });
                         break;
                     case "Messages":
