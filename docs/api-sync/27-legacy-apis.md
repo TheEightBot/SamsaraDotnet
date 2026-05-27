@@ -6,6 +6,9 @@
 > **Implementation**: `src/Samsara.Sdk/Clients/.../N/A.cs`  
 > **Models**: `src/Samsara.Sdk/N/A`  
 
+> **Resolved 2026-05-27 (model-sync plan)** — see
+> [`model-sync-plan-2026-05-27/27-legacy-apis.md`](./model-sync-plan-2026-05-27/27-legacy-apis.md).
+
 ---
 
 ## Endpoints

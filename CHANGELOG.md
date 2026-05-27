@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 27-legacy-apis (2026-05-27)** — applied the per-domain
+  remediation plan (3 HIGH, 24 MEDIUM, 0 LOW — 27 total). `ILegacyApisClient`
+  query surface expanded for seven endpoints. `GetVehicleIdlingReportAsync`
+  converted from `Task<object>` to paginated `IAsyncEnumerable<object>` and
+  gained required `startTime`/`endTime` plus five optional filters
+  (`vehicleIds`, `tagIds`, `parentTagIds`, `isPtoActive`,
+  `minIdlingDurationMinutes`); `after`/`limit` are handled transparently by
+  the shared `PaginateAsync` helper. `GetDriversVehicleAssignmentsAsync` and
+  `GetVehiclesDriverAssignmentsAsync` each gained five optional filter
+  parameters; `GetDvirHistoryAsync` gained `parentTagIds`/`tagIds` (array);
+  `GetDvirDefectsHistoryAsync` gained `isResolved`; `GetSafetyEventsAsync`
+  gained `tagIds`/`parentTagIds`/`vehicleIds` (arrays). On
+  `V1GetVehicleHarshEventAsync` the parameter previously named `timestampMs`
+  was renamed to `timestamp` to match the spec query key (wire format
+  unchanged). See `docs/api-sync/model-sync-plan-2026-05-27/27-legacy-apis.md`.
 - **Model sync 25-issues (2026-05-27)** — applied the per-domain remediation
   plan (3 HIGH, 16 MEDIUM, 6 LOW). `Issue` rebuilt to match the spec
   `IssueResponseObjectResponseBody` inner schema: three spec-REQUIRED fields
