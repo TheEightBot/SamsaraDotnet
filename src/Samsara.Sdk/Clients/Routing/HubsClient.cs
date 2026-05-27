@@ -13,8 +13,17 @@ internal sealed class HubsClient : SamsaraServiceClientBase, IHubsClient
         => PaginateAsync<Hub>(BasePath, cancellationToken: cancellationToken);
 
     /// <summary>List hubs via the dedicated <c>GET /hubs</c> endpoint (listHubs).</summary>
-    public IAsyncEnumerable<Hub> ListHubsAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<Hub>("hubs", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<Hub> ListHubsAsync(
+        string? hubIds = null,
+        string? startTime = null,
+        string? endTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<Hub>(
+            QueryBuilder.WithParams("hubs",
+                ("hubIds", hubIds),
+                ("startTime", startTime),
+                ("endTime", endTime)),
+            cancellationToken: cancellationToken);
 
     /// <summary>List hub plan routes (<c>GET /hub/plan/routes</c>).</summary>
     public IAsyncEnumerable<object> ListPlanRoutesAsync(CancellationToken cancellationToken = default)
@@ -81,23 +90,81 @@ internal sealed class HubsClient : SamsaraServiceClientBase, IHubsClient
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
 
-    public IAsyncEnumerable<HubCapacity> ListCapacitiesAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<HubCapacity>("hub/capacities", cancellationToken: cancellationToken);
+    /// <summary>List hub capacities (<c>GET /hub/capacities</c>) — <paramref name="hubId"/> required by spec.</summary>
+    public IAsyncEnumerable<HubCapacity> ListCapacitiesAsync(
+        string hubId,
+        string? capacityIds = null,
+        string? capacityNames = null,
+        string? startTime = null,
+        string? endTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<HubCapacity>(
+            QueryBuilder.WithParams("hub/capacities",
+                ("hubId", hubId),
+                ("capacityIds", capacityIds),
+                ("capacityNames", capacityNames),
+                ("startTime", startTime),
+                ("endTime", endTime)),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<HubCustomProperty> ListCustomPropertiesAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<HubCustomProperty>("hub/customProperties", cancellationToken: cancellationToken);
+    /// <summary>List hub custom properties (<c>GET /hub/customProperties</c>) — <paramref name="hubId"/> required by spec.</summary>
+    public IAsyncEnumerable<HubCustomProperty> ListCustomPropertiesAsync(
+        string hubId,
+        string? customPropertyIds = null,
+        string? customPropertyNames = null,
+        string? startTime = null,
+        string? endTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<HubCustomProperty>(
+            QueryBuilder.WithParams("hub/customProperties",
+                ("hubId", hubId),
+                ("customPropertyIds", customPropertyIds),
+                ("customPropertyNames", customPropertyNames),
+                ("startTime", startTime),
+                ("endTime", endTime)),
+            cancellationToken: cancellationToken);
 
-    public Task<HubLocation> UpdateLocationAsync(string id, UpdateHubLocationRequest request, CancellationToken cancellationToken = default)
+    /// <summary>Update a hub location (<c>PATCH /hub/location/{id}</c>). The spec wraps the body in <c>{ data: T }</c>.</summary>
+    public Task<HubLocation> UpdateLocationAsync(string id, UpdateHubLocationEnvelopeRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<HubLocation>($"hub/location/{Uri.EscapeDataString(id)}", request, cancellationToken);
 
-    public IAsyncEnumerable<HubLocation> ListLocationsAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<HubLocation>("hub/locations", cancellationToken: cancellationToken);
+    /// <summary>List hub locations (<c>GET /hub/locations</c>) — <paramref name="hubId"/> required by spec.</summary>
+    public IAsyncEnumerable<HubLocation> ListLocationsAsync(
+        string hubId,
+        string? locationIds = null,
+        string? customerLocationIds = null,
+        string? startTime = null,
+        string? endTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<HubLocation>(
+            QueryBuilder.WithParams("hub/locations",
+                ("hubId", hubId),
+                ("locationIds", locationIds),
+                ("customerLocationIds", customerLocationIds),
+                ("startTime", startTime),
+                ("endTime", endTime)),
+            cancellationToken: cancellationToken);
 
-    public Task<HubLocation> CreateLocationAsync(CreateHubLocationRequest request, CancellationToken cancellationToken = default)
+    /// <summary>Create hub locations in bulk (<c>POST /hub/locations</c>). The spec wraps the array in <c>{ data: T[] }</c>.</summary>
+    public Task<HubLocation> CreateLocationAsync(CreateHubLocationsRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<HubLocation>("hub/locations", request, cancellationToken);
 
-    public IAsyncEnumerable<HubSkill> ListSkillsAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<HubSkill>("hub/skills", cancellationToken: cancellationToken);
+    /// <summary>List hub skills (<c>GET /hub/skills</c>) — <paramref name="hubId"/> required by spec.</summary>
+    public IAsyncEnumerable<HubSkill> ListSkillsAsync(
+        string hubId,
+        string? skillIds = null,
+        string? skillNames = null,
+        string? startTime = null,
+        string? endTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<HubSkill>(
+            QueryBuilder.WithParams("hub/skills",
+                ("hubId", hubId),
+                ("skillIds", skillIds),
+                ("skillNames", skillNames),
+                ("startTime", startTime),
+                ("endTime", endTime)),
+            cancellationToken: cancellationToken);
 
     public Task<HubPlan> CreatePlanAsync(CreateHubPlanRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<HubPlan>("hub/plan", request, cancellationToken);

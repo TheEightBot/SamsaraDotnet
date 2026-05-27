@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 21-hubs (2026-05-27)** — applied the per-domain remediation
+  plan, including two CRITICAL wrapper-drift fixes that previously broke the
+  hub-location request bodies at runtime. **`POST /hub/locations`**: prior
+  `CreateHubLocationRequest` is renamed to `CreateHubLocationInput`, gains the
+  five spec-REQUIRED fields (`address`, `customerLocationId`, `hubId`,
+  `isDepot`, `name` — all `required`) plus the missing optional fields
+  (`driverInstructions`, `plannerNotes`, `serviceTimeSeconds`, `serviceWindows`,
+  `skillsRequired`), and is now posted inside the new
+  `CreateHubLocationsRequest { data: IReadOnlyList<CreateHubLocationInput> }`
+  envelope per the spec. **`PATCH /hub/location/{id}`**: `UpdateLocationAsync`
+  now takes the new `UpdateHubLocationEnvelopeRequest { data:
+  UpdateHubLocationRequest }` so the inner update payload is wrapped in
+  `{ data: T }` per the spec; `UpdateHubLocationRequest` gains nine missing
+  optional fields (`customerLocationId`, `driverInstructions`, `isDepot`,
+  `latitude`, `longitude`, `plannerNotes`, `serviceTimeSeconds`,
+  `serviceWindows`, `skillsRequired`) and drops the spec-absent `notes` field.
+  Query surface expanded: `ListCapacitiesAsync`, `ListCustomPropertiesAsync`,
+  `ListLocationsAsync`, and `ListSkillsAsync` now require `hubId` (spec
+  REQUIRED) and accept their full optional surface (`*Ids`, `*Names`,
+  `startTime`, `endTime`); `ListHubsAsync` accepts `hubIds`, `startTime`, and
+  `endTime`. Response records tightened: spec-REQUIRED fields on `Hub`
+  (`createdAt`, `timeZone`, `updatedAt`), `HubLocation`
+  (`address`, `name`, `customerLocationId`, `hubId`, `driverInstructions`,
+  `plannerNotes`, `isDepot`, `latitude`, `longitude`, `serviceTimeSeconds`,
+  `serviceWindows`, `skillsRequired`, `createdAt`, `updatedAt`), `HubCapacity`
+  (`id`, `name`, `unit`, `createdAt`, `updatedAt`), `HubCustomProperty`
+  (`hubId`, `name`, `csvColumns`, `createdAt`, `updatedAt`), and `HubSkill`
+  (`hubId`, `name`, `createdAt`, `updatedAt`) are now non-nullable `required`.
+  LOW response-side extras (`Hub.latitude/longitude/formattedAddress/geofence/tags/externalIds`,
+  `HubCapacity.capacity/usedCapacity/timeSlot`, `HubCustomProperty.type`,
+  `HubLocation.notes`) retained as nullable back-compat per the workflow
+  precedent; request-side spec-absent `notes` removed from both
+  `CreateHubLocationInput` and `UpdateHubLocationRequest`. See
+  `docs/api-sync/model-sync-plan-2026-05-27/21-hubs.md`.
 - **Model sync 20-hours-of-service (2026-05-27)** — applied the per-domain
   remediation plan. `HosLog` (response of `GET /fleet/hos/logs`) re-shaped to
   the spec's per-driver shape (`driver` + `hosLogs[]`), backed by new typed
