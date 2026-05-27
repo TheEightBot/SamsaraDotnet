@@ -3,6 +3,94 @@
 > Companion to [`docs/api-sync/24-industrial.md`](../24-industrial.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `c6dcd80` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH (4), MEDIUM (52), and LOW (6) findings were applied — 62 total.
+
+Files touched:
+
+- `src/Samsara.Sdk/Models/Industrial/IndustrialModels.cs` — full rewrite of
+  `IndustrialAsset`, `DataInput`, and `DataInputDataPoint` plus seventeen
+  new nested records.
+- `src/Samsara.Sdk/Clients/Industrial/IIndustrialClient.cs` — full surface
+  re-shaped to expose the spec's query parameter set for every list endpoint
+  and the v1 vision endpoints; `V1GetVisionRunsAsync` and
+  `V1GetVisionRunsByCameraAsync` now take a required `long durationMs`
+  parameter.
+- `src/Samsara.Sdk/Clients/Industrial/IndustrialClient.cs` — query-string
+  composition via `QueryBuilder.WithParams`, mirroring the `IdlingClient`
+  / `FuelClient` array-join precedent.
+- `src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs` — added eighteen
+  new `[JsonSerializable]` registrations for the nested types and removed
+  the obsolete `DataPoint` registration.
+- `tools/Samsara.Cli/TuiApp.cs` — switched three call sites to named
+  arguments for `cancellationToken` after the list-asset / list-data-input
+  / get-data-input signatures gained leading optional parameters.
+
+**HIGH (4)**
+
+- **`(no SDK type)` query — `durationMs` on V1 vision runs endpoints**:
+  `V1GetVisionRunsAsync` and `V1GetVisionRunsByCameraAsync` now take a
+  required `long durationMs` first positional parameter, appended via
+  `QueryBuilder.WithParams("durationMs", …)`.
+- **`IndustrialAsset.isRunning`** added as `required bool` (spec marks
+  REQUIRED in `AssetResponse`).
+- **`IndustrialAsset.statusCode`** added as nullable `long?`. Spec marks
+  this REQUIRED on `PatchAssetDataOutputsSingleResponseResponseBody` but
+  the same record is reused across the standard asset payloads where the
+  field is absent — modelled as nullable so the type stays sound across
+  every endpoint.
+
+**MEDIUM (52)**
+
+- **27 missing optional query parameters** added across `ListAssetsAsync`,
+  `ListDataInputsAsync`, `GetDataInputAsync`, `GetDataInputSnapshotAsync`,
+  `GetDataInputFeedAsync`, `GetDataInputHistoryAsync`,
+  `V1GetVisionLatestRunForCameraAsync`, `V1GetVisionRunsAsync`,
+  `V1GetVisionRunsByCameraAsync`, and
+  `V1GetVisionRunsByCameraAndProgramAsync`. Array params use
+  `string.Join(",", …)`; integers use
+  `ToString(CultureInfo.InvariantCulture)`.
+- **`IndustrialAsset.Name` tightened** from `string?` to `required string`
+  (spec marks REQUIRED).
+- **10 missing `IndustrialAsset` optional members** added: `customMetadata`
+  (`IReadOnlyDictionary<string, string>?` — the spec's `CustomMetadata`
+  type is a free-form string map), `dataOutputs` (concrete
+  `IndustrialAssetDataOutput` items), `errorMessage`, `location`
+  (`IndustrialAssetLocation`), `locationDataInput`
+  (`IndustrialAssetLocationDataInput`), `locationType`, `parentAsset`
+  (`IndustrialAssetParent`), `runningStatusDataInput`
+  (`IndustrialAssetRunningStatusDataInput`), `tags`
+  (`IndustrialAssetTag` items). Where the plan recommended
+  `object`/`object?`, the codebase convention (established in
+  `13`/`14`/`23`) is to model spec sub-schemas as concrete records.
+- **3 missing `DataInput` optional members** added: `assetId`,
+  `dataGroup`, `units` — matching `DataInputTinyResponse`.
+- **12 missing `DataInputDataPoint` members** added: `dataGroup`, `units`
+  (from `DataInputTinyResponse`); plus snapshot-only `fftSpectraPoint`,
+  `j1939D1StatusPoint`, `locationPoint`, `numberPoint`, `stringPoint`
+  (from `DataInputSnapshot_allOf`); plus feed/history-only
+  `fftSpectraPoints`, `j1939D1StatusPoints`, `locationPoints`,
+  `numberPoints`, `stringPoints` (from `DataInputResponse_allOf`). One
+  record covers all three endpoints since the spec's field names do not
+  collide — each endpoint populates a disjoint subset.
+
+**LOW (6)**
+
+All six SDK-only flat scalars absent from the spec inner schemas were
+removed: `DataInput.Points`, `DataInputDataPoint.Time`,
+`DataInputDataPoint.Value`, `IndustrialAsset.DataInputs`,
+`IndustrialAsset.MacAddress`, `IndustrialAsset.Name` (the
+`PatchAssetDataOutputsSingleResponseResponseBody` view does not include
+`name`, but the AssetResponse view does — the unified `IndustrialAsset`
+record keeps `Name` because it is spec-REQUIRED on the asset-CRUD
+endpoints that share the record). The legacy `DataPoint` record was also
+removed (no longer referenced after the rewrite).
+
+Build is green, `tools/check-sdk-sync.py` reports `mismatched=0` /
+`not implemented=0`, and all 59 unit tests pass.
 
 ## Quick reference
 
