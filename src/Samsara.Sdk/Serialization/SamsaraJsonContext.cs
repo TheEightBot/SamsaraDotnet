@@ -181,6 +181,7 @@ using Samsara.Sdk.Pagination;
 // Fuel & energy
 [JsonSerializable(typeof(FuelPurchase))]
 [JsonSerializable(typeof(CreateFuelPurchaseRequest))]
+[JsonSerializable(typeof(FuelPurchaseMoney))]
 [JsonSerializable(typeof(FuelEnergyVehicleReport))]
 [JsonSerializable(typeof(FuelEnergyDriverReport))]
 [JsonSerializable(typeof(FuelEnergyCost))]
@@ -188,6 +189,10 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(FuelEnergyDriverReportsResponse))]
 [JsonSerializable(typeof(DriverEfficiencyByDriver))]
 [JsonSerializable(typeof(DriverEfficiencyByVehicle))]
+[JsonSerializable(typeof(DriverEfficiencyDifficultyScore))]
+[JsonSerializable(typeof(DriverEfficiencyPercentageData))]
+[JsonSerializable(typeof(DriverEfficiencyRawData))]
+[JsonSerializable(typeof(DriverEfficiencyScoreData))]
 // Industrial
 [JsonSerializable(typeof(IndustrialAsset))]
 [JsonSerializable(typeof(DataInput))]

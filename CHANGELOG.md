@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 18-fuel-and-energy (2026-05-27)** — applied the per-domain
+  remediation plan. `FuelEnergyVehicleReport` and `FuelEnergyDriverReport`
+  (response rows) tighten `distanceTraveledMeters`, `efficiencyMpge`,
+  `estFuelEnergyCost`, and `vehicle`/`driver` to non-nullable `required`
+  per the spec. `DriverEfficiencyByDriver` and `DriverEfficiencyByVehicle`
+  tighten `driverId` / `vehicleId` to `required string` and replace the four
+  `object?` weak typings with four new typed nested records:
+  `DriverEfficiencyDifficultyScore`, `DriverEfficiencyPercentageData`,
+  `DriverEfficiencyRawData`, and `DriverEfficiencyScoreData`. New
+  `FuelPurchaseMoney` (required `amount` + `currency`) replaces the
+  previously-untyped `object` on `CreateFuelPurchaseRequest.TransactionPrice`
+  (now required) and `Discount` (optional). `FuelPurchase` (response of
+  `POST /fuel-purchase`) gains required `uuid`; legacy `id`, `driverId`,
+  `vehicleId`, and other echoed fields are retained as nullable back-compat.
+  `IFuelClient.GetDriverEfficiencyByDriverAsync` and
+  `GetDriverEfficiencyByVehicleAsync` now require `startTime` / `endTime`
+  (previously took no parameters) and expose optional
+  `driverIds`/`vehicleIds`, `dataFormats`, `tagIds`, and `parentTagIds`.
+  `ListVehicleFuelEnergyReportsAsync` and `ListDriverFuelEnergyReportsAsync`
+  gain an optional `after` cursor. See
+  `docs/api-sync/model-sync-plan-2026-05-27/18-fuel-and-energy.md`.
 - **Model sync 17-forms (2026-05-27)** — applied the per-domain remediation
   plan. `FormSubmission` (response) now mirrors the spec's nested shape with
   required `createdAtTime`, `updatedAtTime`, `submittedAtTime`, `status`,
