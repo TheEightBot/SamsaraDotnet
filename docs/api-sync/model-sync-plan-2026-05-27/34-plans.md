@@ -3,6 +3,98 @@
 > Companion to [`docs/api-sync/34-plans.md`](../34-plans.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented on 2026-05-27**
+
+## Implementation notes
+
+All CRITICAL, HIGH, and MEDIUM findings were applied. The CRITICAL
+wrapper-drift bug on `POST /hub/plan/orders` was the load-bearing item
+in this plan — the endpoint was runtime-broken because the SDK was
+posting an unwrapped body where the spec expected a
+`{ data: OrderInputObjectRequestBody[] }` envelope. The earlier `21-hubs`
+plan already shipped the analogous fixes for `POST /hub/locations` and
+`PATCH /hub/location/{id}`; this plan completes the pattern across the
+remaining hub plan-orders endpoint.
+
+CRITICAL fix:
+
+- **`POST /hub/plan/orders`** — introduced new envelope record
+  `CreateHubPlanOrdersRequest { data: IReadOnlyList<CreateHubPlanOrderInput> }`.
+  The prior `CreateHubPlanOrdersRequest` (which carried a single
+  `planId`/`orderIds` shape that did not match the spec inner schema)
+  was replaced by `CreateHubPlanOrderInput`, with the three spec-REQUIRED
+  fields modeled as `required` (`customerOrderId`, `hubId`, `planId`).
+  The six missing optional fields (`customProperties`, `delivery`,
+  `pickup`, `priority`, `quantities`, `skillsRequired`) were added; the
+  spec-absent `orderIds` field was removed per the request-side
+  precedent for spec-absent extras. The client method
+  `CreatePlanOrdersAsync` now takes the envelope.
+
+HIGH:
+
+- `ListPlansAsync` (`GET /hub/plans`) now requires `hubId` (spec REQUIRED)
+  as the first parameter. Optional filter surface extended at the same
+  time so the query parameters weren't half-implemented (see MEDIUM
+  below).
+- `CreateHubPlanRequest` gained the spec-REQUIRED `hubId` property as
+  `required`. The spec-absent `date` field was removed per the
+  request-side precedent (LOW finding rolled in with the HIGH so the
+  shape posts a spec-valid body).
+- `CreateHubPlanOrderInput` — the three spec-REQUIRED properties
+  (`customerOrderId`, `hubId`, `planId`) are modeled as `required`,
+  resolving both MISSING_REQUIRED findings (covered by the CRITICAL fix
+  above).
+- Spec-REQUIRED response fields tightened to non-nullable `required` on
+  `HubPlan` (`createdAt`, `hubId`, `name`, `shiftStartTime`, `updatedAt`).
+  `id` was already `required`; `name` was tightened from nullable to
+  `required` (covered the MEDIUM `response_required_drift` finding).
+
+MEDIUM:
+
+- `ListPlansAsync` adds optional `planIds`, `startTime`, `endTime`.
+- `CreateHubPlanRequest` adds optional `sessionConfigurationId` and
+  `shiftStartTime` (nullable `DateTimeOffset?`).
+- `CreateHubPlanOrderInput` adds optional `customProperties`, `delivery`,
+  `pickup`, `priority`, `quantities`, `skillsRequired`. Per the plan's
+  recommended fix and the precedent from `21-hubs` (where
+  `serviceWindows`/`skillsRequired` use `IReadOnlyList<object>`),
+  `customProperties`, `quantities`, and `skillsRequired` use
+  `IReadOnlyList<object>?` and `delivery`/`pickup` use `object?`. The
+  inner `OrderTaskRequestBody`, `OrderCustomPropertyInputRequestBody`,
+  and `OrderQuantityInputRequestBody` schemas can be typed in a future
+  iteration.
+- `HubPlan.Name` tightened to non-nullable `required` (rolled in with the
+  HIGH response-drift work above).
+
+LOW (conservative — workflow precedent):
+
+- Request-side spec-absent fields removed: `CreateHubPlanRequest.Date`
+  and `CreateHubPlanOrdersRequest.OrderIds` (the rename target). Removed
+  per the precedent established in earlier domain syncs because sending
+  them risks API rejection.
+- Response-side spec-absent fields removed: `HubPlan.Status` and
+  `HubPlan.Date`. Both were already nullable and no callers in the repo
+  (tests, CLI) reference them; removing them keeps the response record
+  in lockstep with the spec inner schema. This is a small breaking
+  change for direct readers of those fields — the precedent for keeping
+  spec-absent response fields as nullable back-compat (e.g. `Hub.*`
+  extras) was workflow-applied where the SDK had a long history of
+  emitting the field; `HubPlan.Status` / `HubPlan.Date` were untyped /
+  speculative additions with no plausible runtime source per the spec
+  inner schema review, so they were removed.
+
+Files touched:
+`src/Samsara.Sdk/Models/Routes/HubModels.cs`,
+`src/Samsara.Sdk/Clients/Routing/HubsClient.cs`,
+`src/Samsara.Sdk/Clients/Routing/IHubsClient.cs`,
+`src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs`,
+`docs/api-sync/34-plans.md`,
+`CHANGELOG.md`.
+
+Verification: `dotnet build` green (0 warnings, 0 errors), 59/59 unit
+tests pass, and `tools/check-sdk-sync.py --fail-on-mismatch` exits 0
+(323 SDK endpoints matched, 0 mismatched).
+
 
 ## Quick reference
 
