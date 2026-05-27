@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 06-beta-apis (2026-05-27)** — applied the per-domain
+  remediation plan. Added spec-required and spec-optional query parameters
+  across all Beta clients (`BetaClient`, `FunctionsClient`, `PlacesClient`,
+  `PreferredStationsClient`, `QualificationRecordsClient`, `ReportsClient`,
+  `RidershipClient`) plus the Beta operations on `ComplianceClient` (HOS
+  ELD events filters, `UpdateShippingDocsAsync` now requires `driverID` and
+  `hosDate`), `TachographClient` (live-data filters), `VehiclesClient`
+  (`vehicleIds` required for immobilizer stream), `AssetsClient`
+  (depreciation `assetIds`/time-range; inputs stream `ids` + `type`
+  required), `DriversClient` (`workflowType` for workflow listing),
+  `HubsClient` (`planId` required for plan orders, `hubId` required for
+  route templates), and `MaintenanceClient` (vendor `ids`/`includeExternalIds`).
+  `HubPlanOrder` response now exposes all 8 spec-required fields
+  (`hubId`, `customerOrderId`, `priority`, `createdAtTime`, `updatedAtTime`,
+  `customProperties`, `quantities`, `skillsRequired`) and tightens `planId`
+  to non-nullable; adds optional `routeId`, `pickup`, `delivery` (typed
+  as `object?` per Beta posture). `UpdateEquipmentRequest` adds `id`,
+  `equipmentSerialNumber`, `engineHours`, `odometerMeters`, `tagIds`, and
+  `attributes`. `Equipment` response adds optional `attributes`.
+  `HosEldEvent` adds `name` and `driverActivationStatus`. Deeply nested
+  `object?` payloads on Beta records (e.g., `HosEldEvent.eldEvents`,
+  `HosEldEvent.externalIds`) intentionally remain weakly-typed per the
+  documented Beta subject-to-change posture; 2 MEDIUM weak-typing items
+  deferred. See
+  `docs/api-sync/model-sync-plan-2026-05-27/06-beta-apis.md`.
 - **Model sync 05-auth-token-for-driver (2026-05-27)** — applied the
   per-domain remediation plan. `CreateDriverAuthTokenRequest` now exposes
   the spec-required `code` (`required string`), plus optional `externalId`

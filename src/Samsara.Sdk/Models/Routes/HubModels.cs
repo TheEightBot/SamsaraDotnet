@@ -144,8 +144,18 @@ public sealed record CreateHubPlanRequest
 public sealed record HubPlanOrder
 {
     [JsonPropertyName("id")] public required string Id { get; init; }
-    [JsonPropertyName("planId")] public string? PlanId { get; init; }
-    [JsonPropertyName("status")] public string? Status { get; init; }
+    [JsonPropertyName("planId")] public required string PlanId { get; init; }
+    [JsonPropertyName("hubId")] public required string HubId { get; init; }
+    [JsonPropertyName("customerOrderId")] public required string CustomerOrderId { get; init; }
+    [JsonPropertyName("priority")] public required long Priority { get; init; }
+    [JsonPropertyName("createdAtTime")] public required DateTimeOffset CreatedAtTime { get; init; }
+    [JsonPropertyName("updatedAtTime")] public required DateTimeOffset UpdatedAtTime { get; init; }
+    [JsonPropertyName("customProperties")] public required IReadOnlyList<object> CustomProperties { get; init; }
+    [JsonPropertyName("quantities")] public required IReadOnlyList<object> Quantities { get; init; }
+    [JsonPropertyName("skillsRequired")] public required IReadOnlyList<object> SkillsRequired { get; init; }
+    [JsonPropertyName("routeId")] public string? RouteId { get; init; }
+    [JsonPropertyName("pickup")] public object? Pickup { get; init; }
+    [JsonPropertyName("delivery")] public object? Delivery { get; init; }
 }
 
 /// <summary>Request body for creating hub plan orders.</summary>

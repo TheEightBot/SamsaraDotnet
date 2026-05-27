@@ -20,8 +20,22 @@ internal sealed class ComplianceClient : SamsaraServiceClientBase, IComplianceCl
     public IAsyncEnumerable<HosDailyLog> ListHosDailyLogsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
         => PaginateAsync<HosDailyLog>(QueryBuilder.WithTimeRange("fleet/hos/daily-logs", startTime, endTime), cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<HosEldEvent> ListHosEldEventsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<HosEldEvent>(QueryBuilder.WithTimeRange("beta/fleet/hos/drivers/eld-events", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<HosEldEvent> ListHosEldEventsAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? driverIds = null,
+        string? tagIds = null,
+        string? parentTagIds = null,
+        string? driverActivationStatus = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<HosEldEvent>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("beta/fleet/hos/drivers/eld-events", startTime, endTime),
+                ("driverIds", driverIds is null ? null : string.Join(",", driverIds)),
+                ("tagIds", tagIds),
+                ("parentTagIds", parentTagIds),
+                ("driverActivationStatus", driverActivationStatus)),
+            cancellationToken: cancellationToken);
 
     /// <summary>HOS authentication logs (v1 legacy, <c>GET /v1/fleet/hos_authentication_logs</c>).</summary>
     public IAsyncEnumerable<object> V1ListHosAuthenticationLogsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
@@ -32,8 +46,19 @@ internal sealed class ComplianceClient : SamsaraServiceClientBase, IComplianceCl
     public Task V1SetCurrentDutyStatusAsync(string driverId, object request, CancellationToken cancellationToken = default)
         => HttpClient.PostAsync($"v1/fleet/drivers/{Uri.EscapeDataString(driverId)}/hos/duty_status", request, cancellationToken);
 
-    /// <summary>Update shipping-doc metadata on HOS daily logs (beta,
-    /// <c>PATCH /hos/daily-logs/log-meta-data</c>).</summary>
-    public Task<object> UpdateShippingDocsAsync(object request, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<object>("hos/daily-logs/log-meta-data", request, cancellationToken);
+    /// <summary>
+    /// Update shipping-doc metadata on HOS daily logs (beta, <c>PATCH /hos/daily-logs/log-meta-data</c>).
+    /// Both <paramref name="driverID"/> and <paramref name="hosDate"/> are required query parameters.
+    /// </summary>
+    public Task<object> UpdateShippingDocsAsync(
+        string driverID,
+        string hosDate,
+        object request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<object>(
+            QueryBuilder.WithParams("hos/daily-logs/log-meta-data",
+                ("driverID", driverID),
+                ("hosDate", hosDate)),
+            request,
+            cancellationToken);
 }

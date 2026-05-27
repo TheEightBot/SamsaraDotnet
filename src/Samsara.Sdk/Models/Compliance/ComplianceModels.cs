@@ -295,6 +295,12 @@ public sealed record HosEldEvent
     [JsonPropertyName("id")]
     public required string Id { get; init; }
 
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    [JsonPropertyName("driverActivationStatus")]
+    public string? DriverActivationStatus { get; init; }
+
     [JsonPropertyName("driverId")]
     public string? DriverId { get; init; }
 

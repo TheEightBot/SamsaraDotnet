@@ -1,7 +1,26 @@
 # Beta APIs — Model Sync Plan (2026-05-27)
 
+> **✅ Implemented in commit `pending` on 2026-05-27**
+
 > Companion to [`docs/api-sync/06-beta-apis.md`](../06-beta-apis.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
+
+## Implementation notes
+
+Resolved 2026-05-27. Counts implemented: CRITICAL=0, HIGH=33, MEDIUM=104, LOW=0.
+
+**MEDIUM weak-typing findings explicitly deferred (2):**
+
+- `HosEldEvent.externalIds` (response, `object` per spec) — deferred.
+- `HosEldEvent.eldEvents` (response, REQUIRED `array of object` per spec) — deferred.
+
+Beta clients are documented as weakly-typed by design; typing would require modeling
+hundreds of nested schemas. Tracked for a future Beta-typing workstream.
+
+**LOW findings (10):** explicitly out of scope for this plan — left untouched per the
+"LOW — leave alone" policy. These are SDK-only `HosEldEvent` and `HubPlanOrder` fields
+that are present in the SDK but not in the spec inner schema (likely historical or v1
+fallthroughs); removing them would be a breaking change for downstream consumers.
 
 
 ## Quick reference

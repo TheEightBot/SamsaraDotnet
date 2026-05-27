@@ -448,6 +448,9 @@ public sealed record CreateEquipmentRequest
 /// </summary>
 public sealed record UpdateEquipmentRequest
 {
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
@@ -456,6 +459,21 @@ public sealed record UpdateEquipmentRequest
 
     [JsonPropertyName("externalIds")]
     public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
+    [JsonPropertyName("equipmentSerialNumber")]
+    public string? EquipmentSerialNumber { get; init; }
+
+    [JsonPropertyName("engineHours")]
+    public long? EngineHours { get; init; }
+
+    [JsonPropertyName("odometerMeters")]
+    public long? OdometerMeters { get; init; }
+
+    [JsonPropertyName("tagIds")]
+    public IReadOnlyList<string>? TagIds { get; init; }
+
+    [JsonPropertyName("attributes")]
+    public IReadOnlyList<object>? Attributes { get; init; }
 }
 
 /// <summary>
@@ -480,6 +498,9 @@ public sealed record Equipment
 
     [JsonPropertyName("notes")]
     public string? Notes { get; init; }
+
+    [JsonPropertyName("attributes")]
+    public IReadOnlyList<object>? Attributes { get; init; }
 }
 
 /// <summary>

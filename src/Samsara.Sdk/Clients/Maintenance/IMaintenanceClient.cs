@@ -18,7 +18,10 @@ public interface IMaintenanceClient
     /// <summary>Legacy v1 fleet maintenance list.</summary>
     IAsyncEnumerable<object> V1ListMaintenanceAsync(CancellationToken cancellationToken = default);
     /// <summary>List maintenance vendors (beta).</summary>
-    IAsyncEnumerable<object> ListVendorsAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<object> ListVendorsAsync(
+        IReadOnlyList<string>? ids = null,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default);
     /// <summary>List maintenance vendor categories (beta).</summary>
     IAsyncEnumerable<object> ListVendorCategoriesAsync(CancellationToken cancellationToken = default);
 }

@@ -108,8 +108,20 @@ public interface IAssetsClient
         long endMs,
         CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<object> GetDepreciationTransactionsAsync(CancellationToken cancellationToken = default);
-    IAsyncEnumerable<object> GetInputsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<object> GetDepreciationTransactionsAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? assetIds = null,
+        CancellationToken cancellationToken = default);
+    IAsyncEnumerable<object> GetInputsStreamAsync(
+        IReadOnlyList<string> ids,
+        string type,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        bool? includeExternalIds = null,
+        bool? includeTags = null,
+        bool? includeAttributes = null,
+        CancellationToken cancellationToken = default);
     IAsyncEnumerable<object> ListDeviceRecoveryMissingAsync(CancellationToken cancellationToken = default);
     Task<object> MarkAssetMissingAsync(string id, object request, CancellationToken cancellationToken = default);
     Task<object> RecoverAssetAsync(string id, object request, CancellationToken cancellationToken = default);

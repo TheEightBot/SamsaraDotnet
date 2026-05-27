@@ -39,9 +39,20 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
     public IAsyncEnumerable<SpeedingInterval> GetSpeedingIntervalsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
         => PaginateAsync<SpeedingInterval>(QueryBuilder.WithTimeRange("speeding-intervals/stream", startTime, endTime), cancellationToken: cancellationToken);
 
-    /// <summary>Engine immobilizer states stream (beta, <c>GET /fleet/vehicles/immobilizer/stream</c>).</summary>
-    public IAsyncEnumerable<object> GetImmobilizerStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(QueryBuilder.WithTimeRange("fleet/vehicles/immobilizer/stream", startTime, endTime), cancellationToken: cancellationToken);
+    /// <summary>
+    /// Engine immobilizer states stream (beta, <c>GET /fleet/vehicles/immobilizer/stream</c>).
+    /// <paramref name="vehicleIds"/> is required by the spec (comma-separated vehicle ids).
+    /// </summary>
+    public IAsyncEnumerable<object> GetImmobilizerStreamAsync(
+        string vehicleIds,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<object>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("fleet/vehicles/immobilizer/stream", startTime, endTime),
+                ("vehicleIds", vehicleIds)),
+            cancellationToken: cancellationToken);
 
     /// <summary>Update an engine immobilizer state (beta, <c>PATCH /beta/fleet/vehicles/{id}/immobilizer</c>).</summary>
     public Task<object> UpdateImmobilizerStateAsync(string id, object request, CancellationToken cancellationToken = default)

@@ -20,21 +20,54 @@ internal sealed class HubsClient : SamsaraServiceClientBase, IHubsClient
     public IAsyncEnumerable<object> ListPlanRoutesAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<object>("hub/plan/routes", cancellationToken: cancellationToken);
 
-    /// <summary>List hub plan orders (<c>GET /hub/plan/orders</c>).</summary>
-    public IAsyncEnumerable<HubPlanOrder> ListPlanOrdersAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<HubPlanOrder>("hub/plan/orders", cancellationToken: cancellationToken);
+    /// <summary>
+    /// List hub plan orders (<c>GET /hub/plan/orders</c>) — <paramref name="planId"/> is required by the spec.
+    /// </summary>
+    public IAsyncEnumerable<HubPlanOrder> ListPlanOrdersAsync(
+        string planId,
+        string? orderIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<HubPlanOrder>(
+            QueryBuilder.WithParams("hub/plan/orders",
+                ("planId", planId),
+                ("orderIds", orderIds)),
+            cancellationToken: cancellationToken);
 
-    /// <summary>Delete one or more hub plan orders (<c>DELETE /hub/plan/orders</c>).</summary>
-    public Task DeletePlanOrdersAsync(object request, CancellationToken cancellationToken = default)
-        => HttpClient.DeleteAsync("hub/plan/orders", request, cancellationToken);
+    /// <summary>
+    /// Delete one or more hub plan orders (<c>DELETE /hub/plan/orders</c>) — <paramref name="planId"/> required.
+    /// </summary>
+    public Task DeletePlanOrdersAsync(
+        string planId,
+        string? orderIds = null,
+        bool? deleteAll = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync(
+            QueryBuilder.WithParams("hub/plan/orders",
+                ("planId", planId),
+                ("orderIds", orderIds),
+                ("deleteAll", deleteAll?.ToString().ToLowerInvariant())),
+            cancellationToken);
 
-    /// <summary>List hub route templates (<c>GET /hub/route-templates</c>).</summary>
-    public IAsyncEnumerable<object> ListRouteTemplatesAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<object>("hub/route-templates", cancellationToken: cancellationToken);
+    /// <summary>
+    /// List hub route templates (<c>GET /hub/route-templates</c>) — <paramref name="hubId"/> required.
+    /// </summary>
+    public IAsyncEnumerable<object> ListRouteTemplatesAsync(
+        string hubId,
+        string? id = null,
+        string? name = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<object>(
+            QueryBuilder.WithParams("hub/route-templates",
+                ("hubId", hubId),
+                ("id", id),
+                ("name", name)),
+            cancellationToken: cancellationToken);
 
-    /// <summary>Delete one or more hub route templates (<c>DELETE /hub/route-templates</c>).</summary>
-    public Task DeleteRouteTemplatesAsync(object request, CancellationToken cancellationToken = default)
-        => HttpClient.DeleteAsync("hub/route-templates", request, cancellationToken);
+    /// <summary>
+    /// Delete one or more hub route templates (<c>DELETE /hub/route-templates</c>) — <paramref name="id"/> required.
+    /// </summary>
+    public Task DeleteRouteTemplatesAsync(string id, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync(QueryBuilder.WithParams("hub/route-templates", ("id", id)), cancellationToken);
 
     public Task<Hub> GetAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<Hub>($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);

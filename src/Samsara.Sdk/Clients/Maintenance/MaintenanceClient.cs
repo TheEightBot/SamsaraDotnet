@@ -36,8 +36,15 @@ internal sealed class MaintenanceClient : SamsaraServiceClientBase, IMaintenance
         => PaginateAsync<object>("v1/fleet/maintenance/list", cancellationToken: cancellationToken);
 
     /// <summary>List maintenance vendors (beta).</summary>
-    public IAsyncEnumerable<object> ListVendorsAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<object>("fleet/maintenance/vendors", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<object> ListVendorsAsync(
+        IReadOnlyList<string>? ids = null,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<object>(
+            QueryBuilder.WithParams("fleet/maintenance/vendors",
+                ("ids", ids is null ? null : string.Join(",", ids)),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
 
     /// <summary>List maintenance vendor categories (beta).</summary>
     public IAsyncEnumerable<object> ListVendorCategoriesAsync(CancellationToken cancellationToken = default)

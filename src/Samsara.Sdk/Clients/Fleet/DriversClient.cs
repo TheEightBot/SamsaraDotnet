@@ -39,8 +39,13 @@ internal sealed class DriversClient : SamsaraServiceClientBase, IDriversClient
     // ── Beta ─────────────────────────────────────────────────────────────────
 
     /// <summary>List driver workflows (beta, <c>GET /fleet/drivers/workflows</c>).</summary>
-    public IAsyncEnumerable<object> ListWorkflowsAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<object>("fleet/drivers/workflows", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<object> ListWorkflowsAsync(
+        string? workflowType = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<object>(
+            QueryBuilder.WithParams("fleet/drivers/workflows",
+                ("workflowType", workflowType)),
+            cancellationToken: cancellationToken);
 
     /// <summary>Assign a workflow to a driver (beta, <c>POST /fleet/drivers/workflow-assignments</c>).</summary>
     public Task<object> CreateWorkflowAssignmentAsync(object request, CancellationToken cancellationToken = default)

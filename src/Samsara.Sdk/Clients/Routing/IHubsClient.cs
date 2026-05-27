@@ -11,10 +11,21 @@ public interface IHubsClient
     /// <summary>List hubs via the dedicated <c>GET /hubs</c> endpoint.</summary>
     IAsyncEnumerable<Hub> ListHubsAsync(CancellationToken cancellationToken = default);
     IAsyncEnumerable<object> ListPlanRoutesAsync(CancellationToken cancellationToken = default);
-    IAsyncEnumerable<HubPlanOrder> ListPlanOrdersAsync(CancellationToken cancellationToken = default);
-    Task DeletePlanOrdersAsync(object request, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<object> ListRouteTemplatesAsync(CancellationToken cancellationToken = default);
-    Task DeleteRouteTemplatesAsync(object request, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<HubPlanOrder> ListPlanOrdersAsync(
+        string planId,
+        string? orderIds = null,
+        CancellationToken cancellationToken = default);
+    Task DeletePlanOrdersAsync(
+        string planId,
+        string? orderIds = null,
+        bool? deleteAll = null,
+        CancellationToken cancellationToken = default);
+    IAsyncEnumerable<object> ListRouteTemplatesAsync(
+        string hubId,
+        string? id = null,
+        string? name = null,
+        CancellationToken cancellationToken = default);
+    Task DeleteRouteTemplatesAsync(string id, CancellationToken cancellationToken = default);
     Task<Hub> GetAsync(string id, CancellationToken cancellationToken = default);
     Task<Hub> CreateAsync(CreateHubRequest request, CancellationToken cancellationToken = default);
     Task<Hub> UpdateAsync(string id, UpdateHubRequest request, CancellationToken cancellationToken = default);

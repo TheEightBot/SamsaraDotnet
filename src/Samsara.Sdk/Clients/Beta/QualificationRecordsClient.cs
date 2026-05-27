@@ -5,14 +5,31 @@ using Samsara.Sdk.Http;
 /// <summary>Beta — Driver qualification records (<c>/qualification-records</c>, <c>/qualification-types</c>).</summary>
 public interface IQualificationRecordsClient
 {
-    /// <summary>List qualification records (<c>GET /qualification-records</c>).</summary>
-    IAsyncEnumerable<object> ListAsync(CancellationToken cancellationToken = default);
+    /// <summary>List qualification records (<c>GET /qualification-records</c>) — required <paramref name="ids"/>.</summary>
+    IAsyncEnumerable<object> ListAsync(
+        IReadOnlyList<string> ids,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default);
 
-    /// <summary>Stream qualification records (<c>GET /qualification-records/stream</c>).</summary>
-    IAsyncEnumerable<object> GetStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Stream qualification records (<c>GET /qualification-records/stream</c>) — required <paramref name="entityType"/>.
+    /// </summary>
+    IAsyncEnumerable<object> GetStreamAsync(
+        string entityType,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? ownerIds = null,
+        IReadOnlyList<string>? qualificationTypeIds = null,
+        bool? includeExternalIds = null,
+        bool? includeDeleted = null,
+        CancellationToken cancellationToken = default);
 
-    /// <summary>Available qualification types (<c>GET /qualification-types</c>).</summary>
-    Task<object> ListTypesAsync(CancellationToken cancellationToken = default);
+    /// <summary>Available qualification types (<c>GET /qualification-types</c>) — required <paramref name="entityType"/>.</summary>
+    Task<object> ListTypesAsync(
+        string entityType,
+        IReadOnlyList<string>? ids = null,
+        string? after = null,
+        CancellationToken cancellationToken = default);
 
     Task<object> CreateAsync(object request, CancellationToken cancellationToken = default);
     /// <summary>Update (PATCH /qualification-records) — id in body.</summary>
@@ -30,14 +47,46 @@ internal sealed class QualificationRecordsClient : SamsaraServiceClientBase, IQu
 
     public QualificationRecordsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<object> ListAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<object> ListAsync(
+        IReadOnlyList<string> ids,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<object>(
+            QueryBuilder.WithParams(BasePath,
+                ("ids", string.Join(",", ids)),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<object> GetStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(QueryBuilder.WithTimeRange("qualification-records/stream", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<object> GetStreamAsync(
+        string entityType,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? ownerIds = null,
+        IReadOnlyList<string>? qualificationTypeIds = null,
+        bool? includeExternalIds = null,
+        bool? includeDeleted = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<object>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("qualification-records/stream", startTime, endTime),
+                ("entityType", entityType),
+                ("ownerIds", ownerIds is null ? null : string.Join(",", ownerIds)),
+                ("qualificationTypeIds", qualificationTypeIds is null ? null : string.Join(",", qualificationTypeIds)),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant()),
+                ("includeDeleted", includeDeleted?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
 
-    public Task<object> ListTypesAsync(CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>("qualification-types", cancellationToken);
+    public Task<object> ListTypesAsync(
+        string entityType,
+        IReadOnlyList<string>? ids = null,
+        string? after = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.GetAsync<object>(
+            QueryBuilder.WithParams("qualification-types",
+                ("entityType", entityType),
+                ("ids", ids is null ? null : string.Join(",", ids)),
+                ("after", after)),
+            cancellationToken);
 
     public Task<object> CreateAsync(object request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<object>(BasePath, request, cancellationToken);

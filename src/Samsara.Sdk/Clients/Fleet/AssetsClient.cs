@@ -111,12 +111,39 @@ internal sealed class AssetsClient : SamsaraServiceClientBase, IAssetsClient
     // ── Beta ─────────────────────────────────────────────────────────────────
 
     /// <summary>Asset depreciation transactions (beta, <c>GET /assets/depreciation</c>).</summary>
-    public IAsyncEnumerable<object> GetDepreciationTransactionsAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<object>("assets/depreciation", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<object> GetDepreciationTransactionsAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? assetIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<object>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("assets/depreciation", startTime, endTime),
+                ("assetIds", assetIds is null ? null : string.Join(",", assetIds))),
+            cancellationToken: cancellationToken);
 
-    /// <summary>Asset inputs stream (beta, <c>GET /assets/inputs/stream</c>).</summary>
-    public IAsyncEnumerable<object> GetInputsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(QueryBuilder.WithTimeRange("assets/inputs/stream", startTime, endTime), cancellationToken: cancellationToken);
+    /// <summary>
+    /// Asset inputs stream (beta, <c>GET /assets/inputs/stream</c>). Both
+    /// <paramref name="ids"/> and <paramref name="type"/> are required by the spec.
+    /// </summary>
+    public IAsyncEnumerable<object> GetInputsStreamAsync(
+        IReadOnlyList<string> ids,
+        string type,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        bool? includeExternalIds = null,
+        bool? includeTags = null,
+        bool? includeAttributes = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<object>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("assets/inputs/stream", startTime, endTime),
+                ("ids", string.Join(",", ids)),
+                ("type", type),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant()),
+                ("includeTags", includeTags?.ToString().ToLowerInvariant()),
+                ("includeAttributes", includeAttributes?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
 
     /// <summary>Assets missing from device-recovery (beta).</summary>
     public IAsyncEnumerable<object> ListDeviceRecoveryMissingAsync(CancellationToken cancellationToken = default)

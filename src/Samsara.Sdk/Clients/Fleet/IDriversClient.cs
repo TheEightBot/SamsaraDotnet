@@ -17,7 +17,9 @@ public interface IDriversClient
     Task<DriverQrCode> CreateQrCodeAsync(CreateDriverQrCodeRequest request, CancellationToken cancellationToken = default);
     Task DeleteQrCodeAsync(string driverId, CancellationToken cancellationToken = default);
     /// <summary>List driver workflows (beta).</summary>
-    IAsyncEnumerable<object> ListWorkflowsAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<object> ListWorkflowsAsync(
+        string? workflowType = null,
+        CancellationToken cancellationToken = default);
     Task<object> CreateWorkflowAssignmentAsync(object request, CancellationToken cancellationToken = default);
     Task<object> ResolveVoiceSignInAssignmentAsync(object request, CancellationToken cancellationToken = default);
 }
