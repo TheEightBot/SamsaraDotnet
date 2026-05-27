@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 24-industrial (2026-05-27)** — applied the per-domain
+  remediation plan (4 HIGH, 52 MEDIUM, 6 LOW). `IndustrialAsset` rebuilt to
+  match the spec `AssetResponse` inner schema: three spec-REQUIRED fields
+  (`id`, `name`, `isRunning`) are now non-nullable `required`, plus
+  optional `statusCode`/`errorMessage` for the data-outputs endpoint;
+  eight new nested records (`IndustrialAssetDataOutput`,
+  `IndustrialAssetDataInput`, `IndustrialAssetDataInputLastPoint`,
+  `IndustrialAssetLocation`, `IndustrialAssetLocationDataInput`,
+  `IndustrialAssetParent`, `IndustrialAssetRunningStatusDataInput`,
+  `IndustrialAssetTag`) replace prior placeholders. `DataInput` and
+  `DataInputDataPoint` rebuilt to mirror `DataInputTinyResponse` +
+  `DataInputResponse_allOf` / `DataInputSnapshot_allOf`; nine new nested
+  data-point records (`NumberDataPoint`, `StringDataPoint`,
+  `LocationDataPoint`, `LocationDataPointGpsLocation`,
+  `LocationDataPointPlace`, `FftSpectraDataPoint`, `FftSpectraValue`,
+  `J1939D1StatusDataPoint`, `J1939D1Status`) capture the per-type payload
+  variants. Six SDK-only flat scalars (`DataInput.Points`,
+  `DataInputDataPoint.Time`/`Value`, `IndustrialAsset.DataInputs`/`MacAddress`,
+  and the legacy `DataPoint` record) absent from the spec inner schemas
+  were removed. `IIndustrialClient` gained 27 optional query parameters
+  across `ListAssetsAsync`, `ListDataInputsAsync`, `GetDataInputAsync`,
+  the three data-point endpoints, and the v1 vision endpoints; the v1
+  vision-runs endpoints now require a `long durationMs` argument.
+  See `docs/api-sync/model-sync-plan-2026-05-27/24-industrial.md`.
 - **Model sync 23-idling (2026-05-27)** — applied the per-domain remediation
   plan. `IdlingEvent` rebuilt to match the spec
   `IdlingEventObject_V2025_10_23ResponseBody` inner schema: nine spec-REQUIRED

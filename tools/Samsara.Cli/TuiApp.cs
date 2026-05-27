@@ -1279,14 +1279,14 @@ internal sealed class TuiApp
                     case "Industrial Assets":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching industrial assets...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Industrial.ListAssetsAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.Industrial.ListAssetsAsync(cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Industrial Assets", a => [a.Id, a.Name ?? ""], ["ID", "Name"]);
                         });
                         break;
                     case "Data Inputs":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching data inputs...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Industrial.ListDataInputsAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.Industrial.ListDataInputsAsync(cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Data Inputs", d => [d.Id, d.Name ?? ""], ["ID", "Name"]);
                         });
                         break;
@@ -1294,7 +1294,7 @@ internal sealed class TuiApp
                         var diId = InputHelper.AskId("Data Input ID");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching data input...[/]", async _ =>
                         {
-                            var d = await _client.Industrial.GetDataInputAsync(diId, Timeout60s());
+                            var d = await _client.Industrial.GetDataInputAsync(diId, cancellationToken: Timeout60s());
                             ResultRenderer.RenderObject(d, $"Data Input {diId}");
                         });
                         break;

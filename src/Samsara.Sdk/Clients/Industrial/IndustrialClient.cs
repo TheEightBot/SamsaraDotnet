@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Globalization;
 using Samsara.Sdk.Http;
 using Samsara.Sdk.Models.Industrial;
 
@@ -7,23 +8,104 @@ internal sealed class IndustrialClient : SamsaraServiceClientBase, IIndustrialCl
 {
     public IndustrialClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<IndustrialAsset> ListAssetsAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<IndustrialAsset>("industrial/assets", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<IndustrialAsset> ListAssetsAsync(
+        IReadOnlyList<string>? assetIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = QueryBuilder.WithParams(
+            "industrial/assets",
+            ("assetIds", assetIds is null ? null : string.Join(",", assetIds)),
+            ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+            ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)));
 
-    public IAsyncEnumerable<DataInput> ListDataInputsAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<DataInput>("industrial/data-inputs", cancellationToken: cancellationToken);
+        return PaginateAsync<IndustrialAsset>(path, cancellationToken: cancellationToken);
+    }
 
-    public Task<DataInput> GetDataInputAsync(string id, CancellationToken cancellationToken = default)
-        => HttpClient.GetDataAsync<DataInput>($"industrial/data-inputs?ids={Uri.EscapeDataString(id)}", cancellationToken);
+    public IAsyncEnumerable<DataInput> ListDataInputsAsync(
+        IReadOnlyList<string>? assetIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = QueryBuilder.WithParams(
+            "industrial/data-inputs",
+            ("assetIds", assetIds is null ? null : string.Join(",", assetIds)),
+            ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+            ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)));
 
-    public IAsyncEnumerable<DataInputDataPoint> GetDataInputSnapshotAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<DataInputDataPoint>("industrial/data-inputs/data-points", cancellationToken: cancellationToken);
+        return PaginateAsync<DataInput>(path, cancellationToken: cancellationToken);
+    }
 
-    public IAsyncEnumerable<DataInputDataPoint> GetDataInputFeedAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<DataInputDataPoint>("industrial/data-inputs/data-points/feed", cancellationToken: cancellationToken);
+    public Task<DataInput> GetDataInputAsync(
+        string id,
+        string? after = null,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = QueryBuilder.WithParams(
+            "industrial/data-inputs",
+            ("ids", id),
+            ("after", after),
+            ("limit", limit?.ToString(CultureInfo.InvariantCulture)));
+        return HttpClient.GetDataAsync<DataInput>(path, cancellationToken);
+    }
 
-    public IAsyncEnumerable<DataInputDataPoint> GetDataInputHistoryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<DataInputDataPoint>(QueryBuilder.WithTimeRange("industrial/data-inputs/data-points/history", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<DataInputDataPoint> GetDataInputSnapshotAsync(
+        IReadOnlyList<string>? dataInputIds = null,
+        IReadOnlyList<string>? assetIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = QueryBuilder.WithParams(
+            "industrial/data-inputs/data-points",
+            ("dataInputIds", dataInputIds is null ? null : string.Join(",", dataInputIds)),
+            ("assetIds", assetIds is null ? null : string.Join(",", assetIds)),
+            ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+            ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)));
+
+        return PaginateAsync<DataInputDataPoint>(path, cancellationToken: cancellationToken);
+    }
+
+    public IAsyncEnumerable<DataInputDataPoint> GetDataInputFeedAsync(
+        IReadOnlyList<string>? dataInputIds = null,
+        IReadOnlyList<string>? assetIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = QueryBuilder.WithParams(
+            "industrial/data-inputs/data-points/feed",
+            ("dataInputIds", dataInputIds is null ? null : string.Join(",", dataInputIds)),
+            ("assetIds", assetIds is null ? null : string.Join(",", assetIds)),
+            ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+            ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)));
+
+        return PaginateAsync<DataInputDataPoint>(path, cancellationToken: cancellationToken);
+    }
+
+    public IAsyncEnumerable<DataInputDataPoint> GetDataInputHistoryAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? dataInputIds = null,
+        IReadOnlyList<string>? assetIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = QueryBuilder.WithParams(
+            "industrial/data-inputs/data-points/history",
+            ("startTime", startTime?.ToString("O")),
+            ("endTime", endTime?.ToString("O")),
+            ("dataInputIds", dataInputIds is null ? null : string.Join(",", dataInputIds)),
+            ("assetIds", assetIds is null ? null : string.Join(",", assetIds)),
+            ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+            ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)));
+
+        return PaginateAsync<DataInputDataPoint>(path, cancellationToken: cancellationToken);
+    }
 
     // ── Industrial assets CRUD (spec adds POST/PATCH/DELETE) ──────────────────
 
@@ -50,22 +132,63 @@ internal sealed class IndustrialClient : SamsaraServiceClientBase, IIndustrialCl
         => HttpClient.GetAsync<object>($"v1/industrial/vision/cameras/{Uri.EscapeDataString(cameraId)}/programs", cancellationToken);
 
     /// <summary>Latest vision run for a camera (<c>GET /v1/industrial/vision/run/camera/{cameraId}</c>).</summary>
-    public Task<object> V1GetVisionLatestRunForCameraAsync(string cameraId, CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>($"v1/industrial/vision/run/camera/{Uri.EscapeDataString(cameraId)}", cancellationToken);
+    public Task<object> V1GetVisionLatestRunForCameraAsync(
+        string cameraId,
+        long? programId = null,
+        long? startedAtMs = null,
+        string? include = null,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = QueryBuilder.WithParams(
+            $"v1/industrial/vision/run/camera/{Uri.EscapeDataString(cameraId)}",
+            ("program_id", programId?.ToString(CultureInfo.InvariantCulture)),
+            ("startedAtMs", startedAtMs?.ToString(CultureInfo.InvariantCulture)),
+            ("include", include),
+            ("limit", limit?.ToString(CultureInfo.InvariantCulture)));
+        return HttpClient.GetAsync<object>(path, cancellationToken);
+    }
 
     /// <summary>List vision runs (<c>GET /v1/industrial/vision/runs</c>).</summary>
-    public Task<object> V1GetVisionRunsAsync(CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>("v1/industrial/vision/runs", cancellationToken);
+    public Task<object> V1GetVisionRunsAsync(
+        long durationMs,
+        long? endMs = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = QueryBuilder.WithParams(
+            "v1/industrial/vision/runs",
+            ("durationMs", durationMs.ToString(CultureInfo.InvariantCulture)),
+            ("endMs", endMs?.ToString(CultureInfo.InvariantCulture)));
+        return HttpClient.GetAsync<object>(path, cancellationToken);
+    }
 
     /// <summary>Vision runs filtered to a single camera (<c>GET /v1/industrial/vision/runs/{cameraId}</c>).</summary>
-    public Task<object> V1GetVisionRunsByCameraAsync(string cameraId, CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>($"v1/industrial/vision/runs/{Uri.EscapeDataString(cameraId)}", cancellationToken);
+    public Task<object> V1GetVisionRunsByCameraAsync(
+        string cameraId,
+        long durationMs,
+        long? endMs = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = QueryBuilder.WithParams(
+            $"v1/industrial/vision/runs/{Uri.EscapeDataString(cameraId)}",
+            ("durationMs", durationMs.ToString(CultureInfo.InvariantCulture)),
+            ("endMs", endMs?.ToString(CultureInfo.InvariantCulture)));
+        return HttpClient.GetAsync<object>(path, cancellationToken);
+    }
 
     /// <summary>Vision runs filtered to a single camera + program at a start ms timestamp.</summary>
-    public Task<object> V1GetVisionRunsByCameraAndProgramAsync(string cameraId, string programId, long startedAtMs, CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>(
-            $"v1/industrial/vision/runs/{Uri.EscapeDataString(cameraId)}/{Uri.EscapeDataString(programId)}/{startedAtMs}",
-            cancellationToken);
+    public Task<object> V1GetVisionRunsByCameraAndProgramAsync(
+        string cameraId,
+        string programId,
+        long startedAtMs,
+        string? include = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = QueryBuilder.WithParams(
+            $"v1/industrial/vision/runs/{Uri.EscapeDataString(cameraId)}/{Uri.EscapeDataString(programId)}/{startedAtMs.ToString(CultureInfo.InvariantCulture)}",
+            ("include", include));
+        return HttpClient.GetAsync<object>(path, cancellationToken);
+    }
 
     // ── v1 Machines API ──────────────────────────────────────────────────────
 
