@@ -381,7 +381,7 @@ internal sealed class TuiApp
                     case "List All":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching drivers...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Drivers.ListAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.Drivers.ListAsync(cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Drivers", d => [d.Id, d.Name, d.Username ?? "", d.IsDeactivated == true ? "Inactive" : "Active"], ["ID", "Name", "Username", "Status"]);
                         });
                         break;

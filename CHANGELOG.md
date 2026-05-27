@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 15-drivers (2026-05-27)** — applied the per-domain remediation
+  plan. `IDriversClient.ListAsync` now accepts the 7 spec-defined optional
+  query parameters (`driverActivationStatus`, `parentTagIds`, `tagIds`,
+  `attributeValueIds`, `attributes`, `updatedAfterTime`, `createdAfterTime`),
+  with array params joined by `,` per the spec's `style=form,explode=false`.
+  `Driver` (response), `CreateDriverRequest`, and `UpdateDriverRequest` now
+  carry typed properties for fields previously modeled as
+  `System.Text.Json.JsonElement?`: `attributes` (`IReadOnlyList<object>?`
+  matching the spec's `attributeTiny`/`CreateDriverRequest_attributes` inner
+  schemas; precedent: `Equipment`, `Vehicle`, `Attributes` domains),
+  `hasDrivingFeaturesHidden` and `hasVehicleUnpinningEnabled` (`bool?`), and
+  `profileImageBase64` / `profileImageUrl` (`string?`). The remaining
+  `JsonElement?` properties (`eldSettings`, `carrierSettings`, `hosSetting`,
+  `peerGroupTag`, `trailerGroupTag`, `vehicleGroupTag`,
+  `usDriverRulesetOverride`) are left intentionally untyped pending separate
+  spec-shaped plans. See
+  `docs/api-sync/model-sync-plan-2026-05-27/15-drivers.md`.
 - **Model sync 14-driver-vehicle-assignments (2026-05-27)** — applied the
   per-domain remediation plan. `DriverVehicleAssignment` (response) now mirrors
   the spec's nested shape: required `driver` (new

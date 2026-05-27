@@ -9,8 +9,25 @@ internal sealed class DriversClient : SamsaraServiceClientBase, IDriversClient
 
     public DriversClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<Driver> ListAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<Driver>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<Driver> ListAsync(
+        string? driverActivationStatus = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? attributeValueIds = null,
+        IReadOnlyList<string>? attributes = null,
+        string? updatedAfterTime = null,
+        string? createdAfterTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<Driver>(
+            QueryBuilder.WithParams(BasePath,
+                ("driverActivationStatus", driverActivationStatus),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("attributeValueIds", attributeValueIds is null ? null : string.Join(",", attributeValueIds)),
+                ("attributes", attributes is null ? null : string.Join(",", attributes)),
+                ("updatedAfterTime", updatedAfterTime),
+                ("createdAfterTime", createdAfterTime)),
+            cancellationToken: cancellationToken);
 
     public Task<Driver> GetAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<Driver>($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);

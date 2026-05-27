@@ -2,6 +2,7 @@
 
 > **API Version**: `2025-10-23`  
 > **Status**: ✅ Complete (5/5 endpoints match the spec)  
+> **✅ Resolved 2026-05-27 (model-sync plan)** — Implemented all 20 MEDIUM findings from `docs/api-sync/model-sync-plan-2026-05-27/15-drivers.md`: added 7 optional query params to `ListAsync` and typed 13 properties across `Driver`, `CreateDriverRequest`, and `UpdateDriverRequest` (replaced `JsonElement?` with `IReadOnlyList<object>?`/`bool?`/`string?` per spec).  
 > **⚠️ 2026-05-21 audit**: `DeleteAsync` is fabricated (no `deleteDriver`; deactivate via PATCH `driverActivationStatus`). `CreateDriverRequest.username` should be required. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IDriversClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../DriversClient.cs`  
