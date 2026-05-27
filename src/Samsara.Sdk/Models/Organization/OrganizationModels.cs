@@ -13,18 +13,34 @@ public sealed record OrganizationInfo
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
+    /// <summary>Street address. Not part of the spec inner schema; retained as
+    /// a nullable back-compat convenience — callers should prefer
+    /// <see cref="CarrierSettings"/>.<see cref="OrganizationCarrierSettings.MainOfficeAddress"/>
+    /// for the canonical address field.</summary>
     [JsonPropertyName("address")]
     public string? Address { get; init; }
 
+    /// <summary>City. Not part of the spec inner schema; retained as a
+    /// nullable back-compat convenience — no canonical replacement exists on
+    /// the current spec inner schema.</summary>
     [JsonPropertyName("city")]
     public string? City { get; init; }
 
+    /// <summary>State or region. Not part of the spec inner schema; retained
+    /// as a nullable back-compat convenience — no canonical replacement
+    /// exists on the current spec inner schema.</summary>
     [JsonPropertyName("state")]
     public string? State { get; init; }
 
+    /// <summary>Postal / ZIP code. Not part of the spec inner schema;
+    /// retained as a nullable back-compat convenience — no canonical
+    /// replacement exists on the current spec inner schema.</summary>
     [JsonPropertyName("zip")]
     public string? Zip { get; init; }
 
+    /// <summary>Country. Not part of the spec inner schema; retained as a
+    /// nullable back-compat convenience — no canonical replacement exists on
+    /// the current spec inner schema.</summary>
     [JsonPropertyName("country")]
     public string? Country { get; init; }
 

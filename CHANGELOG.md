@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 33-organization-info (2026-05-27)** — applied the per-domain
+  remediation plan (0 CRIT / 0 HIGH / 0 MED / 5 LOW). All five LOW findings
+  were SDK-only extras on the `OrganizationInfo` `GET /me` response
+  (`address`, `city`, `state`, `zip`, `country`). Per the precedent set by
+  plans `08`, `13`, `14`, `28`, and `29`, the fields were retained as
+  nullable back-compat properties and annotated with XML doc comments
+  noting they are not part of the spec inner schema and pointing callers
+  to the canonical replacement where one exists
+  (`Address` → `CarrierSettings.MainOfficeAddress`). No client signature
+  changes; no breaking changes for existing callers. See
+  `docs/api-sync/model-sync-plan-2026-05-27/33-organization-info.md`.
 - **Model sync 32-messages (2026-05-27)** — applied the per-domain remediation
   plan (5 HIGH, 5 MEDIUM, 6 LOW — 16 total). `DriverMessage` response rebuilt
   to match spec `V1MessageResponse`: added required `isRead`, `text`, and a
