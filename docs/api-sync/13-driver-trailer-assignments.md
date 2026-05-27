@@ -1,5 +1,7 @@
 # Driver-Trailer Assignments — API Sync Checklist
 
+> Resolved 2026-05-27 (model-sync plan)
+
 > **API Version**: `2025-10-23`  
 > **Status**: ⚠️ Unverified (0/3 endpoints implemented)  
 > **SDK Client**: `IDriverTrailerAssignmentsClient`  

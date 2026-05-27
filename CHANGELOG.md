@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 13-driver-trailer-assignments (2026-05-27)** — applied the
+  per-domain remediation plan. `DriverTrailerAssignment` (response) now mirrors
+  the spec's nested shape: required `id`, `driver` (new
+  `DriverTrailerAssignmentDriver` with required `driverId` and optional
+  `externalIds`), `trailer` (new `DriverTrailerAssignmentTrailer` with required
+  `trailerId`), and `startTime` (RFC 3339 string), plus optional
+  `createdAtTime`, `endTime`, and `updatedAtTime`. The legacy flat-scalar
+  conveniences `driverId`, `driverName`, `trailerId`, `trailerName`, and `time`
+  are retained as nullable, documented back-compat properties (not in spec
+  inner schema). `CreateDriverTrailerAssignmentRequest` gains optional
+  `startTime` (RFC 3339 string). `UpdateDriverTrailerAssignmentRequest` now
+  carries only `required string EndTime` (spec marks `endTime` REQUIRED) — the
+  SDK-only `driverId`/`trailerId` body fields were dropped (not in spec body).
+  `IDriverTrailerAssignmentsClient.ListAsync` now requires
+  `IReadOnlyList<string> driverIds` (spec REQUIRED on
+  `GET /driver-trailer-assignments`) and accepts optional
+  `bool? includeExternalIds`. `UpdateAsync` now takes the assignment `id`
+  separately and appends it via `QueryBuilder.WithParams("id", ...)` to match
+  the spec's required `id` query parameter on `PATCH /driver-trailer-assignments`.
+  See `docs/api-sync/model-sync-plan-2026-05-27/13-driver-trailer-assignments.md`.
 - **Model sync 12-driver-qr-codes (2026-05-27)** — applied the per-domain
   remediation plan. `IDriversClient.ListQrCodesAsync` now requires
   `IReadOnlyList<string> driverIds` (spec REQUIRED on `GET /drivers/qr-codes`)

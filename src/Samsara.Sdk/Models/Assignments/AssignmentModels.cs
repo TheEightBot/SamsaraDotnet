@@ -342,26 +342,155 @@ public sealed record UpdateCarrierProposedAssignmentRequest
     public string? Status { get; init; }
 }
 
-/// <summary>Represents a driver-to-trailer assignment.</summary>
+/// <summary>
+/// Represents a driver-to-trailer assignment. Mirrors the spec's
+/// <c>GetDriverTrailerAssignmentsResponseBody</c> inner schema, which nests the
+/// driver and trailer references rather than emitting flat scalars.
+/// </summary>
 public sealed record DriverTrailerAssignment
 {
-    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
-    [JsonPropertyName("trailerId")] public required string TrailerId { get; init; }
-    [JsonPropertyName("driverName")] public string? DriverName { get; init; }
-    [JsonPropertyName("trailerName")] public string? TrailerName { get; init; }
-    [JsonPropertyName("time")] public DateTimeOffset? Time { get; init; }
+    /// <summary>Samsara ID of the driver-trailer assignment. Spec-required.</summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+
+    /// <summary>
+    /// The driver this assignment is for (nested object per spec). Spec-required.
+    /// </summary>
+    [JsonPropertyName("driver")]
+    public required DriverTrailerAssignmentDriver Driver { get; init; }
+
+    /// <summary>
+    /// The trailer this assignment is for (nested object per spec). Spec-required.
+    /// </summary>
+    [JsonPropertyName("trailer")]
+    public required DriverTrailerAssignmentTrailer Trailer { get; init; }
+
+    /// <summary>
+    /// Time when the driver-trailer assignment starts, in RFC 3339 format
+    /// (e.g., <c>2019-06-13T19:08:25Z</c>). Spec-required.
+    /// </summary>
+    [JsonPropertyName("startTime")]
+    public required string StartTime { get; init; }
+
+    /// <summary>
+    /// Time when the driver-trailer assignment was created, in RFC 3339 format.
+    /// </summary>
+    [JsonPropertyName("createdAtTime")]
+    public string? CreatedAtTime { get; init; }
+
+    /// <summary>
+    /// Time when the driver-trailer assignment will end, in RFC 3339 format.
+    /// Omitted while the assignment is still active.
+    /// </summary>
+    [JsonPropertyName("endTime")]
+    public string? EndTime { get; init; }
+
+    /// <summary>
+    /// Time when the driver-trailer assignment was last updated, in RFC 3339 format.
+    /// </summary>
+    [JsonPropertyName("updatedAtTime")]
+    public string? UpdatedAtTime { get; init; }
+
+    /// <summary>
+    /// Convenience accessor for the assignment's driver ID. Retained alongside the nested
+    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes; not
+    /// part of the spec inner schema.
+    /// </summary>
+    [JsonPropertyName("driverId")]
+    public string? DriverId { get; init; }
+
+    /// <summary>
+    /// Convenience accessor for the assignment's driver name. Retained for backward
+    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
+    /// </summary>
+    [JsonPropertyName("driverName")]
+    public string? DriverName { get; init; }
+
+    /// <summary>
+    /// Convenience accessor for the assignment's trailer ID. Retained alongside the nested
+    /// <see cref="Trailer"/> object for backward compatibility with earlier SDK shapes; not
+    /// part of the spec inner schema.
+    /// </summary>
+    [JsonPropertyName("trailerId")]
+    public string? TrailerId { get; init; }
+
+    /// <summary>
+    /// Convenience accessor for the assignment's trailer name. Retained for backward
+    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
+    /// </summary>
+    [JsonPropertyName("trailerName")]
+    public string? TrailerName { get; init; }
+
+    /// <summary>
+    /// Legacy assignment timestamp. Retained for backward compatibility with earlier SDK
+    /// shapes; not part of the spec inner schema. Prefer <see cref="StartTime"/> /
+    /// <see cref="EndTime"/> / <see cref="CreatedAtTime"/> / <see cref="UpdatedAtTime"/>.
+    /// </summary>
+    [JsonPropertyName("time")]
+    public DateTimeOffset? Time { get; init; }
+}
+
+/// <summary>
+/// Driver associated with a driver-trailer assignment. Mirrors the spec's
+/// <c>DriverWithExternalIdObjectResponseBody</c> (driver id + external ids map).
+/// </summary>
+public sealed record DriverTrailerAssignmentDriver
+{
+    /// <summary>Samsara ID of the driver. Spec-required.</summary>
+    [JsonPropertyName("driverId")]
+    public required string DriverId { get; init; }
+
+    /// <summary>Map of external IDs for the driver.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// Trailer associated with a driver-trailer assignment. Mirrors the spec's
+/// <c>TrailerObjectResponseBody</c>.
+/// </summary>
+public sealed record DriverTrailerAssignmentTrailer
+{
+    /// <summary>Samsara ID of the trailer. Spec-required.</summary>
+    [JsonPropertyName("trailerId")]
+    public required string TrailerId { get; init; }
 }
 
 /// <summary>Request body for creating a driver-trailer assignment.</summary>
 public sealed record CreateDriverTrailerAssignmentRequest
 {
-    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
-    [JsonPropertyName("trailerId")] public required string TrailerId { get; init; }
+    /// <summary>
+    /// ID of the driver. May be a Samsara ID or an
+    /// <see href="https://developers.samsara.com/docs/external-ids">external ID</see>.
+    /// </summary>
+    [JsonPropertyName("driverId")]
+    public required string DriverId { get; init; }
+
+    /// <summary>
+    /// ID of the trailer. May be a Samsara ID or an
+    /// <see href="https://developers.samsara.com/docs/external-ids">external ID</see>.
+    /// </summary>
+    [JsonPropertyName("trailerId")]
+    public required string TrailerId { get; init; }
+
+    /// <summary>
+    /// Start time in RFC 3339 format. The time needs to be current or within the past
+    /// 7 days. Defaults to now if not provided.
+    /// </summary>
+    [JsonPropertyName("startTime")]
+    public string? StartTime { get; init; }
 }
 
-/// <summary>Request body for updating a driver-trailer assignment.</summary>
+/// <summary>
+/// Request body for updating an existing driver-trailer assignment. The assignment
+/// identifier travels in the query string (<c>id</c>), so the body only carries the
+/// end time per spec.
+/// </summary>
 public sealed record UpdateDriverTrailerAssignmentRequest
 {
-    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
-    [JsonPropertyName("trailerId")] public string? TrailerId { get; init; }
+    /// <summary>
+    /// End time in RFC 3339 format. The end time must not be in the future. Spec-required.
+    /// </summary>
+    [JsonPropertyName("endTime")]
+    public required string EndTime { get; init; }
 }

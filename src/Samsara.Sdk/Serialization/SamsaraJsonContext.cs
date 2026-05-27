@@ -268,6 +268,8 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(CoachingBehavior))]
 // Assignments - Driver/Trailer
 [JsonSerializable(typeof(DriverTrailerAssignment))]
+[JsonSerializable(typeof(DriverTrailerAssignmentDriver))]
+[JsonSerializable(typeof(DriverTrailerAssignmentTrailer))]
 [JsonSerializable(typeof(CreateDriverTrailerAssignmentRequest))]
 [JsonSerializable(typeof(UpdateDriverTrailerAssignmentRequest))]
 // Maintenance - DVIRs & Defects
