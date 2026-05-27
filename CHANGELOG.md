@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 28-live-sharing-links (2026-05-27)** — applied the per-domain
+  remediation plan (3 HIGH, 16 MEDIUM, 8 LOW — 27 total). `LiveSharingLink`
+  response rebuilt to match the spec
+  `LiveSharingLinkFullResponseObjectResponseBody`: `liveSharingUrl` (REQUIRED)
+  added, `name` and `type` tightened from nullable to `required`, and four
+  optional spec fields added — `description`, `expiresAtTime`, plus typed
+  nested config records `LiveSharingLinkAssetsLocationLinkConfig`,
+  `LiveSharingLinkAssetsNearLocationLinkConfig`, and
+  `LiveSharingLinkAssetsOnRouteLinkConfig` (with supporting
+  `LiveSharingLinkLocation` / `LiveSharingLinkTag`). SDK-only response
+  flat-scalars (`url`, `expiresAt`, `entityId`, `entityType`) retained as
+  nullable back-compat conveniences per the established workflow precedent.
+  `CreateLiveSharingLinkRequest` gained `description`, `expiresAtTime`, and
+  the three typed `*LinkConfig` request shapes (`CreateAssetsLocationLinkConfig`
+  with `assetId`/`location`/`tagIds`); SDK-only `entityId` (previously
+  REQUIRED) and `expiresAt` removed (spec-absent body fields silently
+  ignored by the API). `UpdateLiveSharingLinkRequest` gained `description`
+  and `expiresAtTime`, tightened `name` to `required`, and dropped SDK-only
+  body fields `id` and `expiresAt` (the `id` is now passed as the
+  spec-required query parameter on `UpdateAsync(string id, ...)`).
+  `ILiveSharingLinksClient.ListAsync` gained optional `ids` / `type` filter
+  parameters; `UpdateAsync` signature changed to take the `id` query
+  parameter explicitly (breaking for direct callers of the previous body-only
+  signature). See
+  `docs/api-sync/model-sync-plan-2026-05-27/28-live-sharing-links.md`.
 - **Model sync 27-legacy-apis (2026-05-27)** — applied the per-domain
   remediation plan (3 HIGH, 24 MEDIUM, 0 LOW — 27 total). `ILegacyApisClient`
   query surface expanded for seven endpoints. `GetVehicleIdlingReportAsync`
