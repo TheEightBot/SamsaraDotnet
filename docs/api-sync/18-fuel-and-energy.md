@@ -3,6 +3,7 @@
 > **API Version**: `2025-10-23`  
 > **Status**: 🔴 Broken (0/5)  
 > **⚠️ 2026-05-21 audit**: both methods hit non-existent `/fleet/vehicles/fuel/*`. Spec: `/fleet/reports/{vehicles,drivers}/fuel-energy`, `/fuel-purchase`, `/driver-efficiency/*`. Needs rework. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
+> **Resolved 2026-05-27 (model-sync plan)** — see [`model-sync-plan-2026-05-27/18-fuel-and-energy.md`](model-sync-plan-2026-05-27/18-fuel-and-energy.md).  
 > **SDK Client**: `IFuelClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../FuelClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Fuel/FuelModels.cs`  

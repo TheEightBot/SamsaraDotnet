@@ -3,6 +3,64 @@
 > Companion to [`docs/api-sync/18-fuel-and-energy.md`](../18-fuel-and-energy.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `f297ca4` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH (13) and MEDIUM (32) findings were applied. LOW findings on the
+response records were intentionally retained as nullable back-compat
+properties per the workflow precedent established in
+`08-carrier-proposed-assignments`, `13-driver-trailer-assignments`,
+`14-driver-vehicle-assignments`, `16-equipment`, and `17-forms` (flat-scalar
+conveniences kept so existing consumers don't silently break).
+
+The audit tool's `*ReportsResponse` findings were applied to the actual SDK
+row records — `FuelEnergyDriverReport` and `FuelEnergyVehicleReport` — since
+those are what carry the spec's per-row schema. The `FuelEnergyDriverReportsResponse`
+/ `FuelEnergyVehicleReportsResponse` wrappers (which carry `driverReports`
+/ `vehicleReports` arrays) are unchanged: the LOW `extra_property` findings
+on those wrappers are conservative retentions of the existing `data` shape.
+
+Files touched:
+- `src/Samsara.Sdk/Models/Fuel/FuelModels.cs` — tightened required fields
+  on `FuelEnergyVehicleReport` and `FuelEnergyDriverReport`
+  (`distanceTraveledMeters`, `efficiencyMpge`, `estFuelEnergyCost`, plus
+  `vehicle`/`driver`) to non-nullable `required`; introduced typed
+  `DriverEfficiencyDifficultyScore`, `DriverEfficiencyPercentageData`,
+  `DriverEfficiencyRawData`, and `DriverEfficiencyScoreData` records to
+  replace the four `object?` weak typings on `DriverEfficiencyByDriver`
+  and `DriverEfficiencyByVehicle`; tightened `driverId`/`vehicleId` to
+  `required string`; introduced `FuelPurchaseMoney` (required `amount`
+  + `currency`) and used it to type the previously-`object` `transactionPrice`
+  and `discount` on `CreateFuelPurchaseRequest`; added `required string Uuid`
+  to `FuelPurchase`.
+- `src/Samsara.Sdk/Clients/Fuel/IFuelClient.cs` and
+  `src/Samsara.Sdk/Clients/Fuel/FuelClient.cs` — added required
+  `startTime` / `endTime` plus optional `driverIds` / `vehicleIds` /
+  `dataFormats` / `tagIds` / `parentTagIds` to the two driver-efficiency
+  methods (previously took no parameters at all); added optional `after`
+  cursor to `ListVehicleFuelEnergyReportsAsync` and
+  `ListDriverFuelEnergyReportsAsync`.
+- `src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs` — registered the
+  five new fuel/efficiency records (`FuelPurchaseMoney`,
+  `DriverEfficiencyDifficultyScore`, `DriverEfficiencyPercentageData`,
+  `DriverEfficiencyRawData`, `DriverEfficiencyScoreData`).
+
+Two minor spec gaps the audit did not flag and which were not changed:
+
+- `FuelEnergyCost.currency` keeps the existing SDK property name even
+  though the spec calls it `currencyCode`. The plan did not flag this and
+  changing it is out of scope.
+- The driver-efficiency `dataFormats` array is typed as
+  `IReadOnlyList<string>?` (rather than the audit's suggested
+  `IReadOnlyList<object>?`), matching the spec's
+  `items: { type: "string" }` declaration and the established pattern for
+  comma-joined enum arrays elsewhere in the SDK.
+
+Verification:
+- `dotnet build Samsara.Dotnet.sln`: 0 errors, 0 warnings.
+- `dotnet test tests/Samsara.Sdk.Tests`: 59 passed.
+- `python3 tools/check-sdk-sync.py --fail-on-mismatch`: exit 0.
 
 ## Quick reference
 
