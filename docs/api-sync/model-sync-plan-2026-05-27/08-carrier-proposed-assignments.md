@@ -1,6 +1,6 @@
 # Carrier Proposed Assignments — Model Sync Plan (2026-05-27)
 
-> **✅ Implemented in commit `<pending>` on 2026-05-27**
+> **✅ Implemented in commit `bc293f8` on 2026-05-27**
 
 > Companion to [`docs/api-sync/08-carrier-proposed-assignments.md`](../08-carrier-proposed-assignments.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
