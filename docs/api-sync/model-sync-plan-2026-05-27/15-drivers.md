@@ -3,6 +3,79 @@
 > Companion to [`docs/api-sync/15-drivers.md`](../15-drivers.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `d1aec1f` on 2026-05-27**
+
+## Implementation notes
+
+All 20 MEDIUM findings were applied. Files touched:
+`src/Samsara.Sdk/Models/Drivers/DriverModels.cs`,
+`src/Samsara.Sdk/Clients/Fleet/IDriversClient.cs`,
+`src/Samsara.Sdk/Clients/Fleet/DriversClient.cs`, and
+`tools/Samsara.Cli/TuiApp.cs` (one-line update to pass
+`cancellationToken:` by name now that the listing method has 7 leading
+optional query params).
+
+**`(no SDK type)` query — 7 optional query params (MEDIUM)**
+
+`IDriversClient.ListAsync` and `DriversClient.ListAsync` gained the seven
+spec-defined optional query parameters. Array params follow the spec's
+`style=form,explode=false` convention by joining with `,` via
+`string.Join(",", ...)`:
+
+- `string? driverActivationStatus = null` — enum `active` / `deactivated`.
+- `IReadOnlyList<string>? parentTagIds = null`.
+- `IReadOnlyList<string>? tagIds = null`.
+- `IReadOnlyList<string>? attributeValueIds = null`.
+- `IReadOnlyList<string>? attributes = null` — spec types this query as
+  `array of string` (not `array of object` as the plan recommended);
+  values are name-value or range expressions such as `"AttrName:value"`
+  or `"AttrName:range(10,20)"`.
+- `string? updatedAfterTime = null` — RFC 3339 string.
+- `string? createdAfterTime = null` — RFC 3339 string.
+
+All appended via `QueryBuilder.WithParams(...)` which already skips
+`null` values. The pattern matches `BetaClient` / `ReportsClient`.
+
+**`Driver` (response) — 3 MEDIUM typed-property fixes**
+
+- `attributes`: `System.Text.Json.JsonElement?` ->
+  `IReadOnlyList<object>?`. Spec inner schema is `attributeTiny`
+  (`id`, `name`, `dateValues`, `numberValues`, `stringValues`). Modeled
+  as `object` for forward-compat, matching the precedent set by
+  `Equipment` and the `Attributes` domain.
+- `hasDrivingFeaturesHidden`: `JsonElement?` -> `bool?`. Spec marks
+  field as boolean. `Driver` declares `required: []`, so the
+  property remains nullable.
+- `hasVehicleUnpinningEnabled`: `JsonElement?` -> `bool?`. Same
+  rationale as above.
+
+**`CreateDriverRequest` — 5 MEDIUM typed-property fixes**
+
+- `attributes`: `JsonElement?` -> `IReadOnlyList<object>?`. Spec inner
+  schema is `CreateDriverRequest_attributes` (`id`, `name`,
+  `numberValues`, `stringValues`).
+- `hasDrivingFeaturesHidden`: `JsonElement?` -> `bool?`.
+- `hasVehicleUnpinningEnabled`: `JsonElement?` -> `bool?`.
+- `profileImageBase64`: `JsonElement?` -> `string?`.
+- `profileImageUrl`: `JsonElement?` -> `string?` (spec maxLength 1024).
+
+**`UpdateDriverRequest` — 5 MEDIUM typed-property fixes**
+
+Identical set of changes as `CreateDriverRequest`. The spec reuses the
+same inner schemas for the PATCH body.
+
+**Intentionally untouched**
+
+The remaining `JsonElement?` properties on `Driver`,
+`CreateDriverRequest`, and `UpdateDriverRequest` were left as-is
+because they each reference a separate non-trivial nested schema and
+the plan did not flag them: `eldSettings` (`DriverEldSettings`),
+`carrierSettings` (`DriverCarrierSettings` for the request side — the
+response side already uses the typed `DriverCarrierSettings` record),
+`hosSetting` (`DriverHosSetting`), `peerGroupTag` /
+`trailerGroupTag` / `vehicleGroupTag` (tag-tiny variants), and
+`usDriverRulesetOverride` (`UsDriverRulesetOverride`). Those will be
+addressed when their respective nested-shape plans are implemented.
 
 ## Quick reference
 
