@@ -59,3 +59,43 @@
   - Endpoints: `POST /fleet/drivers/auth-token`
   - Recommended fix: Remove `DriverAuthToken.ExpiresAt` (not in spec).
 
+## Implementation notes
+
+All eight findings resolved in `src/Samsara.Sdk/Models/Drivers/DriverModels.cs`.
+The endpoint signature
+(`IDriversClient.CreateAuthTokenAsync(CreateDriverAuthTokenRequest, …)`)
+and the JSON-context registrations
+(`SamsaraJsonContext.DriverAuthToken` / `.CreateDriverAuthTokenRequest`) did
+not need to change — only the model property surfaces did.
+
+- **`CreateDriverAuthTokenRequest`**
+  - **HIGH (1) — required `code`**: added
+    `[JsonPropertyName("code")] public required string Code { get; init; }`.
+    The spec marks `code` as the only REQUIRED request property
+    (`AuthTokenAuthTokenRequestBody.required = ["code"]`).
+  - **MEDIUM (3) — missing optionals and type drift on `driverId`**: added
+    `ExternalId` (`string?`) and `Username` (`string?`); changed
+    `DriverId` from `required string` to `long?` (spec type
+    `integer/int64`, optional). The driver identity is "one of `driverId`,
+    `externalId`, or `username`" per spec description, all optional at the
+    schema level, so `long?` is the spec-accurate representation.
+  - **LOW (1) — `driverId` required drift**: handled implicitly by the
+    MEDIUM type-mismatch fix above (no longer `required`, now `long?`).
+    Honors the "required + nullable contradicts" constraint.
+
+- **`DriverAuthToken`** (response inner body
+  `AuthTokenForDriverResponseResponseBody`)
+  - **HIGH (1) — missing required `expirationTime`**: added
+    `[JsonPropertyName("expirationTime")] public required long ExpirationTime { get; init; }`.
+    Spec marks `expirationTime` REQUIRED (alongside `token`); chose
+    non-nullable `required long` to mirror the existing `required string Token`
+    treatment of the other REQUIRED field on the same inner object.
+  - **LOW (2) — extra `driverId` / `expiresAt`**: removed both. They are
+    not part of the spec inner schema; the response only carries `token`
+    and `expirationTime`.
+
+### Skipped / downgraded findings
+
+None — all 8 findings (HIGH=2, MEDIUM=3, LOW=3) were implemented as
+recommended.
+

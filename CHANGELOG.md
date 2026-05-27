@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 05-auth-token-for-driver (2026-05-27)** — applied the
+  per-domain remediation plan. `CreateDriverAuthTokenRequest` now exposes
+  the spec-required `code` (`required string`), plus optional `externalId`
+  and `username` (`string?`); `driverId` switches from `required string`
+  to `long?` (spec `integer/int64`, optional — one of `driverId`,
+  `externalId`, or `username` is required). `DriverAuthToken` response
+  drops the non-spec `driverId` and `expiresAt` and adds the spec-required
+  `expirationTime` (`required long`, Unix milliseconds). See
+  `docs/api-sync/model-sync-plan-2026-05-27/05-auth-token-for-driver.md`.
 - **Model sync 04-attributes (2026-05-27)** — applied the per-domain
   remediation plan. `IAttributesClient.ListAsync`, `GetAsync`, and `DeleteAsync`
   now take the spec-required `entityType` query parameter. `AttributeDefinition`

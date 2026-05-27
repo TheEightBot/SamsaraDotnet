@@ -370,15 +370,27 @@ public sealed record RemoteSignOutRequest
 /// <summary>An authentication token for a driver.</summary>
 public sealed record DriverAuthToken
 {
+    /// <summary>A one-time-use authentication token. Must be paired with the original code and driver identity in a separate request to exchange for a session.</summary>
     [JsonPropertyName("token")] public required string Token { get; init; }
-    [JsonPropertyName("expiresAt")] public DateTimeOffset? ExpiresAt { get; init; }
-    [JsonPropertyName("driverId")] public string? DriverId { get; init; }
+
+    /// <summary>Expiration time of the token in Unix milliseconds since epoch. Clients must redeem the token before this timestamp.</summary>
+    [JsonPropertyName("expirationTime")] public required long ExpirationTime { get; init; }
 }
 
-/// <summary>Request body for creating a driver auth token.</summary>
+/// <summary>Request body for creating a driver auth token. One of <c>driverId</c>, <c>externalId</c>, or <c>username</c> is required.</summary>
 public sealed record CreateDriverAuthTokenRequest
 {
-    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
+    /// <summary>Required. Random 12+ character string, used with the auth token to help secure the client from intercepted tokens.</summary>
+    [JsonPropertyName("code")] public required string Code { get; init; }
+
+    /// <summary>Optional. Samsara ID of the driver. One of <c>driverId</c>, <c>externalId</c>, or <c>username</c> is required.</summary>
+    [JsonPropertyName("driverId")] public long? DriverId { get; init; }
+
+    /// <summary>Optional. External ID of the driver, in the format <c>key:value</c> (e.g., <c>payrollId:ABFS18600</c>). One of <c>driverId</c>, <c>externalId</c>, or <c>username</c> is required.</summary>
+    [JsonPropertyName("externalId")] public string? ExternalId { get; init; }
+
+    /// <summary>Optional. Username of the driver. This is the login identifier configured when the driver is created. One of <c>driverId</c>, <c>externalId</c>, or <c>username</c> is required.</summary>
+    [JsonPropertyName("username")] public string? Username { get; init; }
 }
 
 /// <summary>Represents a driver QR code.</summary>
