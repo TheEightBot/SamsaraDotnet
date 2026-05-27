@@ -272,7 +272,15 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(TrainingCourse))]
 // Issues
 [JsonSerializable(typeof(Issue))]
+[JsonSerializable(typeof(IssueAsset))]
+[JsonSerializable(typeof(IssueUser))]
+[JsonSerializable(typeof(IssueSource))]
+[JsonSerializable(typeof(IssueMedia))]
+[JsonSerializable(typeof(CreateIssueRequest))]
 [JsonSerializable(typeof(UpdateIssueRequest))]
+[JsonSerializable(typeof(IssueAssetRequest))]
+[JsonSerializable(typeof(IssueAssigneeRequest))]
+[JsonSerializable(typeof(IssueMediaItemRequest))]
 // Media
 [JsonSerializable(typeof(MediaFile))]
 [JsonSerializable(typeof(MediaRetrieval))]

@@ -37,6 +37,25 @@ internal sealed class IssuesClient : SamsaraServiceClientBase, IIssuesClient
     public Task<Issue> UpdateAsync(UpdateIssueRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<Issue>(BasePath, request, cancellationToken);
 
-    public IAsyncEnumerable<Issue> GetStreamAsync(DateTimeOffset startTime, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<Issue>(QueryBuilder.WithTimeRange("issues/stream", startTime, endTime), cancellationToken: cancellationToken);
+    /// <summary>
+    /// Stream issues created or updated within a time window (<c>GET /issues/stream</c>).
+    /// </summary>
+    public IAsyncEnumerable<Issue> GetStreamAsync(
+        DateTimeOffset startTime,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? status = null,
+        IReadOnlyList<string>? assetIds = null,
+        IReadOnlyList<string>? assetExternalIds = null,
+        IReadOnlyList<string>? include = null,
+        IReadOnlyList<string>? assignedToRouteStopIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<Issue>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("issues/stream", startTime, endTime),
+                ("status", status is null ? null : string.Join(",", status)),
+                ("assetIds", assetIds is null ? null : string.Join(",", assetIds)),
+                ("assetExternalIds", assetExternalIds is null ? null : string.Join(",", assetExternalIds)),
+                ("include", include is null ? null : string.Join(",", include)),
+                ("assignedToRouteStopIds", assignedToRouteStopIds is null ? null : string.Join(",", assignedToRouteStopIds))),
+            cancellationToken: cancellationToken);
 }

@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 25-issues (2026-05-27)** — applied the per-domain remediation
+  plan (3 HIGH, 16 MEDIUM, 6 LOW). `Issue` rebuilt to match the spec
+  `IssueResponseObjectResponseBody` inner schema: three spec-REQUIRED fields
+  (`issueSource`, `submittedAtTime`, `submittedBy`) added as non-nullable
+  `required`; four existing fields (`title`, `status`, `createdAtTime`,
+  `updatedAtTime`) tightened from nullable to `required`; four optional
+  spec fields (`asset`, `assignedTo`, `dueDate`, `mediaList`) added. Four
+  new nested response records (`IssueAsset`, `IssueUser`, `IssueSource`,
+  `IssueMedia`) replace prior `object`/missing placeholders, mirroring
+  the spec's `FormsAssetObjectResponseBody`,
+  `FormsPolymorphicUserObjectResponseBody`, `IssueSourceObjectResponseBody`,
+  and `FormsMediaRecordObjectResponseBody`. Six SDK-only flat scalars
+  (`assigneeId`, `assigneeName`, `vehicleId`, `vehicleName`,
+  `resolvedAtTime`, `type`) absent from the spec inner schema were removed.
+  `CreateIssueRequest.Asset`/`AssignedTo` and `UpdateIssueRequest.AssignedTo`
+  swapped from weak `object` to typed `IssueAssetRequest` /
+  `IssueAssigneeRequest`; `Media` collections typed as
+  `IReadOnlyList<IssueMediaItemRequest>`. `IIssuesClient.GetStreamAsync`
+  gained five missing optional query parameters (`status`, `assetIds`,
+  `assetExternalIds`, `include`, `assignedToRouteStopIds`) for the full
+  spec query surface. See
+  `docs/api-sync/model-sync-plan-2026-05-27/25-issues.md`.
 - **Model sync 24-industrial (2026-05-27)** — applied the per-domain
   remediation plan (4 HIGH, 52 MEDIUM, 6 LOW). `IndustrialAsset` rebuilt to
   match the spec `AssetResponse` inner schema: three spec-REQUIRED fields
