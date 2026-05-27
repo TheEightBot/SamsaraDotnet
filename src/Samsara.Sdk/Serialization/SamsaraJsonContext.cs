@@ -385,6 +385,7 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(HubPlan))]
 [JsonSerializable(typeof(CreateHubPlanRequest))]
 [JsonSerializable(typeof(HubPlanOrder))]
+[JsonSerializable(typeof(CreateHubPlanOrderInput))]
 [JsonSerializable(typeof(CreateHubPlanOrdersRequest))]
 // Organization - Settings
 [JsonSerializable(typeof(ComplianceSettings))]

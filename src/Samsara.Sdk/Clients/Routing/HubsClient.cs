@@ -169,9 +169,22 @@ internal sealed class HubsClient : SamsaraServiceClientBase, IHubsClient
     public Task<HubPlan> CreatePlanAsync(CreateHubPlanRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<HubPlan>("hub/plan", request, cancellationToken);
 
-    public IAsyncEnumerable<HubPlan> ListPlansAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<HubPlan>("hub/plans", cancellationToken: cancellationToken);
+    /// <summary>List hub plans (<c>GET /hub/plans</c>) — <paramref name="hubId"/> required by spec.</summary>
+    public IAsyncEnumerable<HubPlan> ListPlansAsync(
+        string hubId,
+        string? planIds = null,
+        string? startTime = null,
+        string? endTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<HubPlan>(
+            QueryBuilder.WithParams("hub/plans",
+                ("hubId", hubId),
+                ("planIds", planIds),
+                ("startTime", startTime),
+                ("endTime", endTime)),
+            cancellationToken: cancellationToken);
 
+    /// <summary>Create hub plan orders in bulk (<c>POST /hub/plan/orders</c>). The spec wraps the array in <c>{ data: T[] }</c>.</summary>
     public Task<HubPlanOrder> CreatePlanOrdersAsync(CreateHubPlanOrdersRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<HubPlanOrder>("hub/plan/orders", request, cancellationToken);
 }

@@ -85,6 +85,15 @@ public interface IHubsClient
         CancellationToken cancellationToken = default);
 
     Task<HubPlan> CreatePlanAsync(CreateHubPlanRequest request, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<HubPlan> ListPlansAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>List hub plans (<c>GET /hub/plans</c>). <paramref name="hubId"/> is required by the spec.</summary>
+    IAsyncEnumerable<HubPlan> ListPlansAsync(
+        string hubId,
+        string? planIds = null,
+        string? startTime = null,
+        string? endTime = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Create hub plan orders in bulk (<c>POST /hub/plan/orders</c>) — the body is wrapped in <c>{ data: T[] }</c>.</summary>
     Task<HubPlanOrder> CreatePlanOrdersAsync(CreateHubPlanOrdersRequest request, CancellationToken cancellationToken = default);
 }

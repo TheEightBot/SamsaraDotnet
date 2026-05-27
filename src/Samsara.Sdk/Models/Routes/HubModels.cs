@@ -406,23 +406,55 @@ public sealed record HubSkill
     public required DateTimeOffset UpdatedAt { get; init; }
 }
 
-/// <summary>A hub dispatch plan.</summary>
+/// <summary>A hub dispatch plan returned by <c>GET /hub/plans</c> and <c>POST /hub/plan</c>.</summary>
 public sealed record HubPlan
 {
-    [JsonPropertyName("id")] public required string Id { get; init; }
-    [JsonPropertyName("name")] public string? Name { get; init; }
-    [JsonPropertyName("status")] public string? Status { get; init; }
-    [JsonPropertyName("date")] public DateTimeOffset? Date { get; init; }
+    /// <summary>The Samsara-generated unique identifier (UUID) for the plan (spec REQUIRED).</summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+
+    /// <summary>The name of the plan (spec REQUIRED).</summary>
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+
+    /// <summary>The ID of the hub this plan belongs to (spec REQUIRED).</summary>
+    [JsonPropertyName("hubId")]
+    public required string HubId { get; init; }
+
+    /// <summary>Shift start time for the plan in RFC 3339 format (spec REQUIRED).</summary>
+    [JsonPropertyName("shiftStartTime")]
+    public required DateTimeOffset ShiftStartTime { get; init; }
+
+    /// <summary>Creation timestamp (spec REQUIRED).</summary>
+    [JsonPropertyName("createdAt")]
+    public required DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>Last update timestamp (spec REQUIRED).</summary>
+    [JsonPropertyName("updatedAt")]
+    public required DateTimeOffset UpdatedAt { get; init; }
 }
 
-/// <summary>Request body for creating a hub plan.</summary>
+/// <summary>Request body for creating a hub plan (<c>POST /hub/plan</c>).</summary>
 public sealed record CreateHubPlanRequest
 {
-    [JsonPropertyName("name")] public required string Name { get; init; }
-    [JsonPropertyName("date")] public required DateTimeOffset Date { get; init; }
+    /// <summary>The ID of the hub the plan belongs to (spec REQUIRED).</summary>
+    [JsonPropertyName("hubId")]
+    public required string HubId { get; init; }
+
+    /// <summary>The name of the plan (spec REQUIRED).</summary>
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+
+    /// <summary>The ID of a saved session configuration (preset) to apply when creating the plan.</summary>
+    [JsonPropertyName("sessionConfigurationId")]
+    public string? SessionConfigurationId { get; init; }
+
+    /// <summary>Shift start time for the plan in RFC 3339 format. Defaults to 9:00 AM on the next business day in the hub's timezone when omitted.</summary>
+    [JsonPropertyName("shiftStartTime")]
+    public DateTimeOffset? ShiftStartTime { get; init; }
 }
 
-/// <summary>A hub plan order.</summary>
+/// <summary>A hub plan order returned by <c>GET /hub/plan/orders</c> and <c>POST /hub/plan/orders</c>.</summary>
 public sealed record HubPlanOrder
 {
     [JsonPropertyName("id")] public required string Id { get; init; }
@@ -440,9 +472,58 @@ public sealed record HubPlanOrder
     [JsonPropertyName("delivery")] public object? Delivery { get; init; }
 }
 
-/// <summary>Request body for creating hub plan orders.</summary>
+/// <summary>
+/// A single hub plan order input object posted as part of the
+/// <c>{ data: OrderInputObjectRequestBody[] }</c> envelope to
+/// <c>POST /hub/plan/orders</c>. Renamed from <c>CreateHubPlanOrdersRequest</c>
+/// during the 2026-05-27 model sync — the prior name now refers to the
+/// outer envelope (<see cref="CreateHubPlanOrdersRequest"/>).
+/// </summary>
+public sealed record CreateHubPlanOrderInput
+{
+    /// <summary>The customer-provided identifier for the order (spec REQUIRED).</summary>
+    [JsonPropertyName("customerOrderId")]
+    public required string CustomerOrderId { get; init; }
+
+    /// <summary>The ID of the hub the order belongs to (spec REQUIRED).</summary>
+    [JsonPropertyName("hubId")]
+    public required string HubId { get; init; }
+
+    /// <summary>The ID of the plan the order belongs to (spec REQUIRED).</summary>
+    [JsonPropertyName("planId")]
+    public required string PlanId { get; init; }
+
+    /// <summary>An array of custom property values for the order.</summary>
+    [JsonPropertyName("customProperties")]
+    public IReadOnlyList<object>? CustomProperties { get; init; }
+
+    /// <summary>Delivery task details (spec ref <c>OrderTaskRequestBody</c>).</summary>
+    [JsonPropertyName("delivery")]
+    public object? Delivery { get; init; }
+
+    /// <summary>Pickup task details (spec ref <c>OrderTaskRequestBody</c>).</summary>
+    [JsonPropertyName("pickup")]
+    public object? Pickup { get; init; }
+
+    /// <summary>Priority of the order (e.g., 1 for high, 5 for low).</summary>
+    [JsonPropertyName("priority")]
+    public long? Priority { get; init; }
+
+    /// <summary>An array of quantities for the order.</summary>
+    [JsonPropertyName("quantities")]
+    public IReadOnlyList<object>? Quantities { get; init; }
+
+    /// <summary>An array of skill IDs required to fulfill the order.</summary>
+    [JsonPropertyName("skillsRequired")]
+    public IReadOnlyList<object>? SkillsRequired { get; init; }
+}
+
+/// <summary>
+/// Envelope request body for <c>POST /hub/plan/orders</c> — the spec wraps the
+/// array of plan order inputs in <c>{ data: [...] }</c>.
+/// </summary>
 public sealed record CreateHubPlanOrdersRequest
 {
-    [JsonPropertyName("planId")] public required string PlanId { get; init; }
-    [JsonPropertyName("orderIds")] public required IReadOnlyList<string> OrderIds { get; init; }
+    [JsonPropertyName("data")]
+    public required IReadOnlyList<CreateHubPlanOrderInput> Data { get; init; }
 }

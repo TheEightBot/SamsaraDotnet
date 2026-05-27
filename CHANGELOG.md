@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 34-plans (2026-05-27)** — applied the per-domain remediation
+  plan (1 CRIT / 8 HIGH / 12 MED / 4 LOW — 25 total). The load-bearing fix
+  was a wrapper-drift bug on `POST /hub/plan/orders`: the SDK previously
+  posted an unwrapped `{ planId, orderIds }` body that did not match the
+  spec inner schema. The request body is now correctly wrapped as
+  `CreateHubPlanOrdersRequest { data: IReadOnlyList<CreateHubPlanOrderInput> }`,
+  and the inner input shape carries the three spec-REQUIRED fields
+  (`customerOrderId`, `hubId`, `planId`) as `required` plus six optional
+  fields (`customProperties`, `delivery`, `pickup`, `priority`,
+  `quantities`, `skillsRequired`). This mirrors the wrapper fixes shipped
+  for `POST /hub/locations` and `PATCH /hub/location/{id}` in the
+  `21-hubs` plan. `HubPlan` response record rebuilt to match the spec
+  `PlanObjectResponseBody`: five new `required` fields (`createdAt`,
+  `hubId`, `name`, `shiftStartTime`, `updatedAt`) and the spec-absent
+  `status`/`date` extras were removed. `CreateHubPlanRequest` gained the
+  spec-REQUIRED `hubId` property plus the two optional fields
+  (`sessionConfigurationId`, `shiftStartTime`), and the spec-absent
+  `date` was removed. `IHubsClient.ListPlansAsync` now requires `hubId`
+  (spec REQUIRED) as the first positional parameter and gained three
+  optional query parameters (`planIds`, `startTime`, `endTime`). Breaking
+  signature changes for direct callers of `CreatePlanOrdersAsync`,
+  `CreatePlanAsync`, and `ListPlansAsync`. See
+  `docs/api-sync/model-sync-plan-2026-05-27/34-plans.md`.
 - **Model sync 33-organization-info (2026-05-27)** — applied the per-domain
   remediation plan (0 CRIT / 0 HIGH / 0 MED / 5 LOW). All five LOW findings
   were SDK-only extras on the `OrganizationInfo` `GET /me` response
