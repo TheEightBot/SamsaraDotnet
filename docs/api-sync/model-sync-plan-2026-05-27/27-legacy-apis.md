@@ -3,6 +3,98 @@
 > Companion to [`docs/api-sync/27-legacy-apis.md`](../27-legacy-apis.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `4088176` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH (3) and MEDIUM (24) findings were applied — 27 total. There were no
+LOW findings for this domain.
+
+Files touched:
+
+- `src/Samsara.Sdk/Clients/Legacy/LegacyApisClient.cs` — interface + impl,
+  query surface expanded across seven endpoints.
+- `CHANGELOG.md`, `docs/api-sync/27-legacy-apis.md` — banners.
+
+The legacy v1 schemas are loosely defined and the SDK keeps `object` /
+`object?` for response payloads (per the file-level guidance). No new model
+records were introduced — the entire change is in method signatures and
+query-string composition.
+
+**Endpoint-by-endpoint summary**
+
+- **`GET /fleet/reports/vehicle/idling` (`GetVehicleIdlingReportAsync`)** —
+  Converted from a single-page `Task<object>` to paginated
+  `IAsyncEnumerable<object>` using `PaginateAsync`. This pattern matches
+  every other paginated legacy endpoint on the client (DVIRs, defects,
+  driver/vehicle assignments, safety events) and lets `after` and `limit`
+  be absorbed by the shared pagination helper instead of being exposed as
+  extra method parameters. Two HIGH spec-REQUIRED params (`startTime`,
+  `endTime`) added as non-nullable `DateTimeOffset` and pushed through
+  `QueryBuilder.WithTimeRange`. Five MEDIUM optional filters
+  (`vehicleIds`, `tagIds`, `parentTagIds`, `isPtoActive`,
+  `minIdlingDurationMinutes`) added as nullable scalars matching the
+  spec parameter types. `isPtoActive` is lowercased via
+  `ToString(CultureInfo.InvariantCulture).ToLowerInvariant()`;
+  `minIdlingDurationMinutes` is rendered with invariant culture.
+
+- **`GET /v1/fleet/vehicles/{vehicleId}/safety/harsh_event`
+  (`V1GetVehicleHarshEventAsync`)** — The HIGH finding flagged
+  `timestamp` (required, int64) as missing. The SDK already forwarded the
+  value to the wire as `timestamp` via `QueryBuilder.WithParams`, but the
+  C# parameter was named `timestampMs`. The analyzer matches by parameter
+  name — renamed to `timestamp` and switched the string conversion to
+  `CultureInfo.InvariantCulture` (was using the default
+  `long.ToString()`). Wire format is unchanged.
+
+- **`GET /fleet/drivers/vehicle-assignments`
+  (`GetDriversVehicleAssignmentsAsync`)** — Added six optional filters per
+  the plan: `driverIds` (array, joined with `,`), `startTime`/`endTime`
+  (RFC 3339 via `WithTimeRange`), `tagIds`, `parentTagIds`,
+  `driverActivationStatus`. Pagination cursor `after` continues to be
+  handled by `PaginateAsync`.
+
+- **`GET /fleet/vehicles/driver-assignments`
+  (`GetVehiclesDriverAssignmentsAsync`)** — Added five optional filters:
+  `startTime`/`endTime`, `vehicleIds`, `tagIds`, `parentTagIds`. Per the
+  spec these are all plain `string` (comma-joined IDs), not arrays.
+
+- **`GET /fleet/dvirs/history` (`GetDvirHistoryAsync`)** — Added
+  `parentTagIds` and `tagIds` (both arrays in the spec, joined with `,`).
+  Existing `startTime`/`endTime` retained; the spec marks them REQUIRED
+  but they remain nullable in the SDK signature for backward
+  compatibility with existing callers — surfaced in the doc-comment.
+
+- **`GET /fleet/defects/history` (`GetDvirDefectsHistoryAsync`)** — Added
+  `isResolved` (bool, lowercased). `startTime`/`endTime` similarly remain
+  nullable for backward compatibility.
+
+- **`GET /fleet/safety-events` (`GetSafetyEventsAsync`)** — Added
+  `tagIds`, `parentTagIds`, `vehicleIds` (all arrays per the spec).
+
+- **`GET /fleet/safety-events/audit-logs/feed`
+  (`GetSafetyEventsAuditFeedAsync`)** — No plan findings; signature
+  unchanged. (Note: the SDK exposes an `endTime` parameter that is not in
+  the spec — kept as-is to avoid an out-of-scope removal.)
+
+**Conventions followed**
+
+- Array query parameters joined with `,` via
+  `string.Join(",", parameters)` per `FuelClient` /
+  `QualificationRecordsClient` precedent.
+- Boolean parameters rendered as `true` / `false` via
+  `ToString(CultureInfo.InvariantCulture).ToLowerInvariant()`.
+- Integer parameters rendered with `CultureInfo.InvariantCulture`.
+- Date/time parameters: `DateTimeOffset` (or `DateTimeOffset?`) routed
+  through `QueryBuilder.WithTimeRange` (RFC 3339 round-trip format `"O"`).
+
+**Verification**
+
+- `dotnet build Samsara.Dotnet.sln` — `0 Warning(s) 0 Error(s)`.
+- `dotnet test tests/Samsara.Sdk.Tests` — `Passed: 59, Failed: 0`.
+- `python3 tools/check-sdk-sync.py --spec-file samsara-api.json
+  --fail-on-mismatch` — `MISMATCHED: 0`,
+  `Spec ops not implemented: 0`.
 
 ## Quick reference
 
