@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 17-forms (2026-05-27)** — applied the per-domain remediation
+  plan. `FormSubmission` (response) now mirrors the spec's nested shape with
+  required `createdAtTime`, `updatedAtTime`, `submittedAtTime`, `status`,
+  `isRequired`, `fields`, `formTemplate` (object), and `submittedBy` (object),
+  plus optional `title`, `approvalDetails`, `asset`, `geofence`, `location`,
+  `score`, `externalIds`, `assignedTo`, `assignedAtTime`, `dueAtTime`,
+  `routeId`, and `routeStopId`. Legacy flat-scalar fields (`formTemplateId`,
+  `formTemplateName`, `driverId`, `driverName`, `vehicleId`, `vehicleName`,
+  `state`, `fieldValues`) are retained as nullable back-compat. `FormTemplate`
+  (response) gains required `title` (paired with the legacy `name` for
+  back-compat per the rename guidance), `revisionId`, `fields`, `createdBy`,
+  and `updatedBy`; `createdAtTime`/`updatedAtTime`/`sections` tightened from
+  nullable to non-nullable; optional `approvalConfig` and `formCategory`
+  added. `FormPdfExport` (response) tightened with required `pdfId`,
+  `jobStatus`, `requestedAtTime`, and `expiresAtTime`, plus optional
+  `completedAtTime`, `errorMessage`, and `pdfUrlExpiresAtTime`; the legacy
+  `status`, `formSubmissionId`, and `createdAt` fields are retained as
+  nullable back-compat. `CreateFormSubmissionRequest` now exposes the
+  spec-required `formTemplate` (object) and `status` plus optional `title`,
+  `assignedTo`, `dueAtTime`, `fields`, `isRequired`, and `routeStopId`;
+  legacy `formTemplateId`, `driver`, `vehicle`, and `fieldValues` are
+  retained as nullable back-compat. `UpdateFormSubmissionRequest` gains
+  optional `title`, `status`, `isRequired`, `approvalDetails`, `assignedTo`,
+  `dueAtTime`, and `routeStopId`; legacy `fieldValues` retained.
+  `IFormsClient.ListTemplatesAsync` now accepts optional `ids` (array,
+  joined by `,`). `GetSubmissionsStreamAsync` adds optional
+  `formTemplateIds`, `userIds`, `driverIds`, `assignedToRouteStopIds`, and
+  `include` array parameters. `GetPdfExportsAsync(string pdfId)` and
+  `CreatePdfExportAsync(string id)` now accept the spec-required query
+  parameters (breaking: `CreatePdfExportAsync` previously took
+  `CreateFormPdfExportRequest`, which has been removed since the spec
+  endpoint has no request body). See
+  `docs/api-sync/model-sync-plan-2026-05-27/17-forms.md`.
 - **Model sync 16-equipment (2026-05-27)** — applied the per-domain remediation
   plan. `IEquipmentClient` now exposes the spec's optional `parentTagIds`,
   `tagIds`, and `equipmentIds` query parameters across `ListAsync`,

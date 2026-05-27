@@ -296,7 +296,9 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(GenerateDocumentPdfRequest))]
 // Documents - Form PDF exports
 [JsonSerializable(typeof(FormPdfExport))]
-[JsonSerializable(typeof(CreateFormPdfExportRequest))]
+// Documents - Form submission requests
+[JsonSerializable(typeof(CreateFormSubmissionRequest))]
+[JsonSerializable(typeof(UpdateFormSubmissionRequest))]
 // Drivers - auth/QR
 [JsonSerializable(typeof(RemoteSignOutRequest))]
 [JsonSerializable(typeof(DriverAuthToken))]

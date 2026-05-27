@@ -1125,8 +1125,8 @@ internal sealed class TuiApp
                     case "List Templates":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching form templates...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Forms.ListTemplatesAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Form Templates", t => [t.Id, t.Name ?? ""], ["ID", "Name"]);
+                            var items = await CollectAsync(_client.Forms.ListTemplatesAsync(cancellationToken: Timeout60s()));
+                            ResultRenderer.RenderList(items, "Form Templates", t => [t.Id, t.Title ?? t.Name ?? ""], ["ID", "Title"]);
                         });
                         break;
                     case "List Submissions":
