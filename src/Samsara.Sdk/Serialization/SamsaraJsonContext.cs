@@ -270,6 +270,11 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(AssetLocation))]
 // Fleet - Idling
 [JsonSerializable(typeof(IdlingEvent))]
+[JsonSerializable(typeof(IdlingEventAddress))]
+[JsonSerializable(typeof(IdlingEventAsset))]
+[JsonSerializable(typeof(IdlingEventOperator))]
+[JsonSerializable(typeof(IdlingEventFuelCost))]
+[JsonSerializable(typeof(IdlingEventGaseousFuelCost))]
 // Fleet - LiveSharing
 [JsonSerializable(typeof(LiveSharingLink))]
 [JsonSerializable(typeof(CreateLiveSharingLinkRequest))]

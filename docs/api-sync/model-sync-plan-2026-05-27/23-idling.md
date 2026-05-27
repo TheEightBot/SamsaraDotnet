@@ -3,6 +3,81 @@
 > Companion to [`docs/api-sync/23-idling.md`](../23-idling.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+## Implementation notes
+
+All HIGH (8), MEDIUM (15), and LOW (8) findings were applied — 31 total.
+
+Files touched:
+
+- `src/Samsara.Sdk/Models/Fleet/IdlingModels.cs` — full rewrite of
+  `IdlingEvent` plus five new nested records.
+- `src/Samsara.Sdk/Clients/Fleet/IIdlingClient.cs` — `ListEventsAsync`
+  surface expanded from 2 to 13 parameters.
+- `src/Samsara.Sdk/Clients/Fleet/IdlingClient.cs` — query-string composition
+  via `QueryBuilder.WithParams`, mirroring `FuelClient`'s array-join pattern.
+- `src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs` — added five new
+  `[JsonSerializable]` registrations for the nested types.
+
+**HIGH (8) — `IdlingEvent` (response) spec-REQUIRED fields**
+
+All eight spec-REQUIRED inner-schema fields were added as non-nullable
+`required` members. Where the plan recommended `object`, the codebase
+convention (established in `13-driver-trailer-assignments` and
+`14-driver-vehicle-assignments`) is to model spec sub-schemas as concrete
+nested records. So:
+
+- **`asset`** → `IdlingEventAsset` (required `long Id`, optional
+  `IReadOnlyDictionary<string, string>? ExternalIds`) — mirrors
+  `IdlingEventAssetObjectResponseBody`.
+- **`durationMilliseconds`** → `required long` (spec `integer/int64`).
+- **`eventUuid`** → `required string`.
+- **`fuelConsumedMilliliters`** → `required double` (spec `number/double`).
+- **`fuelCost`** → `IdlingEventFuelCost` (required `Amount` string,
+  required `Currency` enum-as-string) — mirrors `FuelCostObjectResponseBody`.
+- **`gaseousFuelConsumedGrams`** → `required double` (spec `number/double`).
+- **`gaseousFuelCost`** → `IdlingEventGaseousFuelCost` (same shape as
+  `IdlingEventFuelCost`) — mirrors `GaseousFuelCostObjectResponseBody`.
+- **`ptoState`** → `required string`. The spec declares `enum: ["active, inactive"]`
+  with a single comma-joined entry — that is a spec defect, the prose
+  description clarifies the two valid values are `active` and `inactive`.
+  Modelled as `string` to avoid hard-coding the broken enum.
+
+**MEDIUM (15)**
+
+- **11 missing optional query parameters on `ListEventsAsync`** — added to
+  both `IIdlingClient` and `IdlingClient`. Array params use `string.Join(",", …)`
+  per the `FuelClient` precedent; integer/boolean params use
+  `ToString(CultureInfo.InvariantCulture)` with booleans lowercased to match
+  the spec's lowercase form. Order in the method signature: spec-required
+  pair first (`startTime`, `endTime` — kept nullable on the SDK side because
+  the existing surface accepted them as optional, and the only caller is
+  `PaginateAsync`), then the spec-optional surface in spec order.
+- **`IdlingEvent.startTime` tightened** from `DateTimeOffset?` to `required
+  DateTimeOffset` (spec-REQUIRED). Listed under MEDIUM in the plan
+  (`response_required_drift`) but applied together with the HIGH adds.
+- **`IdlingEvent.address`** changed from `string?` to
+  `IdlingEventAddress?` (spec `object`, optional) — concrete nested record
+  rather than the plan's recommended `object` placeholder.
+- **`IdlingEvent.airTemperatureMillicelsius`** added as `long?`
+  (spec `integer/int64`, optional).
+- **`IdlingEvent.operator`** added as `IdlingEventOperator?`
+  (spec `object`, optional) — concrete nested record rather than `object`.
+
+**LOW (8) — extra-property removals**
+
+All eight SDK-only flat scalars absent from
+`IdlingEventObject_V2025_10_23ResponseBody` were removed: `id`, `vehicleId`,
+`vehicleName`, `driverId`, `driverName`, `endTime`, `durationMs`,
+`fuelConsumedMl`. There are no SDK consumers (no test/TUI references), so
+nothing else needed updating. The flat-scalar back-compat approach used in
+`13`/`14` was not applied here because the new nested records use the same
+JSON property names as the spec (`asset.id`, `operator.id`, etc.) — keeping
+the flat scalars alongside would have produced confusing duplication
+without a meaningful migration aid, since the source data flowed only
+through the spec-aligned JSON payload.
+
+Build is green and `tools/check-sdk-sync.py` reports `mismatched=0` /
+`not implemented=0`. All 59 unit tests pass.
 
 ## Quick reference
 

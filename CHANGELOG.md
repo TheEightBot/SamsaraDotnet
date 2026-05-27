@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 23-idling (2026-05-27)** — applied the per-domain remediation
+  plan. `IdlingEvent` rebuilt to match the spec
+  `IdlingEventObject_V2025_10_23ResponseBody` inner schema: nine spec-REQUIRED
+  fields (`asset`, `durationMilliseconds`, `eventUuid`,
+  `fuelConsumedMilliliters`, `fuelCost`, `gaseousFuelConsumedGrams`,
+  `gaseousFuelCost`, `ptoState`, `startTime`) are now non-nullable `required`;
+  five new nested records (`IdlingEventAsset`, `IdlingEventAddress`,
+  `IdlingEventOperator`, `IdlingEventFuelCost`, `IdlingEventGaseousFuelCost`)
+  replace prior flat `string?` / `object` placeholders and are registered in
+  `SamsaraJsonContext`; the optional `airTemperatureMillicelsius` field was
+  added. Eight SDK-only flat scalars (`id`, `vehicleId`, `vehicleName`,
+  `driverId`, `driverName`, `endTime`, `durationMs`, `fuelConsumedMl`) absent
+  from the spec inner schema were removed. `IIdlingClient.ListEventsAsync`
+  gained 11 optional query parameters (`assetIds`, `operatorIds`, `ptoState`,
+  `min/maxAirTemperatureMillicelsius`, `excludeEventsWithUnknownAirTemperature`,
+  `min/maxDurationMilliseconds`, `tagIds`, `parentTagIds`, `includeExternalIds`)
+  for the full spec query surface. See
+  `docs/api-sync/model-sync-plan-2026-05-27/23-idling.md`.
 - **Model sync 22-ifta (2026-05-27)** — applied the per-domain remediation
   plan. `IftaJurisdictionReportsResponse.Year` /
   `.JurisdictionReports`, `IftaVehicleReportsResponse.Year` /
