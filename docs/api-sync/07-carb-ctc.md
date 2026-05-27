@@ -1,9 +1,9 @@
 # CARB CTC — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ⚠️ Unverified (0/2 endpoints implemented)  
+> **Status**: Resolved 2026-05-27 (model-sync plan)  
 > **SDK Client**: `ICarbCtcClient`  
-> **Implementation**: `src/Samsara.Sdk/Clients/.../CarbCtcClient.cs`  
+> **Implementation**: `src/Samsara.Sdk/Clients/Compliance/CarbCtcClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Compliance/CarbCtcModels.cs`  
 
 ---
