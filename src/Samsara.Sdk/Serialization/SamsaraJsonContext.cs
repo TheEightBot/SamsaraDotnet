@@ -283,6 +283,7 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(IssueMediaItemRequest))]
 // Media
 [JsonSerializable(typeof(MediaFile))]
+[JsonSerializable(typeof(MediaUrlInfo))]
 [JsonSerializable(typeof(MediaRetrieval))]
 [JsonSerializable(typeof(CreateMediaRetrievalRequest))]
 // Fleet - Assets

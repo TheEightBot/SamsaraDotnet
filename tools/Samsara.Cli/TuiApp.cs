@@ -1686,10 +1686,14 @@ internal sealed class TuiApp
                 switch (op)
                 {
                     case "List All":
+                        var mediaVehicleIds = InputHelper.AskId("Vehicle IDs (comma-separated)");
+                        var (mStart, mEnd) = InputHelper.AskTimeRange("media");
+                        var mediaStart = (mStart ?? DateTimeOffset.UtcNow.AddDays(-7)).ToString("O");
+                        var mediaEnd = (mEnd ?? DateTimeOffset.UtcNow).ToString("O");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching media files...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Media.ListAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Media Files", m => [m.Id, m.MediaType ?? "", m.VehicleId ?? ""], ["ID", "Type", "Vehicle ID"]);
+                            var items = await CollectAsync(_client.Media.ListAsync(mediaVehicleIds, mediaStart, mediaEnd, cancellationToken: Timeout60s()));
+                            ResultRenderer.RenderList(items, "Media Files", m => [m.Id ?? "", m.MediaType, m.VehicleId], ["ID", "Type", "Vehicle ID"]);
                         });
                         break;
                 }

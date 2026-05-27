@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 31-media (2026-05-27)** — applied the per-domain remediation
+  plan (14 HIGH, 15 MEDIUM, 19 LOW — 48 total). `MediaFile` response rebuilt
+  to match the spec `UploadedMediaObjectResponseBody`: seven spec-REQUIRED
+  fields added as non-nullable `required` (`availableAtTime`, `endTime`,
+  `input`, `startTime`, `triggerReason` are new; `mediaType` and
+  `vehicleId` tightened from nullable), plus optional `cameraRole` and a
+  typed nested `MediaUrlInfo? UrlInfo` (mirrors spec
+  `UrlInfoObjectResponseBody`). `MediaRetrieval` response gained the spec
+  `MediaObjectResponseBody` fields (`input`, `mediaType`, `quotaStatus`,
+  `retrievalId`, `availableAtTime`, `cameraRole`, `urlInfo`); all are
+  modeled as nullable because the type is shared between
+  `GET /cameras/media/retrieval` and `POST /cameras/media/retrieval`,
+  whose response shapes are disjoint (same precedent as `MaintenanceDvir`
+  in plan 30). `CreateMediaRetrievalRequest` rebuilt to match the spec
+  `MediaRetrievalPostMediaRetrievalRequestBody`: added required
+  `IReadOnlyList<string> Inputs` and `string MediaType`; removed spec-absent
+  `CameraId`. `IMediaClient.ListAsync` gained the full spec query surface:
+  three required positional parameters (`vehicleIds`, `startTime`,
+  `endTime`) and four optional ones (`inputs`, `mediaTypes`,
+  `triggerReasons`, `availableAfterTime`). This is a breaking signature
+  change for direct callers of the previous parameterless `ListAsync`. SDK-
+  only response flat-scalars across both response records retained as
+  nullable back-compat conveniences per the established workflow precedent
+  (08, 13, 14, 28, 29, 30). See
+  `docs/api-sync/model-sync-plan-2026-05-27/31-media.md`.
 - **Model sync 30-maintenance (2026-05-27)** — applied the per-domain
   remediation plan (9 HIGH, 40 MEDIUM, 16 LOW — 65 total). `MaintenanceDvir`
   response rebuilt to match the spec `DvirStreamResponseDataResponseBody` /
