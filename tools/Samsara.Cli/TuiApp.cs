@@ -1415,8 +1415,8 @@ internal sealed class TuiApp
                     case "List All":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching webhooks...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Webhooks.ListAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Webhooks", w => [w.Id, w.Name ?? "", w.Url ?? ""], ["ID", "Name", "URL"]);
+                            var items = await CollectAsync(_client.Webhooks.ListAsync(cancellationToken: Timeout60s()));
+                            ResultRenderer.RenderList(items, "Webhooks", w => [w.Id, w.Name, w.Url], ["ID", "Name", "URL"]);
                         });
                         break;
                     case "Get by ID":

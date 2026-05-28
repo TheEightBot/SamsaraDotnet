@@ -9,8 +9,10 @@ internal sealed class WebhooksClient : SamsaraServiceClientBase, IWebhooksClient
 
     public WebhooksClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<Webhook> ListAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<Webhook>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<Webhook> ListAsync(string? ids = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<Webhook>(
+            QueryBuilder.WithParams(BasePath, ("ids", ids)),
+            cancellationToken: cancellationToken);
 
     public Task<Webhook> GetAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<Webhook>($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);

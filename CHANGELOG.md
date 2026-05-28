@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 55-webhooks (2026-05-27)** — applied the per-domain remediation
+  plan (0 CRIT / 1 HIGH / 5 MED / 1 LOW — 7 total) across the webhook endpoints.
+  The `Webhook` response record now exposes the HIGH `secretKey` as
+  **`required string`** (the spec marks it required across all four webhook
+  endpoints — verified safe, no `new Webhook(...)` construction sites and no
+  `Webhook` deserialization fixtures) and tightens three previously-nullable
+  props to **non-null `required`** (`name`, `url`, `version`).
+  `UpdateWebhookRequest` gained the nullable `version` (`string?`), and its
+  non-spec `eventTypes` extra was retained as a nullable back-compat property.
+  A new optional query param `ids` (`string?`) was added to `ListAsync`
+  (`GET /webhooks`) via `QueryBuilder.WithParams`. **Breaking**: consumers may
+  now rely on non-null `Webhook.Name`/`Url`/`Version`/`SecretKey`; the CLI
+  `List All` webhook action passes the cancellation token by name (the 1st
+  positional slot is now `ids`). No JsonContext changes
+  (`Webhook`/`UpdateWebhookRequest` already registered; new props are scalar
+  `string`/`string?`, no new top-level types). See
+  `docs/api-sync/model-sync-plan-2026-05-27/55-webhooks.md`.
 - **Model sync 54-vehicles (2026-05-27)** — applied the per-domain remediation
   plan (0 CRIT / 1 HIGH / 14 MED / 4 LOW — 19 total) across the three vehicle
   endpoints. The `Vehicle` response record gained the HIGH `createdAtTime` as
