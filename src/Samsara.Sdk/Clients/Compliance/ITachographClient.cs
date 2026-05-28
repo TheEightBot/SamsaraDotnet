@@ -7,10 +7,10 @@ using Samsara.Sdk.Models.Compliance;
 /// </summary>
 public interface ITachographClient
 {
-    IAsyncEnumerable<TachographActivity> ListActivitiesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<TachographFile> ListFilesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TachographActivity> ListActivitiesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? driverIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TachographFile> ListFilesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? driverIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, CancellationToken cancellationToken = default);
     /// <summary>Vehicle tachograph files history (<c>GET /fleet/vehicles/tachograph-files/history</c>).</summary>
-    IAsyncEnumerable<TachographFile> ListVehicleFilesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TachographFile> ListVehicleFilesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, CancellationToken cancellationToken = default);
     /// <summary>Latest tachograph live-data (beta).</summary>
     IAsyncEnumerable<object> ListLiveDataAsync(
         string? driverIds = null,

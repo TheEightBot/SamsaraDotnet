@@ -7,15 +7,33 @@ internal sealed class TachographClient : SamsaraServiceClientBase, ITachographCl
 {
     public TachographClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<TachographActivity> ListActivitiesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<TachographActivity>(QueryBuilder.WithTimeRange("fleet/drivers/tachograph-activity/history", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<TachographActivity> ListActivitiesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? driverIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TachographActivity>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("fleet/drivers/tachograph-activity/history", startTime, endTime),
+                ("driverIds", driverIds is null ? null : string.Join(",", driverIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds))),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<TachographFile> ListFilesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<TachographFile>(QueryBuilder.WithTimeRange("fleet/drivers/tachograph-files/history", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<TachographFile> ListFilesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? driverIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TachographFile>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("fleet/drivers/tachograph-files/history", startTime, endTime),
+                ("driverIds", driverIds is null ? null : string.Join(",", driverIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds))),
+            cancellationToken: cancellationToken);
 
     /// <summary>Vehicle tachograph files history (<c>GET /fleet/vehicles/tachograph-files/history</c>).</summary>
-    public IAsyncEnumerable<TachographFile> ListVehicleFilesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<TachographFile>(QueryBuilder.WithTimeRange("fleet/vehicles/tachograph-files/history", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<TachographFile> ListVehicleFilesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TachographFile>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("fleet/vehicles/tachograph-files/history", startTime, endTime),
+                ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds))),
+            cancellationToken: cancellationToken);
 
     /// <summary>Latest tachograph live-data (beta, <c>GET /fleet/tachograph-live-data/latest</c>).</summary>
     public IAsyncEnumerable<object> ListLiveDataAsync(

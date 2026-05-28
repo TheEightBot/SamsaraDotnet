@@ -3,6 +3,50 @@
 > Companion to [`docs/api-sync/44-tachograph-eu-only.md`](../44-tachograph-eu-only.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<commit>` on 2026-05-27**
+
+## Implementation notes
+
+All MEDIUM findings were applied; the LOW `extra_property` findings were
+intentionally retained as nullable back-compat properties per the workflow
+precedent established in `40-safety-scores`, `42-settings`, and
+`43-speeding-intervals` — flat-scalar conveniences present in the SDK but absent
+from the current spec inner schema kept (now ordered after the spec props)
+rather than removed outright. All three records/methods are deserialize- /
+query-only with no construction sites in `src`/`tools`/`tests`.
+
+**MEDIUM (14)**
+
+- **`(query)` — 9 optional params across 3 methods**: `ListActivitiesAsync` and
+  `ListFilesAsync` each gained `driverIds`, `tagIds`, `parentTagIds`;
+  `ListVehicleFilesAsync` gained `vehicleIds`, `tagIds`, `parentTagIds`. All
+  added as trailing `IReadOnlyList<string>? = null` parameters (entity-id filter
+  first, then `tagIds`, then `parentTagIds`, before `cancellationToken`) and
+  comma-joined onto the query string via `QueryBuilder.WithParams` wrapping the
+  existing `QueryBuilder.WithTimeRange`, mirroring
+  `ISafetyClient.GetEventsStreamAsync`. Non-breaking (all optional, appended
+  after `startTime`/`endTime`).
+- **`TachographActivity` (response) — 2 optional props**: `activity`
+  (`IReadOnlyList<object>?`) and `driver` (`object?`), left weakly-typed per the
+  plan and ordered ahead of the retained extras.
+- **`TachographFile` (response) — 3 optional props**: `driver` (`object?`),
+  `files` (`IReadOnlyList<object>?`), and `vehicle` (`object?`), left
+  weakly-typed per the plan and ordered ahead of the retained extras.
+
+**LOW (21) — kept as nullable back-compat extras (conservative; not removed)**
+
+- `TachographActivity`: `id`, `driverId`, `driverName`, `vehicleId`,
+  `vehicleName`, `activityType`, `startTime`, `endTime`, `durationMs`,
+  `country`, `region` (`id` demoted from `required` to nullable).
+- `TachographFile`: `id`, `driverId`, `driverName`, `vehicleId`, `vehicleName`,
+  `fileType`, `downloadUrl`, `createdAtTime`, `startTime`, `endTime` (`id`
+  demoted from `required` to nullable).
+
+The new response props are weakly-typed `object` / `IReadOnlyList<object>`, so
+no new top-level types are introduced and `SamsaraJsonContext` (both records
+already registered) needed no change. Two CLI call sites in `TuiApp.cs` that
+passed the `CancellationToken` positionally as the 3rd argument were switched to
+the named `cancellationToken:` form (the 3rd positional slot is now `driverIds`).
 
 ## Quick reference
 

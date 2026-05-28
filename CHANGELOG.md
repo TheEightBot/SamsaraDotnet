@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 44-tachograph-eu-only (2026-05-27)** — applied the per-domain
+  remediation plan (0 CRIT / 0 HIGH / 14 MED / 21 LOW — 35 total) across the
+  three tachograph history endpoints
+  (`GET /fleet/drivers/tachograph-activity/history`,
+  `GET /fleet/drivers/tachograph-files/history`,
+  `GET /fleet/vehicles/tachograph-files/history`). Added 9 optional query
+  params: `ListActivitiesAsync` and `ListFilesAsync` each gained `driverIds`,
+  `tagIds`, `parentTagIds`; `ListVehicleFilesAsync` gained `vehicleIds`,
+  `tagIds`, `parentTagIds` (all trailing `IReadOnlyList<string>?`, comma-joined
+  via `QueryBuilder.WithParams`). Added 5 optional response props left
+  weakly-typed per the plan: `TachographActivity.activity`
+  (`IReadOnlyList<object>?`) and `TachographActivity.driver` (`object?`);
+  `TachographFile.driver` (`object?`), `TachographFile.files`
+  (`IReadOnlyList<object>?`), and `TachographFile.vehicle` (`object?`). The 21
+  non-spec flat scalars (e.g. `driverId`, `vehicleName`, `startTime`,
+  `fileType`, `downloadUrl`) are kept as nullable back-compat extras (both
+  `TachographActivity.id` and `TachographFile.id` demoted from `required` to
+  nullable). No JsonContext/test changes (deserialize-through models already
+  registered, no construction sites); two CLI call sites in `TuiApp.cs` switched
+  to the named `cancellationToken:` argument. See
+  `docs/api-sync/model-sync-plan-2026-05-27/44-tachograph-eu-only.md`.
 - **Model sync 43-speeding-intervals (2026-05-27)** — applied the per-domain
   remediation plan (0 CRIT / 6 HIGH / 4 MED / 10 LOW — 20 total) across the
   `GET /speeding-intervals/stream` endpoint. `SpeedingInterval` (response) gained

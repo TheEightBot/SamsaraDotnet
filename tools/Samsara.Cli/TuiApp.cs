@@ -924,7 +924,7 @@ internal sealed class TuiApp
                         var (taStart, taEnd) = InputHelper.AskTimeRange("Tachograph Activities");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching tachograph activities...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Tachograph.ListActivitiesAsync(taStart, taEnd, Timeout60s()));
+                            var items = await CollectAsync(_client.Tachograph.ListActivitiesAsync(taStart, taEnd, cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Tachograph Activities", a => [a.DriverId ?? "", a.ActivityType ?? ""], ["Driver ID", "Activity Type"]);
                         });
                         break;
@@ -932,7 +932,7 @@ internal sealed class TuiApp
                         var (tfStart, tfEnd) = InputHelper.AskTimeRange("Tachograph Files");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching tachograph files...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Tachograph.ListFilesAsync(tfStart, tfEnd, Timeout60s()));
+                            var items = await CollectAsync(_client.Tachograph.ListFilesAsync(tfStart, tfEnd, cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Tachograph Files", f => [f.DriverId ?? "", f.FileType ?? ""], ["Driver ID", "File Type"]);
                         });
                         break;
