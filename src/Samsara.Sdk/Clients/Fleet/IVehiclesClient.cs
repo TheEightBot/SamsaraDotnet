@@ -16,7 +16,19 @@ public interface IVehiclesClient
     IAsyncEnumerable<VehicleLocation> GetLocationsHistoryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
     IAsyncEnumerable<VehicleStats> GetStatsFeedAsync(string types, CancellationToken cancellationToken = default);
     IAsyncEnumerable<VehicleStats> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<SpeedingInterval> GetSpeedingIntervalsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Stream speeding intervals over a time window (<c>GET /speeding-intervals/stream</c>).
+    /// <paramref name="assetIds"/> is spec-required.
+    /// </summary>
+    IAsyncEnumerable<SpeedingInterval> GetSpeedingIntervalsStreamAsync(
+        IReadOnlyList<string> assetIds,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        string? queryBy = null,
+        IReadOnlyList<string>? severityLevels = null,
+        bool? includeAsset = null,
+        bool? includeDriverId = null,
+        CancellationToken cancellationToken = default);
     /// <summary>Engine immobilizer states stream (beta).</summary>
     IAsyncEnumerable<object> GetImmobilizerStreamAsync(
         string vehicleIds,

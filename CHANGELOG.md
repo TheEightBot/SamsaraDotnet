@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 43-speeding-intervals (2026-05-27)** — applied the per-domain
+  remediation plan (0 CRIT / 6 HIGH / 4 MED / 10 LOW — 20 total) across the
+  `GET /speeding-intervals/stream` endpoint. `SpeedingInterval` (response) gained
+  its 5 spec-REQUIRED fields as `required` non-nullable: `asset` (`object`),
+  `intervals` (`IReadOnlyList<object>`), and the `createdAtTime`, `tripStartTime`,
+  and `updatedAtTime` timestamps as `DateTimeOffset`. **Breaking**:
+  `GetSpeedingIntervalsStreamAsync` now takes a leading spec-REQUIRED
+  `IReadOnlyList<string> assetIds` parameter, plus 4 optional query params
+  (`queryBy`, `severityLevels`, `includeAsset`, `includeDriverId`). The 10
+  non-spec flat scalars (`id`, `vehicleId`, `vehicleName`, `driverName`,
+  `startTime`, `endTime`, `maxSpeedMph`, `speedLimitMph`, `latitude`,
+  `longitude`) are kept as nullable back-compat extras (`id` demoted from
+  `required` to nullable). No JsonContext/CLI/test changes (deserialize-through
+  model already registered, no construction/caller sites). See
+  `docs/api-sync/model-sync-plan-2026-05-27/43-speeding-intervals.md`.
 - **Model sync 42-settings (2026-05-27)** — applied the per-domain remediation
   plan (0 CRIT / 12 HIGH / 32 MED / 25 LOW — 69 total) across the five settings
   models in `SettingsModels.cs`. `SafetySettings` (response) gained its 12

@@ -582,7 +582,14 @@ public sealed record EquipmentLocationPoint
 /// <summary>Represents a speeding interval event.</summary>
 public sealed record SpeedingInterval
 {
-    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("asset")] public required object Asset { get; init; }
+    [JsonPropertyName("createdAtTime")] public required DateTimeOffset CreatedAtTime { get; init; }
+    [JsonPropertyName("intervals")] public required IReadOnlyList<object> Intervals { get; init; }
+    [JsonPropertyName("tripStartTime")] public required DateTimeOffset TripStartTime { get; init; }
+    [JsonPropertyName("updatedAtTime")] public required DateTimeOffset UpdatedAtTime { get; init; }
+
+    // Not in current spec; retained for back-compat.
+    [JsonPropertyName("id")] public string? Id { get; init; }
     [JsonPropertyName("vehicleId")] public string? VehicleId { get; init; }
     [JsonPropertyName("vehicleName")] public string? VehicleName { get; init; }
     [JsonPropertyName("driverId")] public string? DriverId { get; init; }

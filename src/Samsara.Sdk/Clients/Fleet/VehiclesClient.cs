@@ -36,8 +36,24 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
     public IAsyncEnumerable<VehicleStats> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
         => PaginateAsync<VehicleStats>(QueryBuilder.WithTimeRange($"{BasePath}/stats/history?types={Uri.EscapeDataString(types)}", startTime, endTime), cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<SpeedingInterval> GetSpeedingIntervalsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<SpeedingInterval>(QueryBuilder.WithTimeRange("speeding-intervals/stream", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<SpeedingInterval> GetSpeedingIntervalsStreamAsync(
+        IReadOnlyList<string> assetIds,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        string? queryBy = null,
+        IReadOnlyList<string>? severityLevels = null,
+        bool? includeAsset = null,
+        bool? includeDriverId = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<SpeedingInterval>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("speeding-intervals/stream", startTime, endTime),
+                ("assetIds", string.Join(",", assetIds)),
+                ("queryBy", queryBy),
+                ("severityLevels", severityLevels is null ? null : string.Join(",", severityLevels)),
+                ("includeAsset", includeAsset?.ToString().ToLowerInvariant()),
+                ("includeDriverId", includeDriverId?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
 
     /// <summary>
     /// Engine immobilizer states stream (beta, <c>GET /fleet/vehicles/immobilizer/stream</c>).

@@ -3,6 +3,57 @@
 > Companion to [`docs/api-sync/43-speeding-intervals.md`](../43-speeding-intervals.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<pending>` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH and MEDIUM findings were applied. The single endpoint
+(`GET /speeding-intervals/stream`, surfaced by `GetSpeedingIntervalsStreamAsync`)
+covers both the `SpeedingInterval` response model and the query parameters.
+
+**HIGH (6)**
+
+- **`SpeedingInterval` (response) — 5 spec-REQUIRED fields**: all added as
+  `required` non-nullable and ordered ahead of the retained extras. `asset` →
+  `required object` (left weakly-typed per the repo convention of not
+  schematizing config the plan left as `object`); `intervals` →
+  `required IReadOnlyList<object>`; and the three timestamps `createdAtTime`,
+  `tripStartTime`, `updatedAtTime` → `required DateTimeOffset` (the repo
+  convention for `*AtTime`/time fields, not the plan's literal `string`). Safe
+  because `SpeedingInterval` is deserialize-only (no construction sites).
+- **`(query)` — `assetIds` spec-REQUIRED**: added as a leading
+  `IReadOnlyList<string> assetIds` parameter (no default, before the optional
+  params) and comma-joined onto the query string via `QueryBuilder.WithParams`,
+  mirroring `ISafetyClient.GetEventsStreamAsync`. This is a **breaking**
+  signature change to `GetSpeedingIntervalsStreamAsync`.
+
+**MEDIUM (4)**
+
+- **`(query)` — 4 optional params**: `queryBy` (`string?`), `severityLevels`
+  (`IReadOnlyList<string>?`, serialized comma-joined like every query-array in
+  this SDK rather than the plan's literal `IReadOnlyList<object>?`),
+  `includeAsset` (`bool?`), `includeDriverId` (`bool?`) — all appended
+  conditionally.
+
+**LOW (10) — kept as nullable back-compat extras (conservative; not removed)**
+
+- `SpeedingInterval`: `id`, `vehicleId`, `vehicleName`, `driverName`,
+  `startTime`, `endTime`, `maxSpeedMph`, `speedLimitMph`, `latitude`,
+  `longitude` — flat-scalar conveniences present in the SDK but absent from the
+  current spec inner schema, kept (now ordered after the spec props) per the
+  precedent established in `08-carrier-proposed-assignments`,
+  `29-location-and-speed`, `30-maintenance`, `39-safety`, `40-safety-scores`,
+  and `42-settings`. `id` was demoted from `required string` to `string?` (it is
+  not in the spec schema, so leaving it `required` would risk deserialization
+  failure — the same `required`→nullable demotion applied to `tagGroupId` in
+  `40-safety-scores`). `driverId` was not flagged and is left unchanged.
+
+Files touched: `src/Samsara.Sdk/Models/Fleet/FleetModels.cs`,
+`src/Samsara.Sdk/Clients/Fleet/IVehiclesClient.cs`,
+`src/Samsara.Sdk/Clients/Fleet/VehiclesClient.cs`. `SpeedingInterval` is already
+registered in `SamsaraJsonContext` and the new fields are weakly-typed `object`
+(no new top-level types), so no JsonContext change; there are no
+construction/caller sites in `src`/`tools`/`tests`, so no CLI/test changes.
 
 ## Quick reference
 
