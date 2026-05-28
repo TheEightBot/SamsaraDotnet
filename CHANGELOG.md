@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 39-safety (2026-05-27)** — applied the per-domain remediation
+  plan (0 CRIT / 16 HIGH / 24 MED / 2 LOW — 42 total). The long-flagged
+  `SafetyEvent` v2 stub was rebuilt against its real schema
+  `SafetyEventV2ObjectResponseBody` (returned by `getSafetyEventsV2` and
+  `getSafetyEventsStream`): added the 14 spec-REQUIRED fields (`asset`,
+  `behaviorLabels`, `contextLabels`, `createdAtTime`, `updatedAtTime`, `startMs`,
+  `endMs`, `eventState`, `inboxEventUrl`, `incidentReportUrl`, `location`,
+  `maxAccelerationGForce`, plus `driver`/`id`) and 8 optional fields
+  (`assignedCoach`, `detectedStreams`, `dismissalReason`, `media`,
+  `speedingMetadata`, `tripStartTime`, `tripEndTime`, `updatedByUserId`), with
+  strongly-typed nested records (`SafetyEventAsset`, `SafetyEventDriver`,
+  `SafetyEventBehaviorLabel`, `SafetyEventContextLabel`, `SafetyEventMedia`,
+  `SafetyEventDismissalReason`, `SafetyEventSpeedingMetadata`,
+  `SafetyEventLocation`, `SafetyEventAddress`, `SafetyEventGeofence`,
+  `SafetyEventAttribute`, `SafetyEventTag`). `Id`/`Driver`/`BehaviorLabels`
+  tightened to `required` (the last also retyped to the object-typed
+  `IReadOnlyList<SafetyEventBehaviorLabel>`). The non-spec `Vehicle` scalar is
+  kept alongside the new `asset` object and `Time` is retained, per the
+  conservative flat-scalar back-compat precedent. `ISafetyClient.ListEventsAsync`
+  gained the spec-REQUIRED `safetyEventIds` plus
+  `includeAsset`/`includeDriver`/`includeVgOnlyEvents` (and dropped the
+  spec-absent `startTime`/`endTime`); `GetEventsStreamAsync` made `startTime`
+  required and added `endTime`/`queryByTimeField`/`assetIds`/`driverIds`/
+  `tagIds`/`assignedCoaches`/`behaviorLabels`/`eventStates`/`include*`; the v1
+  driver/vehicle safety-score methods gained the spec-REQUIRED `startMs`/`endMs`.
+  CLI safety "List Events" rewired to the stream endpoint. See
+  `docs/api-sync/model-sync-plan-2026-05-27/39-safety.md`.
 - **Model sync 38-routes (2026-05-27)** — applied the per-domain remediation
   plan (0 CRIT / 5 HIGH / 10 MED / 16 LOW — 31 total). `RouteAuditEvent`
   response record realigned to the spec's `RouteFeedObjectResponseBody`: added

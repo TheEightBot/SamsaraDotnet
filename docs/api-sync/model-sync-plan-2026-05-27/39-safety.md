@@ -3,6 +3,60 @@
 > Companion to [`docs/api-sync/39-safety.md`](../39-safety.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<hash>` on 2026-05-27**
+
+## Implementation notes
+
+`SafetyEvent` was the v2 stub flagged throughout this effort. The SDK's `SafetyEvent`
+targets `getSafetyEventsV2` (`GET /safety-events`) and `getSafetyEventsStream`
+(`GET /safety-events/stream`), whose real schema is `SafetyEventV2ObjectResponseBody`.
+The model was rebuilt against that schema with strongly-typed nested records (matching the
+repo convention used by `IdlingEvent` etc. rather than the plan's `object` placeholders).
+
+- **`SafetyEvent` (response)** — realigned to `SafetyEventV2ObjectResponseBody`:
+  - Added all 14 REQUIRED properties: `asset` (`SafetyEventAsset`), `behaviorLabels`
+    (`IReadOnlyList<SafetyEventBehaviorLabel>`), `contextLabels`
+    (`IReadOnlyList<SafetyEventContextLabel>`), `createdAtTime`, `updatedAtTime`,
+    `startMs`, `endMs`, `eventState`, `inboxEventUrl`, `incidentReportUrl`, `location`
+    (`SafetyEventLocation`), `maxAccelerationGForce` (`double`), plus `driver`/`id`
+    (already present, tightened — see below).
+  - Added the 8 optional properties: `assignedCoach`, `detectedStreams`
+    (`IReadOnlyList<SafetyEventMedia>`), `dismissalReason` (`SafetyEventDismissalReason`),
+    `media` (`IReadOnlyList<SafetyEventMedia>`), `speedingMetadata`
+    (`SafetyEventSpeedingMetadata`), `tripEndTime`, `tripStartTime`, `updatedByUserId`.
+  - **Tightened to required** (`response_required_drift`): `Id`, `Driver`, `BehaviorLabels`
+    (dropped `?`). `BehaviorLabels` also changed type from `IReadOnlyList<string>?` to the
+    object-typed `IReadOnlyList<SafetyEventBehaviorLabel>` to match the spec's array-of-object.
+  - **LOW extras kept (conservative back-compat)**: `Vehicle` is retained alongside the new
+    spec-faithful `Asset` (per the "add the nested object, keep the scalar" guidance — the
+    spec models the reporting asset as `asset`, not `vehicle`). `Time` is retained as a
+    back-compat flat scalar even though the plan recommended removal — kept to avoid an
+    unnecessary breaking change for a LOW finding; the spec's event timing lives in
+    `startMs`/`endMs`/`createdAtTime`.
+- **New typed nested records** (mirroring spec sub-schemas): `SafetyEventAsset`,
+  `SafetyEventDriver` (extended with `name`/`attributes`/`tags`/`externalIds`),
+  `SafetyEventBehaviorLabel`, `SafetyEventContextLabel`, `SafetyEventMedia`,
+  `SafetyEventDismissalReason`, `SafetyEventSpeedingMetadata`, `SafetyEventLocation`,
+  `SafetyEventAddress`, `SafetyEventGeofence`, `SafetyEventAttribute`, `SafetyEventTag`.
+  All registered in `SamsaraJsonContext`.
+- **Query parameters** (`ISafetyClient` / `SafetyClient`):
+  - `ListEventsAsync` (`GET /safety-events`): added REQUIRED `safetyEventIds`
+    (`IReadOnlyList<string>`) + optional `includeAsset`/`includeDriver`/`includeVgOnlyEvents`.
+    Removed `startTime`/`endTime` — the spec does not define them for this path (it uses
+    `safetyEventIds` + `after`); the time-window listing lives on the stream endpoint.
+  - `GetEventsStreamAsync` (`GET /safety-events/stream`): `startTime` made REQUIRED
+    (non-nullable) per spec; added `endTime`/`queryByTimeField`/`assetIds`/`driverIds`/
+    `tagIds`/`assignedCoaches`/`behaviorLabels`/`eventStates`/`includeAsset`/`includeDriver`/
+    `includeVgOnlyEvents`.
+  - `V1GetDriverSafetyScoreAsync` / `V1GetVehicleSafetyScoreAsync`: added REQUIRED
+    `startMs`/`endMs` (`long`, epoch-ms — wider than the plan's `int` suggestion to fit
+    millisecond timestamps).
+- **CLI** (`tools/Samsara.Cli/TuiApp.cs`): the "List Events" action now calls
+  `GetEventsStreamAsync` (the time-window endpoint) since `ListEventsAsync` requires explicit
+  IDs; renders `e.Id`, `e.BehaviorLabels.Select(b => b.Label)`, and `e.Asset.Id`.
+
+Verification: `dotnet build` 0 errors/0 warnings, `dotnet test` 59 passed, and
+`check-sdk-sync.py --fail-on-mismatch` exits 0 (323/323 matched).
 
 ## Quick reference
 

@@ -974,8 +974,10 @@ internal sealed class TuiApp
                         var (seStart, seEnd) = InputHelper.AskTimeRange("Safety Events");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching safety events...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Safety.ListEventsAsync(seStart, seEnd, Timeout60s()));
-                            ResultRenderer.RenderList(items, "Safety Events", e => [e.Id ?? "", string.Join(", ", e.BehaviorLabels ?? []), e.Vehicle?.Id ?? ""], ["ID", "Behavior", "Vehicle ID"]);
+                            // /safety-events/stream requires a start time; default to the last 7 days.
+                            var streamStart = seStart ?? DateTimeOffset.UtcNow.AddDays(-7);
+                            var items = await CollectAsync(_client.Safety.GetEventsStreamAsync(streamStart, seEnd, cancellationToken: Timeout60s()));
+                            ResultRenderer.RenderList(items, "Safety Events", e => [e.Id, string.Join(", ", e.BehaviorLabels.Select(b => b.Label ?? "")), e.Asset.Id], ["ID", "Behavior", "Asset ID"]);
                         });
                         break;
                     case "Vehicle Safety Scores":
