@@ -1,7 +1,8 @@
 # Vehicle Locations — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (3/3)  
+> **Status**: ✅ Resolved 2026-05-27 (model-sync plan)  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: see [`model-sync-plan-2026-05-27/52-vehicle-locations.md`](model-sync-plan-2026-05-27/52-vehicle-locations.md). All 2 HIGH + 11 MEDIUM findings applied across the 3 location endpoints. The single `VehicleLocation` record deserializes 3 mutually-exclusive shapes (snapshot `location` object vs. feed/history `locations` array), so the 2 HIGH `response_drift_required` props (`location`, `locations`) were modeled **nullable** (weakly-typed `object?`/`IReadOnlyList<object>?`) rather than `required` — marking either required would throw on the other shape. **Breaking**: `VehicleLocation.name` tightened from `string?` to `required string` (present in all 3 shapes; verified safe — no `new VehicleLocation(...)` sites). 10 optional query params added across the 3 methods (`vehicleIds`/`tagIds`/`parentTagIds` on all three, plus `time` on the snapshot). The 7 LOW non-spec extras were retained as nullable back-compat props — and `latitude`/`longitude`/`time` were **demoted** from `required` to nullable (`double?`/`double?`/`DateTimeOffset?`) so the real wrapper shapes still deserialize (precedent: `SpeedingInterval.Id`, `Trip.Id`). CLI `List Locations` fixed (named `cancellationToken:`, `l.Name` un-coalesced, `Latitude`/`Longitude` rendered via `?.ToString() ?? ""`). No JsonContext/test changes.  
 > **⚠️ 2026-05-21 audit**: model — `VehicleLocation` missing `reverseGeo`; `latitude`/`longitude`/`time` should be required. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IVehiclesClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../VehiclesClient.cs`  

@@ -274,13 +274,22 @@ public sealed record VehicleLocation
     public required string Id { get; init; }
 
     [JsonPropertyName("name")]
-    public string? Name { get; init; }
+    public required string Name { get; init; }
 
+    /// <summary>Single location object (snapshot shape, <c>GET /fleet/vehicles/locations</c>).</summary>
+    [JsonPropertyName("location")]
+    public object? Location { get; init; }
+
+    /// <summary>Location entries (feed/history shapes, <c>.../locations/feed</c> and <c>.../locations/history</c>).</summary>
+    [JsonPropertyName("locations")]
+    public IReadOnlyList<object>? Locations { get; init; }
+
+    // Not in current spec; retained for back-compat.
     [JsonPropertyName("latitude")]
-    public required double Latitude { get; init; }
+    public double? Latitude { get; init; }
 
     [JsonPropertyName("longitude")]
-    public required double Longitude { get; init; }
+    public double? Longitude { get; init; }
 
     [JsonPropertyName("heading")]
     public double? Heading { get; init; }
@@ -292,7 +301,7 @@ public sealed record VehicleLocation
     public string? FormattedAddress { get; init; }
 
     [JsonPropertyName("time")]
-    public required DateTimeOffset Time { get; init; }
+    public DateTimeOffset? Time { get; init; }
 
     /// <summary>Reverse-geocoded location (returned by the location feeds).</summary>
     [JsonPropertyName("reverseGeo")]

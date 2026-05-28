@@ -3,6 +3,79 @@
 > Companion to [`docs/api-sync/52-vehicle-locations.md`](../52-vehicle-locations.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<pending>` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH and MEDIUM findings were applied; the LOW response-side extras were
+intentionally retained as nullable back-compat properties per the workflow
+precedent (cf. `40-safety-scores`, `49-trainingcourses`, `50-trips`, `51-users`)
+rather than removed.
+
+**Tri-shape record caveat (verified).** The single `VehicleLocation` record
+deserializes THREE endpoints with mutually exclusive top-level shapes:
+`ListLocationsAsync` (`GET /fleet/vehicles/locations`) returns a snapshot with a
+top-level `location` object, while `GetLocationsFeedAsync` (`.../feed`) and
+`GetLocationsHistoryAsync` (`.../history`) return a top-level `locations` array.
+Because `location` and `locations` never co-occur, both HIGH `response_drift_required`
+props were modeled **nullable** (`object? Location`, `IReadOnlyList<object>? Locations`)
+rather than `required` — marking either `required` would throw on deserialization
+of the other shape. This is the "spec marks REQUIRED → else nullable when not
+guaranteed across all shapes" branch of the convention.
+
+**HIGH (2)**
+
+- `VehicleLocation.location` (object) and `VehicleLocation.locations` (array) added
+  as nullable (`object?` / `IReadOnlyList<object>?`) — weakly typed per the
+  query/response-array convention; see tri-shape caveat above.
+
+**MEDIUM (11)**
+
+- **`VehicleLocation.name` (response_required_drift)**: tightened from `string?` to
+  `required string`. Present in all 3 shapes; SAFE — no `new VehicleLocation(...)`
+  construction sites exist in src/tools/tests. **Breaking**: consumers may now rely
+  on non-null `Name`.
+- **10 optional query params** added across the 3 location methods (each
+  `IReadOnlyList<string>? = null`, comma-joined and appended via
+  `QueryBuilder.WithParams`, except `time` which is `string?`):
+  - `ListLocationsAsync`: `vehicleIds`, `tagIds`, `parentTagIds`, `time`.
+  - `GetLocationsFeedAsync`: `vehicleIds`, `tagIds`, `parentTagIds`.
+  - `GetLocationsHistoryAsync`: `vehicleIds`, `tagIds`, `parentTagIds` (after the
+    existing `startTime`/`endTime`).
+
+**LOW (7) — response-side extras**
+
+- `latitude`, `longitude`, and `time` were **demoted** from `required` to nullable
+  (`double?` / `double?` / `DateTimeOffset?`). These are non-spec SDK flat-scalar
+  conveniences absent from the wrapper schemas; leaving them `required` would break
+  deserialization of the real `location`/`locations` shapes (precedent:
+  `SpeedingInterval.Id`, `Trip.Id`). **Breaking**: `Latitude`/`Longitude`/`Time` are
+  now nullable.
+- `heading`, `speed`, `formattedAddress`, `reverseGeo` were already nullable and were
+  RETAINED as-is (`reverseGeo` keeps its `ReverseGeo?` type and XML doc). The
+  `ReverseGeo` record was not touched.
+
+**Caller updated**
+
+- CLI (`tools/Samsara.Cli/TuiApp.cs`): the `List Locations` vehicle action now passes
+  the cancellation token by name (`cancellationToken:` — the 1st positional slot is now
+  the `vehicleIds` filter), drops the now-redundant `?? ""` on `l.Name`, and renders
+  the now-nullable `Latitude`/`Longitude` via `?.ToString() ?? ""` (the BCL annotates
+  `Nullable<double>.ToString()` as returning `string?`, so a bare `.ToString()` would
+  not satisfy the `Func<T, string[]>` selector under nullable reference types — the
+  plan's note that bare `.ToString()` compiles cleanly was incorrect). The
+  `Equipment.ListLocationsAsync` call is a different client and was left untouched.
+
+Files touched: `src/Samsara.Sdk/Models/Fleet/FleetModels.cs`,
+`src/Samsara.Sdk/Clients/Fleet/IVehiclesClient.cs`,
+`src/Samsara.Sdk/Clients/Fleet/VehiclesClient.cs`,
+`tools/Samsara.Cli/TuiApp.cs`. No `SamsaraJsonContext` changes
+(`VehicleLocation`/`ReverseGeo` already registered; new props weakly-typed
+`object`/array → no new top-level types). No test changes (no
+`new VehicleLocation(...)` construction). Other Vehicles methods untouched.
+
+Verification: `dotnet build` 0 errors / 0 warnings, `dotnet test` 59 passed, and
+`check-sdk-sync.py --fail-on-mismatch` exits 0 (323/323 matched).
 
 ## Quick reference
 

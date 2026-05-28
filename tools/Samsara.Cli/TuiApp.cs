@@ -205,8 +205,8 @@ internal sealed class TuiApp
                     case "List Locations":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching locations...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Vehicles.ListLocationsAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Vehicle Locations", l => [l.Id, l.Name ?? "", l.Latitude.ToString(), l.Longitude.ToString()], ["ID", "Name", "Lat", "Lon"]);
+                            var items = await CollectAsync(_client.Vehicles.ListLocationsAsync(cancellationToken: Timeout60s()));
+                            ResultRenderer.RenderList(items, "Vehicle Locations", l => [l.Id, l.Name, l.Latitude?.ToString() ?? "", l.Longitude?.ToString() ?? ""], ["ID", "Name", "Lat", "Lon"]);
                         });
                         break;
                     case "List Stats":

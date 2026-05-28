@@ -18,17 +18,41 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
     public Task<Vehicle> UpdateAsync(string id, UpdateVehicleRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<Vehicle>($"{BasePath}/{Uri.EscapeDataString(id)}", request, cancellationToken);
 
-    public IAsyncEnumerable<VehicleLocation> ListLocationsAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<VehicleLocation>($"{BasePath}/locations", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<VehicleLocation> ListLocationsAsync(
+        IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null, string? time = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleLocation>(
+            QueryBuilder.WithParams($"{BasePath}/locations",
+                ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("time", time)),
+            cancellationToken: cancellationToken);
 
     public IAsyncEnumerable<VehicleStats> ListStatsAsync(string types, CancellationToken cancellationToken = default)
         => PaginateAsync<VehicleStats>($"{BasePath}/stats?types={Uri.EscapeDataString(types)}", cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<VehicleLocation> GetLocationsFeedAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<VehicleLocation>($"{BasePath}/locations/feed", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<VehicleLocation> GetLocationsFeedAsync(
+        IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleLocation>(
+            QueryBuilder.WithParams($"{BasePath}/locations/feed",
+                ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds))),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<VehicleLocation> GetLocationsHistoryAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<VehicleLocation>(QueryBuilder.WithTimeRange($"{BasePath}/locations/history", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<VehicleLocation> GetLocationsHistoryAsync(
+        DateTimeOffset? startTime = null, DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleLocation>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange($"{BasePath}/locations/history", startTime, endTime),
+                ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds))),
+            cancellationToken: cancellationToken);
 
     public IAsyncEnumerable<VehicleStats> GetStatsFeedAsync(string types, CancellationToken cancellationToken = default)
         => PaginateAsync<VehicleStats>($"{BasePath}/stats/feed?types={Uri.EscapeDataString(types)}", cancellationToken: cancellationToken);

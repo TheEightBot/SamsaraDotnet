@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 52-vehicle-locations (2026-05-27)** — applied the per-domain
+  remediation plan (0 CRIT / 2 HIGH / 11 MED / 7 LOW — 20 total) across the three
+  vehicle-location endpoints. The SDK's single `VehicleLocation` record deserializes
+  three mutually-exclusive shapes — `ListLocationsAsync` (snapshot, top-level
+  `location` object) vs. `GetLocationsFeedAsync` / `GetLocationsHistoryAsync`
+  (top-level `locations` array) — so the two HIGH `response_drift_required` props
+  (`location`, `locations`) were modeled **nullable** (weakly-typed `object?` /
+  `IReadOnlyList<object>?`) rather than `required`; marking either required would
+  throw when deserializing the other shape. **Breaking**: `VehicleLocation.name`
+  tightened from `string?` to `required string` (present in all three shapes;
+  verified safe — no `new VehicleLocation(...)` construction sites). **Breaking**:
+  the non-spec flat-scalar extras `latitude`, `longitude`, and `time` were demoted
+  from `required` to nullable (`double?` / `double?` / `DateTimeOffset?`) so the real
+  wrapper shapes still deserialize (precedent: `SpeedingInterval.Id`, `Trip.Id`); the
+  other four LOW extras (`heading`, `speed`, `formattedAddress`, `reverseGeo`) were
+  already nullable and retained as-is. Ten optional query params were added across the
+  three methods (each `IReadOnlyList<string>? = null`, comma-joined via
+  `QueryBuilder.WithParams`, except `time` which is `string?`): `vehicleIds`/`tagIds`/
+  `parentTagIds` on all three, plus `time` on the snapshot. The CLI `List Locations`
+  vehicle action passes the cancellation token by name (the 1st positional slot is now
+  `vehicleIds`), drops the redundant `?? ""` on `l.Name`, and renders the now-nullable
+  `Latitude`/`Longitude` via `?.ToString() ?? ""`. No JsonContext changes
+  (`VehicleLocation`/`ReverseGeo` already registered; new props weakly-typed, no new
+  types) and no test changes (no construction sites). See
+  `docs/api-sync/model-sync-plan-2026-05-27/52-vehicle-locations.md`.
 - **Model sync 51-users (2026-05-27)** — applied the per-domain remediation plan
   (0 CRIT / 0 HIGH / 4 MED / 1 LOW — 5 total) across the user endpoints. The 4
   MEDIUM `response_required_drift` findings on the `User` response record were
