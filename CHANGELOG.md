@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 51-users (2026-05-27)** — applied the per-domain remediation plan
+  (0 CRIT / 0 HIGH / 4 MED / 1 LOW — 5 total) across the user endpoints. The 4
+  MEDIUM `response_required_drift` findings on the `User` response record were
+  applied: `name`, `email`, `authType`, and `roles` were tightened from nullable
+  to non-nullable via `required` (repo convention for "tighten to non-nullable",
+  cf. `Address.FormattedAddress`; verified safe — no `new User(...)` construction
+  sites exist anywhere in src/tools/tests). **Breaking**: consumers may now rely
+  on non-null `name`/`email`/`authType`/`roles`. The 1 LOW non-spec extra
+  (`UserRole.tagId`) is retained as a nullable back-compat prop rather than
+  removed. The CLI `List All` users render site in `TuiApp.cs` was simplified to
+  drop the now-redundant `?? ""` on `u.Name`/`u.Email`. `ListAsync` and the
+  `IUsersClient`/`UsersClient` methods are unchanged; `CreateUserRequest`/
+  `UpdateUserRequest` are out of scope. No JsonContext/test changes (`User`/
+  `UserRole` already registered, only nullability tightened, no construction
+  sites). See `docs/api-sync/model-sync-plan-2026-05-27/51-users.md`.
 - **Model sync 50-trips (2026-05-27)** — applied the per-domain remediation plan
   (0 CRIT / 6 HIGH / 6 MED / 13 LOW — 25 total) across the two trip endpoints. The
   SDK's single `Trip` record is a dual-shape unified record deserializing both

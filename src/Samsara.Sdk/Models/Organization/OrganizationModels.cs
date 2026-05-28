@@ -69,16 +69,16 @@ public sealed record User
     public required string Id { get; init; }
 
     [JsonPropertyName("name")]
-    public string? Name { get; init; }
+    public required string Name { get; init; }
 
     [JsonPropertyName("email")]
-    public string? Email { get; init; }
+    public required string Email { get; init; }
 
     [JsonPropertyName("authType")]
-    public string? AuthType { get; init; }
+    public required string AuthType { get; init; }
 
     [JsonPropertyName("roles")]
-    public IReadOnlyList<UserRole>? Roles { get; init; }
+    public required IReadOnlyList<UserRole> Roles { get; init; }
 }
 
 /// <summary>
@@ -92,6 +92,7 @@ public sealed record UserRole
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
+    // Not in current spec; retained for back-compat.
     [JsonPropertyName("tagId")]
     public string? TagId { get; init; }
 }

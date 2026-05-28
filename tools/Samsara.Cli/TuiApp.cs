@@ -436,7 +436,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching users...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Users.ListAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Users", u => [u.Id, u.Name ?? "", u.Email ?? ""], ["ID", "Name", "Email"]);
+                            ResultRenderer.RenderList(items, "Users", u => [u.Id, u.Name, u.Email], ["ID", "Name", "Email"]);
                         });
                         break;
                     case "Get by ID":
