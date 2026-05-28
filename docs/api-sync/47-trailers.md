@@ -1,7 +1,8 @@
 # Trailers — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (5/8 endpoints implemented)  
+> **Status**: ✅ Resolved 2026-05-27 (model-sync plan)  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: see [`model-sync-plan-2026-05-27/47-trailers.md`](model-sync-plan-2026-05-27/47-trailers.md). The three stats methods (`GetStatsSnapshotAsync`, `GetStatsFeedAsync`, `GetStatsHistoryAsync`) gained a required `string types` query param (placed first, no default — **breaking**) plus 14 optional `string?` query params across List/stats methods. `TrailerStats` had `name` tightened from `string?` to `required string` (spec REQUIRED) and gained 23 weakly-typed `object?` reefer/gps props (24 findings). `Trailer` gained `attributes`/`enabledForMobile`/`trailerSerialNumber`; `CreateTrailerRequest` gained the same three; `UpdateTrailerRequest` additionally gained `odometerMeters` (`long?`). All 21 LOW non-spec extras (make/model/serial/vin/year and friends) are retained as nullable back-compat props. CLI `ListAsync` call site updated (named `cancellationToken:`). No JsonContext/test changes.  
 > **SDK Client**: `ITrailersClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../TrailersClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Fleet/TrailerModels.cs`  

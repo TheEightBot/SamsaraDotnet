@@ -1,7 +1,9 @@
 # Maintenance — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (2/9 endpoints implemented)  
+> **Status**: 🔴 Broken (3/9)  
+> **⚠️ 2026-05-21 audit**: most DVIR/defect paths wrong: `/dvirs/stream`, `/dvirs/{id}`, `/defect-types`, `/defects/stream`, `/defects/{id}`. DVIRs are duplicated in `ComplianceClient`. `ListDtcsAsync` (`/fleet/vehicles/diagnostics`) is fabricated. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
+> **Resolved 2026-05-27 (model-sync plan)**: applied [`model-sync-plan-2026-05-27/30-maintenance.md`](model-sync-plan-2026-05-27/30-maintenance.md) — 9 HIGH, 40 MEDIUM findings implemented; LOW spec-absent response extras retained as nullable back-compat per workflow precedent (08, 13, 14); spec-absent request fields on `UpdateDefectRequest` (`comment`, `resolvedAt`) replaced with the spec-aligned `mechanicNotes`, `resolvedAtTime`, `resolvedBy`.  
 > **SDK Client**: `IMaintenanceClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../MaintenanceClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Maintenance/MaintenanceModels.cs`  

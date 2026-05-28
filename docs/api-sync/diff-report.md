@@ -1,6 +1,6 @@
 # Samsara API Sync Diff Report
 
-> **Generated**: 2026-05-13 20:30 UTC  
+> **Generated**: 2026-05-27 12:00 UTC  
 > **Old version**: `2025-10-23`  
 > **New version**: `2025-10-23`  
 > **Endpoint changes**: 0  

@@ -52,6 +52,16 @@ public sealed class SamsaraClientFacadeTests
         var readings = Substitute.For<IReadingsClient>();
         var settings = Substitute.For<ISettingsClient>();
         var workOrders = Substitute.For<IWorkOrdersClient>();
+        var legacyApis = Substitute.For<ILegacyApisClient>();
+        var previewApis = Substitute.For<IPreviewApisClient>();
+        var routeEvents = Substitute.For<IRouteEventsClient>();
+        var places = Substitute.For<IPlacesClient>();
+        var preferredStations = Substitute.For<IPreferredStationsClient>();
+        var qualificationRecords = Substitute.For<IQualificationRecordsClient>();
+        var ridership = Substitute.For<IRidershipClient>();
+        var functions = Substitute.For<IFunctionsClient>();
+        var reports = Substitute.For<IReportsClient>();
+        var beta = Substitute.For<IBetaClient>();
 
         var facade = new SamsaraClient(
             tags, addresses, vehicles, drivers, safety, routes,
@@ -61,7 +71,9 @@ public sealed class SamsaraClientFacadeTests
             attributes, driverVehicleAssignments, trailerAssignments,
             carrierProposedAssignments, training, sensors, issues, media,
             assets, carbCtc, coaching, driverTrailerAssignments, idling,
-            liveSharingLinks, readings, settings, workOrders);
+            liveSharingLinks, readings, settings, workOrders,
+            legacyApis, previewApis, routeEvents, places, preferredStations,
+            qualificationRecords, ridership, functions, reports, beta);
 
         facade.Tags.Should().BeSameAs(tags);
         facade.Addresses.Should().BeSameAs(addresses);

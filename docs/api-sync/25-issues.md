@@ -1,7 +1,8 @@
 # Issues — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (2/3 endpoints implemented)  
+> **Status**: Resolved 2026-05-27 (model-sync plan)  
+> **⚠️ 2026-05-21 audit**: `GetAsync`/`UpdateAsync` use `/issues/{id}`; spec is `/issues` (id as query/body). See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IIssuesClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../IssuesClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Issues/IssueModels.cs`  

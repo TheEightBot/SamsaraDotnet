@@ -1,7 +1,7 @@
 # Route Events — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ⚠️ Unverified (0/1 endpoints implemented)  
+> **Status**: ✅ Resolved 2026-05-27 (model-sync plan)  
 > **SDK Client**: `IRoutesClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../RoutesClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Routes/RouteModels.cs`  

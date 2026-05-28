@@ -9,8 +9,17 @@ internal sealed class AddressesClient : SamsaraServiceClientBase, IAddressesClie
 
     public AddressesClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<Address> ListAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<Address>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<Address> ListAsync(
+        IReadOnlyList<string>? parentTagIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        string? createdAfterTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<Address>(
+            QueryBuilder.WithParams(BasePath,
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("createdAfterTime", createdAfterTime)),
+            cancellationToken: cancellationToken);
 
     public Task<Address> GetAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<Address>($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);

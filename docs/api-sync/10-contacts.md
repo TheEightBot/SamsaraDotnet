@@ -1,10 +1,11 @@
 # Contacts — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (5/5 endpoints implemented)  
+> **Status**: 🟢 Resolved 2026-05-27 (model-sync plan)  
+> **⚠️ 2026-05-21 audit**: model — `Contact.firstName/lastName/email/phone` are required in spec but modelled optional; 3 ops missing. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IContactsClient`  
-> **Implementation**: `src/Samsara.Sdk/Clients/.../ContactsClient.cs`  
-> **Models**: `src/Samsara.Sdk/Models/Common/CommonModels.cs`  
+> **Implementation**: `src/Samsara.Sdk/Clients/Communication/ContactsClient.cs`  
+> **Models**: `src/Samsara.Sdk/Models/Communication/CommunicationModels.cs`  
 
 ---
 

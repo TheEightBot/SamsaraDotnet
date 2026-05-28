@@ -355,13 +355,31 @@ public sealed record UpdateRouteStopRequest
     public long? OntimeWindowBeforeArrivalMs { get; init; }
 }
 
-/// <summary>Represents a route audit log event.</summary>
+/// <summary>Represents a route audit log event (route feed object).</summary>
 public sealed record RouteAuditEvent
 {
-    [JsonPropertyName("id")] public required string Id { get; init; }
+    /// <summary>The before/after changes that were applied as part of this route update (spec REQUIRED).</summary>
+    [JsonPropertyName("changes")] public required JsonElement Changes { get; init; }
+
+    /// <summary>The route this update applies to (spec REQUIRED).</summary>
+    [JsonPropertyName("route")] public required JsonElement Route { get; init; }
+
+    /// <summary>The source of this route update (e.g. <c>automatic</c>, <c>driver</c>, <c>admin</c>) — spec REQUIRED.</summary>
+    [JsonPropertyName("source")] public required string Source { get; init; }
+
+    /// <summary>The type of route update (e.g. <c>route tracking</c>) — spec REQUIRED.</summary>
+    [JsonPropertyName("type")] public required string Type { get; init; }
+
+    /// <summary>The timestamp of the route update in RFC 3339 format (spec REQUIRED).</summary>
+    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
+
+    /// <summary>The operation that was performed as part of this route update (e.g. <c>stop scheduled</c>).</summary>
+    [JsonPropertyName("operation")] public string? Operation { get; init; }
+
+    // Back-compat extras retained from earlier SDK shape (not present in the current spec schema).
+    [JsonPropertyName("id")] public string? Id { get; init; }
     [JsonPropertyName("routeId")] public string? RouteId { get; init; }
     [JsonPropertyName("userId")] public string? UserId { get; init; }
     [JsonPropertyName("eventType")] public string? EventType { get; init; }
-    [JsonPropertyName("time")] public DateTimeOffset? Time { get; init; }
     [JsonPropertyName("description")] public string? Description { get; init; }
 }

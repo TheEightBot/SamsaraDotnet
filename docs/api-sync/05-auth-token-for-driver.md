@@ -1,7 +1,7 @@
 # Auth Token for Driver — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ⚠️ Unverified (0/1 endpoints implemented)  
+> **Status**: Resolved 2026-05-27 (model-sync plan) — all spec drift addressed; see [`model-sync-plan-2026-05-27/05-auth-token-for-driver.md`](model-sync-plan-2026-05-27/05-auth-token-for-driver.md).  
 > **SDK Client**: `IDriversClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../DriversClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Drivers/DriverModels.cs`  

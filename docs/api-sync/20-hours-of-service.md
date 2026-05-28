@@ -1,7 +1,9 @@
 # Hours of Service — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (4/6 endpoints implemented)  
+> **Status**: 🟡 Partial (3/6)  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: HIGH/MEDIUM model and query-parameter drift on HOS endpoints addressed — see [model-sync-plan-2026-05-27/20-hours-of-service.md](model-sync-plan-2026-05-27/20-hours-of-service.md). `HosLog`, `HosViolation`, and `HosDailyLog` re-shaped to the spec's nested form (with prior flat scalars retained as nullable back-compat properties); list/clocks endpoints gained the missing optional query parameters (`driverIds`, `tagIds`, `parentTagIds`, `types`, `startDate`/`endDate`, `expand`, `after`, `limit`, `driverActivationStatus`); `V1ListHosAuthenticationLogsAsync` now requires `driverId` and sends `startMs`/`endMs`.
+> **⚠️ 2026-05-21 audit**: `GetHosClocks`→`/fleet/hos/clocks` (driverIds query; returns a per-driver list, nested clocks); `ListHosEldEvents`→`/beta/fleet/hos/drivers/eld-events`. Missing v1 duty_status + auth-logs. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IComplianceClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../ComplianceClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Compliance/ComplianceModels.cs`  

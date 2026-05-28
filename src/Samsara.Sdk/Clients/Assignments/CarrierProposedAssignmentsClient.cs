@@ -9,14 +9,18 @@ internal sealed class CarrierProposedAssignmentsClient : SamsaraServiceClientBas
 
     public CarrierProposedAssignmentsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<CarrierProposedAssignment> ListAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<CarrierProposedAssignment>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<CarrierProposedAssignment> ListAsync(
+        IReadOnlyList<string>? driverIds = null,
+        string? activeTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<CarrierProposedAssignment>(
+            QueryBuilder.WithParams(BasePath,
+                ("driverIds", driverIds is null ? null : string.Join(",", driverIds)),
+                ("activeTime", activeTime)),
+            cancellationToken: cancellationToken);
 
     public Task<CarrierProposedAssignment> CreateAsync(CreateCarrierProposedAssignmentRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<CarrierProposedAssignment>(BasePath, request, cancellationToken);
-
-    public Task<CarrierProposedAssignment> UpdateAsync(string id, UpdateCarrierProposedAssignmentRequest request, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<CarrierProposedAssignment>($"{BasePath}/{Uri.EscapeDataString(id)}", request, cancellationToken);
 
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);

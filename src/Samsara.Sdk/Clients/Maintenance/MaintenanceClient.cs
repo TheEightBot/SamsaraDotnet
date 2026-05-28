@@ -7,20 +7,28 @@ internal sealed class MaintenanceClient : SamsaraServiceClientBase, IMaintenance
 {
     public MaintenanceClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<MaintenanceDvir> ListDvirsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<MaintenanceDvir>(QueryBuilder.WithTimeRange("fleet/maintenance/dvirs", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<MaintenanceDvir> GetDvirsStreamAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        bool? includeExternalIds = null,
+        IReadOnlyList<string>? safetyStatus = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<MaintenanceDvir>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("dvirs/stream", startTime, endTime),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant()),
+                ("safetyStatus", safetyStatus is null ? null : string.Join(",", safetyStatus))),
+            cancellationToken: cancellationToken);
 
-    public Task<MaintenanceDvir> GetDvirAsync(string id, CancellationToken cancellationToken = default)
-        => HttpClient.GetDataAsync<MaintenanceDvir>($"fleet/maintenance/dvirs/{Uri.EscapeDataString(id)}", cancellationToken);
-
-    public IAsyncEnumerable<DiagnosticTroubleCode> ListDtcsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<DiagnosticTroubleCode>(QueryBuilder.WithTimeRange("fleet/vehicles/diagnostics", startTime, endTime), cancellationToken: cancellationToken);
-
-    public IAsyncEnumerable<MaintenanceDvir> GetDvirsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<MaintenanceDvir>(QueryBuilder.WithTimeRange("fleet/dvirs/stream", startTime, endTime), cancellationToken: cancellationToken);
-
-    public Task<MaintenanceDvir> GetDvirByIdAsync(string id, CancellationToken cancellationToken = default)
-        => HttpClient.GetDataAsync<MaintenanceDvir>($"fleet/dvirs/{Uri.EscapeDataString(id)}", cancellationToken);
+    public Task<MaintenanceDvir> GetDvirByIdAsync(
+        string id,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.GetDataAsync<MaintenanceDvir>(
+            QueryBuilder.WithParams(
+                $"dvirs/{Uri.EscapeDataString(id)}",
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            cancellationToken);
 
     public Task<MaintenanceDvir> CreateDvirAsync(CreateDvirRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<MaintenanceDvir>("fleet/dvirs", request, cancellationToken);
@@ -28,15 +36,57 @@ internal sealed class MaintenanceClient : SamsaraServiceClientBase, IMaintenance
     public Task<MaintenanceDvir> UpdateDvirAsync(string id, UpdateDvirRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<MaintenanceDvir>($"fleet/dvirs/{Uri.EscapeDataString(id)}", request, cancellationToken);
 
-    public IAsyncEnumerable<DefectRecord> GetDefectsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<DefectRecord>(QueryBuilder.WithTimeRange("fleet/defects/stream", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<DefectRecord> GetDefectsStreamAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        bool? includeExternalIds = null,
+        bool? isResolved = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<DefectRecord>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("defects/stream", startTime, endTime),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant()),
+                ("isResolved", isResolved?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
 
-    public Task<DefectRecord> GetDefectAsync(string id, CancellationToken cancellationToken = default)
-        => HttpClient.GetDataAsync<DefectRecord>($"fleet/defects/{Uri.EscapeDataString(id)}", cancellationToken);
+    public Task<DefectRecord> GetDefectAsync(
+        string id,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.GetDataAsync<DefectRecord>(
+            QueryBuilder.WithParams(
+                $"defects/{Uri.EscapeDataString(id)}",
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            cancellationToken);
 
     public Task<DefectRecord> UpdateDefectAsync(string id, UpdateDefectRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<DefectRecord>($"fleet/defects/{Uri.EscapeDataString(id)}", request, cancellationToken);
 
-    public IAsyncEnumerable<DefectType> ListDefectTypesAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<DefectType>("fleet/defect-types", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<DefectType> ListDefectTypesAsync(
+        IReadOnlyList<string>? ids = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<DefectType>(
+            QueryBuilder.WithParams(
+                "defect-types",
+                ("ids", ids is null ? null : string.Join(",", ids))),
+            cancellationToken: cancellationToken);
+
+    /// <summary>Legacy v1 fleet maintenance list (<c>GET /v1/fleet/maintenance/list</c>).</summary>
+    public IAsyncEnumerable<object> V1ListMaintenanceAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<object>("v1/fleet/maintenance/list", cancellationToken: cancellationToken);
+
+    /// <summary>List maintenance vendors (beta).</summary>
+    public IAsyncEnumerable<object> ListVendorsAsync(
+        IReadOnlyList<string>? ids = null,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<object>(
+            QueryBuilder.WithParams("fleet/maintenance/vendors",
+                ("ids", ids is null ? null : string.Join(",", ids)),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
+
+    /// <summary>List maintenance vendor categories (beta).</summary>
+    public IAsyncEnumerable<object> ListVendorCategoriesAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<object>("fleet/maintenance/vendor-categories", cancellationToken: cancellationToken);
 }

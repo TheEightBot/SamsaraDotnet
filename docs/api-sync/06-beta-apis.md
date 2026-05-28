@@ -1,7 +1,7 @@
 # Beta APIs — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ⚠️ Unverified (0/66 endpoints implemented)  
+> **Status**: Resolved 2026-05-27 (model-sync plan, weak-typing intentionally deferred)  
 > **SDK Client**: `multiple`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../multiple.cs`  
 > **Models**: `src/Samsara.Sdk/various`  

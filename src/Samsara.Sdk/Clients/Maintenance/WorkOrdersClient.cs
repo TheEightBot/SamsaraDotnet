@@ -12,11 +12,19 @@ internal sealed class WorkOrdersClient : SamsaraServiceClientBase, IWorkOrdersCl
     public Task<InvoiceScan> PostInvoiceScanAsync(PostInvoiceScanRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<InvoiceScan>("maintenance/invoice-scans", request, cancellationToken);
 
-    public IAsyncEnumerable<ServiceTask> ListServiceTasksAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<ServiceTask>("maintenance/service-tasks", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<ServiceTask> ListServiceTasksAsync(IReadOnlyList<string>? ids = null, bool? includeArchived = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<ServiceTask>(
+            QueryBuilder.WithParams("maintenance/service-tasks",
+                ("ids", ids is null ? null : string.Join(",", ids)),
+                ("includeArchived", includeArchived?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<WorkOrder> ListWorkOrdersAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<WorkOrder>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<WorkOrder> ListWorkOrdersAsync(IReadOnlyList<string>? ids = null, bool? includeExternalIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<WorkOrder>(
+            QueryBuilder.WithParams(BasePath,
+                ("ids", ids is null ? null : string.Join(",", ids)),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
 
     public Task<WorkOrder> CreateWorkOrderAsync(CreateWorkOrderRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<WorkOrder>(BasePath, request, cancellationToken);
@@ -24,9 +32,16 @@ internal sealed class WorkOrdersClient : SamsaraServiceClientBase, IWorkOrdersCl
     public Task<WorkOrder> UpdateWorkOrderAsync(UpdateWorkOrderRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<WorkOrder>(BasePath, request, cancellationToken);
 
-    public Task DeleteWorkOrdersAsync(string[] ids, CancellationToken cancellationToken = default)
-        => HttpClient.DeleteAsync($"{BasePath}?ids={string.Join("&ids=", ids.Select(Uri.EscapeDataString))}", cancellationToken);
+    public Task DeleteWorkOrdersAsync(string id, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync(QueryBuilder.WithParams(BasePath, ("id", id)), cancellationToken);
 
-    public IAsyncEnumerable<WorkOrder> GetWorkOrdersStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<WorkOrder>(QueryBuilder.WithTimeRange($"{BasePath}/stream", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<WorkOrder> GetWorkOrdersStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? assetIds = null, IReadOnlyList<string>? assignedUserIds = null, IReadOnlyList<string>? workOrderStatuses = null, bool? includeExternalIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<WorkOrder>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange($"{BasePath}/stream", startTime, endTime),
+                ("assetIds", assetIds is null ? null : string.Join(",", assetIds)),
+                ("assignedUserIds", assignedUserIds is null ? null : string.Join(",", assignedUserIds)),
+                ("workOrderStatuses", workOrderStatuses is null ? null : string.Join(",", workOrderStatuses)),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
 }

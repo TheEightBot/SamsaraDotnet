@@ -3,19 +3,61 @@ namespace Samsara.Sdk.Clients;
 using Samsara.Sdk.Models.Maintenance;
 
 /// <summary>
-/// Client for Samsara maintenance (DVIRs, diagnostics).
+/// Client for Samsara maintenance (DVIRs, defects, diagnostics).
 /// </summary>
 public interface IMaintenanceClient
 {
-    IAsyncEnumerable<MaintenanceDvir> ListDvirsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
-    Task<MaintenanceDvir> GetDvirAsync(string id, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<DiagnosticTroubleCode> ListDtcsAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<MaintenanceDvir> GetDvirsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
-    Task<MaintenanceDvir> GetDvirByIdAsync(string id, CancellationToken cancellationToken = default);
+    /// <summary>Stream DVIRs (<c>GET /dvirs/stream</c>).</summary>
+    IAsyncEnumerable<MaintenanceDvir> GetDvirsStreamAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        bool? includeExternalIds = null,
+        IReadOnlyList<string>? safetyStatus = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Get a single DVIR by ID (<c>GET /dvirs/{id}</c>).</summary>
+    Task<MaintenanceDvir> GetDvirByIdAsync(
+        string id,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Create a mechanic DVIR (<c>POST /fleet/dvirs</c>).</summary>
     Task<MaintenanceDvir> CreateDvirAsync(CreateDvirRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Resolve a DVIR (<c>PATCH /fleet/dvirs/{id}</c>).</summary>
     Task<MaintenanceDvir> UpdateDvirAsync(string id, UpdateDvirRequest request, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<DefectRecord> GetDefectsStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
-    Task<DefectRecord> GetDefectAsync(string id, CancellationToken cancellationToken = default);
+
+    /// <summary>Stream DVIR defects (<c>GET /defects/stream</c>).</summary>
+    IAsyncEnumerable<DefectRecord> GetDefectsStreamAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        bool? includeExternalIds = null,
+        bool? isResolved = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Get a single DVIR defect by ID (<c>GET /defects/{id}</c>).</summary>
+    Task<DefectRecord> GetDefectAsync(
+        string id,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Update a defect (<c>PATCH /fleet/defects/{id}</c>).</summary>
     Task<DefectRecord> UpdateDefectAsync(string id, UpdateDefectRequest request, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<DefectType> ListDefectTypesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>List DVIR defect types (<c>GET /defect-types</c>).</summary>
+    IAsyncEnumerable<DefectType> ListDefectTypesAsync(
+        IReadOnlyList<string>? ids = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Legacy v1 fleet maintenance list.</summary>
+    IAsyncEnumerable<object> V1ListMaintenanceAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>List maintenance vendors (beta).</summary>
+    IAsyncEnumerable<object> ListVendorsAsync(
+        IReadOnlyList<string>? ids = null,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>List maintenance vendor categories (beta).</summary>
+    IAsyncEnumerable<object> ListVendorCategoriesAsync(CancellationToken cancellationToken = default);
 }

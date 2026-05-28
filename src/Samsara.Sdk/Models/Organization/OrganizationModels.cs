@@ -13,18 +13,34 @@ public sealed record OrganizationInfo
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
+    /// <summary>Street address. Not part of the spec inner schema; retained as
+    /// a nullable back-compat convenience — callers should prefer
+    /// <see cref="CarrierSettings"/>.<see cref="OrganizationCarrierSettings.MainOfficeAddress"/>
+    /// for the canonical address field.</summary>
     [JsonPropertyName("address")]
     public string? Address { get; init; }
 
+    /// <summary>City. Not part of the spec inner schema; retained as a
+    /// nullable back-compat convenience — no canonical replacement exists on
+    /// the current spec inner schema.</summary>
     [JsonPropertyName("city")]
     public string? City { get; init; }
 
+    /// <summary>State or region. Not part of the spec inner schema; retained
+    /// as a nullable back-compat convenience — no canonical replacement
+    /// exists on the current spec inner schema.</summary>
     [JsonPropertyName("state")]
     public string? State { get; init; }
 
+    /// <summary>Postal / ZIP code. Not part of the spec inner schema;
+    /// retained as a nullable back-compat convenience — no canonical
+    /// replacement exists on the current spec inner schema.</summary>
     [JsonPropertyName("zip")]
     public string? Zip { get; init; }
 
+    /// <summary>Country. Not part of the spec inner schema; retained as a
+    /// nullable back-compat convenience — no canonical replacement exists on
+    /// the current spec inner schema.</summary>
     [JsonPropertyName("country")]
     public string? Country { get; init; }
 
@@ -53,16 +69,16 @@ public sealed record User
     public required string Id { get; init; }
 
     [JsonPropertyName("name")]
-    public string? Name { get; init; }
+    public required string Name { get; init; }
 
     [JsonPropertyName("email")]
-    public string? Email { get; init; }
+    public required string Email { get; init; }
 
     [JsonPropertyName("authType")]
-    public string? AuthType { get; init; }
+    public required string AuthType { get; init; }
 
     [JsonPropertyName("roles")]
-    public IReadOnlyList<UserRole>? Roles { get; init; }
+    public required IReadOnlyList<UserRole> Roles { get; init; }
 }
 
 /// <summary>
@@ -76,6 +92,7 @@ public sealed record UserRole
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
+    // Not in current spec; retained for back-compat.
     [JsonPropertyName("tagId")]
     public string? TagId { get; init; }
 }
@@ -92,10 +109,10 @@ public sealed record CreateUserRequest
     public required string Email { get; init; }
 
     [JsonPropertyName("authType")]
-    public string? AuthType { get; init; }
+    public required string AuthType { get; init; }
 
     [JsonPropertyName("roles")]
-    public IReadOnlyList<UserRole>? Roles { get; init; }
+    public required IReadOnlyList<UserRole> Roles { get; init; }
 
     [JsonPropertyName("expireAt")]
     public DateTimeOffset? ExpireAt { get; init; }

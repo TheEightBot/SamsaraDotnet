@@ -1,10 +1,10 @@
 # Location and Speed — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ⚠️ Unverified (0/1 endpoints implemented)  
+> **Status**: Resolved 2026-05-27 (model-sync plan)  
 > **SDK Client**: `IAssetsClient`  
-> **Implementation**: `src/Samsara.Sdk/Clients/.../AssetsClient.cs`  
-> **Models**: `src/Samsara.Sdk/Models/Assets/AssetModels.cs`  
+> **Implementation**: `src/Samsara.Sdk/Clients/Fleet/AssetsClient.cs`  
+> **Models**: `src/Samsara.Sdk/Models/Fleet/AssetModels.cs`  
 
 ---
 

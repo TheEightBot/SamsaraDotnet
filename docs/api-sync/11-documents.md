@@ -1,5 +1,7 @@
 # Documents — API Sync Checklist
 
+> Resolved 2026-05-27 (model-sync plan)
+
 > **API Version**: `2025-10-23`  
 > **Status**: 🟡 Partial (3/7 endpoints implemented)  
 > **SDK Client**: `IDocumentsClient`  

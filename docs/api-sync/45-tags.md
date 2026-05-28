@@ -1,7 +1,8 @@
 # Tags — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (5/6 endpoints implemented)  
+> **Status**: ✅ Resolved 2026-05-27 (model-sync plan)  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: see [`model-sync-plan-2026-05-27/45-tags.md`](model-sync-plan-2026-05-27/45-tags.md). Aligned the `Tag` response and the two write requests to spec across `GET/POST /tags` (+4 more): `Tag` gained the flat `parentTagId` `string?` (coexists with the existing `parentTag` object) and `UpdateTagRequest` gained `externalIds` (typed `IReadOnlyDictionary<string, string>?` to match its siblings). `CreateTagRequest.name` had `required` dropped (spec marks it optional), and `CreateTagRequest.externalIds` is kept as a nullable back-compat extra. All changes are in `TagModels.cs`; no client/interface/JsonContext/CLI/test changes.  
 > **SDK Client**: `ITagsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../TagsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Tags/TagModels.cs`  

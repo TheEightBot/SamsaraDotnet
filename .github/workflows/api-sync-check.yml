@@ -68,6 +68,18 @@ jobs:
           path: docs/api-sync/diff-report.md
           retention-days: 90
 
+      - name: SDK ↔ Spec endpoint coverage report
+        run: |
+          python3 tools/check-sdk-sync.py --show-missing > sdk-sync-report.txt 2>&1 || true
+          head -n 12 sdk-sync-report.txt
+
+      - name: Upload SDK sync report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-sync-report
+          path: sdk-sync-report.txt
+          retention-days: 90
+
       - name: Read diff report for issue body
         if: steps.diff_status.outputs.has_diff == 'true'
         id: read_report

@@ -7,8 +7,26 @@ using Samsara.Sdk.Models.Assignments;
 /// </summary>
 public interface IDriverVehicleAssignmentsClient
 {
-    IAsyncEnumerable<DriverVehicleAssignment> ListAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// List assignments. <paramref name="filterBy"/> is required by the spec
+    /// (e.g. <c>"drivers"</c>, <c>"vehicles"</c>).
+    /// </summary>
+    IAsyncEnumerable<DriverVehicleAssignment> ListAsync(
+        string filterBy,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? driverIds = null,
+        IReadOnlyList<string>? vehicleIds = null,
+        string? driverTagIds = null,
+        string? vehicleTagIds = null,
+        string? assignmentType = null,
+        CancellationToken cancellationToken = default);
+
     Task<DriverVehicleAssignment> CreateAsync(CreateDriverVehicleAssignmentRequest request, CancellationToken cancellationToken = default);
-    Task<DriverVehicleAssignment> UpdateAsync(string id, UpdateDriverVehicleAssignmentRequest request, CancellationToken cancellationToken = default);
-    Task DeleteAsync(string id, CancellationToken cancellationToken = default);
+
+    /// <summary>Update an assignment. Identifiers live in the body.</summary>
+    Task<DriverVehicleAssignment> UpdateAsync(UpdateDriverVehicleAssignmentRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>End/delete an assignment by sending vehicleId (and optional fields) in the body.</summary>
+    Task DeleteAsync(DeleteDriverVehicleAssignmentsRequest request, CancellationToken cancellationToken = default);
 }

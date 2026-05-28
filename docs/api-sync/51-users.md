@@ -1,7 +1,9 @@
 # Users — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (6/6 endpoints implemented)  
+> **Status**: ✅ Resolved 2026-05-27 (model-sync plan)  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: see [`model-sync-plan-2026-05-27/51-users.md`](model-sync-plan-2026-05-27/51-users.md). The 4 MEDIUM `response_required_drift` findings on `User` were applied — `name`, `email`, `authType`, and `roles` tightened from nullable to non-nullable via `required` (repo convention; verified safe — no `new User(...)` construction sites). **Breaking**: consumers may now rely on non-null `name`/`email`/`authType`/`roles`. The 1 LOW extra (`UserRole.tagId`) was retained as a nullable back-compat prop rather than removed. CLI `List All` users render simplified (dropped redundant `?? ""` on `u.Name`/`u.Email`). `ListAsync` and the `IUsersClient`/`UsersClient` methods are unchanged; `CreateUserRequest`/`UpdateUserRequest` out of scope. No JsonContext/test changes.  
+> **⚠️ 2026-05-21 audit**: model — `User`/`CreateUserRequest` required fields (`name`/`email`/`authType`/`roles`) modelled optional. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IUsersClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../UsersClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Organization/OrganizationModels.cs`  

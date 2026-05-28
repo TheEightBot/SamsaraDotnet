@@ -1,7 +1,7 @@
 # Plans — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ⚠️ Unverified (0/3 endpoints implemented)  
+> **Status**: Resolved 2026-05-27 (model-sync plan)  
 > **SDK Client**: `IHubsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../HubsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Routes/HubModels.cs`  

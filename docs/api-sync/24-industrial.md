@@ -1,7 +1,7 @@
 # Industrial — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (5/17 endpoints implemented)  
+> **Status**: Resolved 2026-05-27 (model-sync plan)  
 > **SDK Client**: `IIndustrialClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../IndustrialClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Industrial/IndustrialModels.cs`  

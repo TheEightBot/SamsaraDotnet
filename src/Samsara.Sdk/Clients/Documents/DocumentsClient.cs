@@ -9,8 +9,18 @@ internal sealed class DocumentsClient : SamsaraServiceClientBase, IDocumentsClie
 
     public DocumentsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<Document> ListAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<Document>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<Document> ListAsync(
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
+        string? documentTypeId = null,
+        string? queryBy = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<Document>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange(BasePath, startTime, endTime),
+                ("documentTypeId", documentTypeId),
+                ("queryBy", queryBy)),
+            cancellationToken: cancellationToken);
 
     public Task<Document> GetAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<Document>($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);

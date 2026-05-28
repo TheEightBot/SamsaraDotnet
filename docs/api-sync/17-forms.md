@@ -1,7 +1,9 @@
 # Forms — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: 🟡 Partial (4/7 endpoints implemented)  
+> **Status**: ✅ Complete (7/7 endpoints match the spec)  
+> **✅ Resolved 2026-05-27 (model-sync plan)** — Implemented HIGH (20) and MEDIUM (40) findings from `docs/api-sync/model-sync-plan-2026-05-27/17-forms.md`: aligned `FormSubmission`, `FormTemplate`, `FormPdfExport`, `CreateFormSubmissionRequest`, and `UpdateFormSubmissionRequest` with the spec's required/optional shape (nested objects modeled as `object`); added `pdfId` (required) to `GetPdfExportsAsync` and `id` (required, query) to `CreatePdfExportAsync` (and removed the unused `CreateFormPdfExportRequest` body type since the spec endpoint has no body); added optional `ids` to `ListTemplatesAsync` and optional `formTemplateIds`/`userIds`/`driverIds`/`assignedToRouteStopIds`/`include` to `GetSubmissionsStreamAsync`. Per the task guidance, the legacy `FormTemplate.Name` was kept alongside the new spec-correct `Title` (rename — both deserialize via `JsonPropertyName`). LOW back-compat fields retained per workflow precedent.  
+> **⚠️ 2026-05-21 audit**: `fleet/forms/templates`→`/form-templates`; `fleet/forms/submissions[/{id}]`→`/form-submissions`. Missing `POST`/`PATCH /form-submissions`. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IFormsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../FormsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Documents/FormModels.cs`  

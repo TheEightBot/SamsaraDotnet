@@ -1,7 +1,9 @@
 # Safety — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ❌ Not Started (0/4 endpoints implemented)  
+> **Status**: ✅ Resolved 2026-05-27 (model-sync plan)  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: see [`model-sync-plan-2026-05-27/39-safety.md`](model-sync-plan-2026-05-27/39-safety.md). `SafetyEvent` rebuilt against `SafetyEventV2ObjectResponseBody` (typed `asset`/`driver`/`behaviorLabels`/`contextLabels`/`location`/`media`/`detectedStreams`/`dismissalReason`/`speedingMetadata`, plus `startMs`/`endMs`/`eventState`/`createdAtTime`/`updatedAtTime`/`inboxEventUrl`/`incidentReportUrl`/`maxAccelerationGForce`/`assignedCoach`/`tripStartTime`/`tripEndTime`/`updatedByUserId`; `id`/`driver`/`behaviorLabels` tightened to required; back-compat `vehicle`/`time` scalars kept). Query params wired: `getSafetyEventsV2` (`safetyEventIds` required + `includeAsset`/`includeDriver`/`includeVgOnlyEvents`), `getSafetyEventsStream` (`startTime` required + `endTime`/`queryByTimeField`/`assetIds`/`driverIds`/`tagIds`/`assignedCoaches`/`behaviorLabels`/`eventStates`/`include*`), and v1 driver/vehicle score (`startMs`/`endMs` required).  
+> **⚠️ 2026-05-21 audit**: `GetEventAsync` by-id is fabricated. `SafetyEvent` is a v2 stub — real schema `SafetyEventV2ObjectResponseBody` (asset not vehicle, object `behaviorLabels`, `eventState`, `location`, `maxAccelerationGForce`, `media`…). See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `ISafetyClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../SafetyClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Safety/SafetyModels.cs`  

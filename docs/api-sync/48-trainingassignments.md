@@ -1,7 +1,9 @@
 # TrainingAssignments — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (4/4 endpoints implemented)  
+> **Status**: ✅ Resolved 2026-05-27 (model-sync plan)  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: see [`model-sync-plan-2026-05-27/48-trainingassignments.md`](model-sync-plan-2026-05-27/48-trainingassignments.md). `ListAssignmentsAsync` (`GET /training-assignments/stream`) gained a required `DateTimeOffset startTime` query param (placed first, no default — **breaking**) plus 6 optional query params (`endTime` as `DateTimeOffset?`; `categoryIds`/`courseIds`/`learnerIds`/`status` as `IReadOnlyList<string>?`; `isOverdue` as `bool?`). `TrainingAssignment` gained 7 required props (`course`/`learner` as weakly-typed `object`, `createdById`/`updatedById` as `string`, `createdAtTime`/`updatedAtTime` as `DateTimeOffset`, `durationMinutes` as `long`) and 5 optional props (`startedAtTime`, `deletedAtTime`, `isOverdue`, `isCompletedLate`, `scorePercent`); `status` was tightened from `string?` to `required string` (spec REQUIRED — **breaking**). The 6 LOW non-spec extras (`driverId`/`driverName`/`courseId`/`courseName`/`assignedAtTime`/`score`) are retained as nullable back-compat props. CLI `List Assignments` call site updated (default 7-day window + `a.Status` deref). No JsonContext/test changes.  
+> **⚠️ 2026-05-21 audit**: `fleet/training/assignments`→`/training-assignments/stream`; missing POST/PATCH/DELETE `/training-assignments`. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `ITrainingClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../TrainingClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Training/TrainingModels.cs`  

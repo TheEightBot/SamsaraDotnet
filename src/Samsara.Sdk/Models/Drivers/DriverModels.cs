@@ -90,17 +90,33 @@ public sealed record Driver
     [JsonPropertyName("updatedAtTime")]
     public DateTimeOffset? UpdatedAtTime { get; init; }
 
+    /// <summary>
+    /// Attributes attached to the driver (spec inner schema:
+    /// <c>attributeTiny</c>). Each entry exposes <c>id</c>, <c>name</c>,
+    /// <c>dateValues</c>, <c>numberValues</c>, and <c>stringValues</c>.
+    /// Modeled as <c>object</c> for forward-compat with attribute shape changes.
+    /// </summary>
     [JsonPropertyName("attributes")]
-    public System.Text.Json.JsonElement? Attributes { get; init; }
+    public IReadOnlyList<object>? Attributes { get; init; }
 
     [JsonPropertyName("eldSettings")]
     public System.Text.Json.JsonElement? EldSettings { get; init; }
 
+    /// <summary>
+    /// Whether the driver has driving-related features hidden in the Driver App
+    /// (vehicle selection, HOS, routing, team driving, documents, trip logs).
+    /// Defaults to <c>false</c> when omitted. Available to Connected Forms
+    /// customers only.
+    /// </summary>
     [JsonPropertyName("hasDrivingFeaturesHidden")]
-    public System.Text.Json.JsonElement? HasDrivingFeaturesHidden { get; init; }
+    public bool? HasDrivingFeaturesHidden { get; init; }
 
+    /// <summary>
+    /// Whether the driver has vehicle unpinning enabled. Defaults to <c>true</c>
+    /// when omitted.
+    /// </summary>
     [JsonPropertyName("hasVehicleUnpinningEnabled")]
-    public System.Text.Json.JsonElement? HasVehicleUnpinningEnabled { get; init; }
+    public bool? HasVehicleUnpinningEnabled { get; init; }
 
     [JsonPropertyName("peerGroupTag")]
     public System.Text.Json.JsonElement? PeerGroupTag { get; init; }
@@ -154,7 +170,7 @@ public sealed record CreateDriverRequest
     public required string Name { get; init; }
 
     [JsonPropertyName("username")]
-    public string? Username { get; init; }
+    public required string Username { get; init; }
 
     [JsonPropertyName("password")]
     public required string Password { get; init; }
@@ -225,26 +241,51 @@ public sealed record CreateDriverRequest
     [JsonPropertyName("waitingTimeDutyStatusEnabled")]
     public bool? WaitingTimeDutyStatusEnabled { get; init; }
 
+    /// <summary>
+    /// Attributes to associate with the driver (spec inner schema:
+    /// <c>CreateDriverRequest_attributes</c>: <c>id</c>, <c>name</c>,
+    /// <c>numberValues</c>, <c>stringValues</c>). Modeled as <c>object</c> to
+    /// match the precedent set by request DTOs in
+    /// <c>Equipment</c>, <c>Vehicle</c>, and <c>Attributes</c> domains and to
+    /// remain forward-compatible with attribute shape changes.
+    /// </summary>
     [JsonPropertyName("attributes")]
-    public System.Text.Json.JsonElement? Attributes { get; init; }
+    public IReadOnlyList<object>? Attributes { get; init; }
 
     [JsonPropertyName("carrierSettings")]
     public System.Text.Json.JsonElement? CarrierSettings { get; init; }
 
+    /// <summary>
+    /// Whether the driver has driving-related features hidden in the Driver App.
+    /// Defaults to <c>false</c> when omitted. Available to Connected Forms
+    /// customers only.
+    /// </summary>
     [JsonPropertyName("hasDrivingFeaturesHidden")]
-    public System.Text.Json.JsonElement? HasDrivingFeaturesHidden { get; init; }
+    public bool? HasDrivingFeaturesHidden { get; init; }
 
+    /// <summary>
+    /// Whether the driver has vehicle unpinning enabled. Defaults to <c>true</c>
+    /// when omitted.
+    /// </summary>
     [JsonPropertyName("hasVehicleUnpinningEnabled")]
-    public System.Text.Json.JsonElement? HasVehicleUnpinningEnabled { get; init; }
+    public bool? HasVehicleUnpinningEnabled { get; init; }
 
     [JsonPropertyName("hosSetting")]
     public System.Text.Json.JsonElement? HosSetting { get; init; }
 
+    /// <summary>
+    /// Base64-encoded profile image data. Uploaded during driver creation. When
+    /// Camera ID is enabled, the image is used to train face recognition.
+    /// </summary>
     [JsonPropertyName("profileImageBase64")]
-    public System.Text.Json.JsonElement? ProfileImageBase64 { get; init; }
+    public string? ProfileImageBase64 { get; init; }
 
+    /// <summary>
+    /// URL to the driver's profile image. Can be used to set a profile image
+    /// from an external URL during creation (max length 1024).
+    /// </summary>
     [JsonPropertyName("profileImageUrl")]
-    public System.Text.Json.JsonElement? ProfileImageUrl { get; init; }
+    public string? ProfileImageUrl { get; init; }
 
     [JsonPropertyName("usDriverRulesetOverride")]
     public System.Text.Json.JsonElement? UsDriverRulesetOverride { get; init; }
@@ -336,26 +377,47 @@ public sealed record UpdateDriverRequest
     [JsonPropertyName("waitingTimeDutyStatusEnabled")]
     public bool? WaitingTimeDutyStatusEnabled { get; init; }
 
+    /// <summary>
+    /// Attributes to associate with the driver (spec inner schema:
+    /// <c>CreateDriverRequest_attributes</c>). Modeled as <c>object</c> to
+    /// match the precedent set by request DTOs in other domains and to remain
+    /// forward-compatible with attribute shape changes.
+    /// </summary>
     [JsonPropertyName("attributes")]
-    public System.Text.Json.JsonElement? Attributes { get; init; }
+    public IReadOnlyList<object>? Attributes { get; init; }
 
     [JsonPropertyName("carrierSettings")]
     public System.Text.Json.JsonElement? CarrierSettings { get; init; }
 
+    /// <summary>
+    /// Whether the driver has driving-related features hidden in the Driver App.
+    /// Defaults to <c>false</c> when omitted. Available to Connected Forms
+    /// customers only.
+    /// </summary>
     [JsonPropertyName("hasDrivingFeaturesHidden")]
-    public System.Text.Json.JsonElement? HasDrivingFeaturesHidden { get; init; }
+    public bool? HasDrivingFeaturesHidden { get; init; }
 
+    /// <summary>
+    /// Whether the driver has vehicle unpinning enabled. Defaults to <c>true</c>
+    /// when omitted.
+    /// </summary>
     [JsonPropertyName("hasVehicleUnpinningEnabled")]
-    public System.Text.Json.JsonElement? HasVehicleUnpinningEnabled { get; init; }
+    public bool? HasVehicleUnpinningEnabled { get; init; }
 
     [JsonPropertyName("hosSetting")]
     public System.Text.Json.JsonElement? HosSetting { get; init; }
 
+    /// <summary>
+    /// Base64-encoded profile image data.
+    /// </summary>
     [JsonPropertyName("profileImageBase64")]
-    public System.Text.Json.JsonElement? ProfileImageBase64 { get; init; }
+    public string? ProfileImageBase64 { get; init; }
 
+    /// <summary>
+    /// URL to the driver's profile image (max length 1024).
+    /// </summary>
     [JsonPropertyName("profileImageUrl")]
-    public System.Text.Json.JsonElement? ProfileImageUrl { get; init; }
+    public string? ProfileImageUrl { get; init; }
 
     [JsonPropertyName("usDriverRulesetOverride")]
     public System.Text.Json.JsonElement? UsDriverRulesetOverride { get; init; }
@@ -370,27 +432,42 @@ public sealed record RemoteSignOutRequest
 /// <summary>An authentication token for a driver.</summary>
 public sealed record DriverAuthToken
 {
+    /// <summary>A one-time-use authentication token. Must be paired with the original code and driver identity in a separate request to exchange for a session.</summary>
     [JsonPropertyName("token")] public required string Token { get; init; }
-    [JsonPropertyName("expiresAt")] public DateTimeOffset? ExpiresAt { get; init; }
-    [JsonPropertyName("driverId")] public string? DriverId { get; init; }
+
+    /// <summary>Expiration time of the token in Unix milliseconds since epoch. Clients must redeem the token before this timestamp.</summary>
+    [JsonPropertyName("expirationTime")] public required long ExpirationTime { get; init; }
 }
 
-/// <summary>Request body for creating a driver auth token.</summary>
+/// <summary>Request body for creating a driver auth token. One of <c>driverId</c>, <c>externalId</c>, or <c>username</c> is required.</summary>
 public sealed record CreateDriverAuthTokenRequest
 {
-    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
+    /// <summary>Required. Random 12+ character string, used with the auth token to help secure the client from intercepted tokens.</summary>
+    [JsonPropertyName("code")] public required string Code { get; init; }
+
+    /// <summary>Optional. Samsara ID of the driver. One of <c>driverId</c>, <c>externalId</c>, or <c>username</c> is required.</summary>
+    [JsonPropertyName("driverId")] public long? DriverId { get; init; }
+
+    /// <summary>Optional. External ID of the driver, in the format <c>key:value</c> (e.g., <c>payrollId:ABFS18600</c>). One of <c>driverId</c>, <c>externalId</c>, or <c>username</c> is required.</summary>
+    [JsonPropertyName("externalId")] public string? ExternalId { get; init; }
+
+    /// <summary>Optional. Username of the driver. This is the login identifier configured when the driver is created. One of <c>driverId</c>, <c>externalId</c>, or <c>username</c> is required.</summary>
+    [JsonPropertyName("username")] public string? Username { get; init; }
 }
 
 /// <summary>Represents a driver QR code.</summary>
 public sealed record DriverQrCode
 {
-    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
-    [JsonPropertyName("qrCodeUrl")] public string? QrCodeUrl { get; init; }
-    [JsonPropertyName("expiresAt")] public DateTimeOffset? ExpiresAt { get; init; }
+    /// <summary>ID for the driver the QR code belongs to.</summary>
+    [JsonPropertyName("driverId")] public required long DriverId { get; init; }
+
+    /// <summary>URL link to the driver assignment QR code. Included if a QR code has been created for the driver.</summary>
+    [JsonPropertyName("qrCodeLink")] public string? QrCodeLink { get; init; }
 }
 
 /// <summary>Request body for creating a driver QR code.</summary>
 public sealed record CreateDriverQrCodeRequest
 {
-    [JsonPropertyName("driverId")] public required string DriverId { get; init; }
+    /// <summary>Unique ID of the driver.</summary>
+    [JsonPropertyName("driverId")] public required long DriverId { get; init; }
 }

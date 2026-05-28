@@ -1,9 +1,9 @@
 # Readings — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ⚠️ Unverified (0/3 endpoints implemented)  
+> **Status**: Resolved 2026-05-27 (model-sync plan)  
 > **SDK Client**: `IReadingsClient`  
-> **Implementation**: `src/Samsara.Sdk/Clients/.../ReadingsClient.cs`  
+> **Implementation**: `src/Samsara.Sdk/Clients/Industrial/ReadingsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Industrial/ReadingModels.cs`  
 
 ---

@@ -1,7 +1,9 @@
 # Sensors — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (6/6 endpoints implemented)  
+> **Status**: ✅ Resolved 2026-05-27 (model-sync plan)  
+> **⚠️ 2026-05-21 audit**: client targets `/sensors*`; spec sensors are v1 POST endpoints (`/v1/sensors/list|cargo|door|humidity|temperature|history`). Needs rework. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: see [`model-sync-plan-2026-05-27/41-sensors.md`](model-sync-plan-2026-05-27/41-sensors.md). Added the spec-REQUIRED `stepMs` (`int`) property to the `V1SensorHistoryRequest` request body for `POST /v1/sensors/history`.  
 > **SDK Client**: `ISensorsClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../SensorsClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Industrial/SensorModels.cs`  

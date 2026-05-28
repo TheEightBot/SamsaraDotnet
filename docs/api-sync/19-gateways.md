@@ -1,7 +1,9 @@
 # Gateways — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ✅ Complete (3/3 endpoints implemented)  
+> **Status**: 🔴 Broken (0/3)  
+> **⚠️ 2026-05-21 audit**: `fleet/gateways`→`/gateways`; `GetAsync` by-id has no spec op; missing `POST /gateways`, `DELETE /gateways/{id}`. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: see [`model-sync-plan-2026-05-27/19-gateways.md`](model-sync-plan-2026-05-27/19-gateways.md). `Gateway` (response) now exposes spec-required `model` and `serial` as non-nullable, plus typed `accessoryDevices`, `connectionStatus`, and `dataUsageLast30Days` nested records. `ListAsync` adds the optional `models` query filter. LOW extras (`id`, `name`, `mainBus`, `firmwareVersion`, `wifiMacAddress`, `simCardId`, `vehicle`, `tags`) are retained as nullable back-compat per the established workflow.  
 > **SDK Client**: `IGatewaysClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../GatewaysClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Fleet/GatewayModels.cs`  
