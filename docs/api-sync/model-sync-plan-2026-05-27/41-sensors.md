@@ -3,7 +3,7 @@
 > Companion to [`docs/api-sync/41-sensors.md`](../41-sensors.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
-> **✅ Implemented in commit `PENDING` on 2026-05-27**
+> **✅ Implemented in commit `961698b` on 2026-05-27**
 
 ## Quick reference
 
