@@ -6,13 +6,25 @@ using Samsara.Sdk.Http;
 public interface IRouteEventsClient
 {
     /// <summary>Stream route events (<c>GET /route-events/stream</c>).</summary>
-    IAsyncEnumerable<object> GetStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<object> GetStreamAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default);
 }
 
 internal sealed class RouteEventsClient : SamsaraServiceClientBase, IRouteEventsClient
 {
     public RouteEventsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<object> GetStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(QueryBuilder.WithTimeRange("route-events/stream", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<object> GetStreamAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<object>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("route-events/stream", startTime, endTime),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
 }

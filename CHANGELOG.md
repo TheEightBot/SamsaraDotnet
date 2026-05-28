@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 37-route-events (2026-05-27)** — added the spec's optional
+  `includeExternalIds` query parameter to `IRouteEventsClient.GetStreamAsync` /
+  `RouteEventsClient.GetStreamAsync`. See
+  `docs/api-sync/model-sync-plan-2026-05-27/37-route-events.md`.
 - **Model sync 36-readings (2026-05-27)** — applied the per-domain remediation
   plan (0 CRIT / 9 HIGH / 19 MED / 9 LOW — 37 total). `ReadingDefinition`
   response record rebuilt to match the spec inner schema: five new
