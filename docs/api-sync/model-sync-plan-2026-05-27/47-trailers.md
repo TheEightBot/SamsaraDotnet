@@ -3,6 +3,76 @@
 > Companion to [`docs/api-sync/47-trailers.md`](../47-trailers.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<pending>` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH and MEDIUM findings were applied. LOW response/request-side extras were
+intentionally retained as nullable back-compat properties per the workflow
+precedent (cf. `40-safety-scores`, `44-tachograph-eu-only`, `45-tags`,
+`46-trailer-assignments`) — grouped under a
+`// Not in current spec; retained for back-compat.` comment rather than removed.
+
+Files touched: `src/Samsara.Sdk/Models/Fleet/TrailerModels.cs`,
+`src/Samsara.Sdk/Clients/Fleet/ITrailersClient.cs`,
+`src/Samsara.Sdk/Clients/Fleet/TrailersClient.cs`,
+`tools/Samsara.Cli/TuiApp.cs`.
+
+**HIGH (3) — required `types` query param (breaking)**
+
+- **`(no SDK type)` query — `GetStatsSnapshotAsync` / `GetStatsFeedAsync` /
+  `GetStatsHistoryAsync` required `types`**: added to each as a required positional
+  `string types` (no default, placed first so it precedes the existing defaulted
+  params), appended via `QueryBuilder.WithParams("types", types)`. Breaking
+  signature change on all three stats methods. Spec type is `string` (comma-joined
+  stat-type list), so the param is `string`, NOT an array.
+
+**MEDIUM (48)**
+
+- **Query params (14)**: all spec query params are `type=string`, so each is a
+  trailing `string?` passed straight through `QueryBuilder.WithParams` (callers
+  pass already comma-separated strings). `ListAsync` gained `parentTagIds`,
+  `tagIds`. `GetStatsSnapshotAsync` gained `parentTagIds`, `tagIds`, `time`,
+  `trailerIds`. `GetStatsFeedAsync` gained `decorations`, `parentTagIds`, `tagIds`,
+  `trailerIds`. `GetStatsHistoryAsync` gained `decorations`, `parentTagIds`,
+  `tagIds`, `trailerIds` (keeping its existing `startTime`/`endTime` time range).
+- **`Trailer` (response) — 3 props**: `attributes` (`IReadOnlyList<object>?`),
+  `enabledForMobile` (`bool?`), `trailerSerialNumber` (`string?`).
+- **`CreateTrailerRequest` — 3 props**: `attributes` (`IReadOnlyList<object>?`),
+  `enabledForMobile` (`bool?`), `trailerSerialNumber` (`string?`).
+- **`UpdateTrailerRequest` — 4 props**: `attributes` (`IReadOnlyList<object>?`),
+  `enabledForMobile` (`bool?`), `odometerMeters` (`long?`, int64),
+  `trailerSerialNumber` (`string?`).
+- **`TrailerStats` (response) — 24 findings**: `name` tightened from `string?` to
+  **`required string`** (`response_required_drift`; spec marks it REQUIRED — safe,
+  no construction sites and the CLI does not read `TrailerStats`), plus 23 new
+  `object?` props left weakly-typed per the plan: `carrierReeferState`, `gps`,
+  `gpsOdometerMeters`, `reeferAlarms`, `reeferAmbientAirTemperatureMilliC`,
+  `reeferDoorStateZone1/2/3`, `reeferFuelPercent`, `reeferObdEngineSeconds`,
+  `reeferReturnAirTemperatureMilliCZone1/2/3`, `reeferRunMode`,
+  `reeferSetPointTemperatureMilliCZone1/2/3`, `reeferStateZone1/2/3`,
+  `reeferSupplyAirTemperatureMilliCZone1/2/3`.
+
+**LOW (21) — all retained**
+
+- All 21 `extra_property` findings (already present as nullable props) are
+  RETAINED, not removed, grouped under a back-compat comment:
+  - `Trailer` (6): `make`, `model`, `serial`, `vin`, `year`, `enabledForCommunication`.
+  - `CreateTrailerRequest` (5): `make`, `model`, `serial`, `vin`, `year`.
+  - `UpdateTrailerRequest` (5): `make`, `model`, `serial`, `vin`, `year`.
+  - `TrailerStats` (5): `engineHours`, `location` (kept as its typed
+    `TrailerLocation?`), `odometer`, `temperature`, `time`.
+
+**Other files**: the CLI call site in `tools/Samsara.Cli/TuiApp.cs` was fixed for
+one compile-breaker — `ListAsync(Timeout60s())` now passes the token by name
+(`cancellationToken:`) so it no longer binds to the new `string? parentTagIds`.
+The other Trailers CLI calls use `GetAsync`/`CreateAsync`/`UpdateAsync`/
+`DeleteAsync` (unchanged) and the CLI calls no `GetStats*` method, so the breaking
+`types` param needs no CLI fix. No `SamsaraJsonContext` change (`Trailer`,
+`CreateTrailerRequest`, `UpdateTrailerRequest`, `TrailerStats`, `TrailerLocation`
+already registered; new props are weakly-typed `object`/scalar/array, introducing
+no new top-level types) and no test change (no construction sites; the facade test
+only substitutes the interface).
 
 ## Quick reference
 

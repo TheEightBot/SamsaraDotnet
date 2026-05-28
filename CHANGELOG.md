@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 47-trailers (2026-05-27)** — applied the per-domain remediation
+  plan (0 CRIT / 3 HIGH / 48 MED / 21 LOW — 72 total) across the trailers
+  endpoints (`GET`/`POST` `/fleet/trailers`, `GET`/`PATCH`/`DELETE`
+  `/fleet/trailers/{id}`, and the three stats endpoints `/fleet/trailers/stats`,
+  `/stats/feed`, `/stats/history`). **Breaking**: `GetStatsSnapshotAsync`,
+  `GetStatsFeedAsync`, and `GetStatsHistoryAsync` each gained a required
+  `string types` query param (spec REQUIRED, placed first with no default,
+  appended via `QueryBuilder.WithParams`). Also **breaking**: `TrailerStats.Name`
+  tightened from `string?` to `required string` (spec marks it REQUIRED). Added 14
+  optional `string?` query params (all spec `type=string`): `ListAsync` gained
+  `parentTagIds`/`tagIds`; `GetStatsSnapshotAsync` gained
+  `parentTagIds`/`tagIds`/`time`/`trailerIds`; `GetStatsFeedAsync` gained
+  `decorations`/`parentTagIds`/`tagIds`/`trailerIds`; `GetStatsHistoryAsync` gained
+  `decorations`/`parentTagIds`/`tagIds`/`trailerIds`. `TrailerStats` gained 23
+  weakly-typed `object?` reefer/gps props (`carrierReeferState`, `gps`,
+  `gpsOdometerMeters`, the `reefer*` zone fields, etc.). `Trailer` (response),
+  `CreateTrailerRequest`, and `UpdateTrailerRequest` each gained `attributes`
+  (`IReadOnlyList<object>?`), `enabledForMobile` (`bool?`), and
+  `trailerSerialNumber` (`string?`); `UpdateTrailerRequest` additionally gained
+  `odometerMeters` (`long?`, int64). All 21 LOW non-spec extras
+  (`make`/`model`/`serial`/`vin`/`year` on the three request/response records, plus
+  `enabledForCommunication` on `Trailer` and `engineHours`/`location`/`odometer`/
+  `temperature`/`time` on `TrailerStats`) are retained as nullable back-compat
+  props. The CLI `ListAsync` call site in `TuiApp.cs` was updated for the new
+  signature (named `cancellationToken:` argument). No JsonContext/test changes
+  (records already registered, new props weakly-typed, no construction sites). See
+  `docs/api-sync/model-sync-plan-2026-05-27/47-trailers.md`.
 - **Model sync 46-trailer-assignments (2026-05-27)** — applied the per-domain
   remediation plan (0 CRIT / 1 HIGH / 8 MED / 8 LOW — 17 total) across the two v1
   trailer-assignment endpoints (`GET /v1/fleet/trailers/assignments`,
