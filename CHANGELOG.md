@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 45-tags (2026-05-27)** — applied the per-domain remediation plan
+  (0 CRIT / 0 HIGH / 2 MED / 2 LOW — 4 total) across the tags endpoints
+  (`GET`/`POST` `/tags`, +4 more). `Tag` (response) gained the flat `parentTagId`
+  (`string?`), which coexists with the existing `parentTag` `EntityReference?`
+  object (tiny/abbreviated tag shapes return the flat id; the full `GET /tags`
+  response uses the object). `UpdateTagRequest` gained `externalIds`, typed
+  `IReadOnlyDictionary<string, string>?` to match its siblings
+  `CreateTagRequest.ExternalIds` and `Tag.ExternalIds` rather than the plan's
+  generic `object?` placeholder. `CreateTagRequest.name` had `required` dropped
+  (now nullable `string?`) since the spec marks it optional, and
+  `CreateTagRequest.externalIds` is retained as a nullable back-compat extra. All
+  changes are confined to `TagModels.cs`; no client/interface/JsonContext/CLI/
+  test changes. See `docs/api-sync/model-sync-plan-2026-05-27/45-tags.md`.
 - **Model sync 44-tachograph-eu-only (2026-05-27)** — applied the per-domain
   remediation plan (0 CRIT / 0 HIGH / 14 MED / 21 LOW — 35 total) across the
   three tachograph history endpoints

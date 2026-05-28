@@ -3,6 +3,36 @@
 > Companion to [`docs/api-sync/45-tags.md`](../45-tags.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<pending>` on 2026-05-27**
+
+## Implementation notes
+
+All four findings were applied within the single file
+`src/Samsara.Sdk/Models/Tags/TagModels.cs`; no client/interface/CLI/test/
+JsonContext changes were needed (the affected types are already registered and
+the methods carry no new query params).
+
+**MEDIUM (2)**
+
+- **`Tag` (response) — `parentTagId`**: added as `string?`. It coexists with the
+  existing `parentTag` `EntityReference?` object — the full `GET /tags` response
+  uses the `parentTag` object while the tiny/abbreviated tag response shapes
+  return the flat `parentTagId` string, so both are kept.
+- **`UpdateTagRequest` (request) — `externalIds`**: added as
+  `IReadOnlyDictionary<string, string>?` rather than the plan's generic `object?`
+  placeholder, to match its siblings `CreateTagRequest.ExternalIds` and
+  `Tag.ExternalIds` in the same file.
+
+**LOW (2)**
+
+- **`CreateTagRequest.name` (`required_drift_over`)**: dropped `required` and made
+  it nullable (`string?`) since the spec marks `name` optional on this request —
+  the established handling for `required_drift_over` on request props (cf.
+  `CreateHubRequest` in `01-addresses`). Backward-compatible: existing
+  initializer usages still compile.
+- **`CreateTagRequest.externalIds` (`extra_property`)**: retained as a nullable
+  back-compat extra per the precedent in `40-safety-scores` rather than removed;
+  annotated with a brief `// retained for back-compat` comment.
 
 ## Quick reference
 

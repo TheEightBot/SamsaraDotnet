@@ -19,6 +19,11 @@ public sealed record Tag
     [JsonPropertyName("parentTag")]
     public EntityReference? ParentTag { get; init; }
 
+    /// <summary>Flat parent-tag id returned by the tiny/abbreviated tag response shapes;
+    /// the full <c>GET /tags</c> response uses the <see cref="ParentTag"/> object instead.</summary>
+    [JsonPropertyName("parentTagId")]
+    public string? ParentTagId { get; init; }
+
     [JsonPropertyName("externalIds")]
     public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 
@@ -59,7 +64,7 @@ public sealed record TaggedResource
 public sealed record CreateTagRequest
 {
     [JsonPropertyName("name")]
-    public required string Name { get; init; }
+    public string? Name { get; init; }
 
     [JsonPropertyName("parentTagId")]
     public string? ParentTagId { get; init; }
@@ -82,6 +87,7 @@ public sealed record CreateTagRequest
     [JsonPropertyName("sensors")]
     public IReadOnlyList<TaggedResourceId>? Sensors { get; init; }
 
+    // retained for back-compat; not in spec inner schema
     [JsonPropertyName("externalIds")]
     public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
@@ -96,6 +102,9 @@ public sealed record UpdateTagRequest
 
     [JsonPropertyName("parentTagId")]
     public string? ParentTagId { get; init; }
+
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 
     [JsonPropertyName("addresses")]
     public IReadOnlyList<TaggedResourceId>? Addresses { get; init; }
