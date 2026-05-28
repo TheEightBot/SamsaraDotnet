@@ -237,13 +237,36 @@ public sealed record DeleteDriverVehicleAssignmentsRequest
 }
 
 /// <summary>
-/// Represents a trailer assignment to a vehicle.
+/// Represents a trailer assignment. This single record deserializes BOTH v1 wrapper
+/// shapes: the list endpoint (<c>GET /v1/fleet/trailers/assignments</c>) returns
+/// <c>{ pagination, trailers }</c>, while the per-trailer endpoint
+/// (<c>GET /v1/fleet/trailers/{trailerId}/assignments</c>) returns
+/// <c>{ id, name, trailerAssignments }</c>. Fields present in only one shape are
+/// therefore nullable.
 /// </summary>
 public sealed record TrailerAssignment
 {
+    /// <summary>Trailer id (per-trailer endpoint shape). Spec type int64; absent on the list-wrapper shape.</summary>
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public long? Id { get; init; }
 
+    /// <summary>Trailer name (per-trailer endpoint shape); absent on the list-wrapper shape.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>Per-trailer endpoint: the trailer's assignment rows.</summary>
+    [JsonPropertyName("trailerAssignments")]
+    public IReadOnlyList<object>? TrailerAssignments { get; init; }
+
+    /// <summary>List endpoint: pagination cursor object.</summary>
+    [JsonPropertyName("pagination")]
+    public object? Pagination { get; init; }
+
+    /// <summary>List endpoint: the trailers array.</summary>
+    [JsonPropertyName("trailers")]
+    public IReadOnlyList<object>? Trailers { get; init; }
+
+    // Not in current spec; retained for back-compat.
     [JsonPropertyName("trailerId")]
     public string? TrailerId { get; init; }
 

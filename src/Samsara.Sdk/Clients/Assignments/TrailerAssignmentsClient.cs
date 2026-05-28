@@ -9,10 +9,19 @@ internal sealed class TrailerAssignmentsClient : SamsaraServiceClientBase, ITrai
 
     public TrailerAssignmentsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<TrailerAssignment> ListAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<TrailerAssignment>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<TrailerAssignment> ListAsync(long? startMs = null, long? endMs = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TrailerAssignment>(
+            QueryBuilder.WithParams(BasePath,
+                ("startMs", startMs?.ToString()),
+                ("endMs", endMs?.ToString())),
+            cancellationToken: cancellationToken);
 
     /// <summary>Assignments for a specific trailer (<c>GET /v1/fleet/trailers/{id}/assignments</c>).</summary>
-    public IAsyncEnumerable<TrailerAssignment> GetByTrailerAsync(string trailerId, CancellationToken cancellationToken = default)
-        => PaginateAsync<TrailerAssignment>($"v1/fleet/trailers/{Uri.EscapeDataString(trailerId)}/assignments", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<TrailerAssignment> GetByTrailerAsync(string trailerId, long? startMs = null, long? endMs = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TrailerAssignment>(
+            QueryBuilder.WithParams(
+                $"v1/fleet/trailers/{Uri.EscapeDataString(trailerId)}/assignments",
+                ("startMs", startMs?.ToString()),
+                ("endMs", endMs?.ToString())),
+            cancellationToken: cancellationToken);
 }

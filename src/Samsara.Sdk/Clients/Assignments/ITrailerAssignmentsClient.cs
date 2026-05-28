@@ -7,7 +7,7 @@ using Samsara.Sdk.Models.Assignments;
 /// </summary>
 public interface ITrailerAssignmentsClient
 {
-    IAsyncEnumerable<TrailerAssignment> ListAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TrailerAssignment> ListAsync(long? startMs = null, long? endMs = null, CancellationToken cancellationToken = default);
     /// <summary>Assignments for a specific trailer.</summary>
-    IAsyncEnumerable<TrailerAssignment> GetByTrailerAsync(string trailerId, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TrailerAssignment> GetByTrailerAsync(string trailerId, long? startMs = null, long? endMs = null, CancellationToken cancellationToken = default);
 }

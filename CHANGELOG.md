@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 46-trailer-assignments (2026-05-27)** — applied the per-domain
+  remediation plan (0 CRIT / 1 HIGH / 8 MED / 8 LOW — 17 total) across the two v1
+  trailer-assignment endpoints (`GET /v1/fleet/trailers/assignments`,
+  `GET /v1/fleet/trailers/{trailerId}/assignments`). The single `TrailerAssignment`
+  record deserializes BOTH v1 wrapper shapes (list `{ pagination, trailers }` and
+  per-trailer `{ id, name, trailerAssignments }`), so shape-specific fields are
+  nullable: added `name` (`string?` — kept nullable, not `required`, since it is
+  absent on the list shape), `pagination` (`object?`), and
+  `trailerAssignments`/`trailers` (`IReadOnlyList<object>?`). **Breaking**:
+  `TrailerAssignment.Id` changed from `required string` to `long?` (applies the
+  spec int64 type and stays nullable because the list shape has no top-level id;
+  also subsumes the conflicting LOW "id is an extra" finding). Both `ListAsync` and
+  `GetByTrailerAsync` gained optional `startMs`/`endMs` query params, typed `long?`
+  rather than the plan's `int?` (ms-epoch values overflow `Int32`; matches the
+  `*Ms` repo convention, cf. `SafetyClient`), appended via
+  `QueryBuilder.WithParams`. The 7 flat non-spec scalars (`trailerId`,
+  `trailerName`, `vehicleId`, `vehicleName`, `driverId`, `startTime`, `endTime`)
+  are retained as nullable back-compat extras. The CLI call site in `TuiApp.cs` was
+  updated for the new signature (named `cancellationToken:` argument) and `long?`
+  id (`Id?.ToString()`). No JsonContext/test changes (record already registered,
+  new props weakly-typed, no construction sites). See
+  `docs/api-sync/model-sync-plan-2026-05-27/46-trailer-assignments.md`.
 - **Model sync 45-tags (2026-05-27)** — applied the per-domain remediation plan
   (0 CRIT / 0 HIGH / 2 MED / 2 LOW — 4 total) across the tags endpoints
   (`GET`/`POST` `/tags`, +4 more). `Tag` (response) gained the flat `parentTagId`
