@@ -3,7 +3,7 @@
 > Companion to [`docs/api-sync/44-tachograph-eu-only.md`](../44-tachograph-eu-only.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
-> **✅ Implemented in commit `<commit>` on 2026-05-27**
+> **✅ Implemented in commit `5f20235` on 2026-05-27**
 
 ## Implementation notes
 
