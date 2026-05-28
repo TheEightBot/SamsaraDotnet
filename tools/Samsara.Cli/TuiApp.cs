@@ -1629,7 +1629,7 @@ internal sealed class TuiApp
                     case "List Courses":
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching training courses...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Training.ListCoursesAsync(Timeout60s()));
+                            var items = await CollectAsync(_client.Training.ListCoursesAsync(cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Training Courses", c => [c.Id, c.Name ?? ""], ["ID", "Name"]);
                         });
                         break;

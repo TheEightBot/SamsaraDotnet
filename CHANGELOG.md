@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 49-trainingcourses (2026-05-27)** — applied the per-domain
+  remediation plan (0 CRIT / 5 HIGH / 4 MED / 4 LOW — 13 total) across the
+  training-courses list endpoint (`GET /training-courses`). `ListCoursesAsync`
+  gained 3 optional query params — `categoryIds`, `courseIds`, and `status`
+  (`IReadOnlyList<string>?`, comma-joined, appended via
+  `QueryBuilder.WithParams`; `status` modeled as a string array per the
+  query-array convention rather than the plan's literal `object`).
+  `TrainingCourse` (response) gained 5 required props — `title`, `status`, and
+  `revisionId` (`string`), `category` (weakly-typed `object`), and
+  `estimatedTimeToCompleteMinutes` (`long`, int64) — plus 1 optional prop,
+  `labels` (`IReadOnlyList<object>?`). The 4 LOW non-spec extras (`name`,
+  `isActive`, `createdAtTime`, `updatedAtTime`) are retained as nullable
+  back-compat props; `name` in particular is kept because the spec's
+  course-title field is the newly added `title`. The CLI `List Courses` call
+  site in `TuiApp.cs` was updated for the new signature (named
+  `cancellationToken:` argument). No JsonContext/test changes (record already
+  registered, new props weakly-typed / scalar / array, no construction sites).
+  See `docs/api-sync/model-sync-plan-2026-05-27/49-trainingcourses.md`.
 - **Model sync 48-trainingassignments (2026-05-27)** — applied the per-domain
   remediation plan (0 CRIT / 8 HIGH / 12 MED / 6 LOW — 26 total) across the
   training-assignments stream endpoint (`GET /training-assignments/stream`).

@@ -26,8 +26,17 @@ internal sealed class TrainingClient : SamsaraServiceClientBase, ITrainingClient
                 ("isOverdue", isOverdue?.ToString().ToLowerInvariant())),
             cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<TrainingCourse> ListCoursesAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<TrainingCourse>("training-courses", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<TrainingCourse> ListCoursesAsync(
+        IReadOnlyList<string>? categoryIds = null,
+        IReadOnlyList<string>? courseIds = null,
+        IReadOnlyList<string>? status = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<TrainingCourse>(
+            QueryBuilder.WithParams("training-courses",
+                ("categoryIds", categoryIds is null ? null : string.Join(",", categoryIds)),
+                ("courseIds", courseIds is null ? null : string.Join(",", courseIds)),
+                ("status", status is null ? null : string.Join(",", status))),
+            cancellationToken: cancellationToken);
 
     /// <summary>Create training assignments (<c>POST /training-assignments</c>). All params are query-side.</summary>
     public Task CreateAssignmentsAsync(string courseId, DateTimeOffset dueAtTime, IReadOnlyList<string> learnerIds, CancellationToken cancellationToken = default)

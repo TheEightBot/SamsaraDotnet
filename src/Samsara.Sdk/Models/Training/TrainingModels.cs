@@ -83,11 +83,30 @@ public sealed record TrainingCourse
     [JsonPropertyName("id")]
     public required string Id { get; init; }
 
-    [JsonPropertyName("name")]
-    public string? Name { get; init; }
+    [JsonPropertyName("title")]
+    public required string Title { get; init; }
+
+    [JsonPropertyName("status")]
+    public required string Status { get; init; }
+
+    [JsonPropertyName("revisionId")]
+    public required string RevisionId { get; init; }
+
+    [JsonPropertyName("category")]
+    public required object Category { get; init; }
+
+    [JsonPropertyName("estimatedTimeToCompleteMinutes")]
+    public required long EstimatedTimeToCompleteMinutes { get; init; }
+
+    [JsonPropertyName("labels")]
+    public IReadOnlyList<object>? Labels { get; init; }
 
     [JsonPropertyName("description")]
     public string? Description { get; init; }
+
+    // Not in current spec; retained for back-compat.
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
 
     [JsonPropertyName("isActive")]
     public bool? IsActive { get; init; }
