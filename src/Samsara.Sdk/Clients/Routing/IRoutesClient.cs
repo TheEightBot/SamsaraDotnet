@@ -7,12 +7,22 @@ using Samsara.Sdk.Models.Routes;
 /// </summary>
 public interface IRoutesClient
 {
-    IAsyncEnumerable<Route> ListAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
-    Task<Route> GetAsync(string id, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<Route> ListAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? include = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        CancellationToken cancellationToken = default);
+    Task<Route> GetAsync(string id, IReadOnlyList<string>? include = null, CancellationToken cancellationToken = default);
     Task<Route> CreateAsync(CreateRouteRequest request, CancellationToken cancellationToken = default);
     Task<Route> UpdateAsync(string id, UpdateRouteRequest request, CancellationToken cancellationToken = default);
     Task DeleteAsync(string id, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<RouteAuditEvent> GetAuditLogFeedAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<RouteAuditEvent> GetAuditLogFeedAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        string? expand = null,
+        CancellationToken cancellationToken = default);
     /// <summary>Delete a dispatch route (v1) by id or external id.</summary>
     Task V1DeleteDispatchRouteAsync(string idOrExternalId, CancellationToken cancellationToken = default);
 }

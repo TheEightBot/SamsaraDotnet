@@ -740,7 +740,7 @@ internal sealed class TuiApp
                         var (rStart, rEnd) = InputHelper.AskTimeRange("Routes");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching routes...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Routes.ListAsync(rStart, rEnd, Timeout60s()));
+                            var items = await CollectAsync(_client.Routes.ListAsync(rStart, rEnd, cancellationToken: Timeout60s()));
                             ResultRenderer.RenderList(items, "Routes", r => [r.Id, r.Name ?? ""], ["ID", "Name"]);
                         });
                         break;
@@ -748,7 +748,7 @@ internal sealed class TuiApp
                         var id = InputHelper.AskId("Route ID");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching route...[/]", async _ =>
                         {
-                            var r = await _client.Routes.GetAsync(id, Timeout60s());
+                            var r = await _client.Routes.GetAsync(id, cancellationToken: Timeout60s());
                             ResultRenderer.RenderObject(r, $"Route {id}");
                         });
                         break;

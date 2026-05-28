@@ -2,6 +2,7 @@
 
 > **API Version**: `2025-10-23`  
 > **Status**: 🟡 Partial (5/8)  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: see [`model-sync-plan-2026-05-27/38-routes.md`](model-sync-plan-2026-05-27/38-routes.md). `RouteAuditEvent` aligned with `RouteFeedObjectResponseBody` (added `changes`/`route`/`source`/`type`/`operation`, tightened `time`); query params wired for `fetchRoutes` (`include`/`tagIds`/`parentTagIds`), `fetchRoute` (`include`), `getRoutesFeed` (`expand`), and `listHubPlanRoutes` (`planId` required + `routeIds`/`startTime`/`endTime`, on `IHubsClient`).  
 > **⚠️ 2026-05-21 audit**: `GetAuditLog`→`/fleet/routes/audit-logs/feed`. 3 ops missing. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
 > **SDK Client**: `IRoutesClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../RoutesClient.cs`  

@@ -25,9 +25,20 @@ internal sealed class HubsClient : SamsaraServiceClientBase, IHubsClient
                 ("endTime", endTime)),
             cancellationToken: cancellationToken);
 
-    /// <summary>List hub plan routes (<c>GET /hub/plan/routes</c>).</summary>
-    public IAsyncEnumerable<object> ListPlanRoutesAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<object>("hub/plan/routes", cancellationToken: cancellationToken);
+    /// <summary>List hub plan routes (<c>GET /hub/plan/routes</c>) — <paramref name="planId"/> is required by the spec.</summary>
+    public IAsyncEnumerable<object> ListPlanRoutesAsync(
+        string planId,
+        string? routeIds = null,
+        string? startTime = null,
+        string? endTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<object>(
+            QueryBuilder.WithParams("hub/plan/routes",
+                ("planId", planId),
+                ("routeIds", routeIds),
+                ("startTime", startTime),
+                ("endTime", endTime)),
+            cancellationToken: cancellationToken);
 
     /// <summary>
     /// List hub plan orders (<c>GET /hub/plan/orders</c>) — <paramref name="planId"/> is required by the spec.

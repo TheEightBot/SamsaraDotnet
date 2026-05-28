@@ -3,6 +3,43 @@
 > Companion to [`docs/api-sync/38-routes.md`](../38-routes.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<hash>` on 2026-05-27**
+
+## Implementation notes
+
+- **`RouteAuditEvent` (response)** — realigned to the spec's `RouteFeedObjectResponseBody`
+  (the schema actually returned by `GET /fleet/routes/audit-logs/feed`):
+  - Added the 4 REQUIRED properties — `changes` (`JsonElement`), `route` (`JsonElement`),
+    `source` (`string`), `type` (`string`) — all non-nullable per the spec guarantee.
+    `changes`/`route` are opaque nested objects (`RouteChangesResponseBody` /
+    `baseRouteResponseObjectResponseBody`), modeled as `JsonElement` to match the SDK's
+    existing convention for nested response objects (e.g. `Route.Quantities`, `RouteStop.Address`).
+  - Added optional `operation` (`string?`).
+  - Tightened `time` from `DateTimeOffset?` to `required DateTimeOffset` (MEDIUM
+    `response_required_drift`).
+  - **LOW (conservative keep):** the non-spec back-compat scalars `routeId`, `userId`,
+    `eventType`, `description` are retained. `id` is also retained but **downgraded from
+    `required` to nullable** — it is absent from the current spec schema, so leaving it
+    `required` would throw during deserialization of a spec-compliant payload now that the
+    genuine REQUIRED fields are present.
+- **`GET /fleet/routes` (`RoutesClient.ListAsync` / `IRoutesClient`)** — added optional
+  `include`, `tagIds`, `parentTagIds`. Modeled as `IReadOnlyList<string>?` joined with commas
+  via `QueryBuilder.WithParams` (repo precedent for comma-separated id/tag filters, e.g.
+  `FuelClient`/`BetaClient`); the spec types these as comma-separated `string`.
+- **`GET /fleet/routes/{id}` (`RoutesClient.GetAsync`)** — added optional `include`
+  (`IReadOnlyList<string>?`).
+- **`GET /fleet/routes/audit-logs/feed` (`RoutesClient.GetAuditLogFeedAsync`)** — added optional
+  `string? expand`.
+- **`GET /hub/plan/routes` (`ListPlanRoutesAsync`)** — this method lives on `IHubsClient` /
+  `HubsClient` (the checklist lists it under Routes, but it is wired there). Added the REQUIRED
+  `string planId` plus optional `routeIds`/`startTime`/`endTime` (`string?` to match the
+  surrounding `HubsClient` `hub/plan/*` methods).
+- **`Route` (response) LOW extras** — the 11 flagged extra scalars (`createdAt`, `updatedAt`,
+  `dispatchRouteId`, `distanceMeters`, `durationSeconds`, `hubId`, `isEdited`, `isPinned`,
+  `planId`, `quantities`, `type`) were **kept** per the conservative flat-scalar back-compat
+  guidance (precedent: 08/13/14/28–31). No `Route` changes.
+- No new model types were introduced, so `SamsaraJsonContext` needed no edits.
+
 
 ## Quick reference
 

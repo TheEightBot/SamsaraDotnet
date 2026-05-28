@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 38-routes (2026-05-27)** — applied the per-domain remediation
+  plan (0 CRIT / 5 HIGH / 10 MED / 16 LOW — 31 total). `RouteAuditEvent`
+  response record realigned to the spec's `RouteFeedObjectResponseBody`: added
+  the four spec-REQUIRED fields `changes`/`route` (opaque `JsonElement`),
+  `source`/`type` (`string`), plus optional `operation`, and tightened `time`
+  to a non-nullable `DateTimeOffset`. The non-spec back-compat scalars
+  (`routeId`, `userId`, `eventType`, `description`) are retained; `id` is
+  retained but downgraded from `required` to nullable (the spec schema omits
+  it, so `required` would break deserialization). `IRoutesClient.ListAsync`
+  gained optional `include`/`tagIds`/`parentTagIds`, `GetAsync` gained optional
+  `include`, and `GetAuditLogFeedAsync` gained optional `expand`.
+  `IHubsClient.ListPlanRoutesAsync` (`GET /hub/plan/routes`) gained the
+  spec-REQUIRED `planId` plus optional `routeIds`/`startTime`/`endTime`. The 11
+  spec-absent `Route` response scalars were kept per the conservative
+  flat-scalar back-compat precedent (plans 08, 13, 14, 28–31). See
+  `docs/api-sync/model-sync-plan-2026-05-27/38-routes.md`.
 - **Model sync 37-route-events (2026-05-27)** — added the spec's optional
   `includeExternalIds` query parameter to `IRouteEventsClient.GetStreamAsync` /
   `RouteEventsClient.GetStreamAsync`. See
