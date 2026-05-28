@@ -3,7 +3,7 @@
 > Companion to [`docs/api-sync/55-webhooks.md`](../55-webhooks.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
-> **✅ Implemented in commit `PENDING` on 2026-05-27**
+> **✅ Implemented in commit `9f2cf86` on 2026-05-27**
 
 ## Implementation notes
 
