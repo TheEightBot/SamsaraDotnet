@@ -3,6 +3,63 @@
 > Companion to [`docs/api-sync/42-settings.md`](../42-settings.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<hash>` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH and MEDIUM findings were applied. LOW response/request-side extras were
+intentionally retained as nullable back-compat properties per the workflow
+precedent established in `08-carrier-proposed-assignments`,
+`13-driver-trailer-assignments`, `14-driver-vehicle-assignments`,
+`28-live-sharing-links`, `29-location-and-speed`, `30-maintenance`,
+`36-readings`, `39-safety`, and `40-safety-scores` — flat-scalar conveniences
+present in the SDK but absent from the current spec inner schema kept (now
+ordered after the spec props) rather than removed outright.
+
+Files touched: `src/Samsara.Sdk/Models/Organization/SettingsModels.cs` only.
+The five types are deserialize-/serialize-through models with no construction
+sites in `src`/`tools`/`tests`, so the `SettingsClient` pass-through, the
+`SamsaraJsonContext` registrations (no new top-level types — the new complex
+fields are weakly-typed `object`), and the CLI/tests required no changes.
+
+**HIGH (12)**
+
+- **`SafetySettings` (response) — 12 spec-REQUIRED fields**: all added as
+  `required` non-nullable. `defaultVehicleType` → `required string`,
+  `safetyScoreTarget` → `required long`, and the ten deeply-nested config blobs
+  (`distractedDrivingDetectionAlerts`, `followingDistanceDetectionAlerts`,
+  `forwardCollisionDetectionAlerts`, `harshEventSensitivity`,
+  `harshEventSensitivityV2`, `policyViolationsDetectionAlerts`,
+  `rollingStopDetectionAlerts`, `safetyScoreConfiguration`, `speedingSettings`,
+  `voiceCoaching`) → `required object`, left weakly-typed per the plan (the
+  repo convention of not schematizing config the plan left as `object`).
+  Safe because `SafetySettings` is deserialize-only (no construction sites).
+
+**MEDIUM (32)**
+
+- **`ComplianceSettings` (response) — 10 fields** and
+  **`UpdateComplianceSettingsRequest` (request) — 10 fields**: added as nullable
+  (`allowUnregulatedVehiclesEnabled`, `canadaHosEnabled`, `carrierName`,
+  `dotNumber` (`long?`), `driverAutoDutyEnabled`, `editCertifiedLogsEnabled`,
+  `forceManualLocationForDutyStatusChangesEnabled`,
+  `forceReviewUnassignedHosEnabled`, `mainOfficeFormattedAddress`,
+  `persistentDutyStatusEnabled`).
+- **`DriverAppSettings` (response) — 6 fields** and
+  **`UpdateDriverAppSettingsRequest` (request) — 6 fields**: added as nullable
+  (`driverFleetId`, `gamification`, `gamificationConfig` (`object?`),
+  `orgVehicleSearch`, `trailerSelection`, `trailerSelectionConfig` (`object?`)).
+
+**LOW (25) — kept as nullable back-compat extras (conservative; not removed)**
+
+- `ComplianceSettings` / `UpdateComplianceSettingsRequest`: `hosEnabled`,
+  `dvirEnabled`, `eldExemptEnabled`, `defaultCycleRule`, `defaultHosRule` (5 each).
+- `DriverAppSettings`: `messageEnabled`, `navigationEnabled`,
+  `driverRewardsEnabled`, `vehiclePreviewEnabled`, `coachingAlertsEnabled` (5).
+- `UpdateDriverAppSettingsRequest`: `messageEnabled`, `navigationEnabled`,
+  `driverRewardsEnabled`, `vehiclePreviewEnabled` (4).
+- `SafetySettings`: `forwardCollisionWarningEnabled`, `laneDepartureWarningEnabled`,
+  `speedingEnabled`, `harshAccelerationEnabled`, `harshBrakingEnabled`,
+  `harshCorneringEnabled` (6).
 
 ## Quick reference
 

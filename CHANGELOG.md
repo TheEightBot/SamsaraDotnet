@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 42-settings (2026-05-27)** — applied the per-domain remediation
+  plan (0 CRIT / 12 HIGH / 32 MED / 25 LOW — 69 total) across the five settings
+  models in `SettingsModels.cs`. `SafetySettings` (response) gained its 12
+  spec-REQUIRED fields as `required` non-nullable: `defaultVehicleType`
+  (`string`), `safetyScoreTarget` (`long`), and ten deeply-nested config blobs
+  (`distractedDrivingDetectionAlerts`, `followingDistanceDetectionAlerts`,
+  `forwardCollisionDetectionAlerts`, `harshEventSensitivity`,
+  `harshEventSensitivityV2`, `policyViolationsDetectionAlerts`,
+  `rollingStopDetectionAlerts`, `safetyScoreConfiguration`, `speedingSettings`,
+  `voiceCoaching`) left weakly-typed as `object` per the plan. The MED findings
+  added optional fields: 10 each to `ComplianceSettings` /
+  `UpdateComplianceSettingsRequest` (`allowUnregulatedVehiclesEnabled`,
+  `canadaHosEnabled`, `carrierName`, `dotNumber`, `driverAutoDutyEnabled`,
+  `editCertifiedLogsEnabled`, `forceManualLocationForDutyStatusChangesEnabled`,
+  `forceReviewUnassignedHosEnabled`, `mainOfficeFormattedAddress`,
+  `persistentDutyStatusEnabled`) and 6 each to `DriverAppSettings` /
+  `UpdateDriverAppSettingsRequest` (`driverFleetId`, `gamification`,
+  `gamificationConfig`, `orgVehicleSearch`, `trailerSelection`,
+  `trailerSelectionConfig`). The 25 non-spec flat scalars (e.g. `hosEnabled`,
+  `messageEnabled`, `forwardCollisionWarningEnabled`) are kept as nullable
+  back-compat extras. No client/JsonContext/CLI/test changes (deserialize-/
+  serialize-through models, no new top-level types). See
+  `docs/api-sync/model-sync-plan-2026-05-27/42-settings.md`.
 - **Model sync 41-sensors (2026-05-27)** — applied the per-domain remediation
   plan (0 CRIT / 1 HIGH / 0 MED / 0 LOW — 1 total). Added the spec-REQUIRED
   `stepMs` (`int`) property to the `V1SensorHistoryRequest` request body for
