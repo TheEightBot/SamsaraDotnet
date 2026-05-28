@@ -9,8 +9,23 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
 
     public VehiclesClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<Vehicle> ListAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<Vehicle>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<Vehicle> ListAsync(
+        IReadOnlyList<string>? attributes = null,
+        string? attributeValueIds = null,
+        string? tagIds = null,
+        string? parentTagIds = null,
+        string? createdAfterTime = null,
+        string? updatedAfterTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<Vehicle>(
+            QueryBuilder.WithParams(BasePath,
+                ("attributes", attributes is null ? null : string.Join(",", attributes)),
+                ("attributeValueIds", attributeValueIds),
+                ("tagIds", tagIds),
+                ("parentTagIds", parentTagIds),
+                ("createdAfterTime", createdAfterTime),
+                ("updatedAfterTime", updatedAfterTime)),
+            cancellationToken: cancellationToken);
 
     public Task<Vehicle> GetAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<Vehicle>($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);

@@ -7,7 +7,14 @@ using Samsara.Sdk.Models.Fleet;
 /// </summary>
 public interface IVehiclesClient
 {
-    IAsyncEnumerable<Vehicle> ListAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<Vehicle> ListAsync(
+        IReadOnlyList<string>? attributes = null,
+        string? attributeValueIds = null,
+        string? tagIds = null,
+        string? parentTagIds = null,
+        string? createdAfterTime = null,
+        string? updatedAfterTime = null,
+        CancellationToken cancellationToken = default);
     Task<Vehicle> GetAsync(string id, CancellationToken cancellationToken = default);
     Task<Vehicle> UpdateAsync(string id, UpdateVehicleRequest request, CancellationToken cancellationToken = default);
     IAsyncEnumerable<VehicleLocation> ListLocationsAsync(

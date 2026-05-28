@@ -15,6 +15,12 @@ public sealed record Vehicle
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
+    [JsonPropertyName("createdAtTime")]
+    public required DateTimeOffset CreatedAtTime { get; init; }
+
+    [JsonPropertyName("updatedAtTime")]
+    public DateTimeOffset? UpdatedAtTime { get; init; }
+
     [JsonPropertyName("vin")]
     public string? Vin { get; init; }
 
@@ -104,6 +110,18 @@ public sealed record Vehicle
 
     [JsonPropertyName("cameraSerial")]
     public string? CameraSerial { get; init; }
+
+    [JsonPropertyName("isRemotePrivacyButtonEnabled")]
+    public bool? IsRemotePrivacyButtonEnabled { get; init; }
+
+    [JsonPropertyName("vehicleWeight")]
+    public long? VehicleWeight { get; init; }
+
+    [JsonPropertyName("vehicleWeightInKilograms")]
+    public long? VehicleWeightInKilograms { get; init; }
+
+    [JsonPropertyName("vehicleWeightInPounds")]
+    public long? VehicleWeightInPounds { get; init; }
 
     [JsonPropertyName("grossVehicleWeight")]
     public object? GrossVehicleWeight { get; init; }
@@ -229,7 +247,7 @@ public sealed record UpdateVehicleRequest
     public string? VehicleType { get; init; }
 
     [JsonPropertyName("attributes")]
-    public System.Text.Json.JsonElement? Attributes { get; init; }
+    public IReadOnlyList<object>? Attributes { get; init; }
 
     [JsonPropertyName("odometerMeters")]
     public long? OdometerMeters { get; init; }

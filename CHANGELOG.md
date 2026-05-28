@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 54-vehicles (2026-05-27)** — applied the per-domain remediation
+  plan (0 CRIT / 1 HIGH / 14 MED / 4 LOW — 19 total) across the three vehicle
+  endpoints. The `Vehicle` response record gained the HIGH `createdAtTime` as
+  **`required DateTimeOffset`** (the shared spec schema marks it required across the
+  vehicle endpoints — verified safe, no `new Vehicle(...)` construction sites) plus
+  five new nullable props (`updatedAtTime`, `isRemotePrivacyButtonEnabled`,
+  `vehicleWeight`, `vehicleWeightInKilograms`, `vehicleWeightInPounds`). The two
+  `weak_typing` fields (`grossVehicleWeight`, `sensorConfiguration`) were
+  intentionally kept as weakly-typed `object?` (effort convention — no fabricated
+  models for un-schematized `type=object`, cf. the 58 `object?` props in
+  `53-vehicle-stats`), and the 4 LOW non-spec extras (`engineHours`,
+  `gatewaySerial`, `grossVehicleWeight`, `odometerMeters`) were retained as nullable
+  back-compat props. `UpdateVehicleRequest.attributes` was changed from
+  `System.Text.Json.JsonElement?` to **`IReadOnlyList<object>?`** (spec `type=array`;
+  the only construction site does not set it). Six optional query params were added
+  to `ListAsync` (`GET /fleet/vehicles`) via `QueryBuilder.WithParams` — all
+  `string?` except `attributes` which is `IReadOnlyList<string>?` (comma-joined):
+  `attributes`, `attributeValueIds`, `tagIds`, `parentTagIds`, `createdAfterTime`,
+  `updatedAfterTime`. **Breaking**: consumers may now rely on a non-null
+  `Vehicle.CreatedAtTime`; the two `VehiclesClientTests` mock fixtures were updated
+  to include `createdAtTime` (precedent: `02-alerts` `Alert.createdAtTime`). The CLI
+  `List All` vehicle action passes the cancellation token by name (the 1st
+  positional slot is now `attributes`). No JsonContext changes
+  (`Vehicle`/`UpdateVehicleRequest` already registered; new props are
+  scalar/`DateTimeOffset`/array, no new top-level types). See
+  `docs/api-sync/model-sync-plan-2026-05-27/54-vehicles.md`.
 - **Model sync 53-vehicle-stats (2026-05-27)** — applied the per-domain
   remediation plan (0 CRIT / 0 HIGH / 77 MED / 4 LOW — 81 total) across the three
   vehicle-stats endpoints. The `VehicleStats` response record gained 58 weakly-typed

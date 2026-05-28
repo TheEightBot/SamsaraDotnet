@@ -11,7 +11,10 @@ public sealed class VehiclesClientTests
     [Fact]
     public async Task GetAsync_CallsCorrectPath()
     {
-        var resp = new { data = new { id = "v-1", name = "Truck 1" } };
+        // Spec marks createdAtTime as REQUIRED on the Vehicle response payload — the
+        // mock payload must include it or System.Text.Json's `required` check throws
+        // on deserialization.
+        var resp = new { data = new { id = "v-1", name = "Truck 1", createdAtTime = "2024-01-01T00:00:00Z" } };
         var handler = MockHttpMessageHandler.WithJsonResponse(resp);
         var client = new VehiclesClient(TestFactory.CreateHttpClient(handler));
 
@@ -24,7 +27,7 @@ public sealed class VehiclesClientTests
     [Fact]
     public async Task UpdateAsync_PatchesToCorrectPath()
     {
-        var resp = new { data = new { id = "v-1", name = "Updated Truck" } };
+        var resp = new { data = new { id = "v-1", name = "Updated Truck", createdAtTime = "2024-01-01T00:00:00Z" } };
         var handler = MockHttpMessageHandler.WithJsonResponse(resp);
         var client = new VehiclesClient(TestFactory.CreateHttpClient(handler));
 
