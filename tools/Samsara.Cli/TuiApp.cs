@@ -984,16 +984,16 @@ internal sealed class TuiApp
                         var (vssStart, vssEnd) = InputHelper.AskTimeRange("Vehicle Safety Scores");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching vehicle safety scores...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Safety.ListVehicleSafetyScoresAsync(vssStart, vssEnd, Timeout60s()));
-                            ResultRenderer.RenderList(items, "Vehicle Safety Scores", s => [s.VehicleId ?? "", s.SafetyScore?.ToString() ?? ""], ["Vehicle ID", "Score"]);
+                            var items = await CollectAsync(_client.Safety.ListVehicleSafetyScoresAsync(vssStart, vssEnd, cancellationToken: Timeout60s()));
+                            ResultRenderer.RenderList(items, "Vehicle Safety Scores", s => [s.VehicleId, s.VehicleScore.ToString()], ["Vehicle ID", "Score"]);
                         });
                         break;
                     case "Driver Safety Scores":
                         var (dssStart, dssEnd) = InputHelper.AskTimeRange("Driver Safety Scores");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching driver safety scores...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Safety.ListDriverSafetyScoresAsync(dssStart, dssEnd, Timeout60s()));
-                            ResultRenderer.RenderList(items, "Driver Safety Scores", s => [s.DriverId ?? "", s.SafetyScore?.ToString() ?? ""], ["Driver ID", "Score"]);
+                            var items = await CollectAsync(_client.Safety.ListDriverSafetyScoresAsync(dssStart, dssEnd, cancellationToken: Timeout60s()));
+                            ResultRenderer.RenderList(items, "Driver Safety Scores", s => [s.DriverId, s.DriverScore.ToString()], ["Driver ID", "Score"]);
                         });
                         break;
                 }

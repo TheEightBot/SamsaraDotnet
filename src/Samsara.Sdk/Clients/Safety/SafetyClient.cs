@@ -22,17 +22,35 @@ internal sealed class SafetyClient : SamsaraServiceClientBase, ISafetyClient
                 ("includeVgOnlyEvents", includeVgOnlyEvents?.ToString().ToLowerInvariant())),
             cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<VehicleSafetyScore> ListVehicleSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<VehicleSafetyScore>(QueryBuilder.WithTimeRange("safety-scores/vehicles", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<VehicleSafetyScore> ListVehicleSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? vehicleIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleSafetyScore>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("safety-scores/vehicles", startTime, endTime),
+                ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds))),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<DriverSafetyScore> ListDriverSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<DriverSafetyScore>(QueryBuilder.WithTimeRange("safety-scores/drivers", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<DriverSafetyScore> ListDriverSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? driverIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<DriverSafetyScore>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("safety-scores/drivers", startTime, endTime),
+                ("driverIds", driverIds is null ? null : string.Join(",", driverIds))),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<TagSafetyScore> ListTagSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<TagSafetyScore>(QueryBuilder.WithTimeRange("safety-scores/tags", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<TagSafetyScore> ListTagSafetyScoresAsync(string scoreType, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? tagIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TagSafetyScore>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("safety-scores/tags", startTime, endTime),
+                ("scoreType", scoreType),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds))),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<TagGroupSafetyScore> ListTagGroupSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<TagGroupSafetyScore>(QueryBuilder.WithTimeRange("safety-scores/tag-group", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<TagGroupSafetyScore> ListTagGroupSafetyScoresAsync(string scoreType, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? tagIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TagGroupSafetyScore>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("safety-scores/tag-group", startTime, endTime),
+                ("scoreType", scoreType),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds))),
+            cancellationToken: cancellationToken);
 
     public IAsyncEnumerable<SafetyEvent> GetEventsStreamAsync(
         DateTimeOffset startTime,

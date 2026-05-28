@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 40-safety-scores (2026-05-27)** — applied the per-domain
+  remediation plan (0 CRIT / 22 HIGH / 4 MED / 23 LOW — 49 total). The four
+  safety-score response models (`VehicleSafetyScore`, `DriverSafetyScore`,
+  `TagSafetyScore`, `TagGroupSafetyScore`) were realigned to their real spec
+  schemas: added the spec-REQUIRED fields `driveDistanceMeters`,
+  `driveTimeMilliseconds`, `behaviors`, `speeding`, and the per-entity score
+  (`vehicleScore`/`driverScore`/`tagScore`/`combinedScore`), with `behaviors`
+  and `speeding` modeled as strongly-typed `IReadOnlyList<SafetyScoreBehavior>`
+  / `IReadOnlyList<SafetyScoreSpeeding>` (two new nested records registered in
+  `SamsaraJsonContext`). `scoreType` was made spec-REQUIRED on
+  `ListTagSafetyScoresAsync`/`ListTagGroupSafetyScoresAsync` (positional, valid
+  values `driver`/`vehicle`), and optional `vehicleIds`/`driverIds`/`tagIds`
+  list filters were added across the four list methods. The non-spec flat
+  scalars (`safetyScore`, `timeRange`, `totalHarshEventCount`,
+  `totalDistanceDrivenMeters`, `totalTimeDrivenMs`, `crashCount`,
+  `harshAccelCount`, `harshBrakingCount`, `harshTurningCount`, `tagName`,
+  `tagGroupName`, `tagGroupId`) are kept as nullable back-compat extras with
+  XML doc pointers to the canonical spec fields, per the conservative
+  flat-scalar precedent. CLI safety-score actions and the two existing unit
+  tests were updated for the new signatures/required fields. See
+  `docs/api-sync/model-sync-plan-2026-05-27/40-safety-scores.md`.
 - **Model sync 39-safety (2026-05-27)** — applied the per-domain remediation
   plan (0 CRIT / 16 HIGH / 24 MED / 2 LOW — 42 total). The long-flagged
   `SafetyEvent` v2 stub was rebuilt against its real schema

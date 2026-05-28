@@ -3,6 +3,97 @@
 > Companion to [`docs/api-sync/40-safety-scores.md`](../40-safety-scores.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<pending>` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH and MEDIUM findings were applied. LOW response-side extras were
+intentionally retained as nullable back-compat properties per the workflow
+precedent established in `08-carrier-proposed-assignments`,
+`13-driver-trailer-assignments`, `14-driver-vehicle-assignments`,
+`28-live-sharing-links`, `29-location-and-speed`, `30-maintenance`,
+`36-readings`, and `39-safety` — response-side flat-scalar conveniences kept
+with XML doc pointers to the canonical spec fields rather than removed outright.
+The four score response models were realigned to their real spec schemas
+(`VehicleSafetyScoreResponseBody`, `DriverSafetyScoreResponseBody`,
+`TagSafetyScoreResponseBody`, `TagGroupSafetyScoreResponseBody`).
+
+Files touched: `src/Samsara.Sdk/Models/Safety/SafetyModels.cs`,
+`src/Samsara.Sdk/Clients/Safety/ISafetyClient.cs`,
+`src/Samsara.Sdk/Clients/Safety/SafetyClient.cs`,
+`src/Samsara.Sdk/Serialization/SamsaraJsonContext.cs`,
+`tools/Samsara.Cli/TuiApp.cs`,
+`tests/Samsara.Sdk.Tests/SafetyClientExtensionTests.cs`.
+
+**HIGH (22)**
+
+- **`(no SDK type)` query — `ListTagSafetyScoresAsync` / `ListTagGroupSafetyScoresAsync`
+  required `scoreType`**: added as a required positional `string scoreType` (no
+  default, placed first so it precedes the existing defaulted `startTime`/`endTime`),
+  appended via `QueryBuilder.WithParams("scoreType", scoreType)`. Valid spec values
+  are `driver`/`vehicle`. Breaking signature change.
+- **`DriverSafetyScore` (response) — required `behaviors`, `driveDistanceMeters`,
+  `driveTimeMilliseconds`, `driverScore`, `speeding`**: all five added as `required`
+  non-nullable. `behaviors`/`speeding` modeled as strongly-typed
+  `IReadOnlyList<SafetyScoreBehavior>` / `IReadOnlyList<SafetyScoreSpeeding>` rather
+  than the plan's `IReadOnlyList<object>` placeholders (repo convention, per `39-safety`).
+- **`TagSafetyScore` (response) — required `behaviors`, `driveDistanceMeters`,
+  `driveTimeMilliseconds`, `speeding`, `tagScore`**: all five added as `required`
+  non-nullable (same typed-array treatment).
+- **`TagGroupSafetyScore` (response) — required `behaviors`, `combinedScore`,
+  `driveDistanceMeters`, `driveTimeMilliseconds`, `speeding`**: all five added as
+  `required` non-nullable (same typed-array treatment). Note: the spec's
+  `tag-group` schema does **not** include `tagGroupId`, so `tagGroupId` was demoted
+  from `required` to a nullable back-compat extra (see LOW).
+- **`VehicleSafetyScore` (response) — required `behaviors`, `driveDistanceMeters`,
+  `driveTimeMilliseconds`, `speeding`, `vehicleScore`**: all five added as `required`
+  non-nullable (same typed-array treatment).
+
+**New typed nested records** (mirroring spec sub-schemas), both registered in
+`SamsaraJsonContext`:
+
+- `SafetyScoreBehavior` (`SafetyScoreBehaviorObjectResponseBody`): required
+  `behaviorType` (string enum), `count` (`long`), `scoreImpact` (`double`).
+- `SafetyScoreSpeeding` (`SafetyScoreSpeedingObjectResponseBody`): required
+  `speedingType` (string enum), `durationMilliseconds` (`long`), `scoreImpact` (`double`).
+
+**MEDIUM (4)**
+
+- Added optional list filters to all four list methods: `vehicleIds`
+  (`ListVehicleSafetyScoresAsync`), `driverIds` (`ListDriverSafetyScoresAsync`),
+  `tagIds` (`ListTagSafetyScoresAsync` and `ListTagGroupSafetyScoresAsync`) — each
+  `IReadOnlyList<string>? = null`, appended conditionally as a comma-joined value
+  (matching the existing `assetIds`/`driverIds` pattern in `GetEventsStreamAsync`).
+
+**LOW (23) — kept as nullable back-compat extras (conservative; not removed)**
+
+- `VehicleSafetyScore`: `safetyScore`, `timeRange`, `totalDistanceDrivenMeters`,
+  `totalHarshEventCount`, `totalTimeDrivenMs`, `crashCount`, `harshAccelCount`,
+  `harshBrakingCount`, `harshTurningCount`.
+- `DriverSafetyScore`: `safetyScore`, `timeRange`, `totalDistanceDrivenMeters`,
+  `totalHarshEventCount`, `totalTimeDrivenMs`.
+- `TagSafetyScore`: `safetyScore`, `tagName`, `timeRange`, `totalHarshEventCount`.
+- `TagGroupSafetyScore`: `safetyScore`, `tagGroupId`, `tagGroupName`, `timeRange`,
+  `totalHarshEventCount`.
+
+  Each carries an XML doc pointer to the canonical spec field where applicable
+  (e.g. `safetyScore` → `vehicleScore`/`driverScore`/`tagScore`/`combinedScore`,
+  `totalTimeDrivenMs` → `driveTimeMilliseconds`). Retained to avoid breaking
+  existing consumers (and the CLI/tests) for LOW findings.
+
+**Callers updated**
+
+- CLI (`tools/Samsara.Cli/TuiApp.cs`): the vehicle/driver safety-score actions now
+  pass the cancellation token by name (the 3rd positional slot is now the
+  `vehicleIds`/`driverIds` filter) and render the spec `VehicleScore`/`DriverScore`
+  ints instead of the back-compat nullable `SafetyScore`.
+- Tests (`SafetyClientExtensionTests.cs`): the two existing tag/tag-group tests now
+  pass `scoreType` and include the new spec-REQUIRED fields in their mock JSON
+  (required members throw on deserialization if absent), and assert
+  `TagScore`/`CombinedScore` plus the `scoreType` query value.
+
+Verification: `dotnet build` 0 errors/0 warnings, `dotnet test` 59 passed, and
+`check-sdk-sync.py --fail-on-mismatch` exits 0 (323/323 matched).
 
 ## Quick reference
 

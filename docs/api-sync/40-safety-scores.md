@@ -1,7 +1,8 @@
 # Safety Scores — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ❌ Not Started (0/4 endpoints implemented)  
+> **Status**: ✅ Resolved 2026-05-27 (model-sync plan)  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: see [`model-sync-plan-2026-05-27/40-safety-scores.md`](model-sync-plan-2026-05-27/40-safety-scores.md). All four score response models realigned to their real spec schemas (`VehicleSafetyScoreResponseBody`, `DriverSafetyScoreResponseBody`, `TagSafetyScoreResponseBody`, `TagGroupSafetyScoreResponseBody`): added the spec-REQUIRED fields (`behaviors`/`speeding` as typed `SafetyScoreBehavior`/`SafetyScoreSpeeding` lists, `driveDistanceMeters`, `driveTimeMilliseconds`, plus `vehicleScore`/`driverScore`/`tagScore`/`combinedScore`). Query params wired: `scoreType` made required on `getTagSafetyScores`/`getTagGroupSafetyScores`, and optional `vehicleIds`/`driverIds`/`tagIds` filters added across the four list methods. Back-compat flat scalars (`safetyScore`, `timeRange`, `totalHarshEventCount`, `total*Driven*`, harsh-event counts, `tagName`/`tagGroupName`/`tagGroupId`) kept as nullable extras with XML doc pointers.  
 > **SDK Client**: `ISafetyClient`  
 > **Implementation**: `src/Samsara.Sdk/Clients/.../SafetyClient.cs`  
 > **Models**: `src/Samsara.Sdk/Models/Safety/SafetyModels.cs`  

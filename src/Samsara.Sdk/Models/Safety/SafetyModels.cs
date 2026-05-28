@@ -472,67 +472,161 @@ public sealed record SafetyEventTag
 }
 
 /// <summary>
-/// Vehicle safety score.
+/// Vehicle safety score. Mirrors the spec's <c>VehicleSafetyScoreResponseBody</c> returned by
+/// <c>GET /safety-scores/vehicles</c>.
 /// </summary>
 public sealed record VehicleSafetyScore
 {
+    /// <summary>ID of the vehicle. Spec-required.</summary>
     [JsonPropertyName("vehicleId")]
     public required string VehicleId { get; init; }
 
+    /// <summary>The safety score for the vehicle. Spec-required.</summary>
+    [JsonPropertyName("vehicleScore")]
+    public required int VehicleScore { get; init; }
+
+    /// <summary>Breakdown of the behaviors that contributed to the score. Spec-required.</summary>
+    [JsonPropertyName("behaviors")]
+    public required IReadOnlyList<SafetyScoreBehavior> Behaviors { get; init; }
+
+    /// <summary>Breakdown of the speeding intervals that contributed to the score. Spec-required.</summary>
+    [JsonPropertyName("speeding")]
+    public required IReadOnlyList<SafetyScoreSpeeding> Speeding { get; init; }
+
+    /// <summary>Total distance driven over the time range, in meters. Spec-required.</summary>
+    [JsonPropertyName("driveDistanceMeters")]
+    public required long DriveDistanceMeters { get; init; }
+
+    /// <summary>Total time driven over the time range, in milliseconds. Spec-required.</summary>
+    [JsonPropertyName("driveTimeMilliseconds")]
+    public required long DriveTimeMilliseconds { get; init; }
+
+    /// <summary>
+    /// Composite safety score (legacy flat shape, retained for back-compat). The spec models the
+    /// vehicle score under <see cref="VehicleScore"/>.
+    /// </summary>
     [JsonPropertyName("safetyScore")]
     public double? SafetyScore { get; init; }
 
+    /// <summary>
+    /// Total harsh event count (legacy flat shape, retained for back-compat). The spec models
+    /// behavior counts under <see cref="Behaviors"/>.
+    /// </summary>
     [JsonPropertyName("totalHarshEventCount")]
     public int? TotalHarshEventCount { get; init; }
 
+    /// <summary>
+    /// Total time driven in milliseconds (legacy flat shape, retained for back-compat). The spec
+    /// models this under <see cref="DriveTimeMilliseconds"/>.
+    /// </summary>
     [JsonPropertyName("totalTimeDrivenMs")]
     public long? TotalTimeDrivenMs { get; init; }
 
+    /// <summary>
+    /// Total distance driven in meters (legacy flat shape, retained for back-compat). The spec
+    /// models this under <see cref="DriveDistanceMeters"/>.
+    /// </summary>
     [JsonPropertyName("totalDistanceDrivenMeters")]
     public double? TotalDistanceDrivenMeters { get; init; }
 
+    /// <summary>Time range (legacy flat shape, retained for back-compat). Not modeled by the spec.</summary>
     [JsonPropertyName("timeRange")]
     public TimeRange? TimeRange { get; init; }
 
+    /// <summary>
+    /// Crash count (legacy flat shape, retained for back-compat). The spec models behavior counts
+    /// under <see cref="Behaviors"/>.
+    /// </summary>
     [JsonPropertyName("crashCount")]
     public int? CrashCount { get; init; }
 
+    /// <summary>
+    /// Harsh acceleration count (legacy flat shape, retained for back-compat). The spec models
+    /// behavior counts under <see cref="Behaviors"/>.
+    /// </summary>
     [JsonPropertyName("harshAccelCount")]
     public int? HarshAccelCount { get; init; }
 
+    /// <summary>
+    /// Harsh braking count (legacy flat shape, retained for back-compat). The spec models behavior
+    /// counts under <see cref="Behaviors"/>.
+    /// </summary>
     [JsonPropertyName("harshBrakingCount")]
     public int? HarshBrakingCount { get; init; }
 
+    /// <summary>
+    /// Harsh turning count (legacy flat shape, retained for back-compat). The spec models behavior
+    /// counts under <see cref="Behaviors"/>.
+    /// </summary>
     [JsonPropertyName("harshTurningCount")]
     public int? HarshTurningCount { get; init; }
 }
 
 /// <summary>
-/// Driver safety score.
+/// Driver safety score. Mirrors the spec's <c>DriverSafetyScoreResponseBody</c> returned by
+/// <c>GET /safety-scores/drivers</c>.
 /// </summary>
 public sealed record DriverSafetyScore
 {
+    /// <summary>ID of the driver. Spec-required.</summary>
     [JsonPropertyName("driverId")]
     public required string DriverId { get; init; }
 
+    /// <summary>The safety score for the driver. Spec-required.</summary>
+    [JsonPropertyName("driverScore")]
+    public required int DriverScore { get; init; }
+
+    /// <summary>Breakdown of the behaviors that contributed to the score. Spec-required.</summary>
+    [JsonPropertyName("behaviors")]
+    public required IReadOnlyList<SafetyScoreBehavior> Behaviors { get; init; }
+
+    /// <summary>Breakdown of the speeding intervals that contributed to the score. Spec-required.</summary>
+    [JsonPropertyName("speeding")]
+    public required IReadOnlyList<SafetyScoreSpeeding> Speeding { get; init; }
+
+    /// <summary>Total distance driven over the time range, in meters. Spec-required.</summary>
+    [JsonPropertyName("driveDistanceMeters")]
+    public required long DriveDistanceMeters { get; init; }
+
+    /// <summary>Total time driven over the time range, in milliseconds. Spec-required.</summary>
+    [JsonPropertyName("driveTimeMilliseconds")]
+    public required long DriveTimeMilliseconds { get; init; }
+
+    /// <summary>
+    /// Composite safety score (legacy flat shape, retained for back-compat). The spec models the
+    /// driver score under <see cref="DriverScore"/>.
+    /// </summary>
     [JsonPropertyName("safetyScore")]
     public double? SafetyScore { get; init; }
 
+    /// <summary>
+    /// Total harsh event count (legacy flat shape, retained for back-compat). The spec models
+    /// behavior counts under <see cref="Behaviors"/>.
+    /// </summary>
     [JsonPropertyName("totalHarshEventCount")]
     public int? TotalHarshEventCount { get; init; }
 
+    /// <summary>
+    /// Total time driven in milliseconds (legacy flat shape, retained for back-compat). The spec
+    /// models this under <see cref="DriveTimeMilliseconds"/>.
+    /// </summary>
     [JsonPropertyName("totalTimeDrivenMs")]
     public long? TotalTimeDrivenMs { get; init; }
 
+    /// <summary>
+    /// Total distance driven in meters (legacy flat shape, retained for back-compat). The spec
+    /// models this under <see cref="DriveDistanceMeters"/>.
+    /// </summary>
     [JsonPropertyName("totalDistanceDrivenMeters")]
     public double? TotalDistanceDrivenMeters { get; init; }
 
+    /// <summary>Time range (legacy flat shape, retained for back-compat). Not modeled by the spec.</summary>
     [JsonPropertyName("timeRange")]
     public TimeRange? TimeRange { get; init; }
 }
 
 /// <summary>
-/// A time range used for safety score calculations.
+/// A time range used for safety score calculations (legacy flat shape, retained for back-compat).
 /// </summary>
 public sealed record TimeRange
 {
@@ -544,43 +638,166 @@ public sealed record TimeRange
 }
 
 /// <summary>
-/// Safety score aggregated by tag.
+/// Safety score aggregated by tag. Mirrors the spec's <c>TagSafetyScoreResponseBody</c> returned
+/// by <c>GET /safety-scores/tags</c>.
 /// </summary>
 public sealed record TagSafetyScore
 {
+    /// <summary>ID of the tag. Spec-required.</summary>
     [JsonPropertyName("tagId")]
     public required string TagId { get; init; }
 
+    /// <summary>The safety score for the tag. Spec-required.</summary>
+    [JsonPropertyName("tagScore")]
+    public required int TagScore { get; init; }
+
+    /// <summary>Breakdown of the behaviors that contributed to the score. Spec-required.</summary>
+    [JsonPropertyName("behaviors")]
+    public required IReadOnlyList<SafetyScoreBehavior> Behaviors { get; init; }
+
+    /// <summary>Breakdown of the speeding intervals that contributed to the score. Spec-required.</summary>
+    [JsonPropertyName("speeding")]
+    public required IReadOnlyList<SafetyScoreSpeeding> Speeding { get; init; }
+
+    /// <summary>Total distance driven over the time range, in meters. Spec-required.</summary>
+    [JsonPropertyName("driveDistanceMeters")]
+    public required long DriveDistanceMeters { get; init; }
+
+    /// <summary>Total time driven over the time range, in milliseconds. Spec-required.</summary>
+    [JsonPropertyName("driveTimeMilliseconds")]
+    public required long DriveTimeMilliseconds { get; init; }
+
+    /// <summary>Name of the tag (legacy flat shape, retained for back-compat). Not modeled by the spec.</summary>
     [JsonPropertyName("tagName")]
     public string? TagName { get; init; }
 
+    /// <summary>
+    /// Composite safety score (legacy flat shape, retained for back-compat). The spec models the
+    /// tag score under <see cref="TagScore"/>.
+    /// </summary>
     [JsonPropertyName("safetyScore")]
     public double? SafetyScore { get; init; }
 
+    /// <summary>
+    /// Total harsh event count (legacy flat shape, retained for back-compat). The spec models
+    /// behavior counts under <see cref="Behaviors"/>.
+    /// </summary>
     [JsonPropertyName("totalHarshEventCount")]
     public int? TotalHarshEventCount { get; init; }
 
+    /// <summary>Time range (legacy flat shape, retained for back-compat). Not modeled by the spec.</summary>
     [JsonPropertyName("timeRange")]
     public TimeRange? TimeRange { get; init; }
 }
 
 /// <summary>
-/// Safety score aggregated by tag group.
+/// Safety score aggregated by tag group. Mirrors the spec's <c>TagGroupSafetyScoreResponseBody</c>
+/// returned by <c>GET /safety-scores/tag-group</c>.
 /// </summary>
 public sealed record TagGroupSafetyScore
 {
-    [JsonPropertyName("tagGroupId")]
-    public required string TagGroupId { get; init; }
+    /// <summary>The combined safety score across the tag group. Spec-required.</summary>
+    [JsonPropertyName("combinedScore")]
+    public required int CombinedScore { get; init; }
 
+    /// <summary>Breakdown of the behaviors that contributed to the score. Spec-required.</summary>
+    [JsonPropertyName("behaviors")]
+    public required IReadOnlyList<SafetyScoreBehavior> Behaviors { get; init; }
+
+    /// <summary>Breakdown of the speeding intervals that contributed to the score. Spec-required.</summary>
+    [JsonPropertyName("speeding")]
+    public required IReadOnlyList<SafetyScoreSpeeding> Speeding { get; init; }
+
+    /// <summary>Total distance driven over the time range, in meters. Spec-required.</summary>
+    [JsonPropertyName("driveDistanceMeters")]
+    public required long DriveDistanceMeters { get; init; }
+
+    /// <summary>Total time driven over the time range, in milliseconds. Spec-required.</summary>
+    [JsonPropertyName("driveTimeMilliseconds")]
+    public required long DriveTimeMilliseconds { get; init; }
+
+    /// <summary>
+    /// ID of the tag group (legacy flat shape, retained for back-compat). Not modeled by the
+    /// spec's <c>TagGroupSafetyScoreResponseBody</c>.
+    /// </summary>
+    [JsonPropertyName("tagGroupId")]
+    public string? TagGroupId { get; init; }
+
+    /// <summary>Name of the tag group (legacy flat shape, retained for back-compat). Not modeled by the spec.</summary>
     [JsonPropertyName("tagGroupName")]
     public string? TagGroupName { get; init; }
 
+    /// <summary>
+    /// Composite safety score (legacy flat shape, retained for back-compat). The spec models the
+    /// combined score under <see cref="CombinedScore"/>.
+    /// </summary>
     [JsonPropertyName("safetyScore")]
     public double? SafetyScore { get; init; }
 
+    /// <summary>
+    /// Total harsh event count (legacy flat shape, retained for back-compat). The spec models
+    /// behavior counts under <see cref="Behaviors"/>.
+    /// </summary>
     [JsonPropertyName("totalHarshEventCount")]
     public int? TotalHarshEventCount { get; init; }
 
+    /// <summary>Time range (legacy flat shape, retained for back-compat). Not modeled by the spec.</summary>
     [JsonPropertyName("timeRange")]
     public TimeRange? TimeRange { get; init; }
+}
+
+/// <summary>
+/// A single behavior's contribution to a safety score. Mirrors the spec's
+/// <c>SafetyScoreBehaviorObjectResponseBody</c>.
+/// </summary>
+public sealed record SafetyScoreBehavior
+{
+    /// <summary>
+    /// Type of the behavior. Valid values: <c>acceleration</c>, <c>braking</c>, <c>crash</c>,
+    /// <c>defensiveDriving</c>, <c>didNotYield</c>, <c>distractedDrivingAutomatic</c>,
+    /// <c>distractedDrivingManual</c>, <c>drowsy</c>, <c>eatingDrinking</c>,
+    /// <c>followingDistance</c>, <c>followingDistanceModerate</c>, <c>followingDistanceSevere</c>,
+    /// <c>forwardCollisionWarning</c>, <c>harshTurn</c>, <c>laneDeparture</c>, <c>lateResponse</c>,
+    /// <c>mobileUsage</c>, <c>nearCollision</c>, <c>noSeatbelt</c>, <c>obstructedCamera</c>,
+    /// <c>ranRedLight</c>, <c>rollingStop</c>, <c>smoking</c>, <c>speedingManual</c>,
+    /// <c>unknown</c>. Spec-required.
+    /// </summary>
+    [JsonPropertyName("behaviorType")]
+    public required string BehaviorType { get; init; }
+
+    /// <summary>Count of occurrences of the behavior. Spec-required.</summary>
+    [JsonPropertyName("count")]
+    public required long Count { get; init; }
+
+    /// <summary>
+    /// Total points increased or deducted from the score due to the total count of behaviors.
+    /// Spec-required.
+    /// </summary>
+    [JsonPropertyName("scoreImpact")]
+    public required double ScoreImpact { get; init; }
+}
+
+/// <summary>
+/// A single speeding interval's contribution to a safety score. Mirrors the spec's
+/// <c>SafetyScoreSpeedingObjectResponseBody</c>.
+/// </summary>
+public sealed record SafetyScoreSpeeding
+{
+    /// <summary>
+    /// Type of speeding. Valid values: <c>light</c>, <c>moderate</c>, <c>heavy</c>, <c>severe</c>,
+    /// <c>maxSpeed</c>, <c>unknown</c>. Spec-required.
+    /// </summary>
+    [JsonPropertyName("speedingType")]
+    public required string SpeedingType { get; init; }
+
+    /// <summary>Total time spent speeding for the speeding type, in milliseconds. Spec-required.</summary>
+    [JsonPropertyName("durationMilliseconds")]
+    public required long DurationMilliseconds { get; init; }
+
+    /// <summary>
+    /// Total points increased or deducted from the score due to the total time spent speeding.
+    /// Spec-required.
+    /// </summary>
+    [JsonPropertyName("scoreImpact")]
+    public required double ScoreImpact { get; init; }
 }

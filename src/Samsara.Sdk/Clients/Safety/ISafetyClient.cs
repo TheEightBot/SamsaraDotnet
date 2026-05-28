@@ -17,10 +17,28 @@ public interface ISafetyClient
         bool? includeDriver = null,
         bool? includeVgOnlyEvents = null,
         CancellationToken cancellationToken = default);
-    IAsyncEnumerable<VehicleSafetyScore> ListVehicleSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<DriverSafetyScore> ListDriverSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<TagSafetyScore> ListTagSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<TagGroupSafetyScore> ListTagGroupSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// List vehicle safety scores (<c>GET /safety-scores/vehicles</c>). Optionally filter by
+    /// <paramref name="vehicleIds"/>.
+    /// </summary>
+    IAsyncEnumerable<VehicleSafetyScore> ListVehicleSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? vehicleIds = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// List driver safety scores (<c>GET /safety-scores/drivers</c>). Optionally filter by
+    /// <paramref name="driverIds"/>.
+    /// </summary>
+    IAsyncEnumerable<DriverSafetyScore> ListDriverSafetyScoresAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? driverIds = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// List tag safety scores (<c>GET /safety-scores/tags</c>). <paramref name="scoreType"/> is
+    /// spec-required (valid values: <c>driver</c>, <c>vehicle</c>). Optionally filter by
+    /// <paramref name="tagIds"/>.
+    /// </summary>
+    IAsyncEnumerable<TagSafetyScore> ListTagSafetyScoresAsync(string scoreType, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? tagIds = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Get the combined tag-group safety score (<c>GET /safety-scores/tag-group</c>).
+    /// <paramref name="scoreType"/> is spec-required (valid values: <c>driver</c>, <c>vehicle</c>).
+    /// Optionally filter by <paramref name="tagIds"/>.
+    /// </summary>
+    IAsyncEnumerable<TagGroupSafetyScore> ListTagGroupSafetyScoresAsync(string scoreType, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? tagIds = null, CancellationToken cancellationToken = default);
     /// <summary>
     /// Stream safety events over a time window (<c>GET /safety-events/stream</c>).
     /// <paramref name="startTime"/> is spec-required.
