@@ -3,7 +3,7 @@
 > Companion to [`docs/api-sync/50-trips.md`](../50-trips.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
-> **✅ Implemented in commit `<pending>` on 2026-05-27**
+> **✅ Implemented in commit `e15edee` on 2026-05-27**
 
 ## Implementation notes
 
