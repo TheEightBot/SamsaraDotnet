@@ -3,7 +3,7 @@
 > Companion to [`docs/api-sync/56-work-orders.md`](../56-work-orders.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
-> **✅ Implemented in commit `PENDING` on 2026-05-27**
+> **✅ Implemented in commit `8061850` on 2026-05-27**
 
 ## Implementation notes
 
