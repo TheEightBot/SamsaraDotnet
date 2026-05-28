@@ -3,7 +3,7 @@
 > Companion to [`docs/api-sync/53-vehicle-stats.md`](../53-vehicle-stats.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
-> **✅ Implemented in commit `<pending>` on 2026-05-27**
+> **✅ Implemented in commit `cab18c2` on 2026-05-27**
 
 ## Implementation notes
 
