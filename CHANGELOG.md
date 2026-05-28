@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 48-trainingassignments (2026-05-27)** — applied the per-domain
+  remediation plan (0 CRIT / 8 HIGH / 12 MED / 6 LOW — 26 total) across the
+  training-assignments stream endpoint (`GET /training-assignments/stream`).
+  **Breaking**: `ListAssignmentsAsync` gained a required `DateTimeOffset startTime`
+  query param (spec REQUIRED, placed first with no default, appended via
+  `QueryBuilder.WithTimeRange`; modeled as `DateTimeOffset` per repo stream-param
+  convention rather than the spec's literal `string`). Also **breaking**:
+  `TrainingAssignment.Status` tightened from `string?` to `required string` (spec
+  marks it REQUIRED). Added 6 optional query params: `endTime` (`DateTimeOffset?`),
+  `categoryIds`/`courseIds`/`learnerIds`/`status` (`IReadOnlyList<string>?`,
+  comma-joined), and `isOverdue` (`bool?`). `TrainingAssignment` (response) gained
+  7 required props — `course` and `learner` (weakly-typed `object`), `createdById`
+  and `updatedById` (`string`), `createdAtTime` and `updatedAtTime`
+  (`DateTimeOffset`), and `durationMinutes` (`long`, int64) — plus 5 optional props
+  (`startedAtTime`, `deletedAtTime` as `DateTimeOffset?`; `isOverdue`,
+  `isCompletedLate` as `bool?`; `scorePercent` as `double?`). The 6 LOW non-spec
+  extras (`driverId`, `driverName`, `courseId`, `courseName`, `assignedAtTime`,
+  `score`) are retained as nullable back-compat props. The CLI `List Assignments`
+  call site in `TuiApp.cs` was updated for the new signature (default 7-day window,
+  named `cancellationToken:` argument, non-nullable `Status` deref). No
+  JsonContext/test changes (record already registered, new props weakly-typed /
+  scalar / `DateTimeOffset`, no construction sites). See
+  `docs/api-sync/model-sync-plan-2026-05-27/48-trainingassignments.md`.
 - **Model sync 47-trailers (2026-05-27)** — applied the per-domain remediation
   plan (0 CRIT / 3 HIGH / 48 MED / 21 LOW — 72 total) across the trailers
   endpoints (`GET`/`POST` `/fleet/trailers`, `GET`/`PATCH`/`DELETE`

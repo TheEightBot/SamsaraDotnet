@@ -3,6 +3,61 @@
 > Companion to [`docs/api-sync/48-trainingassignments.md`](../48-trainingassignments.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `PENDING` on 2026-05-27**
+
+## Implementation notes
+
+All HIGH and MEDIUM findings were applied. The 6 LOW response-side extras were
+intentionally retained as nullable back-compat properties per the workflow
+precedent (cf. `40-safety-scores`, `45-tags`, `46-trailer-assignments`,
+`47-trailers`) — grouped under a `// Not in current spec; retained for
+back-compat.` comment rather than removed.
+
+Files touched: `src/Samsara.Sdk/Models/Training/TrainingModels.cs`,
+`src/Samsara.Sdk/Clients/Training/ITrainingClient.cs`,
+`src/Samsara.Sdk/Clients/Training/TrainingClient.cs`,
+`tools/Samsara.Cli/TuiApp.cs`.
+
+**HIGH (8)**
+
+- **`(no SDK type)` query — `ListAssignmentsAsync` required `startTime`**: added
+  as a required positional `DateTimeOffset startTime` (no default, placed first),
+  appended via `QueryBuilder.WithTimeRange`. **Breaking** signature change. The
+  plan lists spec `type=string`, but `*Time` stream params are modeled as
+  `DateTimeOffset` here, mirroring `ISafetyClient.GetEventsStreamAsync`.
+- **`TrainingAssignment` (response) — 7 required props**: `course`
+  (`required object`), `learner` (`required object`), `createdById`
+  (`required string`), `createdAtTime` (`required DateTimeOffset`), `updatedById`
+  (`required string`), `updatedAtTime` (`required DateTimeOffset`),
+  `durationMinutes` (`required long`, int64). Timestamps use `DateTimeOffset` per
+  repo convention (plan says `string`); `course`/`learner` stay weakly-typed
+  `object` per plan. Verified safe to mark `required` — no `new
+  TrainingAssignment(...)` construction sites exist.
+
+**MEDIUM (12)**
+
+- **Query params (6)**: `endTime` added as `DateTimeOffset?` (via
+  `WithTimeRange`); `categoryIds`, `courseIds`, `learnerIds`, and `status` added
+  as `IReadOnlyList<string>?` (comma-joined). `status` uses
+  `IReadOnlyList<string>?`, not the plan's literal `IReadOnlyList<object>?`, to
+  match the array-query convention. `isOverdue` added as `bool?` (lowercase
+  stringified). All appended via `QueryBuilder.WithParams`.
+- **`TrainingAssignment` (response) — 5 optional props + 1 tightening**: added
+  `startedAtTime` (`DateTimeOffset?`), `deletedAtTime` (`DateTimeOffset?`),
+  `isOverdue` (`bool?`), `isCompletedLate` (`bool?`), `scorePercent` (`double?`).
+  `status` tightened from `string?` to `required string` (spec REQUIRED) —
+  **breaking**.
+
+**LOW (6)**
+
+- Non-spec extras `driverId`, `driverName`, `courseId`, `courseName`,
+  `assignedAtTime`, `score` retained as nullable back-compat props.
+
+The CLI `List Assignments` call site in `TuiApp.cs` was updated for the new
+signature (default 7-day window `DateTimeOffset.UtcNow.AddDays(-7)`, named
+`cancellationToken:` argument) and the now-non-nullable `a.Status` deref. No
+JsonContext/test changes (record already registered, new props weakly-typed /
+scalar / `DateTimeOffset`, no construction sites).
 
 ## Quick reference
 
