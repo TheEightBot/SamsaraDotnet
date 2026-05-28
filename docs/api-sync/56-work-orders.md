@@ -1,10 +1,11 @@
 # Work Orders — API Sync Checklist
 
 > **API Version**: `2025-10-23`  
-> **Status**: ⚠️ Unverified (0/7 endpoints implemented)  
-> **SDK Client**: `IMaintenanceClient`  
-> **Implementation**: `src/Samsara.Sdk/Clients/.../MaintenanceClient.cs`  
-> **Models**: `src/Samsara.Sdk/Models/Maintenance/MaintenanceModels.cs`  
+> **Status**: ✅ Resolved 2026-05-27 (model-sync plan)  
+> **✅ Resolved 2026-05-27 (model-sync plan)**: see [`model-sync-plan-2026-05-27/56-work-orders.md`](model-sync-plan-2026-05-27/56-work-orders.md). All 26 findings (0 CRIT / 2 HIGH / 20 MED / 4 LOW) applied across the work-order, service-task, and invoice-scan endpoints. `DeleteWorkOrdersAsync` was re-signatured from `string[] ids` to a single required **`string id`** (the spec's `DELETE /maintenance/work-orders` takes one `id` — **breaking**, but SAFE: no callers in src/tools/tests). `PostInvoiceScanRequest` gained the HIGH **`required object File`**, the MED `assetId` (`string?`), and its non-spec `imageBase64` extra was DEMOTED from `required` to nullable and RETAINED. `ServiceTask` gained four nullable props (`category`, `estimatedLaborTimeMinutes` as `int?`, `estimatedPartsCost` as `object?`, `subcategory`) and tightened `name` to **`required string`**; its non-spec `laborCostCents` extra was RETAINED. `InvoiceScan` tightened `workOrderId` to **`required string`** and DEMOTED its non-spec `id` extra from `required` to nullable (retained, else deserialization breaks); `status` retained. `WorkOrder` gained the MED `maintenanceSite` (`object?`); `CreateWorkOrderRequest`/`UpdateWorkOrderRequest` each gained `placeExternalId`/`placeId` (`string?`). Eight optional query params were added across the three list/stream methods. **Breaking**: consumers may now rely on non-null `InvoiceScan.WorkOrderId`/`ServiceTask.Name`, and `PostInvoiceScanRequest` now requires `file` instead of `imageBase64`. No JsonContext changes (all types already registered; new props are weakly-typed `object`/scalar/array → no new top-level types). No CLI or test changes (no construction sites, no fixtures, no callers).  
+> **SDK Client**: `IWorkOrdersClient`  
+> **Implementation**: `src/Samsara.Sdk/Clients/Maintenance/WorkOrdersClient.cs`  
+> **Models**: `src/Samsara.Sdk/Models/Maintenance/WorkOrderModels.cs`  
 
 ---
 
@@ -113,6 +114,16 @@ See `src/Samsara.Sdk/Models/Maintenance/WorkOrderModels.cs` for model definition
 ---
 
 ## Notes
+
+**Model sync (2026-05-27):** applied the per-domain remediation plan (0 CRIT / 2 HIGH / 20 MED / 4 LOW — 26 total). See [`model-sync-plan-2026-05-27/56-work-orders.md`](model-sync-plan-2026-05-27/56-work-orders.md) for the full breakdown.
+
+- `DeleteWorkOrdersAsync`: re-signatured from `string[] ids` to a single required `string id` (spec is singular — **breaking**, but SAFE: no callers).
+- `PostInvoiceScanRequest`: added HIGH `file` (`required object`) and MED `assetId` (`string?`); DEMOTED non-spec `imageBase64` from `required` to nullable (retained).
+- `ServiceTask`: added `category`, `estimatedLaborTimeMinutes` (`int?`), `estimatedPartsCost` (`object?`), `subcategory`; tightened `name` to `required string`; retained non-spec `laborCostCents` (LOW).
+- `InvoiceScan`: tightened `workOrderId` to `required string`; DEMOTED non-spec `id` from `required` to nullable (retained, else deserialization breaks); retained `status` (LOW).
+- `WorkOrder`: added `maintenanceSite` (`object?`). `CreateWorkOrderRequest`/`UpdateWorkOrderRequest`: each added `placeExternalId`/`placeId` (`string?`).
+- Query params: `ListServiceTasksAsync` +`ids`/`includeArchived`; `ListWorkOrdersAsync` +`ids`/`includeExternalIds`; `GetWorkOrdersStreamAsync` +`assetIds`/`assignedUserIds`/`workOrderStatuses`/`includeExternalIds`.
+- **Breaking**: consumers may now rely on non-null `InvoiceScan.WorkOrderId`/`ServiceTask.Name`; `PostInvoiceScanRequest` requires `file` instead of `imageBase64`.
 
 **Model audit (2025-05-13):** All three Work Order models were rebuilt from scratch with correct API fields.
 

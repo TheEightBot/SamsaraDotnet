@@ -3,6 +3,93 @@
 > Companion to [`docs/api-sync/56-work-orders.md`](../56-work-orders.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `PENDING` on 2026-05-27**
+
+## Implementation notes
+
+All 26 findings were addressed. The HIGH items and the two `response_required_drift`
+tightenings were applied as `required` non-nullable; the MEDIUM request/response/query
+items were applied; the four LOW non-spec extras were intentionally RETAINED per the
+workflow precedent (cf. `40-safety-scores`, `54-vehicles`, `55-webhooks`) rather than
+removed — where an extra was previously `required` but is not in the spec, it was
+DEMOTED to nullable so deserialization cannot break.
+
+**`WorkOrder` response**
+
+- **`maintenanceSite` (response_drift_optional, MED)** — added as weakly-typed
+  `object?` (spec `type=object`, un-schematized — no fabricated model, effort
+  convention). Present on `GET /maintenance/work-orders`,
+  `GET /maintenance/work-orders/stream`, `PATCH /maintenance/work-orders`,
+  `POST /maintenance/work-orders`.
+
+**`CreateWorkOrderRequest` / `UpdateWorkOrderRequest` request**
+
+- **`placeExternalId`, `placeId` (missing_optional, MED ×2 each)** — added as
+  `string?` to both records (placed alphabetically after `odometerMeters`).
+
+**`ServiceTask` response**
+
+- **`name` (response_required_drift, MED)** — tightened from `string?` to
+  `required string`. The spec marks it REQUIRED in the response.
+- **`category`, `estimatedLaborTimeMinutes`, `estimatedPartsCost`, `subcategory`
+  (response_drift_optional, MED ×4)** — added.
+  `estimatedLaborTimeMinutes` is `int?` (spec int32); `estimatedPartsCost` is
+  weakly-typed `object?` (spec `type=object`); the other two are `string?`.
+- **`laborCostCents` (extra_property, LOW)** — RETAINED as `long?` back-compat
+  property (not in spec inner schema).
+
+**`InvoiceScan` response**
+
+- **`workOrderId` (response_required_drift, MED)** — tightened from `string?` to
+  `required string`. The spec marks it REQUIRED in the response, so consumers may
+  now rely on a non-null value.
+- **`id` (extra_property, LOW)** — DEMOTED from `required string` to `string?`
+  and RETAINED. It is not in the spec inner schema; leaving it `required` would
+  break deserialization of the spec-shaped response.
+- **`status` (extra_property, LOW)** — RETAINED as `string?` back-compat property.
+
+**`PostInvoiceScanRequest` request**
+
+- **`file` (missing_required, HIGH)** — added as `required object` (spec
+  `type=object`; the endpoint is `POST /maintenance/invoice-scans`).
+- **`assetId` (missing_optional, MED)** — added as `string?`.
+- **`imageBase64` (extra_property, LOW)** — DEMOTED from `required string` to
+  `string?` and RETAINED as back-compat (not in spec inner schema; demoting keeps
+  the now-required `file` the only mandatory field).
+
+**Query**
+
+- **`DeleteWorkOrdersAsync` — `id` (missing_required_query, HIGH)** — the spec's
+  `DELETE /maintenance/work-orders` takes a SINGLE required `id` (string), not the
+  SDK's prior `ids` array. The method signature was changed from
+  `DeleteWorkOrdersAsync(string[] ids, …)` to
+  `DeleteWorkOrdersAsync(string id, …)` and the value appended via
+  `QueryBuilder.WithParams(BasePath, ("id", id))`. **Breaking** — but SAFE (no
+  callers in src/tools/tests).
+- **`ListServiceTasksAsync` (`GET /maintenance/service-tasks`)** — added optional
+  `ids` (`IReadOnlyList<string>?`, comma-joined) and `includeArchived` (`bool?`).
+- **`ListWorkOrdersAsync` (`GET /maintenance/work-orders`)** — added optional
+  `ids` (`IReadOnlyList<string>?`, comma-joined) and `includeExternalIds`
+  (`bool?`).
+- **`GetWorkOrdersStreamAsync` (`GET /maintenance/work-orders/stream`)** — added
+  optional `assetIds`, `assignedUserIds`, `workOrderStatuses` (each
+  `IReadOnlyList<string>?`, comma-joined) and `includeExternalIds` (`bool?`),
+  appended after the existing `startTime`/`endTime` via `QueryBuilder.WithParams`
+  wrapping `QueryBuilder.WithTimeRange`.
+
+**Breaking / collateral**
+
+- `DeleteWorkOrdersAsync` signature changed from `string[] ids` to `string id`
+  (spec is singular). Consumers may now rely on a non-null `InvoiceScan.WorkOrderId`
+  and `ServiceTask.Name`; `PostInvoiceScanRequest` now requires `file` instead of
+  `imageBase64`. `System.Text.Json`'s `required` check throws on deserialization
+  if a required response field is absent.
+- No JsonContext changes (`WorkOrder`/`ServiceTask`/`InvoiceScan`/
+  `PostInvoiceScanRequest` and the request records already registered; new props
+  are weakly-typed `object`/scalar/array, no new top-level types).
+- No CLI or test changes (no `new WorkOrder/ServiceTask/InvoiceScan/
+  PostInvoiceScanRequest(...)` construction sites, no deserialization fixtures, and
+  the CLI does not call any of these methods — only a facade substitute exists).
 
 ## Quick reference
 

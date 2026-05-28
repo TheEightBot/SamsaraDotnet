@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 56-work-orders (2026-05-27)** — applied the per-domain remediation
+  plan (0 CRIT / 2 HIGH / 20 MED / 4 LOW — 26 total) across the work-order,
+  service-task, and invoice-scan endpoints. **Breaking**: `DeleteWorkOrdersAsync`
+  was re-signatured from `string[] ids` to a single **`string id`** — the spec's
+  `DELETE /maintenance/work-orders` takes one required `id` (verified safe, no
+  callers in src/tools/tests). `PostInvoiceScanRequest` now exposes the HIGH
+  **`required object File`** plus the nullable `assetId`, and its non-spec
+  `imageBase64` extra was **demoted** from `required` to nullable and retained as
+  back-compat (so `file` is the only mandatory field — **breaking** for callers
+  that set `imageBase64`). `ServiceTask` gained four nullable props (`category`,
+  `estimatedLaborTimeMinutes` as `int?`, `estimatedPartsCost` as `object?`,
+  `subcategory`) and tightens `name` to **`required string`**; its non-spec
+  `laborCostCents` extra was retained. `InvoiceScan` tightens `workOrderId` to
+  **`required string`** and **demotes** its non-spec `id` extra from `required` to
+  nullable (retained — leaving it required would break deserialization of the
+  spec-shaped response); `status` retained. `WorkOrder` gained the nullable
+  `maintenanceSite` (`object?`), and `CreateWorkOrderRequest`/
+  `UpdateWorkOrderRequest` each gained nullable `placeExternalId`/`placeId`. Eight
+  optional query params were added across the three list/stream methods
+  (`ListServiceTasksAsync`: `ids`/`includeArchived`; `ListWorkOrdersAsync`:
+  `ids`/`includeExternalIds`; `GetWorkOrdersStreamAsync`: `assetIds`/
+  `assignedUserIds`/`workOrderStatuses`/`includeExternalIds`). **Breaking**:
+  consumers may now rely on non-null `InvoiceScan.WorkOrderId` and
+  `ServiceTask.Name`. No JsonContext changes (all types already registered; new
+  props are weakly-typed `object`/scalar/array, no new top-level types); no CLI or
+  test changes (no construction sites, fixtures, or callers). See
+  `docs/api-sync/model-sync-plan-2026-05-27/56-work-orders.md`.
 - **Model sync 55-webhooks (2026-05-27)** — applied the per-domain remediation
   plan (0 CRIT / 1 HIGH / 5 MED / 1 LOW — 7 total) across the webhook endpoints.
   The `Webhook` response record now exposes the HIGH `secretKey` as
