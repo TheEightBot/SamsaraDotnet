@@ -3,7 +3,7 @@
 > Companion to [`docs/api-sync/40-safety-scores.md`](../40-safety-scores.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
-> **✅ Implemented in commit `<pending>` on 2026-05-27**
+> **✅ Implemented in commit `3e5a59c` on 2026-05-27**
 
 ## Implementation notes
 
