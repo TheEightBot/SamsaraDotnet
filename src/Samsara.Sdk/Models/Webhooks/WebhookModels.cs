@@ -11,13 +11,16 @@ public sealed record Webhook
     public required string Id { get; init; }
 
     [JsonPropertyName("name")]
-    public string? Name { get; init; }
+    public required string Name { get; init; }
 
     [JsonPropertyName("url")]
-    public string? Url { get; init; }
+    public required string Url { get; init; }
 
     [JsonPropertyName("version")]
-    public string? Version { get; init; }
+    public required string Version { get; init; }
+
+    [JsonPropertyName("secretKey")]
+    public required string SecretKey { get; init; }
 
     [JsonPropertyName("customHeaders")]
     public IReadOnlyList<WebhookHeader>? CustomHeaders { get; init; }
@@ -69,6 +72,9 @@ public sealed record UpdateWebhookRequest
 
     [JsonPropertyName("url")]
     public string? Url { get; init; }
+
+    [JsonPropertyName("version")]
+    public string? Version { get; init; }
 
     [JsonPropertyName("customHeaders")]
     public IReadOnlyList<WebhookHeader>? CustomHeaders { get; init; }

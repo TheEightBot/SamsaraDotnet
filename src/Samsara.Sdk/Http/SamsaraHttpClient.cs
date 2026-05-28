@@ -98,6 +98,20 @@ internal sealed class SamsaraHttpClient
     }
 
     /// <summary>
+    /// Sends a POST request with a JSON body and deserializes the response directly
+    /// (no <c>{ "data": ... }</c> envelope). Used by legacy v1 endpoints.
+    /// </summary>
+    public async Task<T> PostAsync<T>(string path, object body, CancellationToken cancellationToken = default)
+    {
+        var content = JsonContent.Create(body, options: _jsonOptions);
+
+        using var response = await SendAndValidateAsync(HttpMethod.Post, path, content, cancellationToken)
+            .ConfigureAwait(false);
+
+        return await DeserializeAsync<T>(response, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Sends a PATCH request with a JSON body and deserializes the <c>{ "data": T }</c> response.
     /// </summary>
     public async Task<T> PatchDataAsync<T>(string path, object body, CancellationToken cancellationToken = default)
@@ -112,11 +126,37 @@ internal sealed class SamsaraHttpClient
     }
 
     /// <summary>
+    /// Sends a PUT request with a JSON body and deserializes the <c>{ "data": T }</c> response.
+    /// </summary>
+    public async Task<T> PutDataAsync<T>(string path, object body, CancellationToken cancellationToken = default)
+    {
+        var content = JsonContent.Create(body, options: _jsonOptions);
+
+        using var response = await SendAndValidateAsync(HttpMethod.Put, path, content, cancellationToken)
+            .ConfigureAwait(false);
+
+        var wrapper = await DeserializeAsync<SamsaraResponse<T>>(response, cancellationToken).ConfigureAwait(false);
+        return wrapper.Data;
+    }
+
+    /// <summary>
     /// Sends a DELETE request.
     /// </summary>
     public async Task DeleteAsync(string path, CancellationToken cancellationToken = default)
     {
         using var response = await SendAndValidateAsync(HttpMethod.Delete, path, content: null, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Sends a DELETE request with a JSON body. Used by endpoints (e.g. driver-vehicle
+    /// assignments) where the resource identifier(s) live in the request body.
+    /// </summary>
+    public async Task DeleteAsync(string path, object body, CancellationToken cancellationToken = default)
+    {
+        var content = JsonContent.Create(body, options: _jsonOptions);
+
+        using var response = await SendAndValidateAsync(HttpMethod.Delete, path, content, cancellationToken)
             .ConfigureAwait(false);
     }
 

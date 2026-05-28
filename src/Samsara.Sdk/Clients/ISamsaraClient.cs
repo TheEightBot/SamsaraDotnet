@@ -39,4 +39,33 @@ public interface ISamsaraClient
     ISensorsClient Sensors { get; }
     IIssuesClient Issues { get; }
     IMediaClient Media { get; }
+    IAssetsClient Assets { get; }
+    ICarbCtcClient CarbCtc { get; }
+    ICoachingClient Coaching { get; }
+    IDriverTrailerAssignmentsClient DriverTrailerAssignments { get; }
+    IIdlingClient Idling { get; }
+    ILiveSharingLinksClient LiveSharingLinks { get; }
+    IReadingsClient Readings { get; }
+    ISettingsClient Settings { get; }
+    IWorkOrdersClient WorkOrders { get; }
+    /// <summary>Read-only legacy fleet endpoints (v1 / pre-v2 surface).</summary>
+    ILegacyApisClient LegacyApis { get; }
+    /// <summary>Preview / pre-release endpoints under <c>/preview/*</c>.</summary>
+    IPreviewApisClient PreviewApis { get; }
+    /// <summary>Route-events stream (<c>/route-events/stream</c>).</summary>
+    IRouteEventsClient RouteEvents { get; }
+    /// <summary>Beta — Places (<c>/places</c>).</summary>
+    IPlacesClient Places { get; }
+    /// <summary>Beta — Preferred fuel stations.</summary>
+    IPreferredStationsClient PreferredStations { get; }
+    /// <summary>Beta — Driver qualification records.</summary>
+    IQualificationRecordsClient QualificationRecords { get; }
+    /// <summary>Beta — Ridership passengers and route setups.</summary>
+    IRidershipClient Ridership { get; }
+    /// <summary>Beta — Samsara Functions and Functions Storage.</summary>
+    IFunctionsClient Functions { get; }
+    /// <summary>Beta — Reports (configs, datasets, runs).</summary>
+    IReportsClient Reports { get; }
+    /// <summary>Beta — miscellaneous endpoints (industrial jobs, devices, detections, AEMP, …).</summary>
+    IBetaClient Beta { get; }
 }

@@ -5,8 +5,30 @@ using System.Text.Json.Serialization;
 public sealed record Trip
 {
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
+    [JsonPropertyName("asset")]
+    public object? Asset { get; init; }
+
+    [JsonPropertyName("completionStatus")]
+    public string? CompletionStatus { get; init; }
+
+    [JsonPropertyName("createdAtTime")]
+    public DateTimeOffset? CreatedAtTime { get; init; }
+
+    [JsonPropertyName("tripStartTime")]
+    public DateTimeOffset? TripStartTime { get; init; }
+
+    [JsonPropertyName("tripEndTime")]
+    public DateTimeOffset? TripEndTime { get; init; }
+
+    [JsonPropertyName("updatedAtTime")]
+    public DateTimeOffset? UpdatedAtTime { get; init; }
+
+    [JsonPropertyName("trips")]
+    public IReadOnlyList<object>? Trips { get; init; }
+
+    // Not in current spec; retained for back-compat.
     [JsonPropertyName("driverId")]
     public string? DriverId { get; init; }
 

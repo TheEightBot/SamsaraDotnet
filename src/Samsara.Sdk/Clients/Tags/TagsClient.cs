@@ -8,7 +8,7 @@ using Samsara.Sdk.Models.Tags;
 /// </summary>
 internal sealed class TagsClient : SamsaraServiceClientBase, ITagsClient
 {
-    private const string BasePath = "fleet/tags";
+    private const string BasePath = "tags";
 
     public TagsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
@@ -23,6 +23,9 @@ internal sealed class TagsClient : SamsaraServiceClientBase, ITagsClient
 
     public Task<Tag> UpdateAsync(string id, UpdateTagRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<Tag>($"{BasePath}/{Uri.EscapeDataString(id)}", request, cancellationToken);
+
+    public Task<Tag> ReplaceAsync(string id, CreateTagRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PutDataAsync<Tag>($"{BasePath}/{Uri.EscapeDataString(id)}", request, cancellationToken);
 
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);

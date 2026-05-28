@@ -7,6 +7,19 @@ using Samsara.Sdk.Models.Fleet;
 /// </summary>
 public interface IGatewaysClient
 {
-    IAsyncEnumerable<Gateway> ListAsync(CancellationToken cancellationToken = default);
-    Task<Gateway> GetAsync(string id, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Lists all activated gateways.
+    /// </summary>
+    /// <param name="models">
+    /// Optional comma-separated list of gateway models to filter on (e.g.
+    /// <c>VG34</c>, <c>AG46</c>). When <c>null</c> the filter is omitted.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    IAsyncEnumerable<Gateway> ListAsync(
+        IReadOnlyList<string>? models = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Gateway> CreateAsync(CreateGatewayRequest request, CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(string id, CancellationToken cancellationToken = default);
 }

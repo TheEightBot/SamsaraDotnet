@@ -1,0 +1,69 @@
+# Media — API Sync Checklist
+
+> **API Version**: `2025-10-23`  
+> **Status**: 🔴 Broken (0/3)  
+> **⚠️ 2026-05-21 audit**: spec uses `/cameras/media` and `/cameras/media/retrieval`; `GetAsync` by-id is fabricated. See [full-sync-review-2026-05-21.md](full-sync-review-2026-05-21.md).  
+> **Resolved 2026-05-27 (model-sync plan)**: applied [`model-sync-plan-2026-05-27/31-media.md`](model-sync-plan-2026-05-27/31-media.md) — 14 HIGH, 15 MEDIUM findings implemented; LOW spec-absent response extras retained as nullable back-compat per workflow precedent (08, 13, 14, 28, 29, 30); LOW request-side extra (`CreateMediaRetrievalRequest.CameraId`) removed in favor of the spec-aligned `Inputs` and `MediaType`.  
+> **SDK Client**: `IMediaClient`  
+> **Implementation**: `src/Samsara.Sdk/Clients/.../MediaClient.cs`  
+> **Models**: `src/Samsara.Sdk/Models/Media/MediaModels.cs`  
+
+---
+
+## Endpoints
+
+### ✅ `GET /cameras/media`
+**Operation ID**: `listUploadedMedia`  
+**Summary**: List uploaded media by time range.  
+**Parameters**: `vehicleIds`, `inputs`, `mediaTypes`, `triggerReasons`, `startTime`, `endTime`, `availableAfterTime`, `after`  
+**Request Body**: No  
+
+- [x] Method defined in `IMediaClient`
+- [x] Method implemented in `MediaClient.cs`
+- [x] Request model(s) defined (if applicable)
+- [x] Response model(s) defined
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [ ] Unit/integration test coverage
+
+### ❌ `GET /cameras/media/retrieval`
+**Operation ID**: `getMediaRetrieval`  
+**Summary**: Get details for a media retrieval request  
+**Parameters**: `retrievalId`  
+**Request Body**: No  
+
+- [x] Method defined in `IMediaClient`
+- [x] Method implemented in `MediaClient.cs`
+- [x] Request model(s) defined (if applicable)
+- [x] Response model(s) defined
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage
+
+### ❌ `POST /cameras/media/retrieval`
+**Operation ID**: `postMediaRetrieval`  
+**Summary**: Create a media retrieval request  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMediaClient`
+- [x] Method implemented in `MediaClient.cs`
+- [x] Request model(s) defined (if applicable)
+- [x] Response model(s) defined
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage
+
+---
+
+## Models
+
+See `src/Samsara.Sdk/Models/Media/MediaModels.cs` for model definitions used by this domain.
+
+- [ ] All request models defined as `record` types
+- [ ] All response models defined as `record` types
+- [ ] All models have XML documentation
+- [ ] All enum values covered
+- [ ] Nullable reference types used correctly
+
+---
+
+## Notes
+
+_Add any implementation notes, breaking changes, or special considerations here._

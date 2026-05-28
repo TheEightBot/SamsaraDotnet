@@ -18,6 +18,19 @@ public sealed record TagReference
 }
 
 /// <summary>
+/// A lightweight <c>{ id, name }</c> reference, matching the Samsara spec's various
+/// <c>*TinyResponse</c> schemas (driver, vehicle, etc.).
+/// </summary>
+public sealed record EntityReference
+{
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+}
+
+/// <summary>
 /// An external ID associated with a Samsara object.
 /// </summary>
 public sealed record ExternalId

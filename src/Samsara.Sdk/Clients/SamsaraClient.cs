@@ -36,7 +36,26 @@ internal sealed class SamsaraClient : ISamsaraClient
         ITrainingClient training,
         ISensorsClient sensors,
         IIssuesClient issues,
-        IMediaClient media)
+        IMediaClient media,
+        IAssetsClient assets,
+        ICarbCtcClient carbCtc,
+        ICoachingClient coaching,
+        IDriverTrailerAssignmentsClient driverTrailerAssignments,
+        IIdlingClient idling,
+        ILiveSharingLinksClient liveSharingLinks,
+        IReadingsClient readings,
+        ISettingsClient settings,
+        IWorkOrdersClient workOrders,
+        ILegacyApisClient legacyApis,
+        IPreviewApisClient previewApis,
+        IRouteEventsClient routeEvents,
+        IPlacesClient places,
+        IPreferredStationsClient preferredStations,
+        IQualificationRecordsClient qualificationRecords,
+        IRidershipClient ridership,
+        IFunctionsClient functions,
+        IReportsClient reports,
+        IBetaClient beta)
     {
         Tags = tags;
         Addresses = addresses;
@@ -72,6 +91,25 @@ internal sealed class SamsaraClient : ISamsaraClient
         Sensors = sensors;
         Issues = issues;
         Media = media;
+        Assets = assets;
+        CarbCtc = carbCtc;
+        Coaching = coaching;
+        DriverTrailerAssignments = driverTrailerAssignments;
+        Idling = idling;
+        LiveSharingLinks = liveSharingLinks;
+        Readings = readings;
+        Settings = settings;
+        WorkOrders = workOrders;
+        LegacyApis = legacyApis;
+        PreviewApis = previewApis;
+        RouteEvents = routeEvents;
+        Places = places;
+        PreferredStations = preferredStations;
+        QualificationRecords = qualificationRecords;
+        Ridership = ridership;
+        Functions = functions;
+        Reports = reports;
+        Beta = beta;
     }
 
     public ITagsClient Tags { get; }
@@ -108,4 +146,23 @@ internal sealed class SamsaraClient : ISamsaraClient
     public ISensorsClient Sensors { get; }
     public IIssuesClient Issues { get; }
     public IMediaClient Media { get; }
+    public IAssetsClient Assets { get; }
+    public ICarbCtcClient CarbCtc { get; }
+    public ICoachingClient Coaching { get; }
+    public IDriverTrailerAssignmentsClient DriverTrailerAssignments { get; }
+    public IIdlingClient Idling { get; }
+    public ILiveSharingLinksClient LiveSharingLinks { get; }
+    public IReadingsClient Readings { get; }
+    public ISettingsClient Settings { get; }
+    public IWorkOrdersClient WorkOrders { get; }
+    public ILegacyApisClient LegacyApis { get; }
+    public IPreviewApisClient PreviewApis { get; }
+    public IRouteEventsClient RouteEvents { get; }
+    public IPlacesClient Places { get; }
+    public IPreferredStationsClient PreferredStations { get; }
+    public IQualificationRecordsClient QualificationRecords { get; }
+    public IRidershipClient Ridership { get; }
+    public IFunctionsClient Functions { get; }
+    public IReportsClient Reports { get; }
+    public IBetaClient Beta { get; }
 }

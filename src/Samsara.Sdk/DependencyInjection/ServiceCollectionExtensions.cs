@@ -102,6 +102,26 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped<ISensorsClient, SensorsClient>();
         services.TryAddScoped<IIssuesClient, IssuesClient>();
         services.TryAddScoped<IMediaClient, MediaClient>();
+        services.TryAddScoped<IAssetsClient, AssetsClient>();
+        services.TryAddScoped<ICarbCtcClient, CarbCtcClient>();
+        services.TryAddScoped<ICoachingClient, CoachingClient>();
+        services.TryAddScoped<IDriverTrailerAssignmentsClient, DriverTrailerAssignmentsClient>();
+        services.TryAddScoped<IIdlingClient, IdlingClient>();
+        services.TryAddScoped<ILiveSharingLinksClient, LiveSharingLinksClient>();
+        services.TryAddScoped<IReadingsClient, ReadingsClient>();
+        services.TryAddScoped<ISettingsClient, SettingsClient>();
+        services.TryAddScoped<IWorkOrdersClient, WorkOrdersClient>();
+        // New clients for full spec parity (Beta, Legacy APIs, Preview, Route Events).
+        services.TryAddScoped<ILegacyApisClient, LegacyApisClient>();
+        services.TryAddScoped<IPreviewApisClient, PreviewApisClient>();
+        services.TryAddScoped<IRouteEventsClient, RouteEventsClient>();
+        services.TryAddScoped<IPlacesClient, PlacesClient>();
+        services.TryAddScoped<IPreferredStationsClient, PreferredStationsClient>();
+        services.TryAddScoped<IQualificationRecordsClient, QualificationRecordsClient>();
+        services.TryAddScoped<IRidershipClient, RidershipClient>();
+        services.TryAddScoped<IFunctionsClient, FunctionsClient>();
+        services.TryAddScoped<IReportsClient, ReportsClient>();
+        services.TryAddScoped<IBetaClient, BetaClient>();
 
         // Register the aggregate facade
         services.TryAddScoped<ISamsaraClient, SamsaraClient>();

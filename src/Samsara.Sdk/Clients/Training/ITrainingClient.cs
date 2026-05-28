@@ -7,6 +7,25 @@ using Samsara.Sdk.Models.Training;
 /// </summary>
 public interface ITrainingClient
 {
-    IAsyncEnumerable<TrainingAssignment> ListAssignmentsAsync(CancellationToken cancellationToken = default);
-    IAsyncEnumerable<TrainingCourse> ListCoursesAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Stream filtered training assignments (<c>GET /training-assignments/stream</c>).
+    /// <paramref name="startTime"/> is spec-required.
+    /// </summary>
+    IAsyncEnumerable<TrainingAssignment> ListAssignmentsAsync(
+        DateTimeOffset startTime,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? categoryIds = null,
+        IReadOnlyList<string>? courseIds = null,
+        IReadOnlyList<string>? learnerIds = null,
+        IReadOnlyList<string>? status = null,
+        bool? isOverdue = null,
+        CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TrainingCourse> ListCoursesAsync(
+        IReadOnlyList<string>? categoryIds = null,
+        IReadOnlyList<string>? courseIds = null,
+        IReadOnlyList<string>? status = null,
+        CancellationToken cancellationToken = default);
+    Task CreateAssignmentsAsync(string courseId, DateTimeOffset dueAtTime, IReadOnlyList<string> learnerIds, CancellationToken cancellationToken = default);
+    Task UpdateAssignmentsAsync(IReadOnlyList<string> ids, DateTimeOffset dueAtTime, CancellationToken cancellationToken = default);
+    Task DeleteAssignmentsAsync(IReadOnlyList<string> ids, CancellationToken cancellationToken = default);
 }

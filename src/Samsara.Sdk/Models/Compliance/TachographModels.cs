@@ -4,8 +4,15 @@ using System.Text.Json.Serialization;
 
 public sealed record TachographActivity
 {
+    [JsonPropertyName("activity")]
+    public IReadOnlyList<object>? Activity { get; init; }
+
+    [JsonPropertyName("driver")]
+    public object? Driver { get; init; }
+
+    // Not in current spec; retained for back-compat.
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     [JsonPropertyName("driverId")]
     public string? DriverId { get; init; }
@@ -40,8 +47,18 @@ public sealed record TachographActivity
 
 public sealed record TachographFile
 {
+    [JsonPropertyName("driver")]
+    public object? Driver { get; init; }
+
+    [JsonPropertyName("files")]
+    public IReadOnlyList<object>? Files { get; init; }
+
+    [JsonPropertyName("vehicle")]
+    public object? Vehicle { get; init; }
+
+    // Not in current spec; retained for back-compat.
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     [JsonPropertyName("driverId")]
     public string? DriverId { get; init; }

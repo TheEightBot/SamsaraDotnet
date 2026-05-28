@@ -14,8 +14,18 @@ public sealed record Tag
     [JsonPropertyName("name")]
     public required string Name { get; init; }
 
+    /// <summary>The parent tag as a <c>{ id, name }</c> reference. Spec returns this as
+    /// an object, not the flat <c>parentTagId</c> string the SDK previously used.</summary>
+    [JsonPropertyName("parentTag")]
+    public EntityReference? ParentTag { get; init; }
+
+    /// <summary>Flat parent-tag id returned by the tiny/abbreviated tag response shapes;
+    /// the full <c>GET /tags</c> response uses the <see cref="ParentTag"/> object instead.</summary>
     [JsonPropertyName("parentTagId")]
     public string? ParentTagId { get; init; }
+
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 
     [JsonPropertyName("addresses")]
     public IReadOnlyList<TaggedResource>? Addresses { get; init; }
@@ -54,27 +64,6 @@ public sealed record TaggedResource
 public sealed record CreateTagRequest
 {
     [JsonPropertyName("name")]
-    public required string Name { get; init; }
-
-    [JsonPropertyName("parentTagId")]
-    public string? ParentTagId { get; init; }
-
-    [JsonPropertyName("addresses")]
-    public IReadOnlyList<TaggedResourceId>? Addresses { get; init; }
-
-    [JsonPropertyName("drivers")]
-    public IReadOnlyList<TaggedResourceId>? Drivers { get; init; }
-
-    [JsonPropertyName("vehicles")]
-    public IReadOnlyList<TaggedResourceId>? Vehicles { get; init; }
-}
-
-/// <summary>
-/// Request body for updating a tag (PATCH).
-/// </summary>
-public sealed record UpdateTagRequest
-{
-    [JsonPropertyName("name")]
     public string? Name { get; init; }
 
     [JsonPropertyName("parentTagId")]
@@ -88,6 +77,52 @@ public sealed record UpdateTagRequest
 
     [JsonPropertyName("vehicles")]
     public IReadOnlyList<TaggedResourceId>? Vehicles { get; init; }
+
+    [JsonPropertyName("assets")]
+    public IReadOnlyList<TaggedResourceId>? Assets { get; init; }
+
+    [JsonPropertyName("machines")]
+    public IReadOnlyList<TaggedResourceId>? Machines { get; init; }
+
+    [JsonPropertyName("sensors")]
+    public IReadOnlyList<TaggedResourceId>? Sensors { get; init; }
+
+    // retained for back-compat; not in spec inner schema
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// Request body for updating a tag (PATCH).
+/// </summary>
+public sealed record UpdateTagRequest
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    [JsonPropertyName("parentTagId")]
+    public string? ParentTagId { get; init; }
+
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
+    [JsonPropertyName("addresses")]
+    public IReadOnlyList<TaggedResourceId>? Addresses { get; init; }
+
+    [JsonPropertyName("drivers")]
+    public IReadOnlyList<TaggedResourceId>? Drivers { get; init; }
+
+    [JsonPropertyName("vehicles")]
+    public IReadOnlyList<TaggedResourceId>? Vehicles { get; init; }
+
+    [JsonPropertyName("assets")]
+    public IReadOnlyList<TaggedResourceId>? Assets { get; init; }
+
+    [JsonPropertyName("machines")]
+    public IReadOnlyList<TaggedResourceId>? Machines { get; init; }
+
+    [JsonPropertyName("sensors")]
+    public IReadOnlyList<TaggedResourceId>? Sensors { get; init; }
 }
 
 /// <summary>

@@ -20,7 +20,7 @@
 
 ## Features
 
-- 🚀 **33 typed domain clients** — vehicles, drivers, routes, compliance, safety, and every other Samsara API domain
+- 🚀 **43 typed domain clients** — vehicles, drivers, routes, compliance, safety, and every other Samsara API domain
 - 📄 **Automatic pagination** — `IAsyncEnumerable<T>` handles cursor-based paging transparently
 - 🔒 **DI-first design** — single `AddSamsaraClient()` call wires up everything
 - ⚡ **Source-generated JSON** — zero-reflection `System.Text.Json` serialization via compile-time context
@@ -159,36 +159,42 @@ builder.Services.AddSamsaraClient(options =>
 
 | Client | Property | Key Operations |
 |---|---|---|
-| `IVehiclesClient` | `samsara.Vehicles` | `ListAsync`, `GetAsync`, `UpdateAsync`, `ListLocationsAsync`, `ListStatsAsync` |
-| `IDriversClient` | `samsara.Drivers` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
-| `ITrailersClient` | `samsara.Trailers` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
-| `IEquipmentClient` | `samsara.Equipment` | `ListAsync`, `GetAsync`, `UpdateAsync` |
+| `IVehiclesClient` | `samsara.Vehicles` | `ListAsync`, `GetAsync`, `UpdateAsync`, `ListLocationsAsync`, `ListStatsAsync`, `GetLocationsFeedAsync`, `GetLocationsHistoryAsync`, `GetStatsFeedAsync`, `GetStatsHistoryAsync` |
+| `IAssetsClient` | `samsara.Assets` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync`, `GetLocationAndSpeedStreamAsync` |
+| `IDriversClient` | `samsara.Drivers` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync`, `RemoteSignOutAsync`, `CreateAuthTokenAsync`, `ListQrCodesAsync` |
+| `ITrailersClient` | `samsara.Trailers` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync`, `GetStatsFeedAsync`, `GetStatsHistoryAsync` |
+| `IEquipmentClient` | `samsara.Equipment` | `ListAsync`, `GetAsync`, `UpdateAsync`, `GetLocationsFeedAsync`, `GetLocationsHistoryAsync`, `GetStatsFeedAsync`, `GetStatsHistoryAsync` |
 | `IGatewaysClient` | `samsara.Gateways` | `ListAsync`, `GetAsync` |
+| `IIdlingClient` | `samsara.Idling` | `GetEventsStreamAsync` |
 
 ### Routing & Dispatch
 
 | Client | Property | Key Operations |
 |---|---|---|
-| `IRoutesClient` | `samsara.Routes` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
-| `ITripsClient` | `samsara.Trips` | `ListAsync`, `GetAsync` |
-| `IHubsClient` | `samsara.Hubs` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
+| `IRoutesClient` | `samsara.Routes` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync`, `GetAuditLogFeedAsync` |
+| `ITripsClient` | `samsara.Trips` | `ListAsync`, `GetAsync`, `GetStreamAsync` |
+| `IHubsClient` | `samsara.Hubs` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync`, `ListLocationsAsync`, `ListPlansAsync` |
 | `IAddressesClient` | `samsara.Addresses` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
+| `ILiveSharingLinksClient` | `samsara.LiveSharingLinks` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
 
 ### Safety & Compliance
 
 | Client | Property | Key Operations |
 |---|---|---|
-| `ISafetyClient` | `samsara.Safety` | `ListEventsAsync`, `GetScoreAsync` |
+| `ISafetyClient` | `samsara.Safety` | `GetEventsAsync`, `GetEventsStreamAsync`, `ListDriverSafetyScoresAsync`, `ListVehicleSafetyScoresAsync` |
+| `ICoachingClient` | `samsara.Coaching` | `ListDriverCoachAssignmentsAsync`, `GetSessionsStreamAsync` |
 | `IComplianceClient` | `samsara.Compliance` | `ListHosLogsAsync`, `ListDvirsAsync`, `CreateDvirAsync` |
+| `ICarbCtcClient` | `samsara.CarbCtc` | `ListVehiclesAsync`, `GetVehiclesHistoryAsync` |
 | `ITachographClient` | `samsara.Tachograph` | `ListFilesAsync`, `GetFileAsync` |
-| `IIftaClient` | `samsara.Ifta` | `ListSummaryAsync` |
+| `IIftaClient` | `samsara.Ifta` | `ListSummaryAsync`, `CreateDetailJobAsync`, `GetDetailJobAsync` |
 
 ### Maintenance
 
 | Client | Property | Key Operations |
 |---|---|---|
-| `IMaintenanceClient` | `samsara.Maintenance` | `ListAlertsAsync`, `ListDvirsAsync` |
-| `IIssuesClient` | `samsara.Issues` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync` |
+| `IMaintenanceClient` | `samsara.Maintenance` | `ListAlertsAsync`, `ListDvirsAsync`, `CreateDvirAsync`, `UpdateDvirAsync`, `GetDvirsStreamAsync`, `GetDefectsStreamAsync`, `UpdateDefectAsync` |
+| `IWorkOrdersClient` | `samsara.WorkOrders` | `ListAsync`, `CreateAsync`, `UpdateAsync`, `GetStreamAsync`, `ListServiceTasksAsync`, `ListInvoiceScansAsync` |
+| `IIssuesClient` | `samsara.Issues` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `GetStreamAsync` |
 | `IFuelClient` | `samsara.Fuel` | `ListPurchasesAsync`, `ListEnergyAsync` |
 
 ### Organization & Users
@@ -199,20 +205,21 @@ builder.Services.AddSamsaraClient(options =>
 | `IUsersClient` | `samsara.Users` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
 | `IUserRolesClient` | `samsara.UserRoles` | `ListAsync` |
 | `IContactsClient` | `samsara.Contacts` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
+| `ISettingsClient` | `samsara.Settings` | `GetComplianceSettingsAsync`, `UpdateComplianceSettingsAsync`, `GetDriverAppSettingsAsync`, `UpdateDriverAppSettingsAsync`, `GetSafetySettingsAsync`, `UpdateSafetySettingsAsync` |
 
 ### Documents & Forms
 
 | Client | Property | Key Operations |
 |---|---|---|
-| `IDocumentsClient` | `samsara.Documents` | `ListAsync`, `GetAsync`, `CreateAsync`, `DeleteAsync` |
-| `IFormsClient` | `samsara.Forms` | `ListTemplatesAsync`, `ListSubmissionsAsync` |
-| `IMediaClient` | `samsara.Media` | `ListAsync`, `GetAsync` |
+| `IDocumentsClient` | `samsara.Documents` | `ListAsync`, `GetAsync`, `CreateAsync`, `DeleteAsync`, `GeneratePdfAsync`, `GetPdfAsync` |
+| `IFormsClient` | `samsara.Forms` | `ListTemplatesAsync`, `ListSubmissionsAsync`, `GetSubmissionsStreamAsync`, `CreatePdfExportAsync` |
+| `IMediaClient` | `samsara.Media` | `ListAsync`, `GetAsync`, `GetRetrievalAsync`, `CreateRetrievalAsync` |
 
 ### Communication & Alerts
 
 | Client | Property | Key Operations |
 |---|---|---|
-| `IAlertsClient` | `samsara.Alerts` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
+| `IAlertsClient` | `samsara.Alerts` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync`, `GetIncidentsStreamAsync` |
 | `IMessagesClient` | `samsara.Messages` | `ListAsync`, `SendAsync` |
 | `IWebhooksClient` | `samsara.Webhooks` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
 
@@ -220,9 +227,10 @@ builder.Services.AddSamsaraClient(options =>
 
 | Client | Property | Key Operations |
 |---|---|---|
-| `ITagsClient` | `samsara.Tags` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
+| `ITagsClient` | `samsara.Tags` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `ReplaceAsync`, `DeleteAsync` |
 | `IAttributesClient` | `samsara.Attributes` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
 | `IDriverVehicleAssignmentsClient` | `samsara.DriverVehicleAssignments` | `ListAsync`, `CreateAsync`, `DeleteAsync` |
+| `IDriverTrailerAssignmentsClient` | `samsara.DriverTrailerAssignments` | `ListAsync`, `CreateAsync`, `DeleteAsync` |
 | `ITrailerAssignmentsClient` | `samsara.TrailerAssignments` | `ListAsync`, `CreateAsync`, `DeleteAsync` |
 | `ICarrierProposedAssignmentsClient` | `samsara.CarrierProposedAssignments` | `ListAsync`, `CreateAsync` |
 
@@ -230,7 +238,8 @@ builder.Services.AddSamsaraClient(options =>
 
 | Client | Property | Key Operations |
 |---|---|---|
-| `IIndustrialClient` | `samsara.Industrial` | `ListAssetsAsync`, `GetAssetAsync`, `ListDataInputsAsync` |
+| `IIndustrialClient` | `samsara.Industrial` | `ListAssetsAsync`, `GetAssetAsync`, `ListDataInputsAsync`, `GetDataInputSnapshotAsync`, `GetDataInputFeedAsync`, `GetDataInputHistoryAsync` |
+| `IReadingsClient` | `samsara.Readings` | `ListDefinitionsAsync`, `GetHistoryAsync`, `GetLatestAsync` |
 | `ISensorsClient` | `samsara.Sensors` | `ListAsync`, `GetHumidityAsync`, `GetTemperatureAsync`, `GetCargoAsync` |
 
 ### Training
@@ -299,11 +308,18 @@ await foreach (var location in samsara.Vehicles.ListLocationsAsync(ct))
 ### Create a Route
 
 ```csharp
-var route = await samsara.Routes.CreateAsync(new CreateRouteRequest(
-    Name: "Morning Delivery",
-    DriverId: "driver-123",
-    VehicleId: "vehicle-456"
-), ct);
+var route = await samsara.Routes.CreateAsync(new CreateRouteRequest
+{
+    Name = "Morning Delivery",
+    Stops =
+    [
+        new CreateRouteStopRequest { AddressId = "address-111" },
+        new CreateRouteStopRequest { AddressId = "address-222" }
+    ],
+    DriverId = "driver-123",
+    VehicleId = "vehicle-456",
+    RecomputeScheduledTimes = true
+}, ct);
 ```
 
 ### Send a Driver Message

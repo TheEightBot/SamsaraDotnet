@@ -9,8 +9,10 @@ internal sealed class TrailersClient : SamsaraServiceClientBase, ITrailersClient
 
     public TrailersClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<Trailer> ListAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<Trailer>(BasePath, cancellationToken: cancellationToken);
+    public IAsyncEnumerable<Trailer> ListAsync(string? parentTagIds = null, string? tagIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<Trailer>(
+            QueryBuilder.WithParams(BasePath, ("parentTagIds", parentTagIds), ("tagIds", tagIds)),
+            cancellationToken: cancellationToken);
 
     public Task<Trailer> GetAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.GetDataAsync<Trailer>($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
@@ -23,4 +25,21 @@ internal sealed class TrailersClient : SamsaraServiceClientBase, ITrailersClient
 
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
+
+    public IAsyncEnumerable<TrailerStats> GetStatsSnapshotAsync(string types, string? parentTagIds = null, string? tagIds = null, string? time = null, string? trailerIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TrailerStats>(
+            QueryBuilder.WithParams($"{BasePath}/stats", ("types", types), ("parentTagIds", parentTagIds), ("tagIds", tagIds), ("time", time), ("trailerIds", trailerIds)),
+            cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<TrailerStats> GetStatsFeedAsync(string types, string? decorations = null, string? parentTagIds = null, string? tagIds = null, string? trailerIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TrailerStats>(
+            QueryBuilder.WithParams($"{BasePath}/stats/feed", ("types", types), ("decorations", decorations), ("parentTagIds", parentTagIds), ("tagIds", tagIds), ("trailerIds", trailerIds)),
+            cancellationToken: cancellationToken);
+
+    public IAsyncEnumerable<TrailerStats> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, string? decorations = null, string? parentTagIds = null, string? tagIds = null, string? trailerIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TrailerStats>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange($"{BasePath}/stats/history", startTime, endTime),
+                ("types", types), ("decorations", decorations), ("parentTagIds", parentTagIds), ("tagIds", tagIds), ("trailerIds", trailerIds)),
+            cancellationToken: cancellationToken);
 }
