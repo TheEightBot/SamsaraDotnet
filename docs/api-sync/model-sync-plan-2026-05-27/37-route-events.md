@@ -3,7 +3,7 @@
 > Companion to [`docs/api-sync/37-route-events.md`](../37-route-events.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
-> **✅ Implemented in commit `<pending>` on 2026-05-27**
+> **✅ Implemented in commit `ad05372` on 2026-05-27**
 
 ## Implementation notes
 
