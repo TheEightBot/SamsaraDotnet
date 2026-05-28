@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 41-sensors (2026-05-27)** — applied the per-domain remediation
+  plan (0 CRIT / 1 HIGH / 0 MED / 0 LOW — 1 total). Added the spec-REQUIRED
+  `stepMs` (`int`) property to the `V1SensorHistoryRequest` request body for
+  `POST /v1/sensors/history`. See
+  `docs/api-sync/model-sync-plan-2026-05-27/41-sensors.md`.
 - **Model sync 40-safety-scores (2026-05-27)** — applied the per-domain
   remediation plan (0 CRIT / 22 HIGH / 4 MED / 23 LOW — 49 total). The four
   safety-score response models (`VehicleSafetyScore`, `DriverSafetyScore`,

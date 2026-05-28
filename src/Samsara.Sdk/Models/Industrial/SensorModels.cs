@@ -40,6 +40,9 @@ public sealed record V1SensorHistoryRequest
     [JsonPropertyName("endMs")]
     public required long EndMs { get; init; }
 
+    [JsonPropertyName("stepMs")]
+    public required int StepMs { get; init; }
+
     [JsonPropertyName("series")]
     public required IReadOnlyList<V1SensorHistorySeries> Series { get; init; }
 
