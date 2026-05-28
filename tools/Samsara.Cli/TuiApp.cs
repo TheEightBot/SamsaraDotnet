@@ -873,7 +873,7 @@ internal sealed class TuiApp
                     await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching trips...[/]", async _ =>
                     {
                         var items = await CollectAsync(_client.Trips.ListAsync(tStart, tEnd, tVehicleId, tDriverId, Timeout60s()));
-                        ResultRenderer.RenderList(items, "Trips", t => [t.Id, t.VehicleId ?? "", t.DriverId ?? ""], ["ID", "Vehicle ID", "Driver ID"]);
+                        ResultRenderer.RenderList(items, "Trips", t => [t.Id ?? "", t.VehicleId ?? "", t.DriverId ?? ""], ["ID", "Vehicle ID", "Driver ID"]);
                     });
                 }
             }

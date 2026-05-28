@@ -3,6 +3,72 @@
 > Companion to [`docs/api-sync/50-trips.md`](../50-trips.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<pending>` on 2026-05-27**
+
+## Implementation notes
+
+The SDK's single `Trip` record is a DUAL-SHAPE unified record that has to
+deserialize BOTH trip endpoints, which is why the plan's findings appear to
+contradict each other. The real shapes are:
+
+- **List** (`GET /v1/fleet/trips`) → v1 flat trip: `id`, `driverId`, `vehicleId`,
+  `startTime`, `endTime`, `startLocation`, `endLocation`, `distanceMeters`, … (no
+  `startLocation` guarantee — flagged as an `extra_property` for this endpoint).
+- **Stream** (`GET /trips/stream`) → modern trip: `asset`, `completionStatus`,
+  `createdAtTime`, `tripStartTime`, `tripEndTime`, `updatedAtTime`,
+  `startLocation`-required, …
+
+Because one record covers both shapes, fields present in only one shape MUST be
+nullable, or deserializing the other endpoint throws. This drives several
+deliberate deviations from the plan's verbatim recommendations:
+
+**HIGH (6)**
+
+- **`GetStreamAsync` `ids` (`missing_required_query`)**: added as a required
+  `IReadOnlyList<string> ids` first parameter (no default), comma-joined and
+  appended via `QueryBuilder.WithParams`. **Breaking** for any caller of
+  `GetStreamAsync` (the CLI does not call it, so no CLI fix needed). Mirrors
+  `ISafetyClient.GetEventsStreamAsync`.
+- **`Trip` (response) — 5 "required" props modeled NULLABLE**: `asset`
+  (weakly-typed `object?`), `completionStatus` (`string?`), `createdAtTime`,
+  `tripStartTime`, `updatedAtTime` (all `DateTimeOffset?`). Although the spec marks
+  these required on the `/trips/stream` shape, they are absent on the
+  `/v1/fleet/trips` shape, so the plan's "else nullable" caveat applies — modeling
+  them non-nullable would break v1 deserialization. Timestamps use
+  `DateTimeOffset?` per repo convention rather than the plan's literal `string`.
+
+**MEDIUM (6)**
+
+- **3 optional query params on `GetStreamAsync`**: `completionStatus` (`string?`),
+  `queryBy` (`string?`), `includeAsset` (`bool?`, lower-cased), appended
+  conditionally via `QueryBuilder.WithParams`.
+- **`Trip.tripEndTime` / `Trip.trips`**: added as `DateTimeOffset?` and
+  `IReadOnlyList<object>?` respectively.
+- **`Trip.startLocation` (`response_required_drift`) — NOT tightened**: kept as
+  nullable `TripLocation?`. The plan flags it both as required-drift (tighten) AND
+  as an `extra_property` for `/v1/fleet/trips`; because the v1 shape omits it,
+  tightening to non-nullable would break v1 deserialization (same dual-shape
+  resolution as `TrailerAssignment` in 46-trailer-assignments).
+
+**LOW (13)**
+
+- All 13 non-spec response extras (`id`, `driverId`, `driverName`, `vehicleId`,
+  `vehicleName`, `startTime`, `endTime`, `startLocation`, `endLocation`,
+  `distanceMeters`, `durationMs`, `fuelConsumedMl`, `coDriver`) are retained as
+  nullable back-compat props per the workflow precedent, grouped under a
+  `// Not in current spec; retained for back-compat.` comment rather than removed.
+- **`Trip.Id` demoted `required string` → `string?`**: `id` is a LOW extra absent
+  from both spec shapes; leaving it `required` would break deserialization of
+  either endpoint (precedent: `SpeedingInterval.Id`, `TachographFile.Id`).
+  **Breaking** for callers reading `Trip.Id` as non-null. The CLI render site
+  (`TuiApp.cs`) was updated to `t.Id ?? ""`.
+
+Files touched: `src/Samsara.Sdk/Models/Routes/TripModels.cs`,
+`src/Samsara.Sdk/Clients/Routing/ITripsClient.cs`,
+`src/Samsara.Sdk/Clients/Routing/TripsClient.cs`,
+`tools/Samsara.Cli/TuiApp.cs`. `ListAsync` is unchanged. No JsonContext/test
+changes (`Trip`/`TripLocation` already registered, new props weakly-typed /
+scalar / array, no construction sites).
 
 ## Quick reference
 

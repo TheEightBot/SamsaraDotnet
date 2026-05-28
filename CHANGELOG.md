@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 50-trips (2026-05-27)** — applied the per-domain remediation plan
+  (0 CRIT / 6 HIGH / 6 MED / 13 LOW — 25 total) across the two trip endpoints. The
+  SDK's single `Trip` record is a dual-shape unified record deserializing both
+  `GET /v1/fleet/trips` (v1 flat) and `GET /trips/stream` (modern), so the
+  stream-only "required" props are modeled nullable to avoid breaking v1
+  deserialization. **Breaking**: `GetStreamAsync` gained a spec-required
+  `IReadOnlyList<string> ids` first param (no default, comma-joined via
+  `QueryBuilder.WithParams`) plus 3 optional query params — `completionStatus` and
+  `queryBy` (`string?`) and `includeAsset` (`bool?`, lower-cased); the CLI does not
+  call `GetStreamAsync`, so no CLI caller fix was needed. **Breaking**: `Trip.Id`
+  demoted from `required string` to `string?` (a non-spec extra absent from both
+  shapes; leaving it required would break deserialization) — the CLI `List All`
+  trips render site was updated to `t.Id ?? ""`. `Trip` (response) gained 5
+  stream-shape props modeled nullable — `asset` (weakly-typed `object?`),
+  `completionStatus` (`string?`), and `createdAtTime`/`tripStartTime`/`updatedAtTime`
+  (`DateTimeOffset?` per repo convention rather than the plan's literal `string`) —
+  plus 2 optional props, `tripEndTime` (`DateTimeOffset?`) and `trips`
+  (`IReadOnlyList<object>?`). `Trip.startLocation` was intentionally NOT tightened
+  (the plan flags it both required-drift and as an `extra_property` on the v1 shape,
+  which omits it). The 13 LOW non-spec extras (`id`, `driverId`, `driverName`,
+  `vehicleId`, `vehicleName`, `startTime`, `endTime`, `startLocation`,
+  `endLocation`, `distanceMeters`, `durationMs`, `fuelConsumedMl`, `coDriver`) are
+  retained as nullable back-compat props. `ListAsync` is unchanged. No
+  JsonContext/test changes (`Trip`/`TripLocation` already registered, new props
+  weakly-typed / scalar / array, no construction sites). See
+  `docs/api-sync/model-sync-plan-2026-05-27/50-trips.md`.
 - **Model sync 49-trainingcourses (2026-05-27)** — applied the per-domain
   remediation plan (0 CRIT / 5 HIGH / 4 MED / 4 LOW — 13 total) across the
   training-courses list endpoint (`GET /training-courses`). `ListCoursesAsync`

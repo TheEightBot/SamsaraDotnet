@@ -18,6 +18,20 @@ internal sealed class TripsClient : SamsaraServiceClientBase, ITripsClient
         return PaginateAsync<Trip>(path, cancellationToken: cancellationToken);
     }
 
-    public IAsyncEnumerable<Trip> GetStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<Trip>(QueryBuilder.WithTimeRange("trips/stream", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<Trip> GetStreamAsync(
+        IReadOnlyList<string> ids,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        string? completionStatus = null,
+        string? queryBy = null,
+        bool? includeAsset = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<Trip>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("trips/stream", startTime, endTime),
+                ("ids", string.Join(",", ids)),
+                ("completionStatus", completionStatus),
+                ("queryBy", queryBy),
+                ("includeAsset", includeAsset?.ToString().ToLowerInvariant())),
+            cancellationToken: cancellationToken);
 }
