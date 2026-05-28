@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Model sync 53-vehicle-stats (2026-05-27)** — applied the per-domain
+  remediation plan (0 CRIT / 0 HIGH / 77 MED / 4 LOW — 81 total) across the three
+  vehicle-stats endpoints. The `VehicleStats` response record gained 58 weakly-typed
+  `object?` props (the `auxInput1`–`auxInput13` bank, the EV-telemetry set, the
+  spreader bank, and the remaining `type=object` scalars such as
+  `engineRpm`/`faultCodes`/`externalIds`) plus three `IReadOnlyList<object>?` array
+  props (`engineStates`, `fuelPercents`, `nfcCardScans`). The three `type_mismatch`
+  fields `gps`, `gpsOdometerMeters`, and `obdOdometerMeters` were changed from their
+  typed records (`GpsData?`/`GpsOdometer?`/`ObdOdometer?`) to **`object?`** — a
+  deliberate deviation from the plan's `IReadOnlyList<object>` recommendation: each is
+  a single object on the snapshot endpoint (`GET /fleet/vehicles/stats`) but an array
+  on feed/history, so `object?` accepts either shape (matches the new `object?` props
+  and the dual-shape `EquipmentStats` precedent). The now-unused `GpsData`/`GpsOdometer`/
+  `ObdOdometer` records remain registered (out of scope to remove). **Breaking**:
+  `VehicleStats.name` tightened from `string?` to `required string` (verified safe — no
+  `new VehicleStats(...)` construction sites). Twelve optional query params were added
+  across the three methods (each `IReadOnlyList<string>? = null`, comma-joined via
+  `QueryBuilder.WithParams`, except `time` which is `string?`): `vehicleIds`/`tagIds`/
+  `parentTagIds` on all three, plus `time` on the snapshot and `decorations` on
+  feed/history — the previously path-embedded `?types=` query was refactored to
+  `QueryBuilder.WithParams`. The 4 LOW non-spec extras (`time`, `engineState`,
+  `fuelPercent`, `engineSeconds`) were retained as nullable back-compat props. The CLI
+  `List Stats` vehicle action passes the cancellation token by name (the 1st positional
+  slot after `types` is now `vehicleIds`) and drops the redundant `?? ""` on `s.Name`.
+  No JsonContext changes (`VehicleStats` and the inner typed records already registered;
+  new props weakly-typed, no new types) and no test changes (no construction sites). See
+  `docs/api-sync/model-sync-plan-2026-05-27/53-vehicle-stats.md`.
 - **Model sync 52-vehicle-locations (2026-05-27)** — applied the per-domain
   remediation plan (0 CRIT / 2 HIGH / 11 MED / 7 LOW — 20 total) across the three
   vehicle-location endpoints. The SDK's single `VehicleLocation` record deserializes

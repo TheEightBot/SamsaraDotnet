@@ -213,8 +213,8 @@ internal sealed class TuiApp
                         var statTypes = InputHelper.AskOptionalString("Stat types (e.g. engineStates,fuelPercents)");
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching stats...[/]", async _ =>
                         {
-                            var items = await CollectAsync(_client.Vehicles.ListStatsAsync(statTypes, Timeout60s()));
-                            ResultRenderer.RenderList(items, "Vehicle Stats", s => [s.Id, s.Name ?? ""], ["ID", "Name"]);
+                            var items = await CollectAsync(_client.Vehicles.ListStatsAsync(statTypes, cancellationToken: Timeout60s()));
+                            ResultRenderer.RenderList(items, "Vehicle Stats", s => [s.Id, s.Name], ["ID", "Name"]);
                         });
                         break;
                 }

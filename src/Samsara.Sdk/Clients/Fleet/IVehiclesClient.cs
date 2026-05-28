@@ -16,7 +16,13 @@ public interface IVehiclesClient
         IReadOnlyList<string>? parentTagIds = null,
         string? time = null,
         CancellationToken cancellationToken = default);
-    IAsyncEnumerable<VehicleStats> ListStatsAsync(string types, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<VehicleStats> ListStatsAsync(
+        string types,
+        IReadOnlyList<string>? vehicleIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        string? time = null,
+        CancellationToken cancellationToken = default);
     IAsyncEnumerable<VehicleLocation> GetLocationsFeedAsync(
         IReadOnlyList<string>? vehicleIds = null,
         IReadOnlyList<string>? tagIds = null,
@@ -29,8 +35,22 @@ public interface IVehiclesClient
         IReadOnlyList<string>? tagIds = null,
         IReadOnlyList<string>? parentTagIds = null,
         CancellationToken cancellationToken = default);
-    IAsyncEnumerable<VehicleStats> GetStatsFeedAsync(string types, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<VehicleStats> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<VehicleStats> GetStatsFeedAsync(
+        string types,
+        IReadOnlyList<string>? vehicleIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        IReadOnlyList<string>? decorations = null,
+        CancellationToken cancellationToken = default);
+    IAsyncEnumerable<VehicleStats> GetStatsHistoryAsync(
+        string types,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        IReadOnlyList<string>? vehicleIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        IReadOnlyList<string>? parentTagIds = null,
+        IReadOnlyList<string>? decorations = null,
+        CancellationToken cancellationToken = default);
     /// <summary>
     /// Stream speeding intervals over a time window (<c>GET /speeding-intervals/stream</c>).
     /// <paramref name="assetIds"/> is spec-required.

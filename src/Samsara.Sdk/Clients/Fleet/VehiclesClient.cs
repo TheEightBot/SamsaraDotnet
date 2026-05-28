@@ -29,8 +29,15 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
                 ("time", time)),
             cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<VehicleStats> ListStatsAsync(string types, CancellationToken cancellationToken = default)
-        => PaginateAsync<VehicleStats>($"{BasePath}/stats?types={Uri.EscapeDataString(types)}", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<VehicleStats> ListStatsAsync(string types, IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, string? time = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleStats>(
+            QueryBuilder.WithParams($"{BasePath}/stats",
+                ("types", types),
+                ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("time", time)),
+            cancellationToken: cancellationToken);
 
     public IAsyncEnumerable<VehicleLocation> GetLocationsFeedAsync(
         IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null,
@@ -54,11 +61,26 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
                 ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds))),
             cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<VehicleStats> GetStatsFeedAsync(string types, CancellationToken cancellationToken = default)
-        => PaginateAsync<VehicleStats>($"{BasePath}/stats/feed?types={Uri.EscapeDataString(types)}", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<VehicleStats> GetStatsFeedAsync(string types, IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, IReadOnlyList<string>? decorations = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleStats>(
+            QueryBuilder.WithParams($"{BasePath}/stats/feed",
+                ("types", types),
+                ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("decorations", decorations is null ? null : string.Join(",", decorations))),
+            cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<VehicleStats> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<VehicleStats>(QueryBuilder.WithTimeRange($"{BasePath}/stats/history?types={Uri.EscapeDataString(types)}", startTime, endTime), cancellationToken: cancellationToken);
+    public IAsyncEnumerable<VehicleStats> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, IReadOnlyList<string>? decorations = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleStats>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange($"{BasePath}/stats/history", startTime, endTime),
+                ("types", types),
+                ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
+                ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
+                ("decorations", decorations is null ? null : string.Join(",", decorations))),
+            cancellationToken: cancellationToken);
 
     public IAsyncEnumerable<SpeedingInterval> GetSpeedingIntervalsStreamAsync(
         IReadOnlyList<string> assetIds,

@@ -317,8 +317,204 @@ public sealed record VehicleStats
     public required string Id { get; init; }
 
     [JsonPropertyName("name")]
-    public string? Name { get; init; }
+    public required string Name { get; init; }
 
+    [JsonPropertyName("ambientAirTemperatureMilliC")]
+    public object? AmbientAirTemperatureMilliC { get; init; }
+
+    [JsonPropertyName("auxInput1")]
+    public object? AuxInput1 { get; init; }
+
+    [JsonPropertyName("auxInput2")]
+    public object? AuxInput2 { get; init; }
+
+    [JsonPropertyName("auxInput3")]
+    public object? AuxInput3 { get; init; }
+
+    [JsonPropertyName("auxInput4")]
+    public object? AuxInput4 { get; init; }
+
+    [JsonPropertyName("auxInput5")]
+    public object? AuxInput5 { get; init; }
+
+    [JsonPropertyName("auxInput6")]
+    public object? AuxInput6 { get; init; }
+
+    [JsonPropertyName("auxInput7")]
+    public object? AuxInput7 { get; init; }
+
+    [JsonPropertyName("auxInput8")]
+    public object? AuxInput8 { get; init; }
+
+    [JsonPropertyName("auxInput9")]
+    public object? AuxInput9 { get; init; }
+
+    [JsonPropertyName("auxInput10")]
+    public object? AuxInput10 { get; init; }
+
+    [JsonPropertyName("auxInput11")]
+    public object? AuxInput11 { get; init; }
+
+    [JsonPropertyName("auxInput12")]
+    public object? AuxInput12 { get; init; }
+
+    [JsonPropertyName("auxInput13")]
+    public object? AuxInput13 { get; init; }
+
+    [JsonPropertyName("barometricPressurePa")]
+    public object? BarometricPressurePa { get; init; }
+
+    [JsonPropertyName("batteryMilliVolts")]
+    public object? BatteryMilliVolts { get; init; }
+
+    [JsonPropertyName("defLevelMilliPercent")]
+    public object? DefLevelMilliPercent { get; init; }
+
+    [JsonPropertyName("ecuDoorStatus")]
+    public object? EcuDoorStatus { get; init; }
+
+    [JsonPropertyName("ecuSpeedMph")]
+    public object? EcuSpeedMph { get; init; }
+
+    [JsonPropertyName("engineCoolantTemperatureMilliC")]
+    public object? EngineCoolantTemperatureMilliC { get; init; }
+
+    [JsonPropertyName("engineImmobilizer")]
+    public object? EngineImmobilizer { get; init; }
+
+    [JsonPropertyName("engineLoadPercent")]
+    public object? EngineLoadPercent { get; init; }
+
+    [JsonPropertyName("engineOilPressureKPa")]
+    public object? EngineOilPressureKPa { get; init; }
+
+    [JsonPropertyName("engineRpm")]
+    public object? EngineRpm { get; init; }
+
+    [JsonPropertyName("evAverageBatteryTemperatureMilliCelsius")]
+    public object? EvAverageBatteryTemperatureMilliCelsius { get; init; }
+
+    [JsonPropertyName("evBatteryCurrentMilliAmp")]
+    public object? EvBatteryCurrentMilliAmp { get; init; }
+
+    [JsonPropertyName("evBatteryStateOfHealthMilliPercent")]
+    public object? EvBatteryStateOfHealthMilliPercent { get; init; }
+
+    [JsonPropertyName("evBatteryVoltageMilliVolt")]
+    public object? EvBatteryVoltageMilliVolt { get; init; }
+
+    [JsonPropertyName("evChargingCurrentMilliAmp")]
+    public object? EvChargingCurrentMilliAmp { get; init; }
+
+    [JsonPropertyName("evChargingEnergyMicroWh")]
+    public object? EvChargingEnergyMicroWh { get; init; }
+
+    [JsonPropertyName("evChargingStatus")]
+    public object? EvChargingStatus { get; init; }
+
+    [JsonPropertyName("evChargingVoltageMilliVolt")]
+    public object? EvChargingVoltageMilliVolt { get; init; }
+
+    [JsonPropertyName("evConsumedEnergyMicroWh")]
+    public object? EvConsumedEnergyMicroWh { get; init; }
+
+    [JsonPropertyName("evDistanceDrivenMeters")]
+    public object? EvDistanceDrivenMeters { get; init; }
+
+    [JsonPropertyName("evRegeneratedEnergyMicroWh")]
+    public object? EvRegeneratedEnergyMicroWh { get; init; }
+
+    [JsonPropertyName("evStateOfChargeMilliPercent")]
+    public object? EvStateOfChargeMilliPercent { get; init; }
+
+    [JsonPropertyName("externalIds")]
+    public object? ExternalIds { get; init; }
+
+    [JsonPropertyName("faultCodes")]
+    public object? FaultCodes { get; init; }
+
+    [JsonPropertyName("fuelConsumedMilliliters")]
+    public object? FuelConsumedMilliliters { get; init; }
+
+    [JsonPropertyName("gpsDistanceMeters")]
+    public object? GpsDistanceMeters { get; init; }
+
+    [JsonPropertyName("idlingDurationMilliseconds")]
+    public object? IdlingDurationMilliseconds { get; init; }
+
+    [JsonPropertyName("intakeManifoldTemperatureMilliC")]
+    public object? IntakeManifoldTemperatureMilliC { get; init; }
+
+    [JsonPropertyName("nfcCardScan")]
+    public object? NfcCardScan { get; init; }
+
+    [JsonPropertyName("obdEngineSeconds")]
+    public object? ObdEngineSeconds { get; init; }
+
+    [JsonPropertyName("seatbeltDriver")]
+    public object? SeatbeltDriver { get; init; }
+
+    [JsonPropertyName("spreaderActive")]
+    public object? SpreaderActive { get; init; }
+
+    [JsonPropertyName("spreaderAirTemp")]
+    public object? SpreaderAirTemp { get; init; }
+
+    [JsonPropertyName("spreaderBlastState")]
+    public object? SpreaderBlastState { get; init; }
+
+    [JsonPropertyName("spreaderGranularName")]
+    public object? SpreaderGranularName { get; init; }
+
+    [JsonPropertyName("spreaderGranularRate")]
+    public object? SpreaderGranularRate { get; init; }
+
+    [JsonPropertyName("spreaderLiquidName")]
+    public object? SpreaderLiquidName { get; init; }
+
+    [JsonPropertyName("spreaderLiquidRate")]
+    public object? SpreaderLiquidRate { get; init; }
+
+    [JsonPropertyName("spreaderOnState")]
+    public object? SpreaderOnState { get; init; }
+
+    [JsonPropertyName("spreaderPlowStatus")]
+    public object? SpreaderPlowStatus { get; init; }
+
+    [JsonPropertyName("spreaderPrewetName")]
+    public object? SpreaderPrewetName { get; init; }
+
+    [JsonPropertyName("spreaderPrewetRate")]
+    public object? SpreaderPrewetRate { get; init; }
+
+    [JsonPropertyName("spreaderRoadTemp")]
+    public object? SpreaderRoadTemp { get; init; }
+
+    [JsonPropertyName("syntheticEngineSeconds")]
+    public object? SyntheticEngineSeconds { get; init; }
+
+    [JsonPropertyName("engineStates")]
+    public IReadOnlyList<object>? EngineStates { get; init; }
+
+    [JsonPropertyName("fuelPercents")]
+    public IReadOnlyList<object>? FuelPercents { get; init; }
+
+    [JsonPropertyName("nfcCardScans")]
+    public IReadOnlyList<object>? NfcCardScans { get; init; }
+
+    /// <summary>GPS data: single object on the snapshot endpoint, array on feed/history; exposed as object to accept either shape.</summary>
+    [JsonPropertyName("gps")]
+    public object? Gps { get; init; }
+
+    /// <summary>GPS-calculated odometer: single object on the snapshot endpoint, array on feed/history; exposed as object to accept either shape.</summary>
+    [JsonPropertyName("gpsOdometerMeters")]
+    public object? GpsOdometerMeters { get; init; }
+
+    /// <summary>OBD-reported odometer: single object on the snapshot endpoint, array on feed/history; exposed as object to accept either shape.</summary>
+    [JsonPropertyName("obdOdometerMeters")]
+    public object? ObdOdometerMeters { get; init; }
+
+    // Not in current spec; retained for back-compat.
     [JsonPropertyName("time")]
     public DateTimeOffset? Time { get; init; }
 
@@ -328,17 +524,8 @@ public sealed record VehicleStats
     [JsonPropertyName("fuelPercent")]
     public FuelPercent? FuelPercent { get; init; }
 
-    [JsonPropertyName("obdOdometerMeters")]
-    public ObdOdometer? ObdOdometerMeters { get; init; }
-
-    [JsonPropertyName("gpsOdometerMeters")]
-    public GpsOdometer? GpsOdometerMeters { get; init; }
-
     [JsonPropertyName("engineSeconds")]
     public EngineSeconds? EngineSeconds { get; init; }
-
-    [JsonPropertyName("gps")]
-    public GpsData? Gps { get; init; }
 }
 
 /// <summary>

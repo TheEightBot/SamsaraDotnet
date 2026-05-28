@@ -3,6 +3,86 @@
 > Companion to [`docs/api-sync/53-vehicle-stats.md`](../53-vehicle-stats.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
+> **✅ Implemented in commit `<pending>` on 2026-05-27**
+
+## Implementation notes
+
+All 77 MEDIUM findings were applied; the 4 LOW response-side extras were
+intentionally retained as nullable back-compat properties per the workflow
+precedent (cf. `40-safety-scores`, `49-trainingcourses`, `50-trips`, `51-users`,
+`52-vehicle-locations`) rather than removed.
+
+**`VehicleStats` response (65 changes)**
+
+- **58 new `object?` props** added for the spec's `type=object` inner-schema
+  fields (each weakly typed per the response convention): the aux-input bank
+  (`auxInput1`–`auxInput13`), the EV telemetry set
+  (`evAverageBatteryTemperatureMilliCelsius`, `evBatteryCurrentMilliAmp`,
+  `evBatteryStateOfHealthMilliPercent`, `evBatteryVoltageMilliVolt`,
+  `evChargingCurrentMilliAmp`, `evChargingEnergyMicroWh`, `evChargingStatus`,
+  `evChargingVoltageMilliVolt`, `evConsumedEnergyMicroWh`, `evDistanceDrivenMeters`,
+  `evRegeneratedEnergyMicroWh`, `evStateOfChargeMilliPercent`), the spreader bank
+  (`spreaderActive`, `spreaderAirTemp`, `spreaderBlastState`, `spreaderGranularName`,
+  `spreaderGranularRate`, `spreaderLiquidName`, `spreaderLiquidRate`,
+  `spreaderOnState`, `spreaderPlowStatus`, `spreaderPrewetName`, `spreaderPrewetRate`,
+  `spreaderRoadTemp`), and the remaining scalars (`ambientAirTemperatureMilliC`,
+  `barometricPressurePa`, `batteryMilliVolts`, `defLevelMilliPercent`,
+  `ecuDoorStatus`, `ecuSpeedMph`, `engineCoolantTemperatureMilliC`,
+  `engineImmobilizer`, `engineLoadPercent`, `engineOilPressureKPa`, `engineRpm`,
+  `externalIds`, `faultCodes`, `fuelConsumedMilliliters`, `gpsDistanceMeters`,
+  `idlingDurationMilliseconds`, `intakeManifoldTemperatureMilliC`, `nfcCardScan`,
+  `obdEngineSeconds`, `seatbeltDriver`, `syntheticEngineSeconds`).
+- **3 new `IReadOnlyList<object>?` array props**: `engineStates`, `fuelPercents`,
+  `nfcCardScans` (feed/history shapes only).
+- **`name` (response_required_drift)**: tightened from `string?` to `required
+  string`. SAFE — no `new VehicleStats(...)` construction sites exist in
+  src/tools/tests. **Breaking**: consumers may now rely on a non-null `Name`.
+- **3 `type_mismatch` fields → `object?`** (deviation from the plan's
+  `IReadOnlyList<object>` recommendation): `gps`, `gpsOdometerMeters`, and
+  `obdOdometerMeters` are each a single object on the snapshot endpoint
+  (`GET /fleet/vehicles/stats`) but an array on feed/history, so they were modeled
+  as `object?` to accept **either** shape (matches the 58 new `object?` props and
+  the dual-shape `EquipmentStats` precedent in this same file). The now-unused
+  `GpsData` / `GpsOdometer` / `ObdOdometer` typed records (and their
+  `SamsaraJsonContext` registrations) were left in place — removing them is out of
+  scope.
+
+**MEDIUM query params (12 across 3 stats methods)**
+
+The three stats methods embedded `?types={…}` directly in the path string; they
+were refactored to build the query via `QueryBuilder.WithParams` (cleaner,
+URL-encodes), with `types` always included. New optional params (each
+`IReadOnlyList<string>? = null`, comma-joined, except `time` which is `string?`):
+
+- `ListStatsAsync`: `vehicleIds`, `tagIds`, `parentTagIds`, `time`.
+- `GetStatsFeedAsync`: `vehicleIds`, `tagIds`, `parentTagIds`, `decorations`.
+- `GetStatsHistoryAsync`: `vehicleIds`, `tagIds`, `parentTagIds`, `decorations`
+  (after the existing `startTime`/`endTime`).
+
+**LOW (4) — response-side extras**
+
+- `time` (`DateTimeOffset?`), `engineState` (`EngineState?`), `fuelPercent`
+  (`FuelPercent?`), and `engineSeconds` (`EngineSeconds?`) were RETAINED as-is
+  (already nullable) under a `// Not in current spec; retained for back-compat.`
+  comment, keeping their typed records.
+
+**Caller updated**
+
+- CLI (`tools/Samsara.Cli/TuiApp.cs`): the `List Stats` vehicle action now passes
+  the cancellation token by name (`cancellationToken:` — the 1st positional slot
+  after `types` is now the `vehicleIds` filter) and drops the now-redundant `?? ""`
+  on `s.Name` (now non-null). The CLI does not call `GetStatsFeed`/`GetStatsHistory`.
+
+Files touched: `src/Samsara.Sdk/Models/Fleet/FleetModels.cs`,
+`src/Samsara.Sdk/Clients/Fleet/IVehiclesClient.cs`,
+`src/Samsara.Sdk/Clients/Fleet/VehiclesClient.cs`,
+`tools/Samsara.Cli/TuiApp.cs`. No `SamsaraJsonContext` changes (`VehicleStats`
+and the inner typed records already registered; new props weakly-typed
+`object`/array → no new top-level types). No test changes (no
+`new VehicleStats(...)` construction). Other Vehicles methods untouched.
+
+Verification: `dotnet build` 0 errors / 0 warnings, `dotnet test` 59 passed, and
+`check-sdk-sync.py --fail-on-mismatch` exits 0 (323/323 matched).
 
 ## Quick reference
 
