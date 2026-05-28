@@ -3,7 +3,7 @@
 > Companion to [`docs/api-sync/48-trainingassignments.md`](../48-trainingassignments.md).  
 > Spec: `samsara-api.json` v`2025-10-23` (local).
 
-> **✅ Implemented in commit `PENDING` on 2026-05-27**
+> **✅ Implemented in commit `f5cb439` on 2026-05-27**
 
 ## Implementation notes
 
