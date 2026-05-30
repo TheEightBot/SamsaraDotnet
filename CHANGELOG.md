@@ -153,6 +153,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `driver`/`trailer` (real on `GET`) — the checker reports each as "extra" on the *other* shape's
     endpoint, but both are spec-backed and required to deserialize all three responses. **Breaking**:
     `Driver`/`Trailer` are now nullable and `driverName`/`trailerName`/`time` no longer exist.
+  - **Driver-Vehicle Assignments** — `DriverVehicleAssignment` is the response record for `GET`
+    (full assignment object), `POST`, and `PATCH` (the latter two return only `{ message }`).
+    **Relaxed** `Driver`/`Vehicle`/`IsPassenger`/`StartTime` from `required` to nullable — the
+    create/update responses omit them, so `required` risked the Hubs-style deserialization throw.
+    **Removed** the flat `id`/`driverId`/`driverName`/`vehicleId`/`vehicleName` scalars: none appears
+    in any spec response schema, and the canonical driver/vehicle id+name are already exposed via the
+    typed nested `Driver`/`Vehicle` objects (the carrier-proposed-assignments precedent). Updated the
+    CLI list view to read `Driver?.Id`/`Vehicle?.Id`/`StartTime`. The GET full-object fields
+    (`driver`/`vehicle`/`isPassenger`/`startTime`/`assignedAtTime`/`assignmentType`/`endTime`/
+    `metadata`) and the `message` field remain — each is flagged "extra" only on the opposite shape's
+    endpoint but is spec-backed. **Breaking**: those four fields are now nullable and the five flat
+    scalars no longer exist (use `Driver.Id`/`Driver.Name`/`Vehicle.Id`/`Vehicle.Name`).
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

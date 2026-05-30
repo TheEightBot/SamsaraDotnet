@@ -1456,7 +1456,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching assignments...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.DriverVehicleAssignments.ListAsync(filterBy, cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Driver-Vehicle Assignments", a => [a.Id ?? "", a.DriverId ?? a.Driver.Id, a.VehicleId ?? a.Vehicle.Id ?? ""], ["ID", "Driver ID", "Vehicle ID"]);
+                            ResultRenderer.RenderList(items, "Driver-Vehicle Assignments", a => [a.Driver?.Id ?? "", a.Vehicle?.Id ?? "", a.StartTime?.ToString("u") ?? ""], ["Driver ID", "Vehicle ID", "Start"]);
                         });
                         break;
                     case "Create":
