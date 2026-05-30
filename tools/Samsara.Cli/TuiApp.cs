@@ -861,7 +861,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching HOS logs...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Compliance.ListHosLogsAsync(hosLogStart, hosLogEnd, cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "HOS Logs", l => [l.Id ?? "", l.DriverId ?? "", l.HosStatusType ?? ""], ["ID", "Driver ID", "Status"]);
+                            ResultRenderer.RenderList(items, "HOS Logs", l => [l.Driver?.Id ?? "", l.Driver?.Name ?? "", (l.HosLogs?.Count ?? 0).ToString()], ["Driver ID", "Driver", "Entries"]);
                         });
                         break;
                     case "HOS Violations":
@@ -869,7 +869,11 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching HOS violations...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Compliance.ListHosViolationsAsync(hosViolStart, hosViolEnd, cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "HOS Violations", v => [v.DriverId ?? "", v.ViolationType ?? ""], ["Driver ID", "Type"]);
+                            ResultRenderer.RenderList(items, "HOS Violations", v =>
+                            {
+                                var first = v.Violations.Count > 0 ? v.Violations[0] : null;
+                                return [first?.Driver?.Id ?? "", (first?.Type) ?? "", v.Violations.Count.ToString()];
+                            }, ["Driver ID", "First Type", "Count"]);
                         });
                         break;
                     case "HOS Clocks":

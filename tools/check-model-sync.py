@@ -259,16 +259,47 @@ def _strip_generic_suffix(t: str) -> str:
     return t.strip().rstrip("?").strip()
 
 
+# Collection wrappers whose top-level record key is their ELEMENT type. When a
+# client method returns one of these directly (e.g. GetHosClocksAsync ->
+# IReadOnlyList<HosClocksForDriver>), the spec response is a { data: [item] }
+# envelope and the SDK record to compare against is the element, not the
+# collection. Listed innermost-first is unnecessary since we unwrap iteratively.
+_COLLECTION_GENERICS = (
+    "IReadOnlyList",
+    "IList",
+    "List",
+    "IEnumerable",
+    "IReadOnlyCollection",
+    "ICollection",
+    "IAsyncEnumerable",
+)
+
+
 def _record_key(t: str) -> str:
     """Reduce a C# response/request type to the SDK record key used in `models`.
 
     Strips a trailing top-level generic-argument list so a closed generic
     wrapper (e.g. ``V1SensorReadingsResponse<V1CargoReading>``) resolves to the
-    record actually declared in source (``V1SensorReadingsResponse``). Unlike
-    :func:`_strip_generic_suffix` (which is applied to *property* types and must
-    preserve element info such as ``IReadOnlyList<long>``), this is only for
-    top-level record lookups, so dropping the type arguments is correct."""
+    record actually declared in source (``V1SensorReadingsResponse``). When the
+    type is a bare collection of a record (``IReadOnlyList<HosClocksForDriver>``),
+    the meaningful top-level record is the *element*, so the collection wrapper is
+    peeled to its single type argument. Unlike :func:`_strip_generic_suffix`
+    (which is applied to *property* types and must preserve element info such as
+    ``IReadOnlyList<long>``), this is only for top-level record lookups, so
+    reducing to the inner record is correct."""
     t = _strip_generic_suffix(t)
+    # Peel collection wrappers to their element record (iteratively, e.g. a
+    # hypothetical IReadOnlyList<List<T>> reduces to T).
+    changed = True
+    while changed:
+        changed = False
+        lt = t.find("<")
+        if lt == -1:
+            break
+        head = t[:lt].strip()
+        if head in _COLLECTION_GENERICS and t.endswith(">"):
+            t = t[lt + 1:-1].strip()
+            changed = True
     lt = t.find("<")
     return t[:lt].strip() if lt != -1 else t
 

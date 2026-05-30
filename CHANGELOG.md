@@ -343,6 +343,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     endpoint, `vehicle` flagged on the driver-files endpoint) are dual-shape and kept. Six new records
     registered in `SamsaraJsonContext`; CLI tachograph views updated. **Breaking**: `TachographActivity`/
     `TachographFile` field types change and 21 flat properties are removed.
+  - **Hours of Service** — **removed** the legacy flat convenience scalars from the three nested HOS
+    response records, none of which are on their spec inner schemas: `HosLog`
+    (`id`/`driverId`/`driverName`/`codriverIds`/`vehicleId`/`vehicleName`/`hosStatusType`/`logStartMs`/
+    `locLat`/`locLng`/`locCity`/`locState`/`locName`/`groupId`/`remark` — the canonical shape is
+    `driver` + `hosLogs`), `HosViolation` (`driverId`/`driverName`/`vehicleId`/`violationType`/
+    `startMs`/`endMs`/`severityType` — canonical `violations`), and `HosDailyLog`
+    (`id`/`driverId`/`driverName`/`vehicleId`/`vehicleName`/`certificationState`/`date`/
+    `distanceDrivenMeters` — canonical `driver`/`startTime`/`endTime`/`distanceTraveled`/
+    `dutyStatusDurations`/`logMetaData`/`pendingDutyStatusDurations`). Updated `ComplianceClientTests`
+    and the CLI HOS views to the nested shape. **Checker fix**: `GetHosClocksAsync` returns
+    `IReadOnlyList<HosClocksForDriver>` (already a fully-typed 5-property record), but `check-model-sync`
+    reported a `weak-typing` false positive because `_record_key` reduced a bare collection type to the
+    collection name (`IReadOnlyList`) rather than its element; it now peels collection generics
+    (`IReadOnlyList`/`IList`/`List`/`IEnumerable`/…) to the element record. A full before/after findings
+    diff confirms ONLY this one finding clears with no collateral (precedent: the Sensors closed-generic
+    fix). **Breaking**: 30 HOS properties removed.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
