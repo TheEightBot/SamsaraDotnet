@@ -141,6 +141,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     the CLI gateway list view to key on `Serial`/`Model`/`ConnectionStatus.HealthStatus` instead of
     the removed `Id`. **Breaking**: those eight properties no longer exist (gateways are identified
     by `Serial`).
+  - **Driver-Trailer Assignments** — `DriverTrailerAssignment` is one record shared across three
+    endpoints with two shapes: `GET /driver-trailer-assignments` nests `driver`/`trailer` objects
+    (and marks them required), while the `POST`/`PATCH` responses instead carry flat
+    `driverId`/`trailerId` scalars and omit the nested objects. **Relaxed** `Driver` and `Trailer`
+    from `required` to nullable (the create/update responses lack them — keeping them `required`
+    risked the Hubs-style deserialization throw). **Removed** `driverName`/`trailerName`/`time`,
+    which appear in no spec schema on any of the three endpoints (the nested driver/trailer objects
+    expose only `driverId`/`trailerId`/`externalIds`, never a name, so those scalars were always
+    null). Kept the flat `driverId`/`trailerId` (real on `POST`/`PATCH`) and the nested
+    `driver`/`trailer` (real on `GET`) — the checker reports each as "extra" on the *other* shape's
+    endpoint, but both are spec-backed and required to deserialize all three responses. **Breaking**:
+    `Driver`/`Trailer` are now nullable and `driverName`/`trailerName`/`time` no longer exist.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
