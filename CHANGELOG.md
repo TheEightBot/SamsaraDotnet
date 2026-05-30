@@ -283,6 +283,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     standard responses — are each spec-backed on the *other* endpoints and kept. **Breaking**:
     five `DataInput` properties removed; `DataInput.Id`/`IndustrialAsset.Name`/`IndustrialAsset.IsRunning`
     now nullable.
+  - **Routes** — **removed** the 11 fabricated `Route` properties
+    (`createdAt`/`updatedAt`/`dispatchRouteId`/`distanceMeters`/`durationSeconds`/`hubId`/`isEdited`/
+    `isPinned`/`planId`/`type`/`quantities`); all four `Route` endpoints (`GET`/`POST /fleet/routes`,
+    `GET`/`PATCH /fleet/routes/{id}`) return the identical schema and none of them define these.
+    Typed `RouteAuditEvent.Changes` (was `JsonElement`) as the new `RouteAuditChanges`
+    (`before`/`after` → `RouteAuditSnapshot` → `RouteAuditStop[]`) and `RouteAuditEvent.Route` (was
+    `JsonElement`) as the existing `Route` record (the spec's `baseRouteResponseObjectResponseBody`
+    matches it); the three new records are registered in `SamsaraJsonContext`. **Removed** the five
+    spec-absent `RouteAuditEvent` extras (`id`/`routeId`/`userId`/`eventType`/`description`).
+    **Breaking**: 11 `Route` properties and 5 `RouteAuditEvent` properties removed;
+    `RouteAuditEvent.Changes`/`Route` change type.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

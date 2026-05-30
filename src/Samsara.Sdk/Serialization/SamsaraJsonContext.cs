@@ -404,6 +404,9 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(ReadingSnapshot))]
 // Routes - audit log
 [JsonSerializable(typeof(RouteAuditEvent))]
+[JsonSerializable(typeof(RouteAuditChanges))]
+[JsonSerializable(typeof(RouteAuditSnapshot))]
+[JsonSerializable(typeof(RouteAuditStop))]
 // Routes - Hubs extended
 [JsonSerializable(typeof(HubCapacity))]
 [JsonSerializable(typeof(HubCustomProperty))]

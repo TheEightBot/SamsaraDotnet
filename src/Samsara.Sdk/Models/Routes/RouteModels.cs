@@ -51,39 +51,6 @@ public sealed record Route
     [JsonPropertyName("orgLocalTimezone")]
     public string? OrgLocalTimezone { get; init; }
 
-    [JsonPropertyName("createdAt")]
-    public DateTimeOffset? CreatedAt { get; init; }
-
-    [JsonPropertyName("updatedAt")]
-    public DateTimeOffset? UpdatedAt { get; init; }
-
-    [JsonPropertyName("dispatchRouteId")]
-    public string? DispatchRouteId { get; init; }
-
-    [JsonPropertyName("distanceMeters")]
-    public long? DistanceMeters { get; init; }
-
-    [JsonPropertyName("durationSeconds")]
-    public long? DurationSeconds { get; init; }
-
-    [JsonPropertyName("hubId")]
-    public string? HubId { get; init; }
-
-    [JsonPropertyName("isEdited")]
-    public bool? IsEdited { get; init; }
-
-    [JsonPropertyName("isPinned")]
-    public bool? IsPinned { get; init; }
-
-    [JsonPropertyName("planId")]
-    public string? PlanId { get; init; }
-
-    [JsonPropertyName("type")]
-    public string? Type { get; init; }
-
-    [JsonPropertyName("quantities")]
-    public JsonElement? Quantities { get; init; }
-
     [JsonPropertyName("recurringRouteLiveSharingLinks")]
     public IReadOnlyList<JsonElement>? RecurringRouteLiveSharingLinks { get; init; }
 }
@@ -355,14 +322,15 @@ public sealed record UpdateRouteStopRequest
     public long? OntimeWindowBeforeArrivalMs { get; init; }
 }
 
-/// <summary>Represents a route audit log event (route feed object).</summary>
+/// <summary>Represents a route audit log event (route feed object), returned by
+/// <c>GET /fleet/routes/audit-logs/feed</c>.</summary>
 public sealed record RouteAuditEvent
 {
     /// <summary>The before/after changes that were applied as part of this route update (spec REQUIRED).</summary>
-    [JsonPropertyName("changes")] public required JsonElement Changes { get; init; }
+    [JsonPropertyName("changes")] public required RouteAuditChanges Changes { get; init; }
 
     /// <summary>The route this update applies to (spec REQUIRED).</summary>
-    [JsonPropertyName("route")] public required JsonElement Route { get; init; }
+    [JsonPropertyName("route")] public required Route Route { get; init; }
 
     /// <summary>The source of this route update (e.g. <c>automatic</c>, <c>driver</c>, <c>admin</c>) — spec REQUIRED.</summary>
     [JsonPropertyName("source")] public required string Source { get; init; }
@@ -375,11 +343,62 @@ public sealed record RouteAuditEvent
 
     /// <summary>The operation that was performed as part of this route update (e.g. <c>stop scheduled</c>).</summary>
     [JsonPropertyName("operation")] public string? Operation { get; init; }
+}
 
-    // Back-compat extras retained from earlier SDK shape (not present in the current spec schema).
-    [JsonPropertyName("id")] public string? Id { get; init; }
-    [JsonPropertyName("routeId")] public string? RouteId { get; init; }
-    [JsonPropertyName("userId")] public string? UserId { get; init; }
-    [JsonPropertyName("eventType")] public string? EventType { get; init; }
-    [JsonPropertyName("description")] public string? Description { get; init; }
+/// <summary>The before/after route snapshots captured by a <see cref="RouteAuditEvent"/>.
+/// Mirrors the spec's <c>RouteChangesResponseBody</c>.</summary>
+public sealed record RouteAuditChanges
+{
+    /// <summary>The route state before the update. Spec-required.</summary>
+    [JsonPropertyName("before")] public required RouteAuditSnapshot Before { get; init; }
+
+    /// <summary>The route state after the update. Spec-required.</summary>
+    [JsonPropertyName("after")] public required RouteAuditSnapshot After { get; init; }
+}
+
+/// <summary>A minimal route snapshot (the changed stops only) inside a
+/// <see cref="RouteAuditChanges"/>. Mirrors the spec's
+/// <c>MinimalRouteAuditLogsResponseBody</c>.</summary>
+public sealed record RouteAuditSnapshot
+{
+    /// <summary>The stops captured in this snapshot.</summary>
+    [JsonPropertyName("stops")] public IReadOnlyList<RouteAuditStop>? Stops { get; init; }
+}
+
+/// <summary>A minimal route-stop snapshot inside a route audit log change.
+/// Mirrors the spec's <c>MinimalRouteStopAuditLogsResponseBody</c>.</summary>
+public sealed record RouteAuditStop
+{
+    /// <summary>Unique identifier of the stop. Spec-required.</summary>
+    [JsonPropertyName("id")] public required string Id { get; init; }
+
+    /// <summary>The state of the stop (e.g. <c>scheduled</c>, <c>enRoute</c>, <c>skipped</c>).</summary>
+    [JsonPropertyName("state")] public string? State { get; init; }
+
+    /// <summary>External identifiers for the stop.</summary>
+    [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
+    /// <summary>The live-sharing URL for the stop.</summary>
+    [JsonPropertyName("liveSharingUrl")] public string? LiveSharingUrl { get; init; }
+
+    /// <summary>Scheduled arrival time, in RFC 3339 format.</summary>
+    [JsonPropertyName("scheduledArrivalTime")] public DateTimeOffset? ScheduledArrivalTime { get; init; }
+
+    /// <summary>Scheduled departure time, in RFC 3339 format.</summary>
+    [JsonPropertyName("scheduledDepartureTime")] public DateTimeOffset? ScheduledDepartureTime { get; init; }
+
+    /// <summary>Actual arrival time, in RFC 3339 format.</summary>
+    [JsonPropertyName("actualArrivalTime")] public DateTimeOffset? ActualArrivalTime { get; init; }
+
+    /// <summary>Actual departure time, in RFC 3339 format.</summary>
+    [JsonPropertyName("actualDepartureTime")] public DateTimeOffset? ActualDepartureTime { get; init; }
+
+    /// <summary>The time the asset went en route to the stop, in RFC 3339 format.</summary>
+    [JsonPropertyName("enRouteTime")] public DateTimeOffset? EnRouteTime { get; init; }
+
+    /// <summary>Estimated time of arrival, in RFC 3339 format.</summary>
+    [JsonPropertyName("eta")] public DateTimeOffset? Eta { get; init; }
+
+    /// <summary>The time the stop was skipped, in RFC 3339 format.</summary>
+    [JsonPropertyName("skippedTime")] public DateTimeOffset? SkippedTime { get; init; }
 }
