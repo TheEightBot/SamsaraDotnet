@@ -102,6 +102,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     the typed `Driver`/`Vehicle` records (with `Id`/`Name`) — so no data is lost. Updated the CLI
     list view to read `Driver?.Id`. **Breaking**: use `Driver.Id`/`Driver.Name`/`Vehicle.Id`/
     `Vehicle.Name` instead of the removed flat scalars.
+  - **Live Sharing Links** — **removed** the legacy `LiveSharingLink.Url`/`ExpiresAt`/`EntityId`/
+    `EntityType` aliases. None appears in `LiveSharingLinkFullResponseObjectResponseBody` (the
+    shared response schema for `GET`/`POST`/`PATCH /live-shares`); each already has a canonical
+    spec-backed equivalent the SDK exposes — `LiveSharingUrl`, `ExpiresAtTime`, the typed
+    `*LinkConfig` objects, and `Type`. **Breaking**: those four aliases no longer exist.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
