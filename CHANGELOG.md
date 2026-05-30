@@ -67,6 +67,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `CreateUserRequest_roles.tagId`, since `UserRole` doubles as the request role element);
     corrected its stale "not in current spec" comment. **Breaking**: consumers can no longer
     assume non-null `UserRole.Id`.
+  - **Documents** — relaxed `DocumentType.Id` and `DocumentPdfJob.Id` to nullable (spec lists
+    both optional on `GET /fleet/document-types` and `POST /fleet/documents/pdfs`). Kept
+    `DocumentPdfJob.JobStatus`/`RequestedAtTime`/`CompletedAtTime`/`DownloadDocumentPdfUrl`
+    (flagged extra against the POST create response, but all are real fields on
+    `GET /fleet/documents/pdfs/{id}` — `DocumentPdfJob` is the shared response record for both
+    the create and the status-query endpoints). **Breaking**: consumers can no longer assume
+    non-null `DocumentType.Id`/`DocumentPdfJob.Id`.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

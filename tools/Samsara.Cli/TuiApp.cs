@@ -1062,7 +1062,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching document types...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Documents.ListTypesAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Document Types", t => [t.Id, t.Name ?? ""], ["ID", "Name"]);
+                            ResultRenderer.RenderList(items, "Document Types", t => [t.Id ?? "", t.Name ?? ""], ["ID", "Name"]);
                         });
                         break;
                 }
