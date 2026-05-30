@@ -122,6 +122,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `UpdatedAtTime` properties (`GET /training-courses` is the only consumer; the canonical fields
     are `Title` and the `Status` enum). Updated the CLI list view to show `Title`. **Breaking**:
     those four properties no longer exist and `Category`/`Labels` change type.
+  - **Work Orders** — typed three previously weak (`object`) properties against their concrete spec
+    schemas: `WorkOrder.MaintenanceSite` → new `WorkOrderMaintenanceSite` (`name`/`placeId`/
+    `placeExternalIds`), `ServiceTask.EstimatedPartsCost` → new `WorkOrderMoney` (`amount`/
+    `currency`), and `PostInvoiceScanRequest.File` → new `InvoiceScanFile` (`base64Content`/
+    `contentType`); all registered in `SamsaraJsonContext`. **Removed** the spec-absent
+    `InvoiceScan.Id`/`Status`, `ServiceTask.LaborCostCents`, and `PostInvoiceScanRequest.ImageBase64`
+    (the latter superseded by the typed `File.Base64Content`). The remaining `JsonElement` fields on
+    `WorkOrder` (`discount`/`tax`/`items`/`serviceTaskInstances`/…) are left untyped for now (large,
+    nested money/line-item schemas). **Breaking**: `MaintenanceSite`/`EstimatedPartsCost`/`File`
+    change type and the four extra properties no longer exist (use `File.Base64Content` for the
+    invoice image).
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

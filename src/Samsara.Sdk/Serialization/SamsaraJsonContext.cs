@@ -364,6 +364,9 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(ServiceTask))]
 [JsonSerializable(typeof(InvoiceScan))]
 [JsonSerializable(typeof(PostInvoiceScanRequest))]
+[JsonSerializable(typeof(InvoiceScanFile))]
+[JsonSerializable(typeof(WorkOrderMaintenanceSite))]
+[JsonSerializable(typeof(WorkOrderMoney))]
 // Documents - PDF jobs
 [JsonSerializable(typeof(DocumentPdfJob))]
 [JsonSerializable(typeof(GenerateDocumentPdfRequest))]
