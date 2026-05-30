@@ -294,6 +294,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     spec-absent `RouteAuditEvent` extras (`id`/`routeId`/`userId`/`eventType`/`description`).
     **Breaking**: 11 `Route` properties and 5 `RouteAuditEvent` properties removed;
     `RouteAuditEvent.Changes`/`Route` change type.
+  - **Trips** — `Trip` conflated three shapes (the v2 `/trips/stream` item, a fabricated v1-flat
+    item, and a `trips` wrapper field). Refocused `Trip` on the v2 `GET /trips/stream` item: typed
+    `asset` (was `object`) as the new `TripAsset`, enriched `TripLocation` to the spec's
+    `LocationResponseResponseBody` (+ `TripLocationAddress`), and kept the v2 time/status fields;
+    **removed** the `trips` wrapper field and the fabricated flat fields (`id`/`driverId`/`driverName`/
+    `vehicleId`/`vehicleName`/`startTime`/`endTime`/`distanceMeters`/`durationMs`/`fuelConsumedMl`/
+    `coDriver`) — none are on the stream schema. Modelled the legacy `GET /v1/fleet/trips` properly:
+    new `V1Trip` (the spec's `V1TripResponse_trips`) and `V1TripsResponse` wrapper (the v1 endpoint
+    returns `{ trips: [...] }`, not a `{ data: [...] }` envelope), and rewired `ITripsClient.ListAsync`
+    to its real required params (`vehicleId`, `startMs`, `endMs`) returning `IReadOnlyList<V1Trip>`
+    (the old signature sent RFC3339 `startTime`/`endTime` and paginated a `data` key the endpoint
+    never returns — it was non-functional). Five new records registered in `SamsaraJsonContext`; CLI
+    trips view updated. **Breaking**: `Trip` loses 12 properties and `asset` changes type;
+    `ListAsync` signature and return type change.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

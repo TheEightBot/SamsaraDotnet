@@ -133,7 +133,11 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(UpdateRouteStopRequest))]
 [JsonSerializable(typeof(Hub))]
 [JsonSerializable(typeof(Trip))]
+[JsonSerializable(typeof(TripAsset))]
 [JsonSerializable(typeof(TripLocation))]
+[JsonSerializable(typeof(TripLocationAddress))]
+[JsonSerializable(typeof(V1Trip))]
+[JsonSerializable(typeof(V1TripsResponse))]
 // Communication
 [JsonSerializable(typeof(DriverMessage))]
 [JsonSerializable(typeof(V1MessageSender))]

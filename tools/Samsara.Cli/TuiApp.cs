@@ -824,13 +824,16 @@ internal sealed class TuiApp
             {
                 if (op == "List All")
                 {
+                    var tVehicleId = InputHelper.AskId("Vehicle ID");
                     var (tStart, tEnd) = InputHelper.AskTimeRange("Trips");
-                    var tVehicleId = InputHelper.AskOptionalId("Vehicle ID");
-                    var tDriverId = InputHelper.AskOptionalId("Driver ID");
+                    var startMs = (tStart ?? DateTimeOffset.UtcNow.AddHours(-24)).ToUnixTimeMilliseconds();
+                    var endMs = (tEnd ?? DateTimeOffset.UtcNow).ToUnixTimeMilliseconds();
                     await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching trips...[/]", async _ =>
                     {
-                        var items = await CollectAsync(_client.Trips.ListAsync(tStart, tEnd, tVehicleId, tDriverId, Timeout60s()));
-                        ResultRenderer.RenderList(items, "Trips", t => [t.Id ?? "", t.VehicleId ?? "", t.DriverId ?? ""], ["ID", "Vehicle ID", "Driver ID"]);
+                        var items = await _client.Trips.ListAsync(tVehicleId, startMs, endMs, Timeout60s());
+                        ResultRenderer.RenderList(items, "Trips", t =>
+                            [t.DriverId?.ToString() ?? "", t.StartLocation ?? "", t.EndLocation ?? ""],
+                            ["Driver ID", "Start", "End"]);
                     });
                 }
             }

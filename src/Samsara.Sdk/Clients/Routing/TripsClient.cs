@@ -9,13 +9,14 @@ internal sealed class TripsClient : SamsaraServiceClientBase, ITripsClient
 
     public TripsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<Trip> ListAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, string? vehicleId = null, string? driverId = null, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<V1Trip>> ListAsync(string vehicleId, long startMs, long endMs, CancellationToken cancellationToken = default)
     {
-        var path = QueryBuilder.WithTimeRange(BasePath, startTime, endTime);
-        path = QueryBuilder.WithParams(path,
+        var path = QueryBuilder.WithParams(BasePath,
             ("vehicleId", vehicleId),
-            ("driverId", driverId));
-        return PaginateAsync<Trip>(path, cancellationToken: cancellationToken);
+            ("startMs", startMs.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            ("endMs", endMs.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        var response = await HttpClient.GetAsync<V1TripsResponse>(path, cancellationToken).ConfigureAwait(false);
+        return response.Trips ?? [];
     }
 
     public IAsyncEnumerable<Trip> GetStreamAsync(
