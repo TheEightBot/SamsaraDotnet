@@ -282,6 +282,8 @@ using Samsara.Sdk.Pagination;
 // Training
 [JsonSerializable(typeof(TrainingAssignment))]
 [JsonSerializable(typeof(TrainingCourse))]
+[JsonSerializable(typeof(TrainingCourseCategory))]
+[JsonSerializable(typeof(TrainingCourseLabel))]
 // Issues
 [JsonSerializable(typeof(Issue))]
 [JsonSerializable(typeof(IssueAsset))]

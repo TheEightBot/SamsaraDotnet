@@ -92,28 +92,46 @@ public sealed record TrainingCourse
     [JsonPropertyName("revisionId")]
     public required string RevisionId { get; init; }
 
+    /// <summary>Category of the training course. Spec-required
+    /// (<c>TrainingCategoryObjectResponseBody</c>).</summary>
     [JsonPropertyName("category")]
-    public required object Category { get; init; }
+    public required TrainingCourseCategory Category { get; init; }
 
     [JsonPropertyName("estimatedTimeToCompleteMinutes")]
     public required long EstimatedTimeToCompleteMinutes { get; init; }
 
+    /// <summary>Labels of the training course
+    /// (<c>TrainingCourseLabelObjectResponseBody</c>).</summary>
     [JsonPropertyName("labels")]
-    public IReadOnlyList<object>? Labels { get; init; }
+    public IReadOnlyList<TrainingCourseLabel>? Labels { get; init; }
 
     [JsonPropertyName("description")]
     public string? Description { get; init; }
+}
 
-    // Not in current spec; retained for back-compat.
+/// <summary>Category of a training course. Mirrors the spec's
+/// <c>TrainingCategoryObjectResponseBody</c>.</summary>
+public sealed record TrainingCourseCategory
+{
+    /// <summary>Category ID of the course. Spec-required.</summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+
+    /// <summary>Category name of the course. Spec-required.</summary>
     [JsonPropertyName("name")]
-    public string? Name { get; init; }
+    public required string Name { get; init; }
+}
 
-    [JsonPropertyName("isActive")]
-    public bool? IsActive { get; init; }
+/// <summary>Label of a training course. Mirrors the spec's
+/// <c>TrainingCourseLabelObjectResponseBody</c>.</summary>
+public sealed record TrainingCourseLabel
+{
+    /// <summary>Name of the course label (e.g. <c>safety</c>). Spec-required.</summary>
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
 
-    [JsonPropertyName("createdAtTime")]
-    public DateTimeOffset? CreatedAtTime { get; init; }
-
-    [JsonPropertyName("updatedAtTime")]
-    public DateTimeOffset? UpdatedAtTime { get; init; }
+    /// <summary>Type of the course label (e.g. <c>accel</c>, <c>braking</c>, <c>speeding</c>;
+    /// see the spec for the full enumeration). Spec-required.</summary>
+    [JsonPropertyName("type")]
+    public required string Type { get; init; }
 }

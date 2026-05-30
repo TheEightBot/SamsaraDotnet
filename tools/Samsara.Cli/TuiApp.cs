@@ -1587,7 +1587,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching training courses...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Training.ListCoursesAsync(cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Training Courses", c => [c.Id, c.Name ?? ""], ["ID", "Name"]);
+                            ResultRenderer.RenderList(items, "Training Courses", c => [c.Id, c.Title], ["ID", "Title"]);
                         });
                         break;
                 }

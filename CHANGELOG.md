@@ -114,6 +114,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     declared `V1SensorReadingsResponse` record. Added a dedicated `_record_key` for top-level
     record lookups (property-type comparison still preserves element info). Verified the only
     finding delta is the 4 sensor entries clearing; no other domain moved. Not breaking.
+  - **Training Courses** — typed `TrainingCourse.Category` (was `object`) as the new
+    `TrainingCourseCategory` record (`id`/`name`) and `TrainingCourse.Labels` (was
+    `IReadOnlyList<object>`) as `TrainingCourseLabel` (`name`/`type`), per the spec
+    `TrainingCategoryObjectResponseBody`/`TrainingCourseLabelObjectResponseBody`; registered both in
+    `SamsaraJsonContext`. **Removed** the spec-absent `Name`/`IsActive`/`CreatedAtTime`/
+    `UpdatedAtTime` properties (`GET /training-courses` is the only consumer; the canonical fields
+    are `Title` and the `Status` enum). Updated the CLI list view to show `Title`. **Breaking**:
+    those four properties no longer exist and `Category`/`Labels` change type.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
