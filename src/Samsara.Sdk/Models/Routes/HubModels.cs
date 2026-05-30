@@ -28,48 +28,6 @@ public sealed record Hub
     /// <summary>Last update timestamp (spec REQUIRED on <c>GET /hubs</c>).</summary>
     [JsonPropertyName("updatedAt")]
     public required DateTimeOffset UpdatedAt { get; init; }
-
-    /// <summary>
-    /// Not part of the <c>GET /hubs</c> spec response — retained as nullable
-    /// back-compat property per the workflow precedent for response-side extras.
-    /// </summary>
-    [JsonPropertyName("latitude")]
-    public double? Latitude { get; init; }
-
-    /// <summary>
-    /// Not part of the <c>GET /hubs</c> spec response — retained as nullable
-    /// back-compat property per the workflow precedent for response-side extras.
-    /// </summary>
-    [JsonPropertyName("longitude")]
-    public double? Longitude { get; init; }
-
-    /// <summary>
-    /// Not part of the <c>GET /hubs</c> spec response — retained as nullable
-    /// back-compat property per the workflow precedent for response-side extras.
-    /// </summary>
-    [JsonPropertyName("formattedAddress")]
-    public string? FormattedAddress { get; init; }
-
-    /// <summary>
-    /// Not part of the <c>GET /hubs</c> spec response — retained as nullable
-    /// back-compat property per the workflow precedent for response-side extras.
-    /// </summary>
-    [JsonPropertyName("geofence")]
-    public Addresses.Geofence? Geofence { get; init; }
-
-    /// <summary>
-    /// Not part of the <c>GET /hubs</c> spec response — retained as nullable
-    /// back-compat property per the workflow precedent for response-side extras.
-    /// </summary>
-    [JsonPropertyName("tags")]
-    public IReadOnlyList<Common.TagReference>? Tags { get; init; }
-
-    /// <summary>
-    /// Not part of the <c>GET /hubs</c> spec response — retained as nullable
-    /// back-compat property per the workflow precedent for response-side extras.
-    /// </summary>
-    [JsonPropertyName("externalIds")]
-    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
 
 /// <summary>Hub capacity returned by <c>GET /hub/capacities</c>.</summary>
@@ -98,27 +56,6 @@ public sealed record HubCapacity
     /// <summary>Last update timestamp (spec REQUIRED).</summary>
     [JsonPropertyName("updatedAt")]
     public required DateTimeOffset UpdatedAt { get; init; }
-
-    /// <summary>
-    /// Not part of the <c>GET /hub/capacities</c> spec response — retained as
-    /// nullable back-compat property per the workflow precedent.
-    /// </summary>
-    [JsonPropertyName("capacity")]
-    public int? Capacity { get; init; }
-
-    /// <summary>
-    /// Not part of the <c>GET /hub/capacities</c> spec response — retained as
-    /// nullable back-compat property per the workflow precedent.
-    /// </summary>
-    [JsonPropertyName("usedCapacity")]
-    public int? UsedCapacity { get; init; }
-
-    /// <summary>
-    /// Not part of the <c>GET /hub/capacities</c> spec response — retained as
-    /// nullable back-compat property per the workflow precedent.
-    /// </summary>
-    [JsonPropertyName("timeSlot")]
-    public string? TimeSlot { get; init; }
 }
 
 /// <summary>A custom property for hubs (returned by <c>GET /hub/customProperties</c>).</summary>
@@ -147,13 +84,6 @@ public sealed record HubCustomProperty
     /// <summary>Last update timestamp (spec REQUIRED).</summary>
     [JsonPropertyName("updatedAt")]
     public required DateTimeOffset UpdatedAt { get; init; }
-
-    /// <summary>
-    /// Not part of the <c>GET /hub/customProperties</c> spec response —
-    /// retained as nullable back-compat property per the workflow precedent.
-    /// </summary>
-    [JsonPropertyName("type")]
-    public string? Type { get; init; }
 }
 
 /// <summary>A hub location returned by <c>GET /hub/locations</c>, <c>POST /hub/locations</c>, and <c>PATCH /hub/location/{id}</c>.</summary>
@@ -218,13 +148,6 @@ public sealed record HubLocation
     /// <summary>Last update timestamp (spec REQUIRED).</summary>
     [JsonPropertyName("updatedAt")]
     public required DateTimeOffset UpdatedAt { get; init; }
-
-    /// <summary>
-    /// Not part of the spec response — retained as nullable back-compat
-    /// property per the workflow precedent for response-side extras.
-    /// </summary>
-    [JsonPropertyName("notes")]
-    public string? Notes { get; init; }
 }
 
 /// <summary>

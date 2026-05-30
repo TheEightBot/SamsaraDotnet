@@ -213,6 +213,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `POST /fuel-purchase` response (the only consumer of this record) returns just `uuid`; the request
     fields already live on `CreateFuelPurchaseRequest`. **Breaking**: those nine properties no longer
     exist — read submitted values from your `CreateFuelPurchaseRequest`, and `uuid` from the response.
+  - **Hubs** — **removed** the spec-absent extras on four hub response records, each mapping to
+    endpoints whose schema never lists them: `Hub.Latitude`/`Longitude`/`FormattedAddress`/`Geofence`/
+    `Tags`/`ExternalIds` (`GET /hubs` returns only `id`/`name`/`timeZone`/`createdAt`/`updatedAt`),
+    `HubCapacity.Capacity`/`UsedCapacity`/`TimeSlot` (`GET /hub/capacities`), `HubCustomProperty.Type`
+    (`GET /hub/customProperties`), and `HubLocation.Notes` (absent from the identical
+    `GET`/`POST`/`PATCH /hub/location(s)` response schema). These had been carried as nullable
+    back-compat under the older "keep response extras" reading; Phase 3 removes them. The Hubs
+    deserialization fix (the `required` `id`/`timeZone`/`createdAt`/`updatedAt`) is unchanged.
+    **Breaking**: those eleven properties no longer exist.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
