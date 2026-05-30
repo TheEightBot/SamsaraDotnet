@@ -16,8 +16,6 @@ public sealed class SafetyClientExtensionTests
                 new
                 {
                     tagId = "tag-1",
-                    tagName = "Region A",
-                    safetyScore = 88.5,
                     tagScore = 89,
                     behaviors = Array.Empty<object>(),
                     speeding = Array.Empty<object>(),
@@ -37,7 +35,7 @@ public sealed class SafetyClientExtensionTests
         scores.Should().HaveCount(1);
         scores[0].TagId.Should().Be("tag-1");
         scores[0].TagScore.Should().Be(89);
-        scores[0].SafetyScore.Should().Be(88.5);
+        scores[0].DriveDistanceMeters.Should().Be(1000L);
         handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("safety-scores/tags");
         handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("scoreType=driver");
     }
@@ -51,9 +49,6 @@ public sealed class SafetyClientExtensionTests
             {
                 new
                 {
-                    tagGroupId = "tg-1",
-                    tagGroupName = "Division West",
-                    safetyScore = 91.0,
                     combinedScore = 92,
                     behaviors = Array.Empty<object>(),
                     speeding = Array.Empty<object>(),
@@ -71,9 +66,8 @@ public sealed class SafetyClientExtensionTests
             scores.Add(s);
 
         scores.Should().HaveCount(1);
-        scores[0].TagGroupId.Should().Be("tg-1");
         scores[0].CombinedScore.Should().Be(92);
-        scores[0].SafetyScore.Should().Be(91.0);
+        scores[0].DriveTimeMilliseconds.Should().Be(120000L);
         handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("safety-scores/tag-group");
         handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("scoreType=vehicle");
     }

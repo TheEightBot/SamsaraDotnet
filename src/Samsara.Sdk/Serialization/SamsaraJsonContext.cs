@@ -119,7 +119,6 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(TagGroupSafetyScore))]
 [JsonSerializable(typeof(SafetyScoreBehavior))]
 [JsonSerializable(typeof(SafetyScoreSpeeding))]
-[JsonSerializable(typeof(TimeRange))]
 // Routes
 [JsonSerializable(typeof(Route))]
 [JsonSerializable(typeof(RouteDriver))]

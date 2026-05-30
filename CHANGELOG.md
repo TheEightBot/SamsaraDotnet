@@ -308,6 +308,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     never returns — it was non-functional). Five new records registered in `SamsaraJsonContext`; CLI
     trips view updated. **Breaking**: `Trip` loses 12 properties and `asset` changes type;
     `ListAsync` signature and return type change.
+  - **Safety Scores** — **removed** all 23 legacy flat-shape extras across the four safety-score
+    records, each of which the SDK doc comments already flagged as superseded by a spec field:
+    `VehicleSafetyScore` (`safetyScore`/`totalHarshEventCount`/`totalTimeDrivenMs`/
+    `totalDistanceDrivenMeters`/`timeRange`/`crashCount`/`harshAccelCount`/`harshBrakingCount`/
+    `harshTurningCount`), `DriverSafetyScore` (`safetyScore`/`totalHarshEventCount`/`totalTimeDrivenMs`/
+    `totalDistanceDrivenMeters`/`timeRange`), `TagSafetyScore` (`tagName`/`safetyScore`/
+    `totalHarshEventCount`/`timeRange`), `TagGroupSafetyScore` (`tagGroupId`/`tagGroupName`/
+    `safetyScore`/`totalHarshEventCount`/`timeRange`). The spec-aligned fields (`*Score`, `behaviors`,
+    `speeding`, `driveDistanceMeters`, `driveTimeMilliseconds`) are unchanged. Removed the now-unused
+    `TimeRange` record and its `SamsaraJsonContext` registration; updated `SafetyClientExtensionTests`
+    to assert on spec fields. **Breaking**: 23 properties and the `TimeRange` record removed.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
