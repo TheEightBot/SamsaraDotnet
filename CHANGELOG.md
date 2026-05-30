@@ -74,6 +74,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `GET /fleet/documents/pdfs/{id}` — `DocumentPdfJob` is the shared response record for both
     the create and the status-query endpoints). **Breaking**: consumers can no longer assume
     non-null `DocumentType.Id`/`DocumentPdfJob.Id`.
+  - **Organization Info** — relaxed `OrganizationInfo.Id` to nullable (spec lists `id` optional
+    on `GET /me`) and **removed** `OrganizationInfo.Address`/`City`/`State`/`Zip`/`Country`,
+    which are absent from the `GET /me` response schema (the only endpoint using this record);
+    the canonical office address is `CarrierSettings.MainOfficeAddress`. **Breaking**: those five
+    properties no longer exist and `OrganizationInfo.Id` is now nullable.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
