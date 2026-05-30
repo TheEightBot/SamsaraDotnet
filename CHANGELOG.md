@@ -177,6 +177,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `trailerAssignments → trailerAssignments → […]` schema to the leaf item — a checker resolution
     limitation on the legacy v1 shape, not an SDK defect. **Breaking**: `TrailerAssignment.Pagination`
     moved to `TrailerAssignmentsResponse.Pagination` and is now `V1Pagination?` (was `object?`).
+  - **Readings** — **removed** the legacy aliases on the three reading response records, none of
+    which appears in its endpoint's spec inner schema: `ReadingDefinition.Id`/`Name`/`DataType`/
+    `Units` (`GET /readings/definitions`; the canonical fields are `ReadingId`/`Label`/`Type`),
+    `ReadingHistory.Id`/`Time` (`GET /readings/history`), and `ReadingSnapshot.Id`/`EntityName`/`Time`
+    (`GET /readings/latest`). Each record maps to a single GET endpoint, so the aliases are absent
+    everywhere. **Breaking**: those nine properties no longer exist (use `ReadingId`/`Label`/`Type`/
+    `EntityId`/`HappenedAtTime`).
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
