@@ -302,7 +302,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching equipment...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Equipment.ListAsync(cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Equipment", e => [e.Id, e.Name ?? ""], ["ID", "Name"]);
+                            ResultRenderer.RenderList(items, "Equipment", e => [e.Id ?? "", e.Name ?? ""], ["ID", "Name"]);
                         });
                         break;
                     case "Get by ID":

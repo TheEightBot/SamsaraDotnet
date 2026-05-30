@@ -359,6 +359,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     (`IReadOnlyList`/`IList`/`List`/`IEnumerable`/…) to the element record. A full before/after findings
     diff confirms ONLY this one finding clears with no collateral (precedent: the Sensors closed-generic
     fix). **Breaking**: 30 HOS properties removed.
+  - **Beta APIs** — `HosEldEvent` (`GET /beta/fleet/hos/drivers/eld-events`): **removed** the nine
+    spec-absent flat fields (`driverId`/`vehicleId`/`eventType`/`eventCode`/`eventTime`/`latitude`/
+    `longitude`/`odometer`/`engineHours`) and modelled the real nested shape — added `externalIds` and
+    the spec-required `eldEvents` as `IReadOnlyList<HosEldEventEntry>` (the
+    `HosEldEventObjectResponseBody` tree: `eldEventCode`/`eldEventType`/`time`/record origin+status/
+    engine+vehicle distances/`location` → `HosEldEventLocation`/`remark` → `HosEldEventRemark`/
+    `vehicle`); four new records registered in `SamsaraJsonContext`. **Corrected the Equipment sweep's
+    over-removal**: `Equipment` is dual-shape between `GET /fleet/equipment` (has `assetSerial`, `id`
+    required) and `PATCH /beta/fleet/equipment/{id}` (has `attributes`/`equipmentSerialNumber`, `id`
+    optional). Restored `Equipment.Attributes`/`EquipmentSerialNumber` (spec-backed on the beta
+    response) and relaxed `Equipment.Id` to nullable; `assetSerial` (GET-only) and
+    `attributes`/`equipmentSerialNumber` (beta-only) are each now reported "extra" on the opposite
+    endpoint and kept. Left as intentional `object?` per the Beta volatility exception: the
+    `HubPlanOrder.Delivery`/`Pickup` and `ListIndustrialJobsAsync` (`GET /beta/industrial/jobs`)
+    weak-typings. **Breaking**: nine `HosEldEvent` flat fields removed and `eldEvents` added;
+    `Equipment.Id` is now nullable.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

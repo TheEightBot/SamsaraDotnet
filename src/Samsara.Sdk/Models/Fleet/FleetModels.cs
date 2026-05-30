@@ -781,13 +781,17 @@ public sealed record UpdateEquipmentRequest
 /// </summary>
 public sealed record Equipment
 {
+    /// <summary>Unique identifier of the equipment. Required on <c>GET /fleet/equipment</c>;
+    /// nullable because the same record is reused for the <c>PATCH /beta/fleet/equipment/{id}</c>
+    /// response where the spec lists <c>id</c> optional.</summary>
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
-    /// <summary>Asset serial number (spec property; preferred over legacy <c>equipmentSerialNumber</c>).</summary>
+    /// <summary>Asset serial number. Returned by the standard <c>GET /fleet/equipment</c>
+    /// (the beta equipment update uses <see cref="EquipmentSerialNumber"/> instead).</summary>
     [JsonPropertyName("assetSerial")]
     public string? AssetSerial { get; init; }
 
@@ -803,6 +807,16 @@ public sealed record Equipment
 
     [JsonPropertyName("notes")]
     public string? Notes { get; init; }
+
+    /// <summary>Serial number as returned by the beta <c>PATCH /beta/fleet/equipment/{id}</c>
+    /// response (the standard equipment endpoints use <see cref="AssetSerial"/>).</summary>
+    [JsonPropertyName("equipmentSerialNumber")]
+    public string? EquipmentSerialNumber { get; init; }
+
+    /// <summary>Custom attributes on the equipment. Returned by the beta
+    /// <c>PATCH /beta/fleet/equipment/{id}</c> response.</summary>
+    [JsonPropertyName("attributes")]
+    public IReadOnlyList<object>? Attributes { get; init; }
 }
 
 /// <summary>
