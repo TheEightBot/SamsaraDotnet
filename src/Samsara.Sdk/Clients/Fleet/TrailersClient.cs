@@ -31,13 +31,13 @@ internal sealed class TrailersClient : SamsaraServiceClientBase, ITrailersClient
             QueryBuilder.WithParams($"{BasePath}/stats", ("types", types), ("parentTagIds", parentTagIds), ("tagIds", tagIds), ("time", time), ("trailerIds", trailerIds)),
             cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<TrailerStats> GetStatsFeedAsync(string types, string? decorations = null, string? parentTagIds = null, string? tagIds = null, string? trailerIds = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<TrailerStats>(
+    public IAsyncEnumerable<TrailerStatsSample> GetStatsFeedAsync(string types, string? decorations = null, string? parentTagIds = null, string? tagIds = null, string? trailerIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TrailerStatsSample>(
             QueryBuilder.WithParams($"{BasePath}/stats/feed", ("types", types), ("decorations", decorations), ("parentTagIds", parentTagIds), ("tagIds", tagIds), ("trailerIds", trailerIds)),
             cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<TrailerStats> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, string? decorations = null, string? parentTagIds = null, string? tagIds = null, string? trailerIds = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<TrailerStats>(
+    public IAsyncEnumerable<TrailerStatsSample> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, string? decorations = null, string? parentTagIds = null, string? tagIds = null, string? trailerIds = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<TrailerStatsSample>(
             QueryBuilder.WithParams(
                 QueryBuilder.WithTimeRange($"{BasePath}/stats/history", startTime, endTime),
                 ("types", types), ("decorations", decorations), ("parentTagIds", parentTagIds), ("tagIds", tagIds), ("trailerIds", trailerIds)),

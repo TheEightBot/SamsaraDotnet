@@ -294,6 +294,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     and the `EngineState`/`FuelPercent`/`EngineSeconds` records no longer exist. Migration: read the
     single snapshot value from the typed property (e.g. `stats.EngineRpm?.Value`); for feed/history,
     enumerate the array (e.g. `sample.EngineRpm` is now `IReadOnlyList<VehicleStatValue>`).
+  - **Trailers** — split the dual-shape `TrailerStats` record the same way: `TrailerStats` now models
+    the `GET /fleet/trailers/stats` snapshot (single samples) and the new `TrailerStatsSample` models
+    the `GET .../stats/feed` and `.../stats/history` time-series (arrays of samples — the SDK previously
+    collapsed each reefer/GPS series to a single `object?`). All 23 `object?` weak-typings are replaced
+    with typed element records: `TrailerStatValue` (int64), `TrailerStatStringValue` (door state / run
+    mode), `TrailerStatReeferState` (state + optional `substateValue`), `TrailerStatGps` (note heading
+    and speed are integer-valued here, reusing `ReverseGeo`), and `TrailerStatReeferAlarms`
+    (+ `TrailerStatReeferAlarm`). **Removed** the fabricated `TrailerStats` extras
+    `engineHours`/`location`/`odometer`/`temperature`/`time` (in neither the snapshot nor feed/history
+    spec response) and the now-orphaned `TrailerLocation` record (de-registered from `SamsaraJsonContext`).
+    Also **removed** the spec-absent `make`/`model`/`serial`/`vin`/`year` fields from `Trailer`,
+    `CreateTrailerRequest`, and `UpdateTrailerRequest` (none appear on any trailer endpoint;
+    `trailerSerialNumber` is the real serial field) and the spec-absent `Trailer.enabledForCommunication`.
+    `Trailer.attributes` is **kept** — it is spec-backed on the by-id, create, and update endpoints and
+    only omitted from the `GET /fleet/trailers` list response. `GetStatsFeedAsync`/`GetStatsHistoryAsync`
+    now return `TrailerStatsSample`; all new records registered in `SamsaraJsonContext`. **Breaking**:
+    `TrailerStats` field types change, the feed/history methods return `TrailerStatsSample` instead of
+    `TrailerStats`, the five `TrailerStats` extras and `TrailerLocation` are removed, and
+    `make`/`model`/`serial`/`vin`/`year`/`enabledForCommunication` are removed from the trailer records.
+    Migration: read the single snapshot value from the typed property (e.g. `stats.ReeferFuelPercent?.Value`);
+    for feed/history, enumerate the array; replace `serial` with `TrailerSerialNumber`.
   - **Industrial** — **removed** the five time-series point arrays
     (`fftSpectraPoints`/`j1939D1StatusPoints`/`locationPoints`/`numberPoints`/`stringPoints`) from
     `DataInput`; they are not on the `GET /industrial/data-inputs` response (the only endpoint

@@ -361,7 +361,13 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(UpdateLiveSharingLinkRequest))]
 // Fleet - Trailers (stats)
 [JsonSerializable(typeof(TrailerStats))]
-[JsonSerializable(typeof(TrailerLocation))]
+[JsonSerializable(typeof(TrailerStatsSample))]
+[JsonSerializable(typeof(TrailerStatValue))]
+[JsonSerializable(typeof(TrailerStatStringValue))]
+[JsonSerializable(typeof(TrailerStatReeferState))]
+[JsonSerializable(typeof(TrailerStatGps))]
+[JsonSerializable(typeof(TrailerStatReeferAlarms))]
+[JsonSerializable(typeof(TrailerStatReeferAlarm))]
 // Fleet - Equipment (stats)
 [JsonSerializable(typeof(SpeedingInterval))]
 [JsonSerializable(typeof(SpeedingIntervalAsset))]
