@@ -165,6 +165,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `metadata`) and the `message` field remain — each is flagged "extra" only on the opposite shape's
     endpoint but is spec-backed. **Breaking**: those four fields are now nullable and the five flat
     scalars no longer exist (use `Driver.Id`/`Driver.Name`/`Vehicle.Id`/`Vehicle.Name`).
+  - **Trailer Assignments** — typed the v1 `GET /v1/fleet/trailers/assignments` pagination: added a
+    `V1Pagination` record (`endCursor`/`hasNextPage`, the spec `Paginationv1ResponseBodyResponseBody`)
+    and moved `pagination` from the per-item `TrailerAssignment` record (where it never belonged) onto
+    the top-level `TrailerAssignmentsResponse` (its real spec home, a sibling of `trailerAssignments`),
+    changing it from weak `object?` to `V1Pagination?`. The remaining `TrailerAssignment` per-item
+    scalars (`trailerId`/`trailerName`/`vehicleId`/`vehicleName`/`driverId`/`driverName`/`startTime`/
+    `endTime`/`id`/`name`) are all genuine v1 leaf fields and are kept; `check-model-sync` still
+    reports them (and the `trailerAssignments` wrapper) as "extra" because its one-level
+    `{ data: … }` envelope unwrapper cannot descend the v1 endpoint's deeply-nested auto-generated
+    `trailerAssignments → trailerAssignments → […]` schema to the leaf item — a checker resolution
+    limitation on the legacy v1 shape, not an SDK defect. **Breaking**: `TrailerAssignment.Pagination`
+    moved to `TrailerAssignmentsResponse.Pagination` and is now `V1Pagination?` (was `object?`).
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
