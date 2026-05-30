@@ -107,6 +107,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     shared response schema for `GET`/`POST`/`PATCH /live-shares`); each already has a canonical
     spec-backed equivalent the SDK exposes — `LiveSharingUrl`, `ExpiresAtTime`, the typed
     `*LinkConfig` objects, and `Type`. **Breaking**: those four aliases no longer exist.
+  - **Sensors** — no SDK change: `V1SensorReadingsResponse<T>` was already correctly typed to the
+    v1 `{ groupId, sensors[] }` response shape. The four `weak-typing` findings were a
+    `check-model-sync.py` false positive — its record-resolution helper did not strip the
+    closed-generic argument, so `V1SensorReadingsResponse<V1CargoReading>` failed to match the
+    declared `V1SensorReadingsResponse` record. Added a dedicated `_record_key` for top-level
+    record lookups (property-type comparison still preserves element info). Verified the only
+    finding delta is the 4 sensor entries clearing; no other domain moved. Not breaking.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

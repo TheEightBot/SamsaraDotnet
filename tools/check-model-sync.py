@@ -259,6 +259,20 @@ def _strip_generic_suffix(t: str) -> str:
     return t.strip().rstrip("?").strip()
 
 
+def _record_key(t: str) -> str:
+    """Reduce a C# response/request type to the SDK record key used in `models`.
+
+    Strips a trailing top-level generic-argument list so a closed generic
+    wrapper (e.g. ``V1SensorReadingsResponse<V1CargoReading>``) resolves to the
+    record actually declared in source (``V1SensorReadingsResponse``). Unlike
+    :func:`_strip_generic_suffix` (which is applied to *property* types and must
+    preserve element info such as ``IReadOnlyList<long>``), this is only for
+    top-level record lookups, so dropping the type arguments is correct."""
+    t = _strip_generic_suffix(t)
+    lt = t.find("<")
+    return t[:lt].strip() if lt != -1 else t
+
+
 def parse_models() -> dict[str, dict[str, dict]]:
     """record_name -> { json_prop -> {ctype, required, nullable} }.
 
@@ -836,7 +850,7 @@ def analyze(spec: dict):
                 req_type = info.get("request_type")
                 # Wrapper-shape check: spec wants { data: ... } envelope.
                 if resolver.wrapper_is_data_enveloped(req_schema_top):
-                    sdk_req_props = models.get(_strip_generic_suffix(req_type or ""))
+                    sdk_req_props = models.get(_record_key(req_type or ""))
                     has_data = bool(sdk_req_props and "data" in sdk_req_props)
                     if req_type and not is_weak_type(req_type) and not has_data:
                         findings.append(Finding(
@@ -859,12 +873,13 @@ def analyze(spec: dict):
                         compare_record(req_type, None, inner, req_required,
                                        resolver, "request", endpoint, tag, beta_capped, findings)
                     else:
-                        rec = _strip_generic_suffix(req_type)
+                        rec = _record_key(req_type)
                         sdk_props = models.get(rec)
+                        rec_label = rec if sdk_props is not None else _strip_generic_suffix(req_type)
                         if sdk_props is not None and isinstance(inner, dict):
                             inner, req_required = resolver.resolve_named_wrapper(
                                 inner, set(sdk_props.keys()))
-                        compare_record(rec, sdk_props, inner, req_required,
+                        compare_record(rec_label, sdk_props, inner, req_required,
                                        resolver, "request", endpoint, tag, beta_capped, findings)
 
         # ---- Response side ----------------------------------------------
@@ -882,13 +897,16 @@ def analyze(spec: dict):
                         f"response weakly typed (object) but spec defines "
                         f"{len(inner.get('properties'))} properties", endpoint, tag))
             else:
-                rec = _strip_generic_suffix(resp_type)
+                rec = _record_key(resp_type)
                 sdk_props = models.get(rec)
+                # Keep the descriptive (possibly generic) type in findings when the
+                # stripped key does not resolve to a declared record.
+                rec_label = rec if sdk_props is not None else _strip_generic_suffix(resp_type)
                 # Endpoint-aware named-list-wrapper resolution (Fuel vs Media).
                 if sdk_props is not None and isinstance(inner, dict):
                     inner, resp_required = resolver.resolve_named_wrapper(
                         inner, set(sdk_props.keys()))
-                compare_record(rec, sdk_props, inner, resp_required,
+                compare_record(rec_label, sdk_props, inner, resp_required,
                                resolver, "response", endpoint, tag, beta_capped, findings)
 
         # ---- Query params -----------------------------------------------
