@@ -25,13 +25,22 @@ public sealed record CoachingDriver
 /// </summary>
 public sealed record DriverCoachAssignment
 {
-    /// <summary>Driver embedded in the assignment. Spec marks REQUIRED.</summary>
+    /// <summary>
+    /// Driver embedded in the assignment, as a nested object. Spec-required on the
+    /// <c>GET</c> list response; the <c>PUT</c> response instead carries the flat
+    /// <see cref="DriverId"/> scalar and omits this object, so it is nullable on the
+    /// shared record.
+    /// </summary>
     [JsonPropertyName("driver")]
-    public required CoachingDriver Driver { get; init; }
+    public CoachingDriver? Driver { get; init; }
 
-    /// <summary>Coach ID associated with the assignment. Spec marks REQUIRED.</summary>
+    /// <summary>
+    /// Coach ID associated with the assignment. Spec-required on the <c>GET</c> list
+    /// response; optional on the <c>PUT</c> response (null when the assignment was
+    /// cleared), so it is nullable on the shared record.
+    /// </summary>
     [JsonPropertyName("coachId")]
-    public required string CoachId { get; init; }
+    public string? CoachId { get; init; }
 
     /// <summary>Time the coach assignment was created (UTC). Spec marks REQUIRED.</summary>
     [JsonPropertyName("createdAtTime")]
@@ -42,26 +51,13 @@ public sealed record DriverCoachAssignment
     public required DateTimeOffset UpdatedAtTime { get; init; }
 
     /// <summary>
-    /// Legacy convenience scalar mirroring <c>driver.driverId</c>. Retained for
-    /// back-compat with earlier SDK shapes; not part of the OpenAPI spec.
+    /// The assignment's driver ID as a flat scalar. Returned by the
+    /// <c>PUT /coaching/driver-coach-assignments</c> response (which omits the nested
+    /// <see cref="Driver"/> object); null on the <c>GET</c> list response, which nests the
+    /// driver under <see cref="Driver"/> instead.
     /// </summary>
     [JsonPropertyName("driverId")]
     public string? DriverId { get; init; }
-
-    /// <summary>
-    /// Legacy convenience scalar; not part of the OpenAPI spec. Retained for
-    /// back-compat with earlier SDK shapes (the live API may continue to emit
-    /// it as a convenience).
-    /// </summary>
-    [JsonPropertyName("driverName")]
-    public string? DriverName { get; init; }
-
-    /// <summary>
-    /// Legacy convenience scalar; not part of the OpenAPI spec. Retained for
-    /// back-compat with earlier SDK shapes.
-    /// </summary>
-    [JsonPropertyName("coachName")]
-    public string? CoachName { get; init; }
 }
 
 /// <summary>
@@ -176,43 +172,4 @@ public sealed record CoachingSession
     /// <summary>Associated note for the session, when present.</summary>
     [JsonPropertyName("sessionNote")]
     public string? SessionNote { get; init; }
-
-    /// <summary>
-    /// Legacy convenience scalar; not part of the current OpenAPI spec.
-    /// Retained for back-compat with earlier SDK shapes (the live API may
-    /// continue to emit it as a convenience). Prefer <see cref="Driver"/>.
-    /// </summary>
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
-
-    /// <summary>
-    /// Legacy convenience scalar; not part of the current OpenAPI spec.
-    /// Retained for back-compat with earlier SDK shapes. Prefer
-    /// <see cref="AssignedCoachId"/> / <see cref="CompletedCoachId"/>.
-    /// </summary>
-    [JsonPropertyName("coachId")]
-    public string? CoachId { get; init; }
-
-    /// <summary>
-    /// Legacy convenience scalar; not part of the current OpenAPI spec.
-    /// Retained for back-compat with earlier SDK shapes. Prefer
-    /// <see cref="SessionStatus"/>.
-    /// </summary>
-    [JsonPropertyName("status")]
-    public string? Status { get; init; }
-
-    /// <summary>
-    /// Legacy convenience scalar; not part of the current OpenAPI spec.
-    /// Retained for back-compat with earlier SDK shapes.
-    /// </summary>
-    [JsonPropertyName("scheduledAtTime")]
-    public DateTimeOffset? ScheduledAtTime { get; init; }
-
-    /// <summary>
-    /// Legacy convenience scalar; not part of the current OpenAPI spec.
-    /// Retained for back-compat with earlier SDK shapes. Prefer
-    /// <see cref="CoachingType"/>.
-    /// </summary>
-    [JsonPropertyName("sessionType")]
-    public string? SessionType { get; init; }
 }

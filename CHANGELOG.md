@@ -184,6 +184,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     (`GET /readings/latest`). Each record maps to a single GET endpoint, so the aliases are absent
     everywhere. **Breaking**: those nine properties no longer exist (use `ReadingId`/`Label`/`Type`/
     `EntityId`/`HappenedAtTime`).
+  - **Coaching** — `DriverCoachAssignment` is shared across `GET` (nests a `driver` object,
+    spec-required) and `PUT /coaching/driver-coach-assignments` (flat `driverId` scalar, omits the
+    object). **Relaxed** `Driver` to nullable (the `PUT` response lacks it — `required` risked the
+    Hubs-style deserialization throw) and `CoachId` to nullable (the spec lists it optional on the
+    `PUT` response, where it is null when the assignment is cleared — clears the over-tightening).
+    **Removed** `DriverCoachAssignment.DriverName`/`CoachName` (absent from both endpoints; the nested
+    driver object exposes only `driverId`/`externalIds`, never a name) and all five legacy
+    `CoachingSession` aliases `DriverId`/`CoachId`/`Status`/`ScheduledAtTime`/`SessionType` (none in
+    the `GET /coaching/sessions/stream` schema; the canonical fields are the nested `Driver`,
+    `AssignedCoachId`/`CompletedCoachId`, `SessionStatus`, `DueAtTime`, and `CoachingType`). Kept the
+    flat `DriverCoachAssignment.DriverId` (real on `PUT`) and nested `Driver` (real on `GET`), each
+    flagged "extra" only on the opposite shape's endpoint. **Breaking**: `Driver`/`CoachId` are now
+    nullable and the seven removed scalars no longer exist.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
