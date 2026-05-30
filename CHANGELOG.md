@@ -319,6 +319,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `speeding`, `driveDistanceMeters`, `driveTimeMilliseconds`) are unchanged. Removed the now-unused
     `TimeRange` record and its `SamsaraJsonContext` registration; updated `SafetyClientExtensionTests`
     to assert on spec fields. **Breaking**: 23 properties and the `TimeRange` record removed.
+  - **Media** — **removed** the 11 legacy SDK-only flat fields from `MediaFile`
+    (`id`/`vehicleName`/`driverId`/`driverName`/`capturedAtTime`/`uploadedAtTime`/`url`/`thumbnailUrl`/
+    `cameraId`/`safetyEventId`/`durationMs`), none on the spec's `UploadedMediaObjectResponseBody`
+    (`GET /cameras/media`), and the three legacy `MediaRetrieval` fields `id`/`url`/`cameraId` (absent
+    from both retrieval shapes). `MediaRetrieval` is dual-shape: its remaining fields are spec-backed on
+    `GET /cameras/media/retrieval` (`input`/`mediaType`/`status`/`vehicleId`/`startTime`/`endTime`/
+    `availableAtTime`/`cameraRole`/`urlInfo` — `MediaObjectResponseBody`) or
+    `POST /cameras/media/retrieval` (`quotaStatus`/`retrievalId` — `PostMediaRetrievalObjectResponseBody`),
+    so the 11 still-reported "extras" are each valid on the opposite endpoint and kept. CLI media view
+    updated. **Breaking**: 14 media properties removed.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

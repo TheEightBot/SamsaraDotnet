@@ -1665,7 +1665,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching media files...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Media.ListAsync(mediaVehicleIds, mediaStart, mediaEnd, cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Media Files", m => [m.Id ?? "", m.MediaType, m.VehicleId], ["ID", "Type", "Vehicle ID"]);
+                            ResultRenderer.RenderList(items, "Media Files", m => [m.VehicleId, m.MediaType, m.StartTime], ["Vehicle ID", "Type", "Start Time"]);
                         });
                         break;
                 }
