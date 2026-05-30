@@ -222,6 +222,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     back-compat under the older "keep response extras" reading; Phase 3 removes them. The Hubs
     deserialization fix (the `required` `id`/`timeZone`/`createdAt`/`updatedAt`) is unchanged.
     **Breaking**: those eleven properties no longer exist.
+  - **Vehicle Locations** — typed `VehicleLocation.Location` (was `object`) and `.Locations` (was
+    `IReadOnlyList<object>`) as the new `VehicleLocationPoint` record (`latitude`/`longitude`/`time`
+    required, plus `heading`/`speed`/`reverseGeo`), matching the spec's nested `location` object
+    (`GET /fleet/vehicles/locations`) and each element of the `locations` array (`.../feed`,
+    `.../history`); registered `VehicleLocationPoint` in `SamsaraJsonContext`. **Removed** the seven
+    flat scalars `latitude`/`longitude`/`heading`/`speed`/`formattedAddress`/`time`/`reverseGeo`,
+    which were absent from every endpoint's schema — their data now lives on the typed
+    `Location`/`Locations` points (`formattedAddress` has no spec field at all; reverse-geo text is
+    `Location.ReverseGeo.FormattedLocation`). Updated the CLI list view to read
+    `Location?.Latitude`/`Location?.Longitude`. Kept the single `location` and array `locations` (each
+    flagged "extra" only on the opposite shape's endpoint). **Breaking**: `Location`/`Locations` change
+    type and the seven flat scalars no longer exist.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

@@ -294,34 +294,49 @@ public sealed record VehicleLocation
     [JsonPropertyName("name")]
     public required string Name { get; init; }
 
-    /// <summary>Single location object (snapshot shape, <c>GET /fleet/vehicles/locations</c>).</summary>
+    /// <summary>
+    /// Single location point (snapshot shape, <c>GET /fleet/vehicles/locations</c>).
+    /// Null on the feed/history shapes, which populate <see cref="Locations"/> instead.
+    /// </summary>
     [JsonPropertyName("location")]
-    public object? Location { get; init; }
+    public VehicleLocationPoint? Location { get; init; }
 
-    /// <summary>Location entries (feed/history shapes, <c>.../locations/feed</c> and <c>.../locations/history</c>).</summary>
+    /// <summary>
+    /// Location points (feed/history shapes, <c>.../locations/feed</c> and
+    /// <c>.../locations/history</c>). Null on the snapshot shape, which populates
+    /// <see cref="Location"/> instead.
+    /// </summary>
     [JsonPropertyName("locations")]
-    public IReadOnlyList<object>? Locations { get; init; }
+    public IReadOnlyList<VehicleLocationPoint>? Locations { get; init; }
+}
 
-    // Not in current spec; retained for back-compat.
+/// <summary>
+/// A single vehicle location point — the nested object the spec returns under
+/// <c>location</c> (snapshot) and each element of <c>locations</c> (feed/history).
+/// </summary>
+public sealed record VehicleLocationPoint
+{
+    /// <summary>Latitude of the vehicle (degrees). Spec marks REQUIRED.</summary>
     [JsonPropertyName("latitude")]
-    public double? Latitude { get; init; }
+    public required double Latitude { get; init; }
 
+    /// <summary>Longitude of the vehicle (degrees). Spec marks REQUIRED.</summary>
     [JsonPropertyName("longitude")]
-    public double? Longitude { get; init; }
+    public required double Longitude { get; init; }
 
+    /// <summary>Time the location was recorded, in RFC 3339 format. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("time")]
+    public required DateTimeOffset Time { get; init; }
+
+    /// <summary>Heading of the vehicle in degrees (0 = north).</summary>
     [JsonPropertyName("heading")]
     public double? Heading { get; init; }
 
+    /// <summary>Speed of the vehicle in miles per hour.</summary>
     [JsonPropertyName("speed")]
     public double? Speed { get; init; }
 
-    [JsonPropertyName("formattedAddress")]
-    public string? FormattedAddress { get; init; }
-
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
-
-    /// <summary>Reverse-geocoded location (returned by the location feeds).</summary>
+    /// <summary>Reverse-geocoded location for this point.</summary>
     [JsonPropertyName("reverseGeo")]
     public ReverseGeo? ReverseGeo { get; init; }
 }

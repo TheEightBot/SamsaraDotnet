@@ -65,6 +65,7 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(CreateVehicleRequest))]
 [JsonSerializable(typeof(UpdateVehicleRequest))]
 [JsonSerializable(typeof(VehicleLocation))]
+[JsonSerializable(typeof(VehicleLocationPoint))]
 [JsonSerializable(typeof(VehicleStats))]
 [JsonSerializable(typeof(EngineState))]
 [JsonSerializable(typeof(FuelPercent))]
