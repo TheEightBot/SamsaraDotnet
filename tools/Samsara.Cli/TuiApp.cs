@@ -382,7 +382,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching drivers...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Drivers.ListAsync(cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Drivers", d => [d.Id, d.Name, d.Username ?? "", d.IsDeactivated == true ? "Inactive" : "Active"], ["ID", "Name", "Username", "Status"]);
+                            ResultRenderer.RenderList(items, "Drivers", d => [d.Id ?? "", d.Name ?? "", d.Username ?? "", d.IsDeactivated == true ? "Inactive" : "Active"], ["ID", "Name", "Username", "Status"]);
                         });
                         break;
                     case "Get by ID":
@@ -656,7 +656,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching attributes...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Attributes.ListAsync(listEntityType, Timeout60s()));
-                            ResultRenderer.RenderList(items, "Attributes", a => [a.Id, a.Name ?? "", a.EntityType ?? ""], ["ID", "Name", "Entity Type"]);
+                            ResultRenderer.RenderList(items, "Attributes", a => [a.Id ?? "", a.Name ?? "", a.EntityType ?? ""], ["ID", "Name", "Entity Type"]);
                         });
                         break;
                     case "Get by ID":

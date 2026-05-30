@@ -55,6 +55,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `UpdateDriverRequest`; relaxed `Driver.Id` and `Driver.Name` to nullable (spec lists them
     optional on `GET /fleet/drivers`). **Breaking**: consumers can no longer assume non-null
     `Driver.Id`/`Name`.
+  - **Attributes** — relaxed `AttributeDefinition.Id` to nullable (spec lists `id` optional on
+    `GET /attributes`). Kept `AttributeDefinition.Entities` (flagged extra on the list response,
+    but present and `required` on `GET /attributes/{id}`, `POST /attributes`,
+    `PATCH /attributes/{id}` — one record serves all four; it defaults to an empty list so the
+    list response still deserializes). **Breaking**: consumers can no longer assume non-null
+    `AttributeDefinition.Id`.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
