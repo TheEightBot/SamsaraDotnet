@@ -341,6 +341,11 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(SpeedingInterval))]
 [JsonSerializable(typeof(SpeedingIntervalAsset))]
 [JsonSerializable(typeof(EquipmentStats))]
+[JsonSerializable(typeof(EquipmentStatsSample))]
+[JsonSerializable(typeof(EquipmentStatValue))]
+[JsonSerializable(typeof(EquipmentStatStringValue))]
+[JsonSerializable(typeof(EquipmentStatGps))]
+[JsonSerializable(typeof(EquipmentStatAddress))]
 // Compliance - CARB CTC
 [JsonSerializable(typeof(CarbCtcVehicle))]
 [JsonSerializable(typeof(CarbCtcVehicleHistory))]

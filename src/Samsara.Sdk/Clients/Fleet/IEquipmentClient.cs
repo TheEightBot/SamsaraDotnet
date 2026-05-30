@@ -40,7 +40,7 @@ public interface IEquipmentClient
         CancellationToken cancellationToken = default);
 
     /// <summary>Follow the equipment stats feed (<c>GET /fleet/equipment/stats/feed</c>).</summary>
-    IAsyncEnumerable<EquipmentStats> GetStatsFeedAsync(
+    IAsyncEnumerable<EquipmentStatsSample> GetStatsFeedAsync(
         string? types = null,
         IReadOnlyList<string>? parentTagIds = null,
         IReadOnlyList<string>? tagIds = null,
@@ -48,7 +48,7 @@ public interface IEquipmentClient
         CancellationToken cancellationToken = default);
 
     /// <summary>Get historical equipment stats (<c>GET /fleet/equipment/stats/history</c>).</summary>
-    IAsyncEnumerable<EquipmentStats> GetStatsHistoryAsync(
+    IAsyncEnumerable<EquipmentStatsSample> GetStatsHistoryAsync(
         string? types = null,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,

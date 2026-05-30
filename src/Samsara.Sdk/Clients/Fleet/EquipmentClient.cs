@@ -63,13 +63,13 @@ internal sealed class EquipmentClient : SamsaraServiceClientBase, IEquipmentClie
                 ("equipmentIds", equipmentIds is null ? null : string.Join(",", equipmentIds))),
             cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<EquipmentStats> GetStatsFeedAsync(
+    public IAsyncEnumerable<EquipmentStatsSample> GetStatsFeedAsync(
         string? types = null,
         IReadOnlyList<string>? parentTagIds = null,
         IReadOnlyList<string>? tagIds = null,
         IReadOnlyList<string>? equipmentIds = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<EquipmentStats>(
+        => PaginateAsync<EquipmentStatsSample>(
             QueryBuilder.WithParams($"{BasePath}/stats/feed",
                 ("types", types),
                 ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),
@@ -77,7 +77,7 @@ internal sealed class EquipmentClient : SamsaraServiceClientBase, IEquipmentClie
                 ("equipmentIds", equipmentIds is null ? null : string.Join(",", equipmentIds))),
             cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<EquipmentStats> GetStatsHistoryAsync(
+    public IAsyncEnumerable<EquipmentStatsSample> GetStatsHistoryAsync(
         string? types = null,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
@@ -85,7 +85,7 @@ internal sealed class EquipmentClient : SamsaraServiceClientBase, IEquipmentClie
         IReadOnlyList<string>? tagIds = null,
         IReadOnlyList<string>? equipmentIds = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<EquipmentStats>(
+        => PaginateAsync<EquipmentStatsSample>(
             QueryBuilder.WithParams(QueryBuilder.WithTimeRange($"{BasePath}/stats/history", startTime, endTime),
                 ("types", types),
                 ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds)),

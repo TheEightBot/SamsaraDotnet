@@ -256,6 +256,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `vehicleWeightInKilograms`/`vehicleWeightInPounds` on the by-id endpoint) are each spec-backed on the
     *other* endpoint and are kept. **Breaking**: `GrossVehicleWeight`/`SensorConfiguration` change type
     and the three stats fields no longer exist (read them from the vehicle-stats endpoints).
+  - **Equipment** — split the dual-shape `EquipmentStats` record so each endpoint gets its real
+    typed shape: `EquipmentStats` now models the `GET /fleet/equipment/stats` snapshot (single
+    `{time,value}` samples) and the new `EquipmentStatsSample` models the `GET .../stats/feed` and
+    `.../stats/history` time-series (arrays of samples). Both replace the previous `JsonElement?`/
+    `object?` straddle fields with typed `EquipmentStatValue` (numeric), `EquipmentStatStringValue`
+    (engine state), and `EquipmentStatGps` (+ `EquipmentStatAddress`) records — clearing the seven
+    `JsonElement`-vs-array type mismatches and two `object?` weak-typings. `GetStatsFeedAsync`/
+    `GetStatsHistoryAsync` now return `EquipmentStatsSample`. **Removed** the spec-absent extras
+    `Equipment.Attributes`/`EquipmentSerialNumber` (the latter superseded by `AssetSerial`;
+    `UpdateEquipmentRequest` keeps both, which the `PATCH` body does define) and the flat
+    `EquipmentLocation.Latitude`/`Longitude`/`Time`. `EquipmentLocation.Location`/`Locations` are
+    dual-shape (singular on `GET .../locations`, plural array on `.../feed`+`.../history`) and kept.
+    All six new records registered in `SamsaraJsonContext`. **Breaking**: `EquipmentStats` field
+    types change, feed/history return `EquipmentStatsSample`, and the four extras are removed.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
