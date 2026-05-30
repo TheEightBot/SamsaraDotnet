@@ -441,6 +441,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `VehicleId`/`Defects`). check-model-sync Maintenance: 42 → 19 (the 19 remaining are deliberately-kept
     dual-shape fields). **Breaking**: nine properties change type, `DefectRecord.Comment` is now nullable,
     and 13 properties plus the `MaintenanceDefect` record are removed.
+  - **Forms** — **Breaking**: aligned `FormTemplate` to the spec and typed every weak (`object`) form
+    property. Removed `FormTemplate.Name` and `FormTemplate.Revision` (neither is on the spec's
+    `FormTemplateResponseObjectResponseBody`, the only endpoint mapping to `FormTemplate`; the spec uses
+    `title` and `revisionId`, both already present). Typed 15 previously weak properties against their
+    concrete spec schemas: `FormTemplate.ApprovalConfig` → new `FormsApprovalConfig`
+    (+ `FormsSingleApprovalConfig`, whose deep `requirements` tree is left as `JsonElement`),
+    `FormTemplate.CreatedBy`/`UpdatedBy` and `FormSubmission.SubmittedBy`/`AssignedTo` → new
+    `FormsPolymorphicUser` (`id`/`type`), `FormSubmission.FormTemplate` → new `FormTemplateReference`
+    (`id`/`revisionId`), `FormSubmission.ApprovalDetails` → new `FormSubmissionApprovalDetails`,
+    `FormSubmission.Asset` → new `FormsAsset`, `FormSubmission.Geofence` → new `FormsGeofence`,
+    `FormSubmission.Location` → new `FormsLocation` (`latitude`/`longitude`), `FormSubmission.Score` →
+    new `FormsScore`, `CreateFormSubmissionRequest.FormTemplate` → new `FormTemplateRequest`,
+    `Create`/`UpdateFormSubmissionRequest.AssignedTo` → new `FormSubmissionAssignedTo`, and
+    `UpdateFormSubmissionRequest.ApprovalDetails` → new `FormSubmissionApprovalDetailsRequest`.
+    `FormSubmission.ExternalIds` is now `IReadOnlyDictionary<string,string>?` and the `fields` arrays are
+    `IReadOnlyList<JsonElement>` (heterogeneous per-field-type payloads, left untyped). **Removed** the
+    legacy SDK-only flat extras absent from the spec on every endpoint: `FormSubmission.FormTemplateId`/
+    `FormTemplateName`/`DriverId`/`DriverName`/`VehicleId`/`VehicleName`/`State`/`FieldValues`,
+    `CreateFormSubmissionRequest.FormTemplateId`/`Driver`/`Vehicle`/`FieldValues`,
+    `UpdateFormSubmissionRequest.FieldValues`, `FormPdfExport.Status`/`FormSubmissionId`/`CreatedAt`, and
+    the now-orphaned `FormFieldValue` record. All new records registered in `SamsaraJsonContext`; CLI form
+    template/submission list views updated (were rendering the removed `Name`/`FormTemplateId`/`DriverId`).
+    check-model-sync Forms: 33 → 0. **Breaking**: 15 properties change type and 19 properties plus the
+    `FormFieldValue` record are removed.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

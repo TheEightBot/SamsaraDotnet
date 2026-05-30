@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Models.Documents;
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 /// <summary>
@@ -8,40 +9,19 @@ using System.Text.Json.Serialization;
 /// </summary>
 public sealed record FormTemplate
 {
-    /// <summary>Unique identifier of the form template.</summary>
+    /// <summary>Unique identifier of the form template. Spec-required.</summary>
     [JsonPropertyName("id")]
     public required string Id { get; init; }
 
-    /// <summary>
-    /// Title of the form template (spec REQUIRED). The Samsara API renamed the
-    /// legacy <c>name</c> field to <c>title</c>; the SDK keeps both
-    /// <see cref="Name"/> (legacy) and <see cref="Title"/> (spec) so callers
-    /// against older responses continue to deserialize. Servers will populate
-    /// one or the other — read whichever is non-null.
-    /// </summary>
+    /// <summary>Title of the form template. Spec-required.</summary>
     [JsonPropertyName("title")]
     public string? Title { get; init; }
-
-    /// <summary>
-    /// Legacy name property — retained for back-compat with consumers that
-    /// already read <c>FormTemplate.Name</c>. Prefer <see cref="Title"/> per
-    /// the current spec.
-    /// </summary>
-    [JsonPropertyName("name")]
-    public string? Name { get; init; }
 
     /// <summary>Description of the form template, when present.</summary>
     [JsonPropertyName("description")]
     public string? Description { get; init; }
 
-    /// <summary>
-    /// Legacy integer revision (back-compat). Prefer <see cref="RevisionId"/>
-    /// (spec uses a uuid string).
-    /// </summary>
-    [JsonPropertyName("revision")]
-    public int? Revision { get; init; }
-
-    /// <summary>Unique identifier of the form template revision (spec REQUIRED, uuid).</summary>
+    /// <summary>Unique identifier of the form template revision (uuid). Spec-required.</summary>
     [JsonPropertyName("revisionId")]
     public string? RevisionId { get; init; }
 
@@ -49,33 +29,84 @@ public sealed record FormTemplate
     [JsonPropertyName("formCategory")]
     public string? FormCategory { get; init; }
 
-    /// <summary>Approval configuration for the template (spec object).</summary>
+    /// <summary>Approval configuration for the template. Mirrors the spec's
+    /// <c>FormsApprovalConfigObjectResponseBody</c>.</summary>
     [JsonPropertyName("approvalConfig")]
-    public object? ApprovalConfig { get; init; }
+    public FormsApprovalConfig? ApprovalConfig { get; init; }
 
-    /// <summary>List of fields in the template (spec REQUIRED).</summary>
+    /// <summary>List of fields in the template (spec-required). Each entry is a heterogeneous
+    /// field-definition object; left untyped to preserve the full per-field-type payload.</summary>
     [JsonPropertyName("fields")]
-    public IReadOnlyList<object>? Fields { get; init; }
+    public IReadOnlyList<JsonElement>? Fields { get; init; }
 
-    /// <summary>List of sections in the template (spec REQUIRED).</summary>
+    /// <summary>List of sections in the template (spec-required).</summary>
     [JsonPropertyName("sections")]
     public IReadOnlyList<FormSection> Sections { get; init; } = Array.Empty<FormSection>();
 
-    /// <summary>Creator of the template (spec REQUIRED, polymorphic user object).</summary>
+    /// <summary>Creator of the template (spec-required). Mirrors the spec's
+    /// <c>FormsPolymorphicUserObjectResponseBody</c>.</summary>
     [JsonPropertyName("createdBy")]
-    public object? CreatedBy { get; init; }
+    public FormsPolymorphicUser? CreatedBy { get; init; }
 
-    /// <summary>Last updater of the template (spec REQUIRED, polymorphic user object).</summary>
+    /// <summary>Last updater of the template (spec-required). Mirrors the spec's
+    /// <c>FormsPolymorphicUserObjectResponseBody</c>.</summary>
     [JsonPropertyName("updatedBy")]
-    public object? UpdatedBy { get; init; }
+    public FormsPolymorphicUser? UpdatedBy { get; init; }
 
-    /// <summary>Creation time of the template, RFC 3339 (spec REQUIRED).</summary>
+    /// <summary>Creation time of the template, RFC 3339 (spec-required).</summary>
     [JsonPropertyName("createdAtTime")]
     public string CreatedAtTime { get; init; } = string.Empty;
 
-    /// <summary>Last update time of the template, RFC 3339 (spec REQUIRED).</summary>
+    /// <summary>Last update time of the template, RFC 3339 (spec-required).</summary>
     [JsonPropertyName("updatedAtTime")]
     public string UpdatedAtTime { get; init; } = string.Empty;
+}
+
+/// <summary>
+/// Approval configuration for a form template. Mirrors the spec's
+/// <c>FormsApprovalConfigObjectResponseBody</c>.
+/// </summary>
+public sealed record FormsApprovalConfig
+{
+    /// <summary>Type of approval configuration (e.g. <c>none</c>, <c>single</c>). Spec-required.</summary>
+    [JsonPropertyName("type")]
+    public string? Type { get; init; }
+
+    /// <summary>Single-approval configuration, present when <see cref="Type"/> is single. Mirrors the
+    /// spec's <c>FormsSingleApprovalConfigObjectResponseBody</c>.</summary>
+    [JsonPropertyName("singleApprovalConfig")]
+    public FormsSingleApprovalConfig? SingleApprovalConfig { get; init; }
+}
+
+/// <summary>
+/// Single-approval configuration for a form template. Mirrors the spec's
+/// <c>FormsSingleApprovalConfigObjectResponseBody</c>.
+/// </summary>
+public sealed record FormsSingleApprovalConfig
+{
+    /// <summary>Whether the approver can be manually selected (true by default). Spec-required.</summary>
+    [JsonPropertyName("allowManualApproverSelection")]
+    public bool? AllowManualApproverSelection { get; init; }
+
+    /// <summary>Approval requirements (spec-required). Left untyped to preserve the nested
+    /// requirements tree (<c>SingleApprovalRequirementsObjectResponseBody</c>).</summary>
+    [JsonPropertyName("requirements")]
+    public JsonElement? Requirements { get; init; }
+}
+
+/// <summary>
+/// A polymorphic user reference on a form template/submission (driver or user).
+/// Mirrors the spec's <c>FormsPolymorphicUserObjectResponseBody</c>.
+/// </summary>
+public sealed record FormsPolymorphicUser
+{
+    /// <summary>Samsara ID of the user. Spec-required.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Type of user (e.g. <c>driver</c>, <c>user</c>). Spec-required.</summary>
+    [JsonPropertyName("type")]
+    public string? Type { get; init; }
 }
 
 public sealed record FormSection
@@ -111,7 +142,7 @@ public sealed record FormFieldDefinition
 /// </summary>
 public sealed record FormSubmission
 {
-    /// <summary>ID of the form submission.</summary>
+    /// <summary>ID of the form submission. Spec-required.</summary>
     [JsonPropertyName("id")]
     public required string Id { get; init; }
 
@@ -120,56 +151,65 @@ public sealed record FormSubmission
     public string? Title { get; init; }
 
     /// <summary>
-    /// Status of the submission (spec REQUIRED). Valid values:
+    /// Status of the submission (spec-required). Valid values:
     /// <c>notStarted</c>, <c>completed</c>, <c>archived</c>, <c>inProgress</c>,
     /// <c>needsReview</c>, <c>changesRequested</c>, <c>approved</c>.
     /// </summary>
     [JsonPropertyName("status")]
     public string Status { get; init; } = string.Empty;
 
-    /// <summary>Whether the submission is required (spec REQUIRED).</summary>
+    /// <summary>Whether the submission is required (spec-required).</summary>
     [JsonPropertyName("isRequired")]
     public bool IsRequired { get; init; }
 
-    /// <summary>Reference to the form template (spec REQUIRED, object).</summary>
+    /// <summary>Reference to the form template (spec-required). Mirrors the spec's
+    /// <c>FormTemplateReferenceObjectResponseBody</c>.</summary>
     [JsonPropertyName("formTemplate")]
-    public object? FormTemplate { get; init; }
+    public FormTemplateReference? FormTemplate { get; init; }
 
-    /// <summary>Polymorphic user/driver who submitted the form (spec REQUIRED).</summary>
+    /// <summary>User/driver who submitted the form (spec-required). Mirrors the spec's
+    /// <c>FormsPolymorphicUserObjectResponseBody</c>.</summary>
     [JsonPropertyName("submittedBy")]
-    public object? SubmittedBy { get; init; }
+    public FormsPolymorphicUser? SubmittedBy { get; init; }
 
-    /// <summary>Polymorphic user/driver assigned to the form, when present.</summary>
+    /// <summary>User/driver assigned to the form, when present. Mirrors the spec's
+    /// <c>FormsPolymorphicUserObjectResponseBody</c>.</summary>
     [JsonPropertyName("assignedTo")]
-    public object? AssignedTo { get; init; }
+    public FormsPolymorphicUser? AssignedTo { get; init; }
 
-    /// <summary>Approval details, when the submission has been reviewed.</summary>
+    /// <summary>Approval details, when the submission has been reviewed. Mirrors the spec's
+    /// <c>FormsProductSubmissionApprovalDetailsObjectResponseBody</c>.</summary>
     [JsonPropertyName("approvalDetails")]
-    public object? ApprovalDetails { get; init; }
+    public FormSubmissionApprovalDetails? ApprovalDetails { get; init; }
 
-    /// <summary>Asset associated with the submission (tracked or untracked).</summary>
+    /// <summary>Asset associated with the submission (tracked or untracked). Mirrors the spec's
+    /// <c>FormsAssetObjectResponseBody</c>.</summary>
     [JsonPropertyName("asset")]
-    public object? Asset { get; init; }
+    public FormsAsset? Asset { get; init; }
 
-    /// <summary>Geofence associated with the submission (tracked or untracked).</summary>
+    /// <summary>Geofence associated with the submission (tracked or untracked). Mirrors the spec's
+    /// <c>FormsGeofenceObjectResponseBody</c>.</summary>
     [JsonPropertyName("geofence")]
-    public object? Geofence { get; init; }
+    public FormsGeofence? Geofence { get; init; }
 
-    /// <summary>Location at submission time (latitude/longitude).</summary>
+    /// <summary>Location at submission time (latitude/longitude). Mirrors the spec's
+    /// <c>FormsLocationObjectResponseBody</c>.</summary>
     [JsonPropertyName("location")]
-    public object? Location { get; init; }
+    public FormsLocation? Location { get; init; }
 
-    /// <summary>Score of the submission, when scoring is configured.</summary>
+    /// <summary>Score of the submission, when scoring is configured. Mirrors the spec's
+    /// <c>FormsScoreObjectResponseBody</c>.</summary>
     [JsonPropertyName("score")]
-    public object? Score { get; init; }
+    public FormsScore? Score { get; init; }
 
     /// <summary>Map of external ids associated with the submission.</summary>
     [JsonPropertyName("externalIds")]
-    public object? ExternalIds { get; init; }
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 
-    /// <summary>List of field inputs in the submission (spec REQUIRED).</summary>
+    /// <summary>List of field inputs in the submission (spec-required). Each entry is a heterogeneous
+    /// field-input object; left untyped to preserve the full per-field-type payload.</summary>
     [JsonPropertyName("fields")]
-    public IReadOnlyList<object>? Fields { get; init; }
+    public IReadOnlyList<JsonElement>? Fields { get; init; }
 
     /// <summary>Route id, when the submission was assigned to a route stop.</summary>
     [JsonPropertyName("routeId")]
@@ -187,68 +227,127 @@ public sealed record FormSubmission
     [JsonPropertyName("dueAtTime")]
     public DateTimeOffset? DueAtTime { get; init; }
 
-    /// <summary>Submission time, RFC 3339 string (spec REQUIRED).</summary>
+    /// <summary>Submission time, RFC 3339 string (spec-required).</summary>
     [JsonPropertyName("submittedAtTime")]
     public string SubmittedAtTime { get; init; } = string.Empty;
 
-    /// <summary>Creation time, RFC 3339 string (spec REQUIRED).</summary>
+    /// <summary>Creation time, RFC 3339 string (spec-required).</summary>
     [JsonPropertyName("createdAtTime")]
     public string CreatedAtTime { get; init; } = string.Empty;
 
-    /// <summary>Last update time, RFC 3339 string (spec REQUIRED).</summary>
+    /// <summary>Last update time, RFC 3339 string (spec-required).</summary>
     [JsonPropertyName("updatedAtTime")]
     public string UpdatedAtTime { get; init; } = string.Empty;
-
-    // ── Back-compat fields (not in current spec inner schema) ─────────────────
-    // Retained for consumers that already read these. Prefer the spec-shaped
-    // properties above. Servers may not populate any of these.
-
-    /// <summary>Legacy flat form template id (back-compat). Prefer <see cref="FormTemplate"/>.</summary>
-    [JsonPropertyName("formTemplateId")]
-    public string? FormTemplateId { get; init; }
-
-    /// <summary>Legacy flat form template name (back-compat).</summary>
-    [JsonPropertyName("formTemplateName")]
-    public string? FormTemplateName { get; init; }
-
-    /// <summary>Legacy flat driver id (back-compat). Prefer <see cref="SubmittedBy"/>.</summary>
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
-
-    /// <summary>Legacy flat driver name (back-compat).</summary>
-    [JsonPropertyName("driverName")]
-    public string? DriverName { get; init; }
-
-    /// <summary>Legacy flat vehicle id (back-compat).</summary>
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    /// <summary>Legacy flat vehicle name (back-compat).</summary>
-    [JsonPropertyName("vehicleName")]
-    public string? VehicleName { get; init; }
-
-    /// <summary>Legacy state (back-compat). Prefer <see cref="Status"/>.</summary>
-    [JsonPropertyName("state")]
-    public string? State { get; init; }
-
-    /// <summary>Legacy flat field values list (back-compat). Prefer <see cref="Fields"/>.</summary>
-    [JsonPropertyName("fieldValues")]
-    public IReadOnlyList<FormFieldValue>? FieldValues { get; init; }
 }
 
-public sealed record FormFieldValue
+/// <summary>
+/// Reference to the form template a submission was created from. Mirrors the spec's
+/// <c>FormTemplateReferenceObjectResponseBody</c>.
+/// </summary>
+public sealed record FormTemplateReference
 {
-    [JsonPropertyName("fieldId")]
-    public string? FieldId { get; init; }
+    /// <summary>ID of the form template. Spec-required.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
 
-    [JsonPropertyName("label")]
-    public string? Label { get; init; }
+    /// <summary>Revision ID of the form template (uuid). Spec-required.</summary>
+    [JsonPropertyName("revisionId")]
+    public string? RevisionId { get; init; }
+}
 
-    [JsonPropertyName("type")]
-    public string? Type { get; init; }
+/// <summary>
+/// Approval details for a reviewed form submission. Mirrors the spec's
+/// <c>FormsProductSubmissionApprovalDetailsObjectResponseBody</c>.
+/// </summary>
+public sealed record FormSubmissionApprovalDetails
+{
+    /// <summary>Reviewer comment on the submission. Spec-required.</summary>
+    [JsonPropertyName("comment")]
+    public string? Comment { get; init; }
+}
 
-    [JsonPropertyName("value")]
-    public object? Value { get; init; }
+/// <summary>
+/// Asset associated with a form submission (tracked or untracked). Mirrors the spec's
+/// <c>FormsAssetObjectResponseBody</c>.
+/// </summary>
+public sealed record FormsAsset
+{
+    /// <summary>Whether the asset is <c>tracked</c> or <c>untracked</c>. Spec-required.</summary>
+    [JsonPropertyName("entryType")]
+    public string? EntryType { get; init; }
+
+    /// <summary>Samsara ID of the asset (present for tracked assets).</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Display name of the asset.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>A map of external IDs for the asset.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// Geofence associated with a form submission (tracked or untracked). Mirrors the spec's
+/// <c>FormsGeofenceObjectResponseBody</c>.
+/// </summary>
+public sealed record FormsGeofence
+{
+    /// <summary>Whether the geofence is <c>tracked</c> or <c>untracked</c>. Spec-required.</summary>
+    [JsonPropertyName("entryType")]
+    public string? EntryType { get; init; }
+
+    /// <summary>Samsara ID of the address/geofence (present for tracked geofences).</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Display name of the geofence.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>Formatted address of the geofence.</summary>
+    [JsonPropertyName("address")]
+    public string? Address { get; init; }
+
+    /// <summary>A map of external IDs for the geofence.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// Location captured at form submission time. Mirrors the spec's
+/// <c>FormsLocationObjectResponseBody</c>.
+/// </summary>
+public sealed record FormsLocation
+{
+    /// <summary>Latitude in degrees. Spec-required.</summary>
+    [JsonPropertyName("latitude")]
+    public double Latitude { get; init; }
+
+    /// <summary>Longitude in degrees. Spec-required.</summary>
+    [JsonPropertyName("longitude")]
+    public double Longitude { get; init; }
+}
+
+/// <summary>
+/// Score of a form submission, when scoring is configured. Mirrors the spec's
+/// <c>FormsScoreObjectResponseBody</c>.
+/// </summary>
+public sealed record FormsScore
+{
+    /// <summary>Maximum possible points. Spec-required.</summary>
+    [JsonPropertyName("maxPoints")]
+    public double MaxPoints { get; init; }
+
+    /// <summary>Score as a percentage (0–100). Spec-required.</summary>
+    [JsonPropertyName("scorePercent")]
+    public double ScorePercent { get; init; }
+
+    /// <summary>Points scored. Spec-required.</summary>
+    [JsonPropertyName("scorePoints")]
+    public double ScorePoints { get; init; }
 }
 
 /// <summary>
@@ -257,26 +356,26 @@ public sealed record FormFieldValue
 /// </summary>
 public sealed record FormPdfExport
 {
-    /// <summary>ID of the form submission being exported (spec REQUIRED).</summary>
+    /// <summary>ID of the form submission being exported (spec-required).</summary>
     [JsonPropertyName("id")]
     public required string Id { get; init; }
 
-    /// <summary>Unique id for the PDF export that was created (spec REQUIRED).</summary>
+    /// <summary>Unique id for the PDF export that was created (spec-required).</summary>
     [JsonPropertyName("pdfId")]
     public string PdfId { get; init; } = string.Empty;
 
     /// <summary>
-    /// Status of the PDF export job (spec REQUIRED). Valid values:
+    /// Status of the PDF export job (spec-required). Valid values:
     /// <c>unknown</c>, <c>pending</c>, <c>done</c>, <c>failed</c>.
     /// </summary>
     [JsonPropertyName("jobStatus")]
     public string JobStatus { get; init; } = string.Empty;
 
-    /// <summary>Time at which the PDF export POST request was made (spec REQUIRED).</summary>
+    /// <summary>Time at which the PDF export POST request was made (spec-required).</summary>
     [JsonPropertyName("requestedAtTime")]
     public DateTimeOffset RequestedAtTime { get; init; }
 
-    /// <summary>Time at which the job expires (spec REQUIRED).</summary>
+    /// <summary>Time at which the job expires (spec-required).</summary>
     [JsonPropertyName("expiresAtTime")]
     public DateTimeOffset ExpiresAtTime { get; init; }
 
@@ -295,35 +394,20 @@ public sealed record FormPdfExport
     /// <summary>Error message for failed PDF export jobs.</summary>
     [JsonPropertyName("errorMessage")]
     public string? ErrorMessage { get; init; }
-
-    // ── Back-compat fields (not in current spec inner schema) ─────────────────
-
-    /// <summary>Legacy job status property (back-compat). Prefer <see cref="JobStatus"/>.</summary>
-    [JsonPropertyName("status")]
-    public string? Status { get; init; }
-
-    /// <summary>Legacy form submission id alias (back-compat). Prefer <see cref="Id"/>.</summary>
-    [JsonPropertyName("formSubmissionId")]
-    public string? FormSubmissionId { get; init; }
-
-    /// <summary>Legacy creation timestamp (back-compat). Prefer <see cref="RequestedAtTime"/>.</summary>
-    [JsonPropertyName("createdAt")]
-    public DateTimeOffset? CreatedAt { get; init; }
 }
 
 /// <summary>Request body for <c>POST /form-submissions</c>.</summary>
 public sealed record CreateFormSubmissionRequest
 {
     /// <summary>
-    /// Reference to the form template being submitted (spec REQUIRED). The
-    /// spec accepts an object with <c>id</c> and <c>revisionId</c>; pass an
-    /// anonymous object or your own DTO.
+    /// Reference to the form template being submitted (spec-required). Mirrors the spec's
+    /// <c>FormTemplateRequestObjectRequestBody</c>.
     /// </summary>
     [JsonPropertyName("formTemplate")]
-    public required object FormTemplate { get; init; }
+    public required FormTemplateRequest FormTemplate { get; init; }
 
     /// <summary>
-    /// Initial status of the form submission (spec REQUIRED). Only valid
+    /// Initial status of the form submission (spec-required). Only valid
     /// value on create is <c>notStarted</c>.
     /// </summary>
     [JsonPropertyName("status")]
@@ -333,17 +417,19 @@ public sealed record CreateFormSubmissionRequest
     [JsonPropertyName("title")]
     public string? Title { get; init; }
 
-    /// <summary>Driver or user the submission is assigned to.</summary>
+    /// <summary>Driver or user the submission is assigned to. Mirrors the spec's
+    /// <c>FormSubmissionRequestAssignedToRequestBody</c>.</summary>
     [JsonPropertyName("assignedTo")]
-    public object? AssignedTo { get; init; }
+    public FormSubmissionAssignedTo? AssignedTo { get; init; }
 
     /// <summary>Due time for the submission, RFC 3339.</summary>
     [JsonPropertyName("dueAtTime")]
     public DateTimeOffset? DueAtTime { get; init; }
 
-    /// <summary>Field inputs to populate at creation time.</summary>
+    /// <summary>Field inputs to populate at creation time. Each entry is a heterogeneous
+    /// field-input object; left untyped to preserve the full per-field-type payload.</summary>
     [JsonPropertyName("fields")]
-    public IReadOnlyList<object>? Fields { get; init; }
+    public IReadOnlyList<JsonElement>? Fields { get; init; }
 
     /// <summary>Whether the worker is required to complete this form at a route stop.</summary>
     [JsonPropertyName("isRequired")]
@@ -352,31 +438,42 @@ public sealed record CreateFormSubmissionRequest
     /// <summary>Route stop id the submission is assigned to.</summary>
     [JsonPropertyName("routeStopId")]
     public string? RouteStopId { get; init; }
+}
 
-    // ── Back-compat fields (not in current spec inner schema) ─────────────────
-    // Retained so existing callers compile; new code should use FormTemplate.
+/// <summary>
+/// Reference to the form template a submission is created from. Mirrors the spec's
+/// <c>FormTemplateRequestObjectRequestBody</c>.
+/// </summary>
+public sealed record FormTemplateRequest
+{
+    /// <summary>ID of the form template to submit. Spec-required.</summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
 
-    /// <summary>Legacy flat form template id (back-compat). Prefer <see cref="FormTemplate"/>.</summary>
-    [JsonPropertyName("formTemplateId")]
-    public string? FormTemplateId { get; init; }
+    /// <summary>Revision ID of the form template (defaults to the latest revision if omitted).</summary>
+    [JsonPropertyName("revisionId")]
+    public string? RevisionId { get; init; }
+}
 
-    /// <summary>Legacy driver assignment (back-compat). Prefer <see cref="AssignedTo"/>.</summary>
-    [JsonPropertyName("driver")]
-    public object? Driver { get; init; }
+/// <summary>
+/// Driver or user a form submission is assigned to, supplied on create/update. Mirrors the spec's
+/// <c>FormSubmissionRequestAssignedToRequestBody</c>.
+/// </summary>
+public sealed record FormSubmissionAssignedTo
+{
+    /// <summary>Samsara ID of the assignee. Spec-required.</summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
 
-    /// <summary>Legacy vehicle association (back-compat).</summary>
-    [JsonPropertyName("vehicle")]
-    public object? Vehicle { get; init; }
-
-    /// <summary>Legacy field values payload (back-compat). Prefer <see cref="Fields"/>.</summary>
-    [JsonPropertyName("fieldValues")]
-    public IReadOnlyList<object>? FieldValues { get; init; }
+    /// <summary>Type of assignee (e.g. <c>driver</c>, <c>user</c>). Spec-required.</summary>
+    [JsonPropertyName("type")]
+    public required string Type { get; init; }
 }
 
 /// <summary>Request body for <c>PATCH /form-submissions</c>. The submission id is in the body.</summary>
 public sealed record UpdateFormSubmissionRequest
 {
-    /// <summary>ID of the form submission to update (spec REQUIRED).</summary>
+    /// <summary>ID of the form submission to update (spec-required).</summary>
     [JsonPropertyName("id")]
     public required string Id { get; init; }
 
@@ -395,13 +492,15 @@ public sealed record UpdateFormSubmissionRequest
     [JsonPropertyName("isRequired")]
     public bool? IsRequired { get; init; }
 
-    /// <summary>Approval details for review workflow.</summary>
+    /// <summary>Approval details for review workflow. Mirrors the spec's
+    /// <c>FormSubmissionRequestApprovalDetailsRequestBody</c>.</summary>
     [JsonPropertyName("approvalDetails")]
-    public object? ApprovalDetails { get; init; }
+    public FormSubmissionApprovalDetailsRequest? ApprovalDetails { get; init; }
 
-    /// <summary>Driver or user the submission is assigned to.</summary>
+    /// <summary>Driver or user the submission is assigned to. Mirrors the spec's
+    /// <c>FormSubmissionRequestAssignedToRequestBody</c>.</summary>
     [JsonPropertyName("assignedTo")]
-    public object? AssignedTo { get; init; }
+    public FormSubmissionAssignedTo? AssignedTo { get; init; }
 
     /// <summary>Due time for the submission, RFC 3339.</summary>
     [JsonPropertyName("dueAtTime")]
@@ -410,10 +509,15 @@ public sealed record UpdateFormSubmissionRequest
     /// <summary>Route stop id the submission is assigned to.</summary>
     [JsonPropertyName("routeStopId")]
     public string? RouteStopId { get; init; }
+}
 
-    // ── Back-compat fields (not in current spec inner schema) ─────────────────
-
-    /// <summary>Legacy field values payload (back-compat).</summary>
-    [JsonPropertyName("fieldValues")]
-    public IReadOnlyList<object>? FieldValues { get; init; }
+/// <summary>
+/// Approval details supplied when updating a form submission. Mirrors the spec's
+/// <c>FormSubmissionRequestApprovalDetailsRequestBody</c>.
+/// </summary>
+public sealed record FormSubmissionApprovalDetailsRequest
+{
+    /// <summary>Reviewer comment on the submission.</summary>
+    [JsonPropertyName("comment")]
+    public string? Comment { get; init; }
 }

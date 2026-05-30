@@ -1092,7 +1092,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching form templates...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Forms.ListTemplatesAsync(cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Form Templates", t => [t.Id, t.Title ?? t.Name ?? ""], ["ID", "Title"]);
+                            ResultRenderer.RenderList(items, "Form Templates", t => [t.Id, t.Title ?? ""], ["ID", "Title"]);
                         });
                         break;
                     case "List Submissions":
@@ -1101,7 +1101,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching form submissions...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Forms.ListSubmissionsAsync(subIds, cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Form Submissions", s => [s.Id, s.FormTemplateId ?? "", s.DriverId ?? ""], ["ID", "Template ID", "Driver ID"]);
+                            ResultRenderer.RenderList(items, "Form Submissions", s => [s.Id, s.FormTemplate?.Id ?? "", s.SubmittedBy?.Id ?? ""], ["ID", "Template ID", "Submitted By"]);
                         });
                         break;
                     case "Get Submission by ID":
