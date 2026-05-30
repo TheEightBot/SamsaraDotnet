@@ -808,27 +808,48 @@ public sealed record EquipmentLocationPoint
     public required DateTimeOffset Time { get; init; }
 }
 
-/// <summary>Represents a speeding interval event.</summary>
+/// <summary>
+/// Represents a trip's speeding intervals, returned by
+/// <c>GET /speeding-intervals/stream</c>.
+/// </summary>
 public sealed record SpeedingInterval
 {
-    [JsonPropertyName("asset")] public required object Asset { get; init; }
+    /// <summary>The asset (vehicle) the speeding occurred on. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("asset")] public required SpeedingIntervalAsset Asset { get; init; }
+
+    /// <summary>Time the record was created, in RFC 3339 format. Spec marks REQUIRED.</summary>
     [JsonPropertyName("createdAtTime")] public required DateTimeOffset CreatedAtTime { get; init; }
+
+    /// <summary>The individual speeding intervals within the trip. Spec marks REQUIRED.</summary>
     [JsonPropertyName("intervals")] public required IReadOnlyList<object> Intervals { get; init; }
+
+    /// <summary>Start time of the trip, in RFC 3339 format. Spec marks REQUIRED.</summary>
     [JsonPropertyName("tripStartTime")] public required DateTimeOffset TripStartTime { get; init; }
+
+    /// <summary>Time the record was last updated, in RFC 3339 format. Spec marks REQUIRED.</summary>
     [JsonPropertyName("updatedAtTime")] public required DateTimeOffset UpdatedAtTime { get; init; }
 
-    // Not in current spec; retained for back-compat.
-    [JsonPropertyName("id")] public string? Id { get; init; }
-    [JsonPropertyName("vehicleId")] public string? VehicleId { get; init; }
-    [JsonPropertyName("vehicleName")] public string? VehicleName { get; init; }
+    /// <summary>Samsara ID of the driver on the trip, when available.</summary>
     [JsonPropertyName("driverId")] public string? DriverId { get; init; }
-    [JsonPropertyName("driverName")] public string? DriverName { get; init; }
-    [JsonPropertyName("startTime")] public DateTimeOffset? StartTime { get; init; }
-    [JsonPropertyName("endTime")] public DateTimeOffset? EndTime { get; init; }
-    [JsonPropertyName("maxSpeedMph")] public double? MaxSpeedMph { get; init; }
-    [JsonPropertyName("speedLimitMph")] public double? SpeedLimitMph { get; init; }
-    [JsonPropertyName("latitude")] public double? Latitude { get; init; }
-    [JsonPropertyName("longitude")] public double? Longitude { get; init; }
+}
+
+/// <summary>
+/// Asset (vehicle) reference on a <see cref="SpeedingInterval"/>. Mirrors the
+/// spec's <c>TripAssetResponseBody</c>.
+/// </summary>
+public sealed record SpeedingIntervalAsset
+{
+    /// <summary>Samsara ID of the asset. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")] public required string Id { get; init; }
+
+    /// <summary>Name of the asset.</summary>
+    [JsonPropertyName("name")] public string? Name { get; init; }
+
+    /// <summary>Asset type (e.g. <c>vehicle</c>).</summary>
+    [JsonPropertyName("type")] public string? Type { get; init; }
+
+    /// <summary>Vehicle identification number (VIN) of the asset.</summary>
+    [JsonPropertyName("vin")] public string? Vin { get; init; }
 }
 
 /// <summary>

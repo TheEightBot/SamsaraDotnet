@@ -334,6 +334,7 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(TrailerLocation))]
 // Fleet - Equipment (stats)
 [JsonSerializable(typeof(SpeedingInterval))]
+[JsonSerializable(typeof(SpeedingIntervalAsset))]
 [JsonSerializable(typeof(EquipmentStats))]
 // Compliance - CARB CTC
 [JsonSerializable(typeof(CarbCtcVehicle))]

@@ -234,6 +234,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `Location?.Latitude`/`Location?.Longitude`. Kept the single `location` and array `locations` (each
     flagged "extra" only on the opposite shape's endpoint). **Breaking**: `Location`/`Locations` change
     type and the seven flat scalars no longer exist.
+  - **Speeding Intervals** — typed `SpeedingInterval.Asset` (was `object`) as the new
+    `SpeedingIntervalAsset` record (`id` required, plus `name`/`type`/`vin`, the spec
+    `TripAssetResponseBody`); registered it in `SamsaraJsonContext`. **Removed** the ten flat scalars
+    `id`/`vehicleId`/`vehicleName`/`driverName`/`startTime`/`endTime`/`maxSpeedMph`/`speedLimitMph`/
+    `latitude`/`longitude`, none in the `GET /speeding-intervals/stream` schema — `vehicleId`/
+    `vehicleName` are superseded by the typed `Asset.Id`/`Asset.Name`, and the per-interval speed/
+    time/location data lives inside the `Intervals[]` items (in Km/h, not the removed Mph scalars).
+    Kept `driverId`, which the spec genuinely returns, and left `Intervals` as `IReadOnlyList<object>`
+    (the item schema with its nested `location` is left untyped per the weak-typing escape hatch).
+    **Breaking**: `Asset` changes type and the ten flat scalars no longer exist.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
