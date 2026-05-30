@@ -43,6 +43,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Phase 3 model-quality sweep (2026-05-30, targeting v0.3.0)** — driving the
+  `check-model-sync.py` MEDIUM/LOW backlog to zero, domain by domain. Each domain aligns
+  SDK record shapes to the live `2025-10-23` spec: relaxing response fields the spec marks
+  optional (the over-tightening that caused the Hubs `missing required properties`
+  deserialization throw), typing `object?`/`JsonElement` fields where the spec has a concrete
+  schema, adding missing optional fields, fixing type mismatches, and **removing** SDK
+  properties absent from the spec (back-compat extras — **breaking**, batched into v0.3.0).
+  Per-domain detail in the commits; net finding deltas tracked against `check-model-sync.py`.
+  - **Drivers** — added `dateOfBirth` (string) to `Driver`/`CreateDriverRequest`/
+    `UpdateDriverRequest`; relaxed `Driver.Id` and `Driver.Name` to nullable (spec lists them
+    optional on `GET /fleet/drivers`). **Breaking**: consumers can no longer assume non-null
+    `Driver.Id`/`Name`.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

@@ -10,10 +10,13 @@ using Samsara.Sdk.Models.Common;
 public sealed record Driver
 {
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     [JsonPropertyName("name")]
-    public required string Name { get; init; }
+    public string? Name { get; init; }
+
+    [JsonPropertyName("dateOfBirth")]
+    public string? DateOfBirth { get; init; }
 
     [JsonPropertyName("username")]
     public string? Username { get; init; }
@@ -175,6 +178,9 @@ public sealed record CreateDriverRequest
     [JsonPropertyName("password")]
     public required string Password { get; init; }
 
+    [JsonPropertyName("dateOfBirth")]
+    public string? DateOfBirth { get; init; }
+
     [JsonPropertyName("phone")]
     public string? Phone { get; init; }
 
@@ -298,6 +304,9 @@ public sealed record UpdateDriverRequest
 {
     [JsonPropertyName("name")]
     public string? Name { get; init; }
+
+    [JsonPropertyName("dateOfBirth")]
+    public string? DateOfBirth { get; init; }
 
     [JsonPropertyName("phone")]
     public string? Phone { get; init; }
