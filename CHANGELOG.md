@@ -197,6 +197,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     flat `DriverCoachAssignment.DriverId` (real on `PUT`) and nested `Driver` (real on `GET`), each
     flagged "extra" only on the opposite shape's endpoint. **Breaking**: `Driver`/`CoachId` are now
     nullable and the seven removed scalars no longer exist.
+  - **Training Assignments** — typed `TrainingAssignment.Course` and `.Learner` (both were `object`)
+    as the new `TrainingAssignmentCourse` (`id`/`revisionId`) and `TrainingAssignmentLearner`
+    (`id`/`type`) records, per the spec `TrainingCourseObjectResponseBody`/
+    `TrainingLearnerObjectResponseBody`; registered both in `SamsaraJsonContext`. **Removed** the six
+    legacy scalars `DriverId`/`DriverName`/`CourseId`/`CourseName`/`AssignedAtTime`/`Score`, none in
+    the `GET /training-assignments/stream` schema — `DriverId`/`CourseId` are superseded by the now-
+    typed `Learner.Id`/`Course.Id`, and `DriverName`/`CourseName` have no spec field at all (the
+    nested course/learner objects carry no name). Updated the CLI list view to read
+    `Learner.Id`/`Course.Id`. **Breaking**: `Course`/`Learner` change type and the six scalars no
+    longer exist.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

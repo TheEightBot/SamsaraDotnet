@@ -11,10 +11,10 @@ public sealed record TrainingAssignment
     public required string Id { get; init; }
 
     [JsonPropertyName("course")]
-    public required object Course { get; init; }
+    public required TrainingAssignmentCourse Course { get; init; }
 
     [JsonPropertyName("learner")]
-    public required object Learner { get; init; }
+    public required TrainingAssignmentLearner Learner { get; init; }
 
     [JsonPropertyName("createdById")]
     public required string CreatedById { get; init; }
@@ -54,25 +54,36 @@ public sealed record TrainingAssignment
 
     [JsonPropertyName("dueAtTime")]
     public DateTimeOffset? DueAtTime { get; init; }
+}
 
-    // Not in current spec; retained for back-compat.
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
+/// <summary>
+/// Course reference embedded in a <see cref="TrainingAssignment"/>. Mirrors the
+/// spec's <c>TrainingCourseObjectResponseBody</c>.
+/// </summary>
+public sealed record TrainingAssignmentCourse
+{
+    /// <summary>Unique ID of the training course. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
 
-    [JsonPropertyName("driverName")]
-    public string? DriverName { get; init; }
+    /// <summary>ID of the specific course revision assigned. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("revisionId")]
+    public required string RevisionId { get; init; }
+}
 
-    [JsonPropertyName("courseId")]
-    public string? CourseId { get; init; }
+/// <summary>
+/// Learner reference embedded in a <see cref="TrainingAssignment"/>. Mirrors the
+/// spec's <c>TrainingLearnerObjectResponseBody</c>.
+/// </summary>
+public sealed record TrainingAssignmentLearner
+{
+    /// <summary>Unique ID of the learner (e.g. the Samsara driver ID). Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
 
-    [JsonPropertyName("courseName")]
-    public string? CourseName { get; init; }
-
-    [JsonPropertyName("assignedAtTime")]
-    public DateTimeOffset? AssignedAtTime { get; init; }
-
-    [JsonPropertyName("score")]
-    public double? Score { get; init; }
+    /// <summary>Type of the learner (e.g. <c>driver</c>). Spec marks REQUIRED.</summary>
+    [JsonPropertyName("type")]
+    public required string Type { get; init; }
 }
 
 /// <summary>
