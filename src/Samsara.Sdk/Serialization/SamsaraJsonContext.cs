@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Samsara.Sdk.Exceptions;
 using Samsara.Sdk.Models.Addresses;
+using Samsara.Sdk.Models.Beta;
 using Samsara.Sdk.Models.Common;
 using Samsara.Sdk.Models.Communication;
 using Samsara.Sdk.Models.Compliance;
@@ -126,8 +127,6 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(UpdateRouteRequest))]
 [JsonSerializable(typeof(UpdateRouteStopRequest))]
 [JsonSerializable(typeof(Hub))]
-[JsonSerializable(typeof(CreateHubRequest))]
-[JsonSerializable(typeof(UpdateHubRequest))]
 [JsonSerializable(typeof(Trip))]
 [JsonSerializable(typeof(TripLocation))]
 // Communication
@@ -407,6 +406,8 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(DriverAppSettings))]
 [JsonSerializable(typeof(UpdateDriverAppSettingsRequest))]
 [JsonSerializable(typeof(SafetySettings))]
+// Beta — Places
+[JsonSerializable(typeof(PlaceDeletionMarker))]
 internal sealed partial class SamsaraJsonContext : JsonSerializerContext
 {
 }

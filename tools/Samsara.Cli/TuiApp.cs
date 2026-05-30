@@ -796,61 +796,18 @@ internal sealed class TuiApp
     {
         while (true)
         {
-            var op = SubMenu("Hubs", "List All", "Get by ID", "Create", "Update", "Delete");
+            // Hubs are read-only in the API (only GET /hubs exists); address CRUD lives under the Addresses menu.
+            var op = SubMenu("Hubs", "List All");
             if (op == "← Back") return;
             try
             {
-                switch (op)
+                if (op == "List All")
                 {
-                    case "List All":
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching hubs...[/]", async _ =>
-                        {
-                            var items = await CollectAsync(_client.Hubs.ListAsync(Timeout60s()));
-                            ResultRenderer.RenderList(items, "Hubs", h => [h.Id, h.Name ?? ""], ["ID", "Name"]);
-                        });
-                        break;
-                    case "Get by ID":
-                        var id = InputHelper.AskId("Hub ID");
-                        await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching hub...[/]", async _ =>
-                        {
-                            var h = await _client.Hubs.GetAsync(id, Timeout60s());
-                            ResultRenderer.RenderObject(h, $"Hub {id}");
-                        });
-                        break;
-                    case "Create":
-                        var cReq = DeserializePrompt<CreateHubRequest>("CreateHubRequest");
-                        if (cReq != null && InputHelper.Confirm("create hub"))
-                        {
-                            await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Creating...[/]", async _ =>
-                            {
-                                var h = await _client.Hubs.CreateAsync(cReq, Timeout60s());
-                                ResultRenderer.RenderObject(h, "Created Hub");
-                            });
-                        }
-                        break;
-                    case "Update":
-                        var uid = InputHelper.AskId("Hub ID to update");
-                        var uReq = DeserializePrompt<UpdateHubRequest>("UpdateHubRequest");
-                        if (uReq != null && InputHelper.Confirm("update hub"))
-                        {
-                            await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Updating...[/]", async _ =>
-                            {
-                                var h = await _client.Hubs.UpdateAsync(uid, uReq, Timeout60s());
-                                ResultRenderer.RenderObject(h, "Updated Hub");
-                            });
-                        }
-                        break;
-                    case "Delete":
-                        var did = InputHelper.AskId("Hub ID to delete");
-                        if (InputHelper.Confirm($"delete hub {did}"))
-                        {
-                            await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Deleting...[/]", async _ =>
-                            {
-                                await _client.Hubs.DeleteAsync(did, Timeout60s());
-                            });
-                            ResultRenderer.RenderSuccess("Hub deleted.");
-                        }
-                        break;
+                    await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching hubs...[/]", async _ =>
+                    {
+                        var items = await CollectAsync(_client.Hubs.ListAsync(Timeout60s()));
+                        ResultRenderer.RenderList(items, "Hubs", h => [h.Id, h.Name ?? ""], ["ID", "Name"]);
+                    });
                 }
             }
             catch (Exception ex) { ResultRenderer.RenderError(ex); }

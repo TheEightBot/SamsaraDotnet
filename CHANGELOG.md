@@ -7,8 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Places: `GET /places/deletions` (2026-05-29)** — added `IPlacesClient.GetDeletionsAsync()`
+  (operationId `getPlaceDeletions`, beta) to poll soft-deleted places, closing the last
+  endpoint-coverage gap (`check-sdk-sync.py` now reports `missing=0` against the live spec).
+  Introduces a typed `Samsara.Sdk.Models.Beta.PlaceDeletionMarker` (`id` + `deletedAtTime`
+  required, optional `externalIds`) — the first typed model on the otherwise weakly-typed Beta
+  surface — registered in `SamsaraJsonContext`. Additive (no breaking changes). Refreshed the
+  cached spec baseline to `2025-10-23` (absorbing the +13 Places-deletion schemas) so
+  `diff-report.md` reads clean. See `docs/api-sync/full-sync-completion-plan-2026-05-29.md`
+  (Phase 0).
+
 ### Changed
 
+- **Hubs `ListAsync` fix + read-only cleanup (2026-05-29)** — `IHubsClient.ListAsync()`
+  was wired to `GET /addresses` and threw `JSON deserialization for type 'Hub' was
+  missing required properties: timeZone, createdAt, updatedAt` after the 21-hubs sync
+  tightened `Hub` to the `GET /hubs` schema; `ListAsync()` now lists hubs via `GET /hubs`
+  (delegates to `ListHubsAsync`). **Breaking**: the spec exposes no hub
+  get-by-id/create/update/delete endpoint, so the address-overlay methods `GetAsync`/
+  `CreateAsync`/`UpdateAsync`/`DeleteAsync` and the `CreateHubRequest`/`UpdateHubRequest`
+  models were removed (they duplicated the `Addresses` client) — use `client.Addresses`
+  for `/addresses` CRUD. CLI Hubs menu reduced to read-only `List All`; dropped the
+  `CreateHubRequest`/`UpdateHubRequest` registrations from `SamsaraJsonContext`. See
+  `docs/api-sync/21-hubs.md`.
 - **Model sync 56-work-orders (2026-05-27)** — applied the per-domain remediation
   plan (0 CRIT / 2 HIGH / 20 MED / 4 LOW — 26 total) across the work-order,
   service-task, and invoice-scan endpoints. **Breaking**: `DeleteWorkOrdersAsync`

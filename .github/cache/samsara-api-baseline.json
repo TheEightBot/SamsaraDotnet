@@ -7467,6 +7467,9 @@
             "example": "941767043",
             "type": "string"
           },
+          "dateOfBirth": {
+            "$ref": "#/components/schemas/DriverDateOfBirth"
+          },
           "eldAdverseWeatherExemptionEnabled": {
             "description": "Flag indicating this driver may use Adverse Weather exemptions in ELD logs.",
             "type": "boolean"
@@ -12004,6 +12007,9 @@
           "currentIdCardCode": {
             "$ref": "#/components/schemas/DriverIdCardCode"
           },
+          "dateOfBirth": {
+            "$ref": "#/components/schemas/DriverDateOfBirth"
+          },
           "driverActivationStatus": {
             "$ref": "#/components/schemas/DriverActivationStatus"
           },
@@ -12763,6 +12769,12 @@
       "DriverCreatedAtTime": {
         "description": "The date and time this driver was created in RFC 3339 format.",
         "example": "2019-05-18T20:27:35Z",
+        "type": "string"
+      },
+      "DriverDateOfBirth": {
+        "description": "Driver's date of birth in `YYYY-MM-DD` format. Treated as a calendar date (no time component, no timezone).",
+        "example": "1985-07-21",
+        "format": "date",
         "type": "string"
       },
       "DriverDeactivatedAtTime": {
@@ -34446,12 +34458,14 @@
           "days": {
             "description": "Days this window applies.",
             "example": [
-              "Consequatur distinctio.",
-              "Sed dolorum hic."
+              "Sed dolorum hic.",
+              "Itaque assumenda possimus placeat.",
+              "Excepturi ratione facilis.",
+              "Officia autem id natus."
             ],
             "items": {
               "description": "Weekday: mon, tue, wed, thu, fri, sat, or sun.",
-              "example": "Expedita repellat placeat sit distinctio hic.",
+              "example": "Hic dolore est consequatur.",
               "type": "string"
             },
             "type": "array"
@@ -46468,6 +46482,35 @@
         },
         "type": "object"
       },
+      "PlaceDeletionMarkerObjectResponseBody": {
+        "description": "Deletion marker for a soft-deleted place.",
+        "properties": {
+          "deletedAtTime": {
+            "description": "When the delete became customer-visible, in RFC 3339 format.",
+            "example": "2026-04-07T15:42:00Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "externalIds": {
+            "description": "External ids captured for the place when present.",
+            "example": {
+              "crmId": "abc123"
+            },
+            "properties": {},
+            "type": "object"
+          },
+          "id": {
+            "description": "Samsara place id.",
+            "example": "12345",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deletedAtTime",
+          "id"
+        ],
+        "type": "object"
+      },
       "PlaceGeofenceVertexResponseResponseBody": {
         "description": "Vertex of a polygon geofence.",
         "properties": {
@@ -46702,7 +46745,7 @@
           "externalIds": {
             "description": "External ids when includeExternalIds=true.",
             "example": {
-              "Molestias alias dolores doloribus vel possimus.": "Aut totam numquam optio est."
+              "Aut totam numquam optio est.": "Cum non praesentium iste voluptas ut."
             },
             "properties": {},
             "type": "object"
@@ -46729,13 +46772,13 @@
           "iftaExemptionTypes": {
             "description": "IFTA exemption labels.",
             "example": [
-              "Omnis qui consequatur.",
-              "Id et magnam est aperiam a.",
-              "Quia minima error voluptate accusamus doloribus."
+              "Error voluptate.",
+              "Doloribus velit.",
+              "Repellat placeat sit."
             ],
             "items": {
               "description": "IFTA exemption type.",
-              "example": "Iste distinctio aspernatur.",
+              "example": "Est aperiam a dolorum.",
               "type": "string"
             },
             "type": "array"
@@ -46778,14 +46821,14 @@
           "placeTypes": {
             "description": "Assigned place types.",
             "example": [
-              "Quis odit voluptatem sequi maiores.",
-              "Sunt laborum voluptas quis quasi debitis dignissimos.",
-              "Eum quae.",
-              "Beatae cum sint cum corrupti."
+              "Voluptatem sequi maiores quidem sunt laborum voluptas.",
+              "Quasi debitis dignissimos quibusdam.",
+              "Quae aspernatur beatae cum sint cum corrupti.",
+              "Iusto aut molestias alias dolores doloribus."
             ],
             "items": {
               "description": "Place type token.",
-              "example": "Minus eum non ducimus.",
+              "example": "Non ducimus eligendi in.",
               "type": "string"
             },
             "type": "array"
@@ -46799,12 +46842,13 @@
           "safetyEventExclusions": {
             "description": "Configured safety exclusions.",
             "example": [
-              "Optio rem.",
-              "Reiciendis ex nulla cupiditate magnam rerum."
+              "Rerum atque et corrupti.",
+              "Distinctio aspernatur.",
+              "Dolorum omnis qui consequatur odio."
             ],
             "items": {
               "description": "Safety event exclusion token.",
-              "example": "Cum non praesentium iste voluptas ut.",
+              "example": "Commodi optio rem quia reiciendis ex nulla.",
               "type": "string"
             },
             "type": "array"
@@ -47128,6 +47172,225 @@
         "type": "object"
       },
       "PlacesDeletePlaceUnauthorizedErrorResponseBody": {
+        "description": "Unauthorized",
+        "properties": {
+          "message": {
+            "description": "Message of error",
+            "example": "Invalid token.",
+            "type": "string"
+          },
+          "requestId": {
+            "description": "The request ID; used when reaching out to support for issues with requests.",
+            "example": "8916e1c1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "PlacesGetPlaceDeletionsBadGatewayErrorResponseBody": {
+        "description": "Bad Gateway",
+        "properties": {
+          "message": {
+            "description": "Message of error",
+            "example": "rpc error: code = Unknown desc = connection refused",
+            "type": "string"
+          },
+          "requestId": {
+            "description": "The request ID; used when reaching out to support for issues with requests.",
+            "example": "8916e1c1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "PlacesGetPlaceDeletionsBadRequestErrorResponseBody": {
+        "description": "Bad Request parameters",
+        "properties": {
+          "message": {
+            "description": "Message of error",
+            "example": "Invalid value for parameter.",
+            "type": "string"
+          },
+          "requestId": {
+            "description": "The request ID; used when reaching out to support for issues with requests.",
+            "example": "8916e1c1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "PlacesGetPlaceDeletionsGatewayTimeoutErrorResponseBody": {
+        "description": "Gateway timeout",
+        "properties": {
+          "message": {
+            "description": "Message of error",
+            "example": "context deadline exceeded",
+            "type": "string"
+          },
+          "requestId": {
+            "description": "The request ID; used when reaching out to support for issues with requests.",
+            "example": "8916e1c1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "PlacesGetPlaceDeletionsInternalServerErrorResponseBody": {
+        "description": "An internal server error occurred",
+        "properties": {
+          "message": {
+            "description": "Message of error",
+            "example": "Failed to execute GraphQL query.",
+            "type": "string"
+          },
+          "requestId": {
+            "description": "The request ID; used when reaching out to support for issues with requests.",
+            "example": "8916e1c1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "PlacesGetPlaceDeletionsMethodNotAllowedErrorResponseBody": {
+        "description": "Method not allowed",
+        "properties": {
+          "message": {
+            "description": "Message of error",
+            "example": "DELETE not allowed on /endpoint.",
+            "type": "string"
+          },
+          "requestId": {
+            "description": "The request ID; used when reaching out to support for issues with requests.",
+            "example": "8916e1c1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "PlacesGetPlaceDeletionsNotFoundErrorResponseBody": {
+        "description": "Resource not found",
+        "properties": {
+          "message": {
+            "description": "Message of error",
+            "example": "Object not found.",
+            "type": "string"
+          },
+          "requestId": {
+            "description": "The request ID; used when reaching out to support for issues with requests.",
+            "example": "8916e1c1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "PlacesGetPlaceDeletionsNotImplementedErrorResponseBody": {
+        "description": "Requested endpoint is not yet implemented",
+        "properties": {
+          "message": {
+            "description": "Message of error",
+            "example": "Not implemented.",
+            "type": "string"
+          },
+          "requestId": {
+            "description": "The request ID; used when reaching out to support for issues with requests.",
+            "example": "8916e1c1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "PlacesGetPlaceDeletionsResponseBody": {
+        "properties": {
+          "data": {
+            "description": "Deletion markers for soft-deleted places.",
+            "items": {
+              "$ref": "#/components/schemas/PlaceDeletionMarkerObjectResponseBody"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/GoaPaginationResponseResponseBody"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "PlacesGetPlaceDeletionsServiceUnavailableErrorResponseBody": {
+        "description": "Service unavailable",
+        "properties": {
+          "message": {
+            "description": "Message of error",
+            "example": "context deadline exceeded",
+            "type": "string"
+          },
+          "requestId": {
+            "description": "The request ID; used when reaching out to support for issues with requests.",
+            "example": "8916e1c1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "PlacesGetPlaceDeletionsTooManyRequestsErrorResponseBody": {
+        "description": "Too many requests",
+        "properties": {
+          "message": {
+            "description": "Message of error",
+            "example": "Exceeded rate limit.",
+            "type": "string"
+          },
+          "requestId": {
+            "description": "The request ID; used when reaching out to support for issues with requests.",
+            "example": "8916e1c1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "PlacesGetPlaceDeletionsUnauthorizedErrorResponseBody": {
         "description": "Unauthorized",
         "properties": {
           "message": {
@@ -75102,6 +75365,9 @@
             "description": "The ID Card Code on the back of the physical card assigned to the driver.  Contact Samsara if you would like to enable this feature.",
             "example": "941767043",
             "type": "string"
+          },
+          "dateOfBirth": {
+            "$ref": "#/components/schemas/DriverDateOfBirth"
           },
           "deactivatedAtTime": {
             "description": "The date and time this driver is considered to be deactivated in RFC 3339 format.",
@@ -123767,6 +124033,149 @@
           "Beta APIs"
         ],
         "x-codegen-request-body-name": "PostPlaceRequestBody"
+      }
+    },
+    "/places/deletions": {
+      "get": {
+        "description": "Returns cursor-paginated deletion markers for soft-deleted places in the organization. Use for replication after DELETE /places.\n\n <b>Rate limit:</b> 5 requests/sec (learn more about rate limits <a href=\"https://developers.samsara.com/docs/rate-limits\" target=\"_blank\">here</a>).\n\nTo use this endpoint, select **Read Places** under the Places category when creating or editing an API token. <a href=\"https://developers.samsara.com/docs/authentication#scopes-for-api-tokens\" target=\"_blank\">Learn More.</a>\n \n\n **Submit Feedback**: Likes, dislikes, and API feature requests should be filed as feedback in our <a href=\"https://forms.gle/zkD4NCH7HjKb7mm69\" target=\"_blank\">API feedback form</a>. If you encountered an issue or noticed inaccuracies in the API documentation, please <a href=\"https://www.samsara.com/help\" target=\"_blank\">submit a case</a> to our support team.",
+        "operationId": "getPlaceDeletions",
+        "parameters": [
+          {
+            "description": " If specified, this should be the endCursor value from the previous page of results. When present, this request will return the next page of results that occur immediately after the previous page of results.",
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The limit for how many objects will be in the response. Default and max for this value is 512 objects.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 512,
+              "maximum": 512,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacesGetPlaceDeletionsResponseBody"
+                }
+              }
+            },
+            "description": "OK response."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacesGetPlaceDeletionsUnauthorizedErrorResponseBody"
+                }
+              }
+            },
+            "description": "Unauthorized response."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacesGetPlaceDeletionsNotFoundErrorResponseBody"
+                }
+              }
+            },
+            "description": "Not Found response."
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacesGetPlaceDeletionsMethodNotAllowedErrorResponseBody"
+                }
+              }
+            },
+            "description": "Method Not Allowed response."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacesGetPlaceDeletionsTooManyRequestsErrorResponseBody"
+                }
+              }
+            },
+            "description": "Too Many Requests response."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacesGetPlaceDeletionsInternalServerErrorResponseBody"
+                }
+              }
+            },
+            "description": "Internal Server Error response."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacesGetPlaceDeletionsNotImplementedErrorResponseBody"
+                }
+              }
+            },
+            "description": "Not Implemented response."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacesGetPlaceDeletionsBadGatewayErrorResponseBody"
+                }
+              }
+            },
+            "description": "Bad Gateway response."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacesGetPlaceDeletionsServiceUnavailableErrorResponseBody"
+                }
+              }
+            },
+            "description": "Service Unavailable response."
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacesGetPlaceDeletionsGatewayTimeoutErrorResponseBody"
+                }
+              }
+            },
+            "description": "Gateway Timeout response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacesGetPlaceDeletionsBadRequestErrorResponseBody"
+                }
+              }
+            },
+            "description": "Bad Request response."
+          }
+        },
+        "summary": "[beta] Poll place deletions",
+        "tags": [
+          "Beta APIs"
+        ]
       }
     },
     "/preferred-stations": {

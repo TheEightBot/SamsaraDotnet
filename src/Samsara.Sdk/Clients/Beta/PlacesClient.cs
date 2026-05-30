@@ -2,6 +2,7 @@ namespace Samsara.Sdk.Clients;
 
 using System.Globalization;
 using Samsara.Sdk.Http;
+using Samsara.Sdk.Models.Beta;
 
 /// <summary>Beta — Places API (<c>/places</c>). Subject to change.</summary>
 public interface IPlacesClient
@@ -34,6 +35,13 @@ public interface IPlacesClient
 
     /// <summary>Delete a place (<c>DELETE /places</c>) — required <paramref name="placeId"/> query param.</summary>
     Task DeleteAsync(int placeId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Poll place deletions (<c>GET /places/deletions</c>, <c>getPlaceDeletions</c>, beta).
+    /// Yields a <see cref="PlaceDeletionMarker"/> for each soft-deleted place; pagination
+    /// (cursor/limit) is handled transparently.
+    /// </summary>
+    IAsyncEnumerable<PlaceDeletionMarker> GetDeletionsAsync(CancellationToken cancellationToken = default);
 }
 
 internal sealed class PlacesClient : SamsaraServiceClientBase, IPlacesClient
@@ -81,4 +89,7 @@ internal sealed class PlacesClient : SamsaraServiceClientBase, IPlacesClient
 
     public Task DeleteAsync(int placeId, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync(QueryBuilder.WithParams(BasePath, ("placeId", placeId.ToString(CultureInfo.InvariantCulture))), cancellationToken);
+
+    public IAsyncEnumerable<PlaceDeletionMarker> GetDeletionsAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<PlaceDeletionMarker>($"{BasePath}/deletions", cancellationToken: cancellationToken);
 }

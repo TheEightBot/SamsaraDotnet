@@ -2,6 +2,11 @@ namespace Samsara.Sdk.Models.Routes;
 
 using System.Text.Json.Serialization;
 
+/// <summary>
+/// A hub returned by <c>GET /hubs</c> (the only hub endpoint in the spec —
+/// there is no hub get-by-id, create, update, or delete). Address CRUD lives
+/// on the separate <c>Addresses</c> client (<c>/addresses</c>).
+/// </summary>
 public sealed record Hub
 {
     /// <summary>Hub identifier (spec REQUIRED).</summary>
@@ -63,48 +68,6 @@ public sealed record Hub
     /// Not part of the <c>GET /hubs</c> spec response — retained as nullable
     /// back-compat property per the workflow precedent for response-side extras.
     /// </summary>
-    [JsonPropertyName("externalIds")]
-    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
-}
-
-public sealed record CreateHubRequest
-{
-    [JsonPropertyName("name")]
-    public required string Name { get; init; }
-
-    [JsonPropertyName("latitude")]
-    public required double Latitude { get; init; }
-
-    [JsonPropertyName("longitude")]
-    public required double Longitude { get; init; }
-
-    [JsonPropertyName("formattedAddress")]
-    public string? FormattedAddress { get; init; }
-
-    [JsonPropertyName("tagIds")]
-    public IReadOnlyList<string>? TagIds { get; init; }
-
-    [JsonPropertyName("externalIds")]
-    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
-}
-
-public sealed record UpdateHubRequest
-{
-    [JsonPropertyName("name")]
-    public string? Name { get; init; }
-
-    [JsonPropertyName("latitude")]
-    public double? Latitude { get; init; }
-
-    [JsonPropertyName("longitude")]
-    public double? Longitude { get; init; }
-
-    [JsonPropertyName("formattedAddress")]
-    public string? FormattedAddress { get; init; }
-
-    [JsonPropertyName("tagIds")]
-    public IReadOnlyList<string>? TagIds { get; init; }
-
     [JsonPropertyName("externalIds")]
     public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
