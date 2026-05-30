@@ -465,6 +465,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     template/submission list views updated (were rendering the removed `Name`/`FormTemplateId`/`DriverId`).
     check-model-sync Forms: 33 → 0. **Breaking**: 15 properties change type and 19 properties plus the
     `FormFieldValue` record are removed.
+  - **Settings** — **Breaking**: typed every weak (`object`) settings property and dropped the legacy
+    extras absent from the spec. Typed `DriverAppSettings`/`UpdateDriverAppSettingsRequest`'s
+    `GamificationConfig` → new `DriverAppGamificationConfig` and `TrailerSelectionConfig` → new
+    `DriverAppTrailerSelectionConfig`. Typed all 10 `SafetySettings` `object` properties against their
+    concrete spec schemas: `DistractedDrivingDetectionAlerts`/`FollowingDistanceDetectionAlerts`/
+    `ForwardCollisionDetectionAlerts`/`HarshEventSensitivity`/`HarshEventSensitivityV2`/
+    `PolicyViolationsDetectionAlerts`/`RollingStopDetectionAlerts`/`SafetyScoreConfiguration` (a flat
+    30-weight record)/`SpeedingSettings`/`VoiceCoaching` → ten new `Safety*` records. Each top-level
+    record models its direct scalar/enum/array fields; the further-nested sub-objects (per-axis g-force
+    sensitivity, inattentive/mobile-usage detection, speeding severity-level entries) are left as
+    `JsonElement` per the large-nested-schema escape hatch. **Removed** the SDK-only flat extras absent
+    from both the GET and PATCH schemas on every settings endpoint:
+    `ComplianceSettings`/`UpdateComplianceSettingsRequest`'s `HosEnabled`/`DvirEnabled`/`EldExemptEnabled`/
+    `DefaultCycleRule`/`DefaultHosRule`; `DriverAppSettings`/`UpdateDriverAppSettingsRequest`'s
+    `MessageEnabled`/`NavigationEnabled`/`DriverRewardsEnabled`/`VehiclePreviewEnabled` (and
+    `DriverAppSettings.CoachingAlertsEnabled`); and `SafetySettings`'s `ForwardCollisionWarningEnabled`/
+    `LaneDepartureWarningEnabled`/`SpeedingEnabled`/`HarshAccelerationEnabled`/`HarshBrakingEnabled`/
+    `HarshCorneringEnabled`. All new records registered in `SamsaraJsonContext`. check-model-sync
+    Settings: 39 → 0. **Breaking**: 14 properties change type and 25 properties are removed.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
