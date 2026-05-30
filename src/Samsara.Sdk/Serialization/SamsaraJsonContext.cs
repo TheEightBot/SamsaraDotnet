@@ -96,7 +96,6 @@ using Samsara.Sdk.Pagination;
 // Safety
 [JsonSerializable(typeof(SafetyEvent))]
 [JsonSerializable(typeof(SafetyEventAsset))]
-[JsonSerializable(typeof(SafetyEventVehicle))]
 [JsonSerializable(typeof(SafetyEventDriver))]
 [JsonSerializable(typeof(SafetyEventBehaviorLabel))]
 [JsonSerializable(typeof(SafetyEventContextLabel))]

@@ -83,6 +83,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     request schema (the only consumer of this record) does not accept `eventTypes`, unlike
     `POST /webhooks` (`CreateWebhookRequest` keeps it). Event subscriptions can only be set at
     creation. **Breaking**: `UpdateWebhookRequest.EventTypes` no longer exists.
+  - **Safety** — **removed** the legacy flat `SafetyEvent.Vehicle` and `SafetyEvent.Time`
+    properties (plus the now-orphaned `SafetyEventVehicle` record and its `SamsaraJsonContext`
+    registration). Neither appears in the `SafetyEventV2ObjectResponseBody` schema returned by
+    `GET /safety-events` or `GET /safety-events/stream`; the canonical data is already exposed via
+    `SafetyEvent.Asset` (typed) and `SafetyEvent.StartMs`/`EndMs`/`CreatedAtTime`. **Breaking**:
+    `SafetyEvent.Vehicle`/`Time` and the `SafetyEventVehicle` type no longer exist.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

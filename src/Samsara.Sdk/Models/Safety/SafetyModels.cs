@@ -120,20 +120,6 @@ public sealed record SafetyEvent
     /// </summary>
     [JsonPropertyName("updatedByUserId")]
     public string? UpdatedByUserId { get; init; }
-
-    /// <summary>
-    /// Vehicle reference (legacy flat shape, retained for back-compat). The spec models the
-    /// reporting asset under <see cref="Asset"/>.
-    /// </summary>
-    [JsonPropertyName("vehicle")]
-    public SafetyEventVehicle? Vehicle { get; init; }
-
-    /// <summary>
-    /// Event time (legacy flat shape, retained for back-compat). The spec models event timing
-    /// under <see cref="StartMs"/>/<see cref="EndMs"/>.
-    /// </summary>
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
 }
 
 /// <summary>
@@ -182,18 +168,6 @@ public sealed record SafetyEventAsset
     /// <summary>A map of external IDs.</summary>
     [JsonPropertyName("externalIds")]
     public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
-}
-
-/// <summary>
-/// Vehicle reference within a safety event (legacy flat shape, retained for back-compat).
-/// </summary>
-public sealed record SafetyEventVehicle
-{
-    [JsonPropertyName("id")]
-    public string? Id { get; init; }
-
-    [JsonPropertyName("name")]
-    public string? Name { get; init; }
 }
 
 /// <summary>
