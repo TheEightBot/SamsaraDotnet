@@ -270,6 +270,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     dual-shape (singular on `GET .../locations`, plural array on `.../feed`+`.../history`) and kept.
     All six new records registered in `SamsaraJsonContext`. **Breaking**: `EquipmentStats` field
     types change, feed/history return `EquipmentStatsSample`, and the four extras are removed.
+  - **Industrial** — **removed** the five time-series point arrays
+    (`fftSpectraPoints`/`j1939D1StatusPoints`/`locationPoints`/`numberPoints`/`stringPoints`) from
+    `DataInput`; they are not on the `GET /industrial/data-inputs` response (the only endpoint
+    `DataInput` serves) — those points belong to the data-points endpoints, already modelled by
+    `DataInputDataPoint`. Relaxed `DataInput.Id` to nullable (spec lists it optional). Relaxed
+    `IndustrialAsset.Name` and `IndustrialAsset.IsRunning` to nullable: the record is reused for the
+    `PATCH /industrial/assets/{id}/data-outputs` response (which returns only `id`/`statusCode`/
+    `errorMessage`), so keeping them `required` would throw on that payload. `IndustrialAsset` is
+    dual-shape across the four asset endpoints, so the still-reported "extras" — the 10 standard-asset
+    fields flagged on the data-outputs response, and `errorMessage`/`statusCode` flagged on the
+    standard responses — are each spec-backed on the *other* endpoints and kept. **Breaking**:
+    five `DataInput` properties removed; `DataInput.Id`/`IndustrialAsset.Name`/`IndustrialAsset.IsRunning`
+    now nullable.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

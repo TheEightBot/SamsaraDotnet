@@ -1256,7 +1256,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching data inputs...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Industrial.ListDataInputsAsync(cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Data Inputs", d => [d.Id, d.Name ?? ""], ["ID", "Name"]);
+                            ResultRenderer.RenderList(items, "Data Inputs", d => [d.Id ?? "", d.Name ?? ""], ["ID", "Name"]);
                         });
                         break;
                     case "Get Data Input":
