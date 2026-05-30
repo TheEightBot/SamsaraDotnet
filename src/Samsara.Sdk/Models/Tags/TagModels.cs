@@ -63,8 +63,10 @@ public sealed record TaggedResource
 /// </summary>
 public sealed record CreateTagRequest
 {
+    /// <summary>Tag name. Spec-required on <c>POST /tags</c> (verified against the live
+    /// 2025-10-23 spec: <c>CreateTagRequest.required = ["name"]</c>).</summary>
     [JsonPropertyName("name")]
-    public string? Name { get; init; }
+    public required string Name { get; init; }
 
     [JsonPropertyName("parentTagId")]
     public string? ParentTagId { get; init; }

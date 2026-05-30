@@ -90,7 +90,7 @@ This folder contains a checklist per API domain for tracking the sync state betw
 
 ### Running the Sync Check Locally
 
-Three complementary checkers guard three different failure modes. **All three must be
+Four complementary checkers guard four different failure modes. **All four must be
 green** — each is blind to what the others catch:
 
 ```bash
@@ -105,14 +105,27 @@ python3 tools/check-sdk-sync.py --fail-on-mismatch
 #    spec op? Catches the Hubs-class bug (a method pointed at another domain's path, e.g.
 #    HubsClient CRUD secretly hitting /addresses) that COVERAGE reports as "0 mismatches".
 python3 tools/check-sdk-fabrication.py --fail-on-issues
+
+# 4. MODEL PARITY — do SDK record *shapes* match the spec request/response bodies,
+#    property by property (matched by endpoint, not by type name)? Gates CRITICAL+HIGH;
+#    reports MEDIUM/LOW (optional fields, extras, weak typing) as the known backlog.
+python3 tools/check-model-sync.py --fail-on-severity HIGH
 ```
 
-Why three? `check-sdk-sync.py` dedups SDK endpoints by `(verb, path)`, so a method
-mis-homed to a *real* path in another domain is counted as coverage and never flagged.
-`check-sdk-fabrication.py` adds the reverse check: **duplicate coverage** (one spec op
-reached from >1 client file) and **client↔tag drift** (a method reaching a spec tag outside
-its client's committed allow-set in `tools/sdk-client-tags.json`). After an intentional new
-cross-domain method, refresh the allow-set with `--update-tags` and review the diff.
+Why four? Each catches what the previous is structurally blind to:
+- `check-sdk-sync.py` dedups SDK endpoints by `(verb, path)`, so a method mis-homed to a
+  *real* path in another domain is counted as coverage and never flagged.
+- `check-sdk-fabrication.py` adds the reverse check: **duplicate coverage** (one spec op
+  reached from >1 client file) and **client↔tag drift** (a method reaching a spec tag outside
+  its client's committed allow-set in `tools/sdk-client-tags.json`). After an intentional new
+  cross-domain method, refresh the allow-set with `--update-tags` and review the diff.
+- `check-model-sync.py` goes one level deeper than paths: it compares the C# record
+  *properties* the SDK sends/receives against the spec schema the endpoint actually
+  uses (unwrapping the `{ data: … }` envelope). It is what keeps models from silently
+  rotting as the spec mutates. CRITICAL = wrapper-shape mismatch; HIGH = missing/required
+  drift on a required field or required query param; MEDIUM/LOW = optional fields, extras,
+  intentional flattening, weak `object?` typing (the deferred backlog). Beta endpoints are
+  capped at MEDIUM.
 
 ### Updating Checklists After Implementation
 

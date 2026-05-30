@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Model-parity checker (2026-05-29)** — new `tools/check-model-sync.py` codifies the
+  one-time 2026-05-27 property-level audit into a reproducible, CI-gated tool. It compares
+  SDK record *shapes* against the live spec request/response bodies **property by property,
+  matched by endpoint** (unwrapping the `{ data: … }` envelope; resolving the schema the
+  endpoint actually uses, not by type name). Severity: CRITICAL = wrapper-shape mismatch,
+  HIGH = missing/required-drift on a required field or required query param, MEDIUM/LOW =
+  optional fields / extras / intentional flattening / weak `object?` typing (Beta capped at
+  MEDIUM). Gated per-PR in `ci.yml` at `--fail-on-severity HIGH`; full MEDIUM/LOW backlog
+  reported weekly. Current state on `main`: **0 CRITICAL, 0 HIGH**, 162 MEDIUM, 448 LOW
+  (the deferred extra-property / optional-field backlog). See
+  `docs/api-sync/full-sync-completion-plan-2026-05-29.md` (Phase 2).
 - **Fabrication / mis-homing checker (2026-05-29)** — new `tools/check-sdk-fabrication.py`
   closes the blind spot that let the Hubs bug ship: `check-sdk-sync.py` dedups SDK endpoints
   by `(verb, path)`, so a method mis-homed to another domain's *real* path is counted as
@@ -32,6 +43,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
+  `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
+  as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
+  contradicts). Surfaced by the new `check-model-sync.py` as the sole HIGH finding and verified
+  against the authoritative spec. **Breaking**: callers of `TagsClient.CreateAsync`/`ReplaceAsync`
+  must now set `Name`. `ReplaceAsync` (`PUT /tags/{id}`) shares this record, where the spec lists
+  `name` optional — requiring it there is a deliberate, benign over-tightening (a tag replace
+  should carry a name). No call sites affected (the one test already sets `Name`).
 - **Hubs `ListAsync` fix + read-only cleanup (2026-05-29)** — `IHubsClient.ListAsync()`
   was wired to `GET /addresses` and threw `JSON deserialization for type 'Hub' was
   missing required properties: timeZone, createdAt, updatedAt` after the 21-hubs sync
