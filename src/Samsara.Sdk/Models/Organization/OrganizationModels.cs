@@ -87,12 +87,14 @@ public sealed record User
 public sealed record UserRole
 {
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
-    // Not in current spec; retained for back-compat.
+    /// <summary>ID of the tag this role applies to (organizational role when absent).
+    /// Present on the user create/update request role schema
+    /// (<c>CreateUserRequest_roles.tagId</c>); not returned by <c>GET /user-roles</c>.</summary>
     [JsonPropertyName("tagId")]
     public string? TagId { get; init; }
 }

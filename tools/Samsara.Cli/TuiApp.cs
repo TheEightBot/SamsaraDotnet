@@ -531,7 +531,7 @@ internal sealed class TuiApp
                     await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching user roles...[/]", async _ =>
                     {
                         var items = await CollectAsync(_client.UserRoles.ListAsync(Timeout60s()));
-                        ResultRenderer.RenderList(items, "User Roles", r => [r.Id, r.Name ?? ""], ["ID", "Name"]);
+                        ResultRenderer.RenderList(items, "User Roles", r => [r.Id ?? "", r.Name ?? ""], ["ID", "Name"]);
                     });
                 }
             }

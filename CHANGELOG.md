@@ -61,6 +61,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `PATCH /attributes/{id}` — one record serves all four; it defaults to an empty list so the
     list response still deserializes). **Breaking**: consumers can no longer assume non-null
     `AttributeDefinition.Id`.
+  - **Users** — relaxed `UserRole.Id` to nullable (the spec `UserRole` schema lists `id`
+    optional on `GET /user-roles` and inside `User.roles`). Kept `UserRole.TagId` (flagged extra
+    against `GET /user-roles`, but it is a real spec field on the user create/update role schema
+    `CreateUserRequest_roles.tagId`, since `UserRole` doubles as the request role element);
+    corrected its stale "not in current spec" comment. **Breaking**: consumers can no longer
+    assume non-null `UserRole.Id`.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
