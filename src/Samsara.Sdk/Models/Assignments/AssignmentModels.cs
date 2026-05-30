@@ -341,38 +341,6 @@ public sealed record CarrierProposedAssignment
     /// <summary>The trailers proposed to the driver (nested array per spec).</summary>
     [JsonPropertyName("trailers")]
     public IReadOnlyList<CarrierProposedAssignmentTrailer>? Trailers { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's driver ID. Retained alongside the nested
-    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's driver name. Retained alongside the nested
-    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverName")]
-    public string? DriverName { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's vehicle ID. Retained alongside the nested
-    /// <see cref="Vehicle"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's vehicle name. Retained alongside the nested
-    /// <see cref="Vehicle"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("vehicleName")]
-    public string? VehicleName { get; init; }
 }
 
 /// <summary>

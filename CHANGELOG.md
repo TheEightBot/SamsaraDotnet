@@ -95,6 +95,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     canonically via `Asset.Id` and `HappenedAtTime`, and the response asset object carries no
     `name` (so the hoisted `Name` was always null). **Breaking**: those three properties no longer
     exist — use `Asset.Id` and `HappenedAtTime`.
+  - **Carrier Proposed Assignments** — **removed** the legacy flat
+    `CarrierProposedAssignment.DriverId`/`DriverName`/`VehicleId`/`VehicleName` scalars. The spec
+    `CarrierProposedAssignment` schema (both `GET` and `POST /fleet/carrier-proposed-assignments`)
+    models these only under the nested `driver`/`vehicle` objects, which the SDK already exposes as
+    the typed `Driver`/`Vehicle` records (with `Id`/`Name`) — so no data is lost. Updated the CLI
+    list view to read `Driver?.Id`. **Breaking**: use `Driver.Id`/`Driver.Name`/`Vehicle.Id`/
+    `Vehicle.Name` instead of the removed flat scalars.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
