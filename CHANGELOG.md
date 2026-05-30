@@ -79,6 +79,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     which are absent from the `GET /me` response schema (the only endpoint using this record);
     the canonical office address is `CarrierSettings.MainOfficeAddress`. **Breaking**: those five
     properties no longer exist and `OrganizationInfo.Id` is now nullable.
+  - **Webhooks** — **removed** `UpdateWebhookRequest.EventTypes`: the `PATCH /webhooks/{id}`
+    request schema (the only consumer of this record) does not accept `eventTypes`, unlike
+    `POST /webhooks` (`CreateWebhookRequest` keeps it). Event subscriptions can only be set at
+    creation. **Breaking**: `UpdateWebhookRequest.EventTypes` no longer exists.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

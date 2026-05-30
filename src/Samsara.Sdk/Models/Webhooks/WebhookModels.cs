@@ -79,6 +79,7 @@ public sealed record UpdateWebhookRequest
     [JsonPropertyName("customHeaders")]
     public IReadOnlyList<WebhookHeader>? CustomHeaders { get; init; }
 
-    [JsonPropertyName("eventTypes")]
-    public IReadOnlyList<string>? EventTypes { get; init; }
+    // Note: the PATCH /webhooks/{id} request schema does NOT accept eventTypes
+    // (unlike POST /webhooks). Event subscriptions can only be set at creation,
+    // so no EventTypes property is exposed here.
 }
