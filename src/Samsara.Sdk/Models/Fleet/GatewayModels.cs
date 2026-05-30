@@ -30,62 +30,6 @@ public sealed record Gateway
     /// <summary>Gateway data usage over the trailing 30 days.</summary>
     [JsonPropertyName("dataUsageLast30Days")]
     public GatewayDataUsage? DataUsageLast30Days { get; init; }
-
-    /// <summary>
-    /// Legacy SDK property not present in the spec inner schema; retained as
-    /// nullable back-compat so existing consumers don't silently break.
-    /// </summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; init; }
-
-    /// <summary>
-    /// Legacy SDK property not present in the spec inner schema; retained as
-    /// nullable back-compat so existing consumers don't silently break.
-    /// </summary>
-    [JsonPropertyName("name")]
-    public string? Name { get; init; }
-
-    /// <summary>
-    /// Legacy SDK property not present in the spec inner schema; retained as
-    /// nullable back-compat so existing consumers don't silently break.
-    /// </summary>
-    [JsonPropertyName("mainBus")]
-    public string? MainBus { get; init; }
-
-    /// <summary>
-    /// Legacy SDK property not present in the spec inner schema; retained as
-    /// nullable back-compat so existing consumers don't silently break.
-    /// </summary>
-    [JsonPropertyName("firmwareVersion")]
-    public string? FirmwareVersion { get; init; }
-
-    /// <summary>
-    /// Legacy SDK property not present in the spec inner schema; retained as
-    /// nullable back-compat so existing consumers don't silently break.
-    /// </summary>
-    [JsonPropertyName("wifiMacAddress")]
-    public string? WifiMacAddress { get; init; }
-
-    /// <summary>
-    /// Legacy SDK property not present in the spec inner schema; retained as
-    /// nullable back-compat so existing consumers don't silently break.
-    /// </summary>
-    [JsonPropertyName("simCardId")]
-    public string? SimCardId { get; init; }
-
-    /// <summary>
-    /// Legacy SDK property not present in the spec inner schema; retained as
-    /// nullable back-compat so existing consumers don't silently break.
-    /// </summary>
-    [JsonPropertyName("vehicle")]
-    public DriverReference? Vehicle { get; init; }
-
-    /// <summary>
-    /// Legacy SDK property not present in the spec inner schema; retained as
-    /// nullable back-compat so existing consumers don't silently break.
-    /// </summary>
-    [JsonPropertyName("tags")]
-    public IReadOnlyList<Common.TagReference>? Tags { get; init; }
 }
 
 /// <summary>

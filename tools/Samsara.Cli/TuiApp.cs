@@ -340,7 +340,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching gateways...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Gateways.ListAsync(cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Gateways", g => [g.Id ?? "", g.Serial, g.Model], ["ID", "Serial", "Model"]);
+                            ResultRenderer.RenderList(items, "Gateways", g => [g.Serial, g.Model, g.ConnectionStatus?.HealthStatus ?? ""], ["Serial", "Model", "Health"]);
                         });
                         break;
                 }

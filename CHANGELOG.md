@@ -133,6 +133,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     nested money/line-item schemas). **Breaking**: `MaintenanceSite`/`EstimatedPartsCost`/`File`
     change type and the four extra properties no longer exist (use `File.Base64Content` for the
     invoice image).
+  - **Gateways** — **removed** the eight legacy back-compat properties on `Gateway`
+    (`id`/`name`/`mainBus`/`firmwareVersion`/`wifiMacAddress`/`simCardId`/`vehicle`/`tags`).
+    None appears in the spec gateway schema returned by `GET /gateways` or `POST /gateways`
+    (the only two consumers of this record), which models only `model`/`serial`/`accessoryDevices`/
+    `asset`/`connectionStatus`/`dataUsageLast30Days` — all already typed on the SDK record. Updated
+    the CLI gateway list view to key on `Serial`/`Model`/`ConnectionStatus.HealthStatus` instead of
+    the removed `Id`. **Breaking**: those eight properties no longer exist (gateways are identified
+    by `Serial`).
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
