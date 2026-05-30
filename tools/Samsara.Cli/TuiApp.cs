@@ -983,7 +983,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching maintenance DVIRs...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Maintenance.GetDvirsStreamAsync(mDvirStart, mDvirEnd, cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Maintenance DVIRs", d => [d.Id, d.VehicleId ?? "", d.Defects?.Count.ToString() ?? "0"], ["ID", "Vehicle ID", "Defects"]);
+                            ResultRenderer.RenderList(items, "Maintenance DVIRs", d => [d.Id, d.Vehicle?.Id ?? "", d.Type ?? ""], ["ID", "Vehicle ID", "Type"]);
                         });
                         break;
                     case "Get DVIR by ID":

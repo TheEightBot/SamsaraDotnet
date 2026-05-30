@@ -420,6 +420,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `HubPlanOrder.Delivery`/`Pickup` and `ListIndustrialJobsAsync` (`GET /beta/industrial/jobs`)
     weak-typings. **Breaking**: nine `HosEldEvent` flat fields removed and `eldEvents` added;
     `Equipment.Id` is now nullable.
+  - **Maintenance** — typed nine previously weak nested properties against their concrete spec schemas.
+    `DefectRecord.ResolvedBy` (was `JsonElement`) → new `DefectResolvedBy` (`id`/`name`/`type`),
+    `DefectRecord.Trailer`/`Vehicle` and `MaintenanceDvir.Trailer`/`Vehicle` (were `JsonElement`) → new
+    `MaintenanceDvirAssetRef` (`id`/`externalIds`), `MaintenanceDvir.AuthorSignature`/`SecondSignature`/
+    `ThirdSignature` (were `JsonElement`) → new `MaintenanceDvirSignature`
+    (`signatoryUser` → `MaintenanceSignatoryUser`/`signedAtTime`/`type`), and
+    `UpdateDefectRequest.ResolvedBy` (was `JsonElement`) → new `UpdateDefectResolvedBy` (`id`/`type`, the
+    spec's request-side `ResolvedBy`). Relaxed `DefectRecord.Comment` to nullable: it is spec-required on
+    `GET /defects/stream` and `GET /defects/{id}` but optional on the `PATCH /fleet/defects/{id}` response
+    (`Defect`), so keeping it `required` would throw on that payload. **Removed** the legacy SDK-only flat
+    scalars absent from every endpoint mapping to each record: `MaintenanceDvir.VehicleId`/`VehicleName`/
+    `InspectionType`/`SafeToOperate`/`TimeMs`/`Defects` (and the now-orphaned `MaintenanceDefect` record,
+    de-registered from `SamsaraJsonContext`), `DefectRecord.VehicleId`/`VehicleName`/`DriverId`/
+    `ResolvedAt`/`CreatedAt`, and `DefectType.Name`/`Category` (use the spec `Label`/`SectionType`).
+    `DefectRecord` and `MaintenanceDvir` are dual-shape across their stream/get vs POST/PATCH endpoints,
+    so the still-reported "extras" (e.g. `endTime`/`startTime`/`trailerDefects` on the stream endpoint,
+    `dvirId`/`updatedAtTime` on the PATCH endpoint) are each spec-backed on the *other* endpoint and kept.
+    New records registered in `SamsaraJsonContext`; CLI DVIR list view updated (was rendering the removed
+    `VehicleId`/`Defects`). check-model-sync Maintenance: 42 → 19 (the 19 remaining are deliberately-kept
+    dual-shape fields). **Breaking**: nine properties change type, `DefectRecord.Comment` is now nullable,
+    and 13 properties plus the `MaintenanceDefect` record are removed.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

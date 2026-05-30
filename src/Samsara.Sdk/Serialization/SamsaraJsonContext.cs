@@ -210,7 +210,9 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(IftaDetailJobOutput))]
 // Maintenance
 [JsonSerializable(typeof(MaintenanceDvir))]
-[JsonSerializable(typeof(MaintenanceDefect))]
+[JsonSerializable(typeof(MaintenanceDvirAssetRef))]
+[JsonSerializable(typeof(MaintenanceDvirSignature))]
+[JsonSerializable(typeof(MaintenanceSignatoryUser))]
 [JsonSerializable(typeof(DiagnosticTroubleCode))]
 [JsonSerializable(typeof(CheckEngineLight))]
 // Documents
@@ -397,7 +399,9 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(UpdateDriverTrailerAssignmentRequest))]
 // Maintenance - DVIRs & Defects
 [JsonSerializable(typeof(DefectRecord))]
+[JsonSerializable(typeof(DefectResolvedBy))]
 [JsonSerializable(typeof(UpdateDefectRequest))]
+[JsonSerializable(typeof(UpdateDefectResolvedBy))]
 [JsonSerializable(typeof(DefectType))]
 [JsonSerializable(typeof(CreateDvirRequest))]
 [JsonSerializable(typeof(UpdateDvirRequest))]
