@@ -42,14 +42,14 @@ public interface IVehiclesClient
         IReadOnlyList<string>? tagIds = null,
         IReadOnlyList<string>? parentTagIds = null,
         CancellationToken cancellationToken = default);
-    IAsyncEnumerable<VehicleStats> GetStatsFeedAsync(
+    IAsyncEnumerable<VehicleStatsSample> GetStatsFeedAsync(
         string types,
         IReadOnlyList<string>? vehicleIds = null,
         IReadOnlyList<string>? tagIds = null,
         IReadOnlyList<string>? parentTagIds = null,
         IReadOnlyList<string>? decorations = null,
         CancellationToken cancellationToken = default);
-    IAsyncEnumerable<VehicleStats> GetStatsHistoryAsync(
+    IAsyncEnumerable<VehicleStatsSample> GetStatsHistoryAsync(
         string types,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,

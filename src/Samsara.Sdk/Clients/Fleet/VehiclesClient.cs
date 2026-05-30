@@ -76,8 +76,8 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
                 ("parentTagIds", parentTagIds is null ? null : string.Join(",", parentTagIds))),
             cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<VehicleStats> GetStatsFeedAsync(string types, IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, IReadOnlyList<string>? decorations = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<VehicleStats>(
+    public IAsyncEnumerable<VehicleStatsSample> GetStatsFeedAsync(string types, IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, IReadOnlyList<string>? decorations = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleStatsSample>(
             QueryBuilder.WithParams($"{BasePath}/stats/feed",
                 ("types", types),
                 ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds)),
@@ -86,8 +86,8 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
                 ("decorations", decorations is null ? null : string.Join(",", decorations))),
             cancellationToken: cancellationToken);
 
-    public IAsyncEnumerable<VehicleStats> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, IReadOnlyList<string>? decorations = null, CancellationToken cancellationToken = default)
-        => PaginateAsync<VehicleStats>(
+    public IAsyncEnumerable<VehicleStatsSample> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, IReadOnlyList<string>? decorations = null, CancellationToken cancellationToken = default)
+        => PaginateAsync<VehicleStatsSample>(
             QueryBuilder.WithParams(
                 QueryBuilder.WithTimeRange($"{BasePath}/stats/history", startTime, endTime),
                 ("types", types),

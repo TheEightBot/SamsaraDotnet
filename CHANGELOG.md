@@ -270,6 +270,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     dual-shape (singular on `GET .../locations`, plural array on `.../feed`+`.../history`) and kept.
     All six new records registered in `SamsaraJsonContext`. **Breaking**: `EquipmentStats` field
     types change, feed/history return `EquipmentStatsSample`, and the four extras are removed.
+  - **Vehicle Stats** — split the dual-shape `VehicleStats` record (the documented GPS data-loss
+    case): `VehicleStats` now models the `GET /fleet/vehicles/stats` snapshot (single `{time,value}`
+    samples) and the new `VehicleStatsSample` models the `GET .../stats/feed` and `.../stats/history`
+    time-series, where every metric is an **array** of samples — the SDK previously exposed each as a
+    single `object?` (or `IReadOnlyList<object>?`), silently dropping the rest of the series. All 60
+    `object?` weak-typings are replaced with typed element records: `VehicleStatValue` (int64),
+    `VehicleStatDoubleValue` (speed/distance), `VehicleStatStringValue` (engine/spreader/door/seatbelt
+    states), `VehicleStatAuxInput` (aux inputs), `VehicleStatEngineImmobilizer`, `VehicleStatNfcCardScan`
+    (+ `VehicleStatNfcCard`), `VehicleStatGps` (+ `VehicleStatAddress`, reusing `ReverseGeo`), and a
+    fully-typed `VehicleStatFaultCodes` tree (`...J1939`/`...Obdii`/`...Oem` with their DTC sub-records).
+    `externalIds` is now `IReadOnlyDictionary<string,string>?`. The snapshot keeps the singular
+    `engineState`/`fuelPercent`/`nfcCardScan` fields; the sample keeps the plural
+    `engineStates`/`fuelPercents`/`nfcCardScans` arrays — each spec-backed only on its own endpoint, so
+    the split clears the eight singular/plural extra-property mismatches. **Removed** the fabricated
+    `engineSeconds` and flat `time` fields (in neither spec response) and the now-orphaned
+    `EngineState`/`FuelPercent`/`EngineSeconds` helper records (synthetic back-compat aliases, not spec
+    schemas; de-registered from `SamsaraJsonContext`). On the feed/history shape `id`/`name` are
+    spec-optional and now nullable (preventing a Hubs-style deserialization throw). `GetStatsFeedAsync`/
+    `GetStatsHistoryAsync` now return `VehicleStatsSample`; all new records registered in
+    `SamsaraJsonContext`. **Breaking**: `VehicleStats` field types change, the feed/history methods
+    return `VehicleStatsSample` instead of `VehicleStats`, the `engineSeconds`/`time` extras are removed,
+    and the `EngineState`/`FuelPercent`/`EngineSeconds` records no longer exist. Migration: read the
+    single snapshot value from the typed property (e.g. `stats.EngineRpm?.Value`); for feed/history,
+    enumerate the array (e.g. `sample.EngineRpm` is now `IReadOnlyList<VehicleStatValue>`).
   - **Industrial** — **removed** the five time-series point arrays
     (`fftSpectraPoints`/`j1939D1StatusPoints`/`locationPoints`/`numberPoints`/`stringPoints`) from
     `DataInput`; they are not on the `GET /industrial/data-inputs` response (the only endpoint
