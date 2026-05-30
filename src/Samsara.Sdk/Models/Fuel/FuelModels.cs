@@ -285,22 +285,11 @@ public sealed record CreateFuelPurchaseRequest
 }
 
 /// <summary>
-/// Response of <c>POST /fuel-purchase</c>. Spec returns only <c>uuid</c>; the
-/// other properties are retained as nullable back-compat conveniences for
-/// callers that previously echoed the request fields off this record.
+/// Response of <c>POST /fuel-purchase</c>. The spec response schema returns only
+/// <c>uuid</c>; the request fields live on <see cref="CreateFuelPurchaseRequest"/>.
 /// </summary>
 public sealed record FuelPurchase
 {
     /// <summary>Universally unique identifier for the fuel purchase. Spec marks REQUIRED.</summary>
     [JsonPropertyName("uuid")] public required string Uuid { get; init; }
-
-    [JsonPropertyName("id")] public string? Id { get; init; }
-    [JsonPropertyName("driverId")] public string? DriverId { get; init; }
-    [JsonPropertyName("vehicleId")] public string? VehicleId { get; init; }
-    [JsonPropertyName("transactionReference")] public string? TransactionReference { get; init; }
-    [JsonPropertyName("transactionTime")] public DateTimeOffset? TransactionTime { get; init; }
-    [JsonPropertyName("transactionLocation")] public string? TransactionLocation { get; init; }
-    [JsonPropertyName("fuelQuantityLiters")] public string? FuelQuantityLiters { get; init; }
-    [JsonPropertyName("fuelGrade")] public string? FuelGrade { get; init; }
-    [JsonPropertyName("iftaFuelType")] public string? IftaFuelType { get; init; }
 }

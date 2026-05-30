@@ -207,6 +207,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     nested course/learner objects carry no name). Updated the CLI list view to read
     `Learner.Id`/`Course.Id`. **Breaking**: `Course`/`Learner` change type and the six scalars no
     longer exist.
+  - **Fuel and Energy** — **removed** the nine back-compat echo properties on the `FuelPurchase`
+    response record (`id`/`driverId`/`vehicleId`/`transactionReference`/`transactionTime`/
+    `transactionLocation`/`fuelQuantityLiters`/`fuelGrade`/`iftaFuelType`). The spec
+    `POST /fuel-purchase` response (the only consumer of this record) returns just `uuid`; the request
+    fields already live on `CreateFuelPurchaseRequest`. **Breaking**: those nine properties no longer
+    exist — read submitted values from your `CreateFuelPurchaseRequest`, and `uuid` from the response.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
