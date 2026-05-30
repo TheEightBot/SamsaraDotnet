@@ -123,20 +123,91 @@ public sealed record Vehicle
     [JsonPropertyName("vehicleWeightInPounds")]
     public long? VehicleWeightInPounds { get; init; }
 
+    /// <summary>Gross vehicle weight, returned by <c>GET /fleet/vehicles/{id}</c> and the PATCH response.</summary>
     [JsonPropertyName("grossVehicleWeight")]
-    public object? GrossVehicleWeight { get; init; }
+    public VehicleGrossWeight? GrossVehicleWeight { get; init; }
 
+    /// <summary>Trailer sensor configuration (cargo/temperature/humidity/door sensors by area).</summary>
     [JsonPropertyName("sensorConfiguration")]
-    public object? SensorConfiguration { get; init; }
+    public VehicleSensorConfiguration? SensorConfiguration { get; init; }
+}
 
-    [JsonPropertyName("engineHours")]
-    public long? EngineHours { get; init; }
+/// <summary>
+/// Gross vehicle weight on a <see cref="Vehicle"/>. Mirrors the spec's
+/// <c>grossVehicleWeight</c> object.
+/// </summary>
+public sealed record VehicleGrossWeight
+{
+    /// <summary>Unit of the weight value (e.g. <c>pounds</c>, <c>kilograms</c>).</summary>
+    [JsonPropertyName("unit")]
+    public string? Unit { get; init; }
 
-    [JsonPropertyName("odometerMeters")]
-    public double? OdometerMeters { get; init; }
+    /// <summary>Gross vehicle weight value, expressed in <see cref="Unit"/>.</summary>
+    [JsonPropertyName("weight")]
+    public long? Weight { get; init; }
+}
 
-    [JsonPropertyName("gatewaySerial")]
-    public string? GatewaySerial { get; init; }
+/// <summary>
+/// Trailer sensor configuration on a <see cref="Vehicle"/>. Mirrors the spec's
+/// <c>sensorConfiguration</c> object.
+/// </summary>
+public sealed record VehicleSensorConfiguration
+{
+    /// <summary>Sensor areas (each grouping cargo/temperature/humidity sensors by position).</summary>
+    [JsonPropertyName("areas")]
+    public IReadOnlyList<VehicleSensorArea>? Areas { get; init; }
+
+    /// <summary>Door sensors by position.</summary>
+    [JsonPropertyName("doors")]
+    public IReadOnlyList<VehicleSensorDoor>? Doors { get; init; }
+}
+
+/// <summary>A sensor area within a <see cref="VehicleSensorConfiguration"/>.</summary>
+public sealed record VehicleSensorArea
+{
+    /// <summary>Position label for the area.</summary>
+    [JsonPropertyName("position")]
+    public string? Position { get; init; }
+
+    /// <summary>Cargo sensors in this area.</summary>
+    [JsonPropertyName("cargoSensors")]
+    public IReadOnlyList<VehicleSensor>? CargoSensors { get; init; }
+
+    /// <summary>Temperature sensors in this area.</summary>
+    [JsonPropertyName("temperatureSensors")]
+    public IReadOnlyList<VehicleSensor>? TemperatureSensors { get; init; }
+
+    /// <summary>Humidity sensors in this area.</summary>
+    [JsonPropertyName("humiditySensors")]
+    public IReadOnlyList<VehicleSensor>? HumiditySensors { get; init; }
+}
+
+/// <summary>A door sensor within a <see cref="VehicleSensorConfiguration"/>.</summary>
+public sealed record VehicleSensorDoor
+{
+    /// <summary>Position label for the door.</summary>
+    [JsonPropertyName("position")]
+    public string? Position { get; init; }
+
+    /// <summary>The door sensor.</summary>
+    [JsonPropertyName("sensor")]
+    public VehicleSensor? Sensor { get; init; }
+}
+
+/// <summary>A single Samsara sensor (cargo/temperature/humidity/door).</summary>
+public sealed record VehicleSensor
+{
+    /// <summary>Sensor ID.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Sensor MAC address.</summary>
+    [JsonPropertyName("mac")]
+    public string? Mac { get; init; }
+
+    /// <summary>Sensor name.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
 }
 
 /// <summary>

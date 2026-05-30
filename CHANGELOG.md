@@ -244,6 +244,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Kept `driverId`, which the spec genuinely returns, and left `Intervals` as `IReadOnlyList<object>`
     (the item schema with its nested `location` is left untyped per the weak-typing escape hatch).
     **Breaking**: `Asset` changes type and the ten flat scalars no longer exist.
+  - **Vehicles** — typed `Vehicle.GrossVehicleWeight` (was `object`) as `VehicleGrossWeight`
+    (`unit`/`weight`) and `Vehicle.SensorConfiguration` (was `object`) as the `VehicleSensorConfiguration`
+    tree (`areas` → `VehicleSensorArea` with cargo/temperature/humidity `VehicleSensor[]`, `doors` →
+    `VehicleSensorDoor`); registered all five new records in `SamsaraJsonContext`. **Removed** the three
+    vehicle-stats fields `engineHours`/`odometerMeters`/`gatewaySerial`, which appear on none of the
+    three vehicle-metadata response schemas (`GET /fleet/vehicles`, `GET`/`PATCH /fleet/vehicles/{id}`)
+    — those belong to the vehicle *stats* endpoints, not the vehicle record. `Vehicle` is shared across
+    those three endpoints with diverging shapes, so the still-reported "extras" (`grossVehicleWeight` on
+    the list endpoint; `createdAtTime`/`updatedAtTime`/`isRemotePrivacyButtonEnabled`/`vehicleWeight`/
+    `vehicleWeightInKilograms`/`vehicleWeightInPounds` on the by-id endpoint) are each spec-backed on the
+    *other* endpoint and are kept. **Breaking**: `GrossVehicleWeight`/`SensorConfiguration` change type
+    and the three stats fields no longer exist (read them from the vehicle-stats endpoints).
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec

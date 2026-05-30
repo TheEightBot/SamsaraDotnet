@@ -60,6 +60,11 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(UpdateAddressRequest))]
 // Fleet
 [JsonSerializable(typeof(Vehicle))]
+[JsonSerializable(typeof(VehicleGrossWeight))]
+[JsonSerializable(typeof(VehicleSensorConfiguration))]
+[JsonSerializable(typeof(VehicleSensorArea))]
+[JsonSerializable(typeof(VehicleSensorDoor))]
+[JsonSerializable(typeof(VehicleSensor))]
 [JsonSerializable(typeof(DriverReference))]
 [JsonSerializable(typeof(GatewayInfo))]
 [JsonSerializable(typeof(CreateVehicleRequest))]
