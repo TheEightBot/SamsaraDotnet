@@ -885,7 +885,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching tachograph activities...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Tachograph.ListActivitiesAsync(taStart, taEnd, cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Tachograph Activities", a => [a.DriverId ?? "", a.ActivityType ?? ""], ["Driver ID", "Activity Type"]);
+                            ResultRenderer.RenderList(items, "Tachograph Activities", a => [a.Driver?.Id ?? "", a.Driver?.Name ?? "", (a.Activity?.Count ?? 0).ToString()], ["Driver ID", "Driver", "Activities"]);
                         });
                         break;
                     case "Tachograph Files":
@@ -893,7 +893,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching tachograph files...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Tachograph.ListFilesAsync(tfStart, tfEnd, cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Tachograph Files", f => [f.DriverId ?? "", f.FileType ?? ""], ["Driver ID", "File Type"]);
+                            ResultRenderer.RenderList(items, "Tachograph Files", f => [f.Driver?.Id ?? "", f.Driver?.Name ?? "", (f.Files?.Count ?? 0).ToString()], ["Driver ID", "Driver", "Files"]);
                         });
                         break;
                     case "IFTA Details":

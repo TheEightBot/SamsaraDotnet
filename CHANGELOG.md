@@ -329,6 +329,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `POST /cameras/media/retrieval` (`quotaStatus`/`retrievalId` — `PostMediaRetrievalObjectResponseBody`),
     so the 11 still-reported "extras" are each valid on the opposite endpoint and kept. CLI media view
     updated. **Breaking**: 14 media properties removed.
+  - **Tachograph (EU Only)** — typed the weak (`object`) nested fields and removed the legacy flat
+    fields on both response records. `TachographActivity`: typed `activity` (was `object[]`) as
+    `TachographActivityEntry[]` (start/end time, state, isManualEntry) and `driver` (was `object`) as the
+    new `TachographDriver` (`driverTinyResponse`); **removed** the 11 flat extras (`id`/`driverId`/
+    `driverName`/`vehicleId`/`vehicleName`/`activityType`/`startTime`/`endTime`/`durationMs`/`country`/
+    `region`). `TachographFile` is dual-shape across the driver-files and vehicle-files endpoints: typed
+    `files` (was `object[]`) as `TachographFileEntry[]` (the union of `TachographDriverFile`/
+    `TachographVehicleFile`), `driver` as `TachographDriver`, and `vehicle` as the new
+    `TachographVehicle` (`vehicleTinyResponse`); **removed** the 10 flat extras (`id`/`driverId`/
+    `driverName`/`vehicleId`/`vehicleName`/`fileType`/`downloadUrl`/`createdAtTime`/`startTime`/
+    `endTime`). The two still-reported `TachographFile` "extras" (`driver` flagged on the vehicle-files
+    endpoint, `vehicle` flagged on the driver-files endpoint) are dual-shape and kept. Six new records
+    registered in `SamsaraJsonContext`; CLI tachograph views updated. **Breaking**: `TachographActivity`/
+    `TachographFile` field types change and 21 flat properties are removed.
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
