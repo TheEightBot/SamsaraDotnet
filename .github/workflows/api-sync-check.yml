@@ -72,6 +72,9 @@ jobs:
         run: |
           python3 tools/check-sdk-sync.py --show-missing > sdk-sync-report.txt 2>&1 || true
           head -n 12 sdk-sync-report.txt
+          echo "" >> sdk-sync-report.txt
+          python3 tools/check-sdk-fabrication.py >> sdk-sync-report.txt 2>&1 || true
+          tail -n 8 sdk-sync-report.txt
 
       - name: Upload SDK sync report artifact
         uses: actions/upload-artifact@v4

@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Fabrication / mis-homing checker (2026-05-29)** — new `tools/check-sdk-fabrication.py`
+  closes the blind spot that let the Hubs bug ship: `check-sdk-sync.py` dedups SDK endpoints
+  by `(verb, path)`, so a method mis-homed to another domain's *real* path is counted as
+  coverage and reported as `0 mismatches`. The new checker verifies the reverse property —
+  every SDK method maps to a **distinct, correctly-homed** spec op — via two signals:
+  **duplicate coverage** (one spec op reached from >1 client file) and **client↔tag drift**
+  (a method reaching a spec tag outside its client's committed allow-set in
+  `tools/sdk-client-tags.json`). Proven against the real pre-fix Hubs code (flags all 5
+  duplicate + 5 tag-drift instances); clean on `main`. Gated per-PR in `ci.yml` and reported
+  in the weekly `api-sync-check.yml`. A repo-wide sweep confirmed **Hubs was the only
+  offender**. See `docs/api-sync/full-sync-completion-plan-2026-05-29.md` (Phase 1).
 - **Places: `GET /places/deletions` (2026-05-29)** — added `IPlacesClient.GetDeletionsAsync()`
   (operationId `getPlaceDeletions`, beta) to poll soft-deleted places, closing the last
   endpoint-coverage gap (`check-sdk-sync.py` now reports `missing=0` against the live spec).

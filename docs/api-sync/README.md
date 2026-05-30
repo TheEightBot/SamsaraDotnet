@@ -90,19 +90,29 @@ This folder contains a checklist per API domain for tracking the sync state betw
 
 ### Running the Sync Check Locally
 
-```bash
-# Fetch the latest spec and compare against checklists
-python3 tools/check-api-sync.py
+Three complementary checkers guard three different failure modes. **All three must be
+green** — each is blind to what the others catch:
 
-# Check against a specific spec version
-python3 tools/check-api-sync.py --spec-url https://developers.samsara.com/openapi/samsara-api.json
+```bash
+# 1. SPEC DRIFT — does the live spec differ from our cached baseline?
+#    (new/removed/changed endpoints + schema additions/removals)
+python3 tools/check-api-sync.py            # writes docs/api-sync/diff-report.md
+
+# 2. COVERAGE — does every SDK path exist in the spec, and is every spec op implemented?
+python3 tools/check-sdk-sync.py --fail-on-mismatch
+
+# 3. FABRICATION / MIS-HOMING — does every SDK method map to a DISTINCT, correctly-homed
+#    spec op? Catches the Hubs-class bug (a method pointed at another domain's path, e.g.
+#    HubsClient CRUD secretly hitting /addresses) that COVERAGE reports as "0 mismatches".
+python3 tools/check-sdk-fabrication.py --fail-on-issues
 ```
 
-The script outputs:
-- New endpoints added since last check
-- Removed/deprecated endpoints
-- Changed parameter signatures
-- A summary diff report at `docs/api-sync/diff-report.md`
+Why three? `check-sdk-sync.py` dedups SDK endpoints by `(verb, path)`, so a method
+mis-homed to a *real* path in another domain is counted as coverage and never flagged.
+`check-sdk-fabrication.py` adds the reverse check: **duplicate coverage** (one spec op
+reached from >1 client file) and **client↔tag drift** (a method reaching a spec tag outside
+its client's committed allow-set in `tools/sdk-client-tags.json`). After an intentional new
+cross-domain method, refresh the allow-set with `--update-tags` and review the diff.
 
 ### Updating Checklists After Implementation
 
