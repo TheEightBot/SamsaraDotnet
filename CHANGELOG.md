@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Schema-level spec-drift detection (2026-06-01)** — `tools/check-api-sync.py` now diffs the
+  spec at the **property level**, not just endpoint/schema-name level: for schemas present in both
+  the live spec and the cached baseline it reports fields and `required`-set entries added/removed
+  (the model-drift signal a name-only diff misses). It also prints a **content fingerprint** (op
+  count, schema count, short content hash) and flags *"⚠️ Spec content changed under the same
+  `info.version`"* when the hash moves without a version bump — Samsara mutates the `2025-10-23`
+  spec in place, which previously hid drift. Documented baseline-refresh discipline in
+  `docs/api-sync/README.md`. See `full-sync-completion-plan-2026-05-29.md` (Phase 4).
 - **Model-parity checker (2026-05-29)** — new `tools/check-model-sync.py` codifies the
   one-time 2026-05-27 property-level audit into a reproducible, CI-gated tool. It compares
   SDK record *shapes* against the live spec request/response bodies **property by property,

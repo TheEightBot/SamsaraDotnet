@@ -127,6 +127,32 @@ Why four? Each catches what the previous is structurally blind to:
   intentional flattening, weak `object?` typing (the deferred backlog). Beta endpoints are
   capped at MEDIUM.
 
+### Spec-drift detection & baseline discipline
+
+Samsara ships spec changes **without bumping `info.version`** — the live spec has been
+`2025-10-23` for months while its content (schemas, fields, descriptions) keeps moving. So
+`check-api-sync.py` does not trust the version string:
+
+- It diffs the live spec against the cached baseline (`.github/cache/samsara-api-baseline.json`)
+  at three levels: **endpoints** (added/removed/changed operations & params), **schemas by name**
+  (added/removed), and **schema properties** (fields and `required`-set added/removed on schemas
+  present in both — the model-drift signal a name-only diff misses).
+- It prints a **content fingerprint** (op count, schema count, short content hash). When the hash
+  moves but the version string doesn't, the report flags *"⚠️ Spec content changed under the same
+  `info.version`"* so a cosmetic-looking "no version change" can't hide real drift.
+
+**Baseline-refresh discipline** — the baseline is the spec the SDK has been reconciled against, so
+refreshing it is a deliberate, reviewed act, never automatic:
+
+1. Run `python3 tools/check-api-sync.py` (writes `docs/api-sync/diff-report.md`).
+2. Review the report. Implement each structural change in the SDK (let `check-model-sync.py`
+   confirm the records match), updating the relevant `NN-*.md` checklist and `CHANGELOG.md`.
+3. **Only after the SDK is reconciled**, refresh the baseline with
+   `python3 tools/check-api-sync.py --update-baseline`. Refreshing *before* reconciling silently
+   swallows the drift and makes the next diff lie.
+4. A content-hash move with **no structural diff** is usually description/example churn — safe to
+   absorb with `--update-baseline`, but note it in the refresh commit so the move stays auditable.
+
 ### Updating Checklists After Implementation
 
 When implementing an endpoint, update its checklist file by checking off the relevant items:
