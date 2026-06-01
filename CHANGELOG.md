@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Tests
+
+- **Contract + client test layer for the Phase 3 model rework (2026-06-01)** — added 39 tests
+  across 16 new test classes, lifting the unit suite from 63 → 102 passing. **Contract tests**
+  (25 tests) construct realistic wire-shape payloads and assert the reworked records bind
+  correctly: the vehicle/trailer/equipment **stats snapshot-vs-time-series split** (singular
+  `engineState`/`gps` objects on the snapshot endpoints vs. `engineStates`/`gps`/`fuelPercents`
+  **arrays** on the feed/history endpoints — the silent-data-loss fix); the v2 `trips/stream`
+  typed `Trip.asset`/`TripLocation` vs. the legacy v1 `{ trips: [...] }` wrapper; `FormTemplate`
+  binding `title`/`revisionId` (not `name`); typed `FormSubmission`, `SafetyEvent`, HOS
+  (`HosLog`/`HosViolation`/`HosDailyLog`), `SafetySettings`/`DriverAppSettings`, and
+  `MaintenanceDvir`/`DefectRecord` nested records; the relaxed `Driver` model deserializing a
+  payload that omits `id`/`name`; and `CreateTagRequest` serializing its required `name`.
+  **Unit-coverage tests** (14 tests) add path/verb/query-param assertions for six previously
+  untested high-traffic clients: Routes, Hubs, Trailers, Drivers, Documents, and Coaching.
+
 ### Added
 
 - **Schema-level spec-drift detection (2026-06-01)** — `tools/check-api-sync.py` now diffs the
