@@ -27,113 +27,6 @@ public sealed record HosLog
     /// </summary>
     [JsonPropertyName("hosLogs")]
     public IReadOnlyList<HosLogEntry>? HosLogs { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the entry ID. Retained for backward compatibility with
-    /// earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the driver ID. Retained alongside the nested
-    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes;
-    /// not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the driver name. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverName")]
-    public string? DriverName { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for co-driver IDs. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("codriverIds")]
-    public IReadOnlyList<string>? CodriverIds { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the vehicle ID. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the vehicle name. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("vehicleName")]
-    public string? VehicleName { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the HOS status type. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("hosStatusType")]
-    public string? HosStatusType { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the log start time, in milliseconds UNIX time.
-    /// Retained for backward compatibility with earlier SDK shapes; not part of the
-    /// spec inner schema.
-    /// </summary>
-    [JsonPropertyName("logStartMs")]
-    public long? LogStartMs { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the recorded latitude. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("locLat")]
-    public double? LocLat { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the recorded longitude. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("locLng")]
-    public double? LocLng { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the recorded city. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("locCity")]
-    public string? LocCity { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the recorded state/province. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("locState")]
-    public string? LocState { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the recorded location name. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("locName")]
-    public string? LocName { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the driver's group ID. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("groupId")]
-    public long? GroupId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the entry's remark. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("remark")]
-    public string? Remark { get; init; }
 }
 
 /// <summary>
@@ -216,57 +109,6 @@ public sealed record HosViolation
     /// </summary>
     [JsonPropertyName("violations")]
     public required IReadOnlyList<HosViolationEntry> Violations { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the driver ID. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the driver name. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverName")]
-    public string? DriverName { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the vehicle ID. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the violation type. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("violationType")]
-    public string? ViolationType { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the violation start time in milliseconds UNIX time.
-    /// Retained for backward compatibility with earlier SDK shapes; not part of the
-    /// spec inner schema.
-    /// </summary>
-    [JsonPropertyName("startMs")]
-    public long? StartMs { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the violation end time in milliseconds UNIX time.
-    /// Retained for backward compatibility with earlier SDK shapes; not part of the
-    /// spec inner schema.
-    /// </summary>
-    [JsonPropertyName("endMs")]
-    public long? EndMs { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the violation severity. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("severityType")]
-    public string? SeverityType { get; init; }
 }
 
 /// <summary>
@@ -572,66 +414,6 @@ public sealed record HosDailyLog
     /// </summary>
     [JsonPropertyName("pendingDutyStatusDurations")]
     public HosDailyLogDutyStatusDurations? PendingDutyStatusDurations { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the log ID. Retained for backward compatibility with
-    /// earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the driver ID. Retained alongside the nested
-    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes;
-    /// not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the driver name. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverName")]
-    public string? DriverName { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the vehicle ID. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the vehicle name. Retained for backward compatibility
-    /// with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("vehicleName")]
-    public string? VehicleName { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the certification state. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// Prefer <see cref="HosDailyLogMetaData.IsCertified"/>.
-    /// </summary>
-    [JsonPropertyName("certificationState")]
-    public string? CertificationState { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the calendar date string. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// Prefer <see cref="StartTime"/>/<see cref="EndTime"/>.
-    /// </summary>
-    [JsonPropertyName("date")]
-    public string? Date { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for distance driven in meters. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// Prefer <see cref="HosDailyLogDistanceTraveled.DriveDistanceMeters"/>.
-    /// </summary>
-    [JsonPropertyName("distanceDrivenMeters")]
-    public double? DistanceDrivenMeters { get; init; }
 }
 
 /// <summary>
@@ -859,43 +641,133 @@ public sealed record HosDailyLogVehicle
 }
 
 /// <summary>
-/// Represents an ELD event record from HOS data.
+/// A driver's ELD event history, the response item of
+/// <c>GET /beta/fleet/hos/drivers/eld-events</c>. The individual events are nested
+/// under <see cref="EldEvents"/>.
 /// </summary>
 public sealed record HosEldEvent
 {
+    /// <summary>ID of the driver. Spec-required.</summary>
     [JsonPropertyName("id")]
     public required string Id { get; init; }
 
+    /// <summary>Name of the driver.</summary>
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
+    /// <summary>The driver's ELD activation status.</summary>
     [JsonPropertyName("driverActivationStatus")]
     public string? DriverActivationStatus { get; init; }
 
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
+    /// <summary>External identifiers for the driver.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
+    /// <summary>The driver's ELD events over the requested window.</summary>
+    [JsonPropertyName("eldEvents")]
+    public IReadOnlyList<HosEldEventEntry>? EldEvents { get; init; }
+}
 
-    [JsonPropertyName("eventType")]
-    public string? EventType { get; init; }
+/// <summary>
+/// A single ELD event. Mirrors the spec's <c>HosEldEventObjectResponseBody</c>.
+/// </summary>
+public sealed record HosEldEventEntry
+{
+    /// <summary>The ELD event code. Spec-required.</summary>
+    [JsonPropertyName("eldEventCode")]
+    public int? EldEventCode { get; init; }
 
-    [JsonPropertyName("eventCode")]
-    public string? EventCode { get; init; }
+    /// <summary>The ELD event type. Spec-required.</summary>
+    [JsonPropertyName("eldEventType")]
+    public int? EldEventType { get; init; }
 
-    [JsonPropertyName("eventTime")]
-    public DateTimeOffset? EventTime { get; init; }
+    /// <summary>Time of the event, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")]
+    public string? Time { get; init; }
 
+    /// <summary>The record origin of the event.</summary>
+    [JsonPropertyName("eldEventRecordOrigin")]
+    public int? EldEventRecordOrigin { get; init; }
+
+    /// <summary>The record status of the event.</summary>
+    [JsonPropertyName("eldEventRecordStatus")]
+    public int? EldEventRecordStatus { get; init; }
+
+    /// <summary>Malfunction/diagnostic code, if any.</summary>
+    [JsonPropertyName("malfunctionDiagnosticCode")]
+    public string? MalfunctionDiagnosticCode { get; init; }
+
+    /// <summary>Accumulated vehicle distance, in meters.</summary>
+    [JsonPropertyName("accumulatedVehicleMeters")]
+    public long? AccumulatedVehicleMeters { get; init; }
+
+    /// <summary>Total vehicle distance, in meters.</summary>
+    [JsonPropertyName("totalVehicleMeters")]
+    public long? TotalVehicleMeters { get; init; }
+
+    /// <summary>Elapsed engine hours.</summary>
+    [JsonPropertyName("elapsedEngineHours")]
+    public double? ElapsedEngineHours { get; init; }
+
+    /// <summary>Total engine hours.</summary>
+    [JsonPropertyName("totalEngineHours")]
+    public double? TotalEngineHours { get; init; }
+
+    /// <summary>Location associated with the event.</summary>
+    [JsonPropertyName("location")]
+    public HosEldEventLocation? Location { get; init; }
+
+    /// <summary>Driver-entered remark associated with the event.</summary>
+    [JsonPropertyName("remark")]
+    public HosEldEventRemark? Remark { get; init; }
+
+    /// <summary>The vehicle associated with the event.</summary>
+    [JsonPropertyName("vehicle")]
+    public Samsara.Sdk.Models.Common.EntityReference? Vehicle { get; init; }
+}
+
+/// <summary>
+/// Location of an ELD event. Mirrors the spec's
+/// <c>HosEldEventLocationObjectResponseBody</c>.
+/// </summary>
+public sealed record HosEldEventLocation
+{
+    /// <summary>Latitude in decimal degrees.</summary>
     [JsonPropertyName("latitude")]
     public double? Latitude { get; init; }
 
+    /// <summary>Longitude in decimal degrees.</summary>
     [JsonPropertyName("longitude")]
     public double? Longitude { get; init; }
 
-    [JsonPropertyName("odometer")]
-    public double? Odometer { get; init; }
+    /// <summary>City of the event.</summary>
+    [JsonPropertyName("city")]
+    public string? City { get; init; }
 
-    [JsonPropertyName("engineHours")]
-    public double? EngineHours { get; init; }
+    /// <summary>State of the event.</summary>
+    [JsonPropertyName("state")]
+    public string? State { get; init; }
+
+    /// <summary>ELD-reported location description.</summary>
+    [JsonPropertyName("eldLocation")]
+    public string? EldLocation { get; init; }
+}
+
+/// <summary>
+/// Driver-entered remark on an ELD event. Mirrors the spec's
+/// <c>HosEldEventRemarkObjectResponseBody</c>.
+/// </summary>
+public sealed record HosEldEventRemark
+{
+    /// <summary>The remark comment. Spec-required.</summary>
+    [JsonPropertyName("comment")]
+    public string? Comment { get; init; }
+
+    /// <summary>Location description for the remark. Spec-required.</summary>
+    [JsonPropertyName("locationDescription")]
+    public string? LocationDescription { get; init; }
+
+    /// <summary>Time of the remark, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")]
+    public string? Time { get; init; }
 }

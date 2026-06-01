@@ -1,0 +1,182 @@
+{
+  "AddressesClient.cs": [
+    "Addresses"
+  ],
+  "AlertsClient.cs": [
+    "Alerts"
+  ],
+  "AssetsClient.cs": [
+    "Assets",
+    "Beta APIs",
+    "Legacy",
+    "Location and Speed"
+  ],
+  "AttributesClient.cs": [
+    "Attributes"
+  ],
+  "BetaClient.cs": [
+    "Beta APIs"
+  ],
+  "CarbCtcClient.cs": [
+    "CARB CTC"
+  ],
+  "CarrierProposedAssignmentsClient.cs": [
+    "Carrier Proposed Assignments"
+  ],
+  "CoachingClient.cs": [
+    "Coaching"
+  ],
+  "ComplianceClient.cs": [
+    "Beta APIs",
+    "Hours of Service"
+  ],
+  "ContactsClient.cs": [
+    "Contacts"
+  ],
+  "DocumentsClient.cs": [
+    "Documents"
+  ],
+  "DriverTrailerAssignmentsClient.cs": [
+    "Driver-Trailer Assignments"
+  ],
+  "DriverVehicleAssignmentsClient.cs": [
+    "Driver-Vehicle Assignments"
+  ],
+  "DriversClient.cs": [
+    "Auth Token for Driver",
+    "Beta APIs",
+    "Driver QR Codes",
+    "Drivers"
+  ],
+  "EquipmentClient.cs": [
+    "Beta APIs",
+    "Equipment"
+  ],
+  "FormsClient.cs": [
+    "Forms"
+  ],
+  "FuelClient.cs": [
+    "Fuel and Energy"
+  ],
+  "FunctionsClient.cs": [
+    "Beta APIs"
+  ],
+  "GatewaysClient.cs": [
+    "Gateways"
+  ],
+  "HubsClient.cs": [
+    "Beta APIs",
+    "Hubs",
+    "Plans",
+    "Routes"
+  ],
+  "IdlingClient.cs": [
+    "Idling"
+  ],
+  "IftaClient.cs": [
+    "IFTA"
+  ],
+  "IndustrialClient.cs": [
+    "Industrial"
+  ],
+  "IssuesClient.cs": [
+    "Issues"
+  ],
+  "LegacyApisClient.cs": [
+    "Legacy APIs"
+  ],
+  "LiveSharingLinksClient.cs": [
+    "Live Sharing Links"
+  ],
+  "MaintenanceClient.cs": [
+    "Beta APIs",
+    "Maintenance"
+  ],
+  "MediaClient.cs": [
+    "Media"
+  ],
+  "MessagesClient.cs": [
+    "Messages"
+  ],
+  "OrganizationClient.cs": [
+    "Organization Info"
+  ],
+  "PlacesClient.cs": [
+    "Beta APIs"
+  ],
+  "PreferredStationsClient.cs": [
+    "Beta APIs"
+  ],
+  "PreviewApisClient.cs": [
+    "Preview APIs"
+  ],
+  "QualificationRecordsClient.cs": [
+    "Beta APIs"
+  ],
+  "ReadingsClient.cs": [
+    "Beta APIs",
+    "Readings"
+  ],
+  "ReportsClient.cs": [
+    "Beta APIs"
+  ],
+  "RidershipClient.cs": [
+    "Beta APIs"
+  ],
+  "RouteEventsClient.cs": [
+    "Route Events"
+  ],
+  "RoutesClient.cs": [
+    "Routes"
+  ],
+  "SafetyClient.cs": [
+    "Beta APIs",
+    "Safety",
+    "Safety Scores"
+  ],
+  "SensorsClient.cs": [
+    "Sensors"
+  ],
+  "SettingsClient.cs": [
+    "Settings"
+  ],
+  "TachographClient.cs": [
+    "Beta APIs",
+    "Tachograph (EU Only)"
+  ],
+  "TagsClient.cs": [
+    "Tags"
+  ],
+  "TrailerAssignmentsClient.cs": [
+    "Trailer Assignments"
+  ],
+  "TrailersClient.cs": [
+    "Trailers"
+  ],
+  "TrainingClient.cs": [
+    "TrainingAssignments",
+    "TrainingCourses"
+  ],
+  "TripsClient.cs": [
+    "Trips"
+  ],
+  "UserRolesClient.cs": [
+    "Users"
+  ],
+  "UsersClient.cs": [
+    "Users"
+  ],
+  "VehiclesClient.cs": [
+    "Beta APIs",
+    "Speeding Intervals",
+    "Vehicle Locations",
+    "Vehicle Stats",
+    "Vehicles"
+  ],
+  "WebhooksClient.cs": [
+    "Webhooks"
+  ],
+  "WorkOrdersClient.cs": [
+    "Work Orders"
+  ]
+}

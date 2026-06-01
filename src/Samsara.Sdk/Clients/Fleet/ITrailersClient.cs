@@ -23,11 +23,11 @@ public interface ITrailersClient
     /// Stream the trailer stats feed (<c>GET /fleet/trailers/stats/feed</c>). <paramref name="types"/> is
     /// spec-required.
     /// </summary>
-    IAsyncEnumerable<TrailerStats> GetStatsFeedAsync(string types, string? decorations = null, string? parentTagIds = null, string? tagIds = null, string? trailerIds = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TrailerStatsSample> GetStatsFeedAsync(string types, string? decorations = null, string? parentTagIds = null, string? tagIds = null, string? trailerIds = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get trailer stats history over a time window (<c>GET /fleet/trailers/stats/history</c>).
     /// <paramref name="types"/> is spec-required.
     /// </summary>
-    IAsyncEnumerable<TrailerStats> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, string? decorations = null, string? parentTagIds = null, string? tagIds = null, string? trailerIds = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<TrailerStatsSample> GetStatsHistoryAsync(string types, DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, string? decorations = null, string? parentTagIds = null, string? tagIds = null, string? trailerIds = null, CancellationToken cancellationToken = default);
 }

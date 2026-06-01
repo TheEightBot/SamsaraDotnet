@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 public sealed record AttributeDefinition
 {
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     [JsonPropertyName("name")]
     public string? Name { get; init; }

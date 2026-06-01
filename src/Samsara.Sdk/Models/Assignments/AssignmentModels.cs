@@ -12,29 +12,35 @@ using Samsara.Sdk.Models.Common;
 public sealed record DriverVehicleAssignment
 {
     /// <summary>
-    /// The driver this assignment is for (nested object per spec). Spec-required for GET.
+    /// The driver this assignment is for (nested object). Spec-required on the
+    /// <c>GET</c> list response; null on the <c>POST</c>/<c>PATCH</c> responses, which
+    /// return only <see cref="Message"/>.
     /// </summary>
     [JsonPropertyName("driver")]
-    public required DriverVehicleAssignmentDriver Driver { get; init; }
+    public DriverVehicleAssignmentDriver? Driver { get; init; }
 
     /// <summary>
-    /// The vehicle this assignment is for (nested object per spec). Spec-required for GET.
+    /// The vehicle this assignment is for (nested object). Spec-required on the
+    /// <c>GET</c> list response; null on the <c>POST</c>/<c>PATCH</c> responses, which
+    /// return only <see cref="Message"/>.
     /// </summary>
     [JsonPropertyName("vehicle")]
-    public required DriverVehicleAssignmentVehicle Vehicle { get; init; }
+    public DriverVehicleAssignmentVehicle? Vehicle { get; init; }
 
     /// <summary>
-    /// Indicates whether the driver is a passenger. Spec-required for GET.
+    /// Indicates whether the driver is a passenger. Spec-required on the <c>GET</c> list
+    /// response; null on the <c>POST</c>/<c>PATCH</c> responses.
     /// </summary>
     [JsonPropertyName("isPassenger")]
-    public required bool IsPassenger { get; init; }
+    public bool? IsPassenger { get; init; }
 
     /// <summary>
     /// Start time of the assignment in RFC 3339 format (e.g., <c>2019-06-13T19:08:25Z</c>).
-    /// Spec-required for GET.
+    /// Spec-required on the <c>GET</c> list response; null on the <c>POST</c>/<c>PATCH</c>
+    /// responses.
     /// </summary>
     [JsonPropertyName("startTime")]
-    public required DateTimeOffset StartTime { get; init; }
+    public DateTimeOffset? StartTime { get; init; }
 
     /// <summary>
     /// Time at which the assignment was made, in RFC 3339 format. Optional.
@@ -69,45 +75,6 @@ public sealed record DriverVehicleAssignment
     /// </summary>
     [JsonPropertyName("message")]
     public string? Message { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's Samsara ID. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's driver ID. Retained alongside the nested
-    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's driver name. Retained alongside the nested
-    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverName")]
-    public string? DriverName { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's vehicle ID. Retained alongside the nested
-    /// <see cref="Vehicle"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's vehicle name. Retained alongside the nested
-    /// <see cref="Vehicle"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("vehicleName")]
-    public string? VehicleName { get; init; }
 }
 
 /// <summary>
@@ -341,38 +308,6 @@ public sealed record CarrierProposedAssignment
     /// <summary>The trailers proposed to the driver (nested array per spec).</summary>
     [JsonPropertyName("trailers")]
     public IReadOnlyList<CarrierProposedAssignmentTrailer>? Trailers { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's driver ID. Retained alongside the nested
-    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's driver name. Retained alongside the nested
-    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverName")]
-    public string? DriverName { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's vehicle ID. Retained alongside the nested
-    /// <see cref="Vehicle"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's vehicle name. Retained alongside the nested
-    /// <see cref="Vehicle"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("vehicleName")]
-    public string? VehicleName { get; init; }
 }
 
 /// <summary>
@@ -500,16 +435,22 @@ public sealed record DriverTrailerAssignment
     public required string Id { get; init; }
 
     /// <summary>
-    /// The driver this assignment is for (nested object per spec). Spec-required.
+    /// The driver this assignment is for, as a nested object. Returned by
+    /// <c>GET /driver-trailer-assignments</c> (where the spec marks it required); the
+    /// <c>POST</c>/<c>PATCH</c> responses instead carry the flat <see cref="DriverId"/>
+    /// scalar and omit this object, so it is nullable on the shared record.
     /// </summary>
     [JsonPropertyName("driver")]
-    public required DriverTrailerAssignmentDriver Driver { get; init; }
+    public DriverTrailerAssignmentDriver? Driver { get; init; }
 
     /// <summary>
-    /// The trailer this assignment is for (nested object per spec). Spec-required.
+    /// The trailer this assignment is for, as a nested object. Returned by
+    /// <c>GET /driver-trailer-assignments</c> (where the spec marks it required); the
+    /// <c>POST</c>/<c>PATCH</c> responses instead carry the flat <see cref="TrailerId"/>
+    /// scalar and omit this object, so it is nullable on the shared record.
     /// </summary>
     [JsonPropertyName("trailer")]
-    public required DriverTrailerAssignmentTrailer Trailer { get; init; }
+    public DriverTrailerAssignmentTrailer? Trailer { get; init; }
 
     /// <summary>
     /// Time when the driver-trailer assignment starts, in RFC 3339 format
@@ -538,42 +479,22 @@ public sealed record DriverTrailerAssignment
     public string? UpdatedAtTime { get; init; }
 
     /// <summary>
-    /// Convenience accessor for the assignment's driver ID. Retained alongside the nested
-    /// <see cref="Driver"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
+    /// The assignment's driver ID as a flat scalar. Returned by the
+    /// <c>POST</c>/<c>PATCH /driver-trailer-assignments</c> responses (which omit the nested
+    /// <see cref="Driver"/> object); null on the <c>GET</c> list response, which nests the
+    /// driver under <see cref="Driver"/> instead.
     /// </summary>
     [JsonPropertyName("driverId")]
     public string? DriverId { get; init; }
 
     /// <summary>
-    /// Convenience accessor for the assignment's driver name. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("driverName")]
-    public string? DriverName { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's trailer ID. Retained alongside the nested
-    /// <see cref="Trailer"/> object for backward compatibility with earlier SDK shapes; not
-    /// part of the spec inner schema.
+    /// The assignment's trailer ID as a flat scalar. Returned by the
+    /// <c>POST</c>/<c>PATCH /driver-trailer-assignments</c> responses (which omit the nested
+    /// <see cref="Trailer"/> object); null on the <c>GET</c> list response, which nests the
+    /// trailer under <see cref="Trailer"/> instead.
     /// </summary>
     [JsonPropertyName("trailerId")]
     public string? TrailerId { get; init; }
-
-    /// <summary>
-    /// Convenience accessor for the assignment's trailer name. Retained for backward
-    /// compatibility with earlier SDK shapes; not part of the spec inner schema.
-    /// </summary>
-    [JsonPropertyName("trailerName")]
-    public string? TrailerName { get; init; }
-
-    /// <summary>
-    /// Legacy assignment timestamp. Retained for backward compatibility with earlier SDK
-    /// shapes; not part of the spec inner schema. Prefer <see cref="StartTime"/> /
-    /// <see cref="EndTime"/> / <see cref="CreatedAtTime"/> / <see cref="UpdatedAtTime"/>.
-    /// </summary>
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
 }
 
 /// <summary>

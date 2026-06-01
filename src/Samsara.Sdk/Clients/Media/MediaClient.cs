@@ -18,7 +18,9 @@ internal sealed class MediaClient : SamsaraServiceClientBase, IMediaClient
         IReadOnlyList<string>? triggerReasons = null,
         string? availableAfterTime = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<MediaFile>(
+        // GET /cameras/media returns { data: { media: [...] }, pagination: {...} } — the
+        // item array is nested under data.media, not data itself, so project it out.
+        => PaginateAsync<MediaListResponse, MediaFile>(
             QueryBuilder.WithParams(
                 BasePath,
                 ("vehicleIds", vehicleIds),
@@ -28,12 +30,19 @@ internal sealed class MediaClient : SamsaraServiceClientBase, IMediaClient
                 ("mediaTypes", mediaTypes is null ? null : string.Join(",", mediaTypes)),
                 ("triggerReasons", triggerReasons is null ? null : string.Join(",", triggerReasons)),
                 ("availableAfterTime", availableAfterTime)),
+            static data => data.Media,
             cancellationToken: cancellationToken);
 
-    public Task<MediaRetrieval> GetRetrievalAsync(string retrievalId, CancellationToken cancellationToken = default)
-        => HttpClient.GetDataAsync<MediaRetrieval>(
+    public async Task<IReadOnlyList<MediaRetrieval>> GetRetrievalAsync(string retrievalId, CancellationToken cancellationToken = default)
+    {
+        // GET /cameras/media/retrieval returns { data: { media: [...] } } — unwrap the
+        // { data } envelope, then return the nested media array.
+        var response = await HttpClient.GetDataAsync<MediaRetrievalListResponse>(
             QueryBuilder.WithParams("cameras/media/retrieval", ("retrievalId", retrievalId)),
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
+
+        return response.Media;
+    }
 
     public Task<MediaRetrieval> CreateRetrievalAsync(CreateMediaRetrievalRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<MediaRetrieval>("cameras/media/retrieval", request, cancellationToken);

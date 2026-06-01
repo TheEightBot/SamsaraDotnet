@@ -90,19 +90,68 @@ This folder contains a checklist per API domain for tracking the sync state betw
 
 ### Running the Sync Check Locally
 
-```bash
-# Fetch the latest spec and compare against checklists
-python3 tools/check-api-sync.py
+Four complementary checkers guard four different failure modes. **All four must be
+green** — each is blind to what the others catch:
 
-# Check against a specific spec version
-python3 tools/check-api-sync.py --spec-url https://developers.samsara.com/openapi/samsara-api.json
+```bash
+# 1. SPEC DRIFT — does the live spec differ from our cached baseline?
+#    (new/removed/changed endpoints + schema additions/removals)
+python3 tools/check-api-sync.py            # writes docs/api-sync/diff-report.md
+
+# 2. COVERAGE — does every SDK path exist in the spec, and is every spec op implemented?
+python3 tools/check-sdk-sync.py --fail-on-mismatch
+
+# 3. FABRICATION / MIS-HOMING — does every SDK method map to a DISTINCT, correctly-homed
+#    spec op? Catches the Hubs-class bug (a method pointed at another domain's path, e.g.
+#    HubsClient CRUD secretly hitting /addresses) that COVERAGE reports as "0 mismatches".
+python3 tools/check-sdk-fabrication.py --fail-on-issues
+
+# 4. MODEL PARITY — do SDK record *shapes* match the spec request/response bodies,
+#    property by property (matched by endpoint, not by type name)? Gates CRITICAL+HIGH;
+#    reports MEDIUM/LOW (optional fields, extras, weak typing) as the known backlog.
+python3 tools/check-model-sync.py --fail-on-severity HIGH
 ```
 
-The script outputs:
-- New endpoints added since last check
-- Removed/deprecated endpoints
-- Changed parameter signatures
-- A summary diff report at `docs/api-sync/diff-report.md`
+Why four? Each catches what the previous is structurally blind to:
+- `check-sdk-sync.py` dedups SDK endpoints by `(verb, path)`, so a method mis-homed to a
+  *real* path in another domain is counted as coverage and never flagged.
+- `check-sdk-fabrication.py` adds the reverse check: **duplicate coverage** (one spec op
+  reached from >1 client file) and **client↔tag drift** (a method reaching a spec tag outside
+  its client's committed allow-set in `tools/sdk-client-tags.json`). After an intentional new
+  cross-domain method, refresh the allow-set with `--update-tags` and review the diff.
+- `check-model-sync.py` goes one level deeper than paths: it compares the C# record
+  *properties* the SDK sends/receives against the spec schema the endpoint actually
+  uses (unwrapping the `{ data: … }` envelope). It is what keeps models from silently
+  rotting as the spec mutates. CRITICAL = wrapper-shape mismatch; HIGH = missing/required
+  drift on a required field or required query param; MEDIUM/LOW = optional fields, extras,
+  intentional flattening, weak `object?` typing (the deferred backlog). Beta endpoints are
+  capped at MEDIUM.
+
+### Spec-drift detection & baseline discipline
+
+Samsara ships spec changes **without bumping `info.version`** — the live spec has been
+`2025-10-23` for months while its content (schemas, fields, descriptions) keeps moving. So
+`check-api-sync.py` does not trust the version string:
+
+- It diffs the live spec against the cached baseline (`.github/cache/samsara-api-baseline.json`)
+  at three levels: **endpoints** (added/removed/changed operations & params), **schemas by name**
+  (added/removed), and **schema properties** (fields and `required`-set added/removed on schemas
+  present in both — the model-drift signal a name-only diff misses).
+- It prints a **content fingerprint** (op count, schema count, short content hash). When the hash
+  moves but the version string doesn't, the report flags *"⚠️ Spec content changed under the same
+  `info.version`"* so a cosmetic-looking "no version change" can't hide real drift.
+
+**Baseline-refresh discipline** — the baseline is the spec the SDK has been reconciled against, so
+refreshing it is a deliberate, reviewed act, never automatic:
+
+1. Run `python3 tools/check-api-sync.py` (writes `docs/api-sync/diff-report.md`).
+2. Review the report. Implement each structural change in the SDK (let `check-model-sync.py`
+   confirm the records match), updating the relevant `NN-*.md` checklist and `CHANGELOG.md`.
+3. **Only after the SDK is reconciled**, refresh the baseline with
+   `python3 tools/check-api-sync.py --update-baseline`. Refreshing *before* reconciling silently
+   swallows the drift and makes the next diff lie.
+4. A content-hash move with **no structural diff** is usually description/example churn — safe to
+   absorb with `--update-baseline`, but note it in the refresh commit so the move stays auditable.
 
 ### Updating Checklists After Implementation
 

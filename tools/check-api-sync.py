@@ -23,6 +23,7 @@ Exit codes:
 """
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -164,13 +165,68 @@ def diff_endpoints(old: dict, new: dict) -> dict:
     }
 
 
-def diff_schemas(old: dict, new: dict) -> dict:
-    """Compare schema (component) keys between two specs."""
-    old_schemas = set(old.get("components", {}).get("schemas", {}).keys())
-    new_schemas = set(new.get("components", {}).get("schemas", {}).keys())
+def _schema_fingerprint(schema: dict) -> dict:
+    """Shallow property-name + required-set fingerprint for a single schema."""
+    props = schema.get("properties")
     return {
-        "added": sorted(new_schemas - old_schemas),
-        "removed": sorted(old_schemas - new_schemas),
+        "props": set(props.keys()) if isinstance(props, dict) else set(),
+        "required": set(schema.get("required", []) or []),
+    }
+
+
+def diff_schemas(old: dict, new: dict) -> dict:
+    """Compare component schemas between two specs.
+
+    Reports schemas added/removed by name, AND — for schemas present in both —
+    property additions/removals and required-set changes. The latter is the
+    model-drift signal that a name-only diff misses: Samsara frequently adds a
+    field to an existing schema (or flips its required-ness) WITHOUT bumping
+    info.version, which silently rots the hand-written SDK records.
+    """
+    old_s = old.get("components", {}).get("schemas", {})
+    new_s = new.get("components", {}).get("schemas", {})
+    old_keys, new_keys = set(old_s), set(new_s)
+
+    changed: dict[str, dict] = {}
+    for name in old_keys & new_keys:
+        o = _schema_fingerprint(old_s[name])
+        n = _schema_fingerprint(new_s[name])
+        delta = {
+            "added_props": sorted(n["props"] - o["props"]),
+            "removed_props": sorted(o["props"] - n["props"]),
+            "added_required": sorted(n["required"] - o["required"]),
+            "removed_required": sorted(o["required"] - n["required"]),
+        }
+        if any(delta.values()):
+            changed[name] = delta
+
+    return {
+        "added": sorted(new_keys - old_keys),
+        "removed": sorted(old_keys - new_keys),
+        "changed": changed,
+    }
+
+
+def content_fingerprint(spec: dict) -> dict:
+    """Counts + a short content hash of the parts the SDK depends on.
+
+    Lets a reviewer see at a glance that the spec content moved even when
+    info.version is frozen (Samsara mutates the 2025-10-23 spec in place).
+    """
+    paths = spec.get("paths", {})
+    ops = sum(
+        1
+        for methods in paths.values()
+        for m in methods
+        if m in ("get", "post", "put", "patch", "delete")
+    )
+    schemas = spec.get("components", {}).get("schemas", {})
+    canonical = json.dumps({"paths": paths, "schemas": schemas}, sort_keys=True)
+    return {
+        "paths": len(paths),
+        "ops": ops,
+        "schemas": len(schemas),
+        "hash": hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:12],
     }
 
 
@@ -180,6 +236,8 @@ def format_report(
     endpoint_diff: dict,
     schema_diff: dict,
     timestamp: str,
+    old_fp: dict | None = None,
+    new_fp: dict | None = None,
 ) -> str:
     """Render a Markdown diff report."""
     added = endpoint_diff["added"]
@@ -187,9 +245,10 @@ def format_report(
     changed = endpoint_diff["changed"]
     dep_added = endpoint_diff["deprecated_added"]
     dep_removed = endpoint_diff["deprecated_removed"]
+    schema_changed = schema_diff.get("changed", {})
 
     total_changes = len(added) + len(removed) + len(changed) + len(dep_added)
-    schema_changes = len(schema_diff["added"]) + len(schema_diff["removed"])
+    schema_changes = len(schema_diff["added"]) + len(schema_diff["removed"]) + len(schema_changed)
 
     lines = [
         "# Samsara API Sync Diff Report",
@@ -199,8 +258,18 @@ def format_report(
         f"> **New version**: `{new_version}`  ",
         f"> **Endpoint changes**: {total_changes}  ",
         f"> **Schema changes**: {schema_changes}  ",
-        "",
     ]
+    if old_fp and new_fp:
+        moved = old_fp["hash"] != new_fp["hash"]
+        content = (
+            f"> **Content**: {old_fp['ops']}→{new_fp['ops']} ops, "
+            f"{old_fp['schemas']}→{new_fp['schemas']} schemas, "
+            f"hash `{old_fp['hash']}`→`{new_fp['hash']}`  "
+        )
+        if old_version == new_version and moved:
+            content += "\n> ⚠️ **Spec content changed under the same `info.version`** — model drift is possible.  "
+        lines.append(content)
+    lines.append("")
 
     if total_changes == 0 and schema_changes == 0:
         lines += [
@@ -261,7 +330,7 @@ def format_report(
         lines.append("")
 
     # Schema changes
-    if schema_diff["added"] or schema_diff["removed"]:
+    if schema_diff["added"] or schema_diff["removed"] or schema_changed:
         lines += [f"## 📦 Schema Changes ({schema_changes})", ""]
         if schema_diff["added"]:
             lines.append(f"**Added schemas** ({len(schema_diff['added'])}):")
@@ -276,6 +345,28 @@ def format_report(
                 lines.append(f"- `{s}`")
             if len(schema_diff["removed"]) > 50:
                 lines.append(f"- *(and {len(schema_diff['removed']) - 50} more...)*")
+            lines.append("")
+        if schema_changed:
+            lines.append(
+                f"**Changed schemas** ({len(schema_changed)}) — property / required-set deltas "
+                "on schemas present in both versions (the model-drift signal):"
+            )
+            for name in sorted(schema_changed)[:60]:
+                d = schema_changed[name]
+                parts = []
+                if d["added_props"]:
+                    shown = ", ".join(f"`{p}`" for p in d["added_props"][:8])
+                    parts.append("+props " + shown + ("…" if len(d["added_props"]) > 8 else ""))
+                if d["removed_props"]:
+                    shown = ", ".join(f"`{p}`" for p in d["removed_props"][:8])
+                    parts.append("−props " + shown + ("…" if len(d["removed_props"]) > 8 else ""))
+                if d["added_required"]:
+                    parts.append("+required " + ", ".join(f"`{p}`" for p in d["added_required"]))
+                if d["removed_required"]:
+                    parts.append("−required " + ", ".join(f"`{p}`" for p in d["removed_required"]))
+                lines.append(f"- `{name}`: " + "; ".join(parts))
+            if len(schema_changed) > 60:
+                lines.append(f"- *(and {len(schema_changed) - 60} more...)*")
             lines.append("")
 
     lines += [
@@ -341,6 +432,8 @@ def main() -> None:
     new_endpoints = extract_endpoints(new_spec)
     endpoint_diff = diff_endpoints(old_endpoints, new_endpoints)
     schema_diff = diff_schemas(old_spec, new_spec)
+    old_fp = content_fingerprint(old_spec)
+    new_fp = content_fingerprint(new_spec)
 
     total_ep_changes = (
         len(endpoint_diff["added"])
@@ -348,10 +441,22 @@ def main() -> None:
         + len(endpoint_diff["changed"])
         + len(endpoint_diff["deprecated_added"])
     )
-    total_schema_changes = len(schema_diff["added"]) + len(schema_diff["removed"])
+    total_schema_changes = (
+        len(schema_diff["added"])
+        + len(schema_diff["removed"])
+        + len(schema_diff["changed"])
+    )
+
+    if old_version == new_version and old_fp["hash"] != new_fp["hash"]:
+        print(
+            f"NOTE: spec content changed but info.version is unchanged ({new_version}); "
+            f"hash {old_fp['hash']} → {new_fp['hash']}"
+        )
 
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    report = format_report(old_version, new_version, endpoint_diff, schema_diff, timestamp)
+    report = format_report(
+        old_version, new_version, endpoint_diff, schema_diff, timestamp, old_fp, new_fp
+    )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
@@ -369,6 +474,7 @@ def main() -> None:
         print(f"   Newly deprecated:  {len(endpoint_diff['deprecated_added'])}")
         print(f"   Schema additions:  {len(schema_diff['added'])}")
         print(f"   Schema removals:   {len(schema_diff['removed'])}")
+        print(f"   Schema changed:    {len(schema_diff['changed'])}")
     else:
         print("\n✅ No changes detected.")
 

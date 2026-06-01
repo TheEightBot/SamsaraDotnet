@@ -120,20 +120,6 @@ public sealed record SafetyEvent
     /// </summary>
     [JsonPropertyName("updatedByUserId")]
     public string? UpdatedByUserId { get; init; }
-
-    /// <summary>
-    /// Vehicle reference (legacy flat shape, retained for back-compat). The spec models the
-    /// reporting asset under <see cref="Asset"/>.
-    /// </summary>
-    [JsonPropertyName("vehicle")]
-    public SafetyEventVehicle? Vehicle { get; init; }
-
-    /// <summary>
-    /// Event time (legacy flat shape, retained for back-compat). The spec models event timing
-    /// under <see cref="StartMs"/>/<see cref="EndMs"/>.
-    /// </summary>
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
 }
 
 /// <summary>
@@ -182,18 +168,6 @@ public sealed record SafetyEventAsset
     /// <summary>A map of external IDs.</summary>
     [JsonPropertyName("externalIds")]
     public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
-}
-
-/// <summary>
-/// Vehicle reference within a safety event (legacy flat shape, retained for back-compat).
-/// </summary>
-public sealed record SafetyEventVehicle
-{
-    [JsonPropertyName("id")]
-    public string? Id { get; init; }
-
-    [JsonPropertyName("name")]
-    public string? Name { get; init; }
 }
 
 /// <summary>
@@ -500,66 +474,6 @@ public sealed record VehicleSafetyScore
     /// <summary>Total time driven over the time range, in milliseconds. Spec-required.</summary>
     [JsonPropertyName("driveTimeMilliseconds")]
     public required long DriveTimeMilliseconds { get; init; }
-
-    /// <summary>
-    /// Composite safety score (legacy flat shape, retained for back-compat). The spec models the
-    /// vehicle score under <see cref="VehicleScore"/>.
-    /// </summary>
-    [JsonPropertyName("safetyScore")]
-    public double? SafetyScore { get; init; }
-
-    /// <summary>
-    /// Total harsh event count (legacy flat shape, retained for back-compat). The spec models
-    /// behavior counts under <see cref="Behaviors"/>.
-    /// </summary>
-    [JsonPropertyName("totalHarshEventCount")]
-    public int? TotalHarshEventCount { get; init; }
-
-    /// <summary>
-    /// Total time driven in milliseconds (legacy flat shape, retained for back-compat). The spec
-    /// models this under <see cref="DriveTimeMilliseconds"/>.
-    /// </summary>
-    [JsonPropertyName("totalTimeDrivenMs")]
-    public long? TotalTimeDrivenMs { get; init; }
-
-    /// <summary>
-    /// Total distance driven in meters (legacy flat shape, retained for back-compat). The spec
-    /// models this under <see cref="DriveDistanceMeters"/>.
-    /// </summary>
-    [JsonPropertyName("totalDistanceDrivenMeters")]
-    public double? TotalDistanceDrivenMeters { get; init; }
-
-    /// <summary>Time range (legacy flat shape, retained for back-compat). Not modeled by the spec.</summary>
-    [JsonPropertyName("timeRange")]
-    public TimeRange? TimeRange { get; init; }
-
-    /// <summary>
-    /// Crash count (legacy flat shape, retained for back-compat). The spec models behavior counts
-    /// under <see cref="Behaviors"/>.
-    /// </summary>
-    [JsonPropertyName("crashCount")]
-    public int? CrashCount { get; init; }
-
-    /// <summary>
-    /// Harsh acceleration count (legacy flat shape, retained for back-compat). The spec models
-    /// behavior counts under <see cref="Behaviors"/>.
-    /// </summary>
-    [JsonPropertyName("harshAccelCount")]
-    public int? HarshAccelCount { get; init; }
-
-    /// <summary>
-    /// Harsh braking count (legacy flat shape, retained for back-compat). The spec models behavior
-    /// counts under <see cref="Behaviors"/>.
-    /// </summary>
-    [JsonPropertyName("harshBrakingCount")]
-    public int? HarshBrakingCount { get; init; }
-
-    /// <summary>
-    /// Harsh turning count (legacy flat shape, retained for back-compat). The spec models behavior
-    /// counts under <see cref="Behaviors"/>.
-    /// </summary>
-    [JsonPropertyName("harshTurningCount")]
-    public int? HarshTurningCount { get; init; }
 }
 
 /// <summary>
@@ -591,50 +505,6 @@ public sealed record DriverSafetyScore
     /// <summary>Total time driven over the time range, in milliseconds. Spec-required.</summary>
     [JsonPropertyName("driveTimeMilliseconds")]
     public required long DriveTimeMilliseconds { get; init; }
-
-    /// <summary>
-    /// Composite safety score (legacy flat shape, retained for back-compat). The spec models the
-    /// driver score under <see cref="DriverScore"/>.
-    /// </summary>
-    [JsonPropertyName("safetyScore")]
-    public double? SafetyScore { get; init; }
-
-    /// <summary>
-    /// Total harsh event count (legacy flat shape, retained for back-compat). The spec models
-    /// behavior counts under <see cref="Behaviors"/>.
-    /// </summary>
-    [JsonPropertyName("totalHarshEventCount")]
-    public int? TotalHarshEventCount { get; init; }
-
-    /// <summary>
-    /// Total time driven in milliseconds (legacy flat shape, retained for back-compat). The spec
-    /// models this under <see cref="DriveTimeMilliseconds"/>.
-    /// </summary>
-    [JsonPropertyName("totalTimeDrivenMs")]
-    public long? TotalTimeDrivenMs { get; init; }
-
-    /// <summary>
-    /// Total distance driven in meters (legacy flat shape, retained for back-compat). The spec
-    /// models this under <see cref="DriveDistanceMeters"/>.
-    /// </summary>
-    [JsonPropertyName("totalDistanceDrivenMeters")]
-    public double? TotalDistanceDrivenMeters { get; init; }
-
-    /// <summary>Time range (legacy flat shape, retained for back-compat). Not modeled by the spec.</summary>
-    [JsonPropertyName("timeRange")]
-    public TimeRange? TimeRange { get; init; }
-}
-
-/// <summary>
-/// A time range used for safety score calculations (legacy flat shape, retained for back-compat).
-/// </summary>
-public sealed record TimeRange
-{
-    [JsonPropertyName("startTime")]
-    public DateTimeOffset? StartTime { get; init; }
-
-    [JsonPropertyName("endTime")]
-    public DateTimeOffset? EndTime { get; init; }
 }
 
 /// <summary>
@@ -666,28 +536,6 @@ public sealed record TagSafetyScore
     /// <summary>Total time driven over the time range, in milliseconds. Spec-required.</summary>
     [JsonPropertyName("driveTimeMilliseconds")]
     public required long DriveTimeMilliseconds { get; init; }
-
-    /// <summary>Name of the tag (legacy flat shape, retained for back-compat). Not modeled by the spec.</summary>
-    [JsonPropertyName("tagName")]
-    public string? TagName { get; init; }
-
-    /// <summary>
-    /// Composite safety score (legacy flat shape, retained for back-compat). The spec models the
-    /// tag score under <see cref="TagScore"/>.
-    /// </summary>
-    [JsonPropertyName("safetyScore")]
-    public double? SafetyScore { get; init; }
-
-    /// <summary>
-    /// Total harsh event count (legacy flat shape, retained for back-compat). The spec models
-    /// behavior counts under <see cref="Behaviors"/>.
-    /// </summary>
-    [JsonPropertyName("totalHarshEventCount")]
-    public int? TotalHarshEventCount { get; init; }
-
-    /// <summary>Time range (legacy flat shape, retained for back-compat). Not modeled by the spec.</summary>
-    [JsonPropertyName("timeRange")]
-    public TimeRange? TimeRange { get; init; }
 }
 
 /// <summary>
@@ -715,35 +563,6 @@ public sealed record TagGroupSafetyScore
     /// <summary>Total time driven over the time range, in milliseconds. Spec-required.</summary>
     [JsonPropertyName("driveTimeMilliseconds")]
     public required long DriveTimeMilliseconds { get; init; }
-
-    /// <summary>
-    /// ID of the tag group (legacy flat shape, retained for back-compat). Not modeled by the
-    /// spec's <c>TagGroupSafetyScoreResponseBody</c>.
-    /// </summary>
-    [JsonPropertyName("tagGroupId")]
-    public string? TagGroupId { get; init; }
-
-    /// <summary>Name of the tag group (legacy flat shape, retained for back-compat). Not modeled by the spec.</summary>
-    [JsonPropertyName("tagGroupName")]
-    public string? TagGroupName { get; init; }
-
-    /// <summary>
-    /// Composite safety score (legacy flat shape, retained for back-compat). The spec models the
-    /// combined score under <see cref="CombinedScore"/>.
-    /// </summary>
-    [JsonPropertyName("safetyScore")]
-    public double? SafetyScore { get; init; }
-
-    /// <summary>
-    /// Total harsh event count (legacy flat shape, retained for back-compat). The spec models
-    /// behavior counts under <see cref="Behaviors"/>.
-    /// </summary>
-    [JsonPropertyName("totalHarshEventCount")]
-    public int? TotalHarshEventCount { get; init; }
-
-    /// <summary>Time range (legacy flat shape, retained for back-compat). Not modeled by the spec.</summary>
-    [JsonPropertyName("timeRange")]
-    public TimeRange? TimeRange { get; init; }
 }
 
 /// <summary>

@@ -7,8 +7,578 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-01
+
+> ### ⚠️ Migration to v0.3.0 — breaking changes summary
+>
+> This release batches the full endpoint + model sync to the live `2025-10-23` spec. All the
+> breaking changes below land **once** (nothing here shipped in `v0.2.x`). Detailed per-item notes
+> are in the dated entries further down; this is the at-a-glance migration list.
+>
+> **Removed / renamed methods & request types**
+> - `IHubsClient`: removed `GetAsync`/`CreateAsync`/`UpdateAsync`/`DeleteAsync` and the
+>   `CreateHubRequest`/`UpdateHubRequest` types — the spec has no hub CRUD (only `GET /hubs`). Use
+>   `client.Addresses` for `/addresses` CRUD. `Hubs.ListAsync` now calls `GET /hubs`.
+> - `IMediaClient.GetRetrievalAsync` now returns `IReadOnlyList<MediaRetrieval>` (was a single
+>   `MediaRetrieval`) — the endpoint returns the retrieved-media array.
+> - `IWorkOrdersClient.DeleteWorkOrdersAsync` takes a single `string id` (was `string[] ids`).
+>
+> **Response record type splits** (time-series endpoints silently lost data before this)
+> - `VehicleStats` / `TrailerStats` / `EquipmentStats` now model the snapshot shape; the
+>   `…/stats/feed` and `…/stats/history` methods return new `VehicleStatsSample` /
+>   `TrailerStatsSample` / `EquipmentStatsSample` records whose metric fields are **arrays** of
+>   timestamped points. Re-point feed/history call sites to the `*Sample` types.
+>
+> **Required-ness changes**
+> - Request: `CreateTagRequest.Name` is now `required`; some `Create*Request` records gained
+>   spec-required fields. Response: spec-required fields tightened to non-null (e.g.
+>   `Webhook.SecretKey/Name/Url/Version`), and over-tightened fields **relaxed to nullable** to match
+>   the spec (e.g. `Driver.Id/Name`) — relaxation prevents the deserialization throw the tightened
+>   `Hub` record hit. Code assuming non-null on a now-nullable field needs a null-check.
+>
+> **Removed spec-absent properties** — back-compat/denormalized fields not in the spec were removed
+> across many records (e.g. `FormTemplate.Name`/`Revision` → use `Title`/`RevisionId`; flat
+> `*Id`/`*Name` scalars superseded by nested objects). The spec-shaped replacement is noted in each
+> per-domain entry.
+>
+> **New**: `IPlacesClient.GetDeletionsAsync` (`GET /places/deletions`); full endpoint parity (319/319).
+
+### Tests
+
+- **Contract + client test layer for the Phase 3 model rework (2026-06-01)** — added 39 tests
+  across 16 new test classes, lifting the unit suite from 63 → 102 passing. **Contract tests**
+  (25 tests) construct realistic wire-shape payloads and assert the reworked records bind
+  correctly: the vehicle/trailer/equipment **stats snapshot-vs-time-series split** (singular
+  `engineState`/`gps` objects on the snapshot endpoints vs. `engineStates`/`gps`/`fuelPercents`
+  **arrays** on the feed/history endpoints — the silent-data-loss fix); the v2 `trips/stream`
+  typed `Trip.asset`/`TripLocation` vs. the legacy v1 `{ trips: [...] }` wrapper; `FormTemplate`
+  binding `title`/`revisionId` (not `name`); typed `FormSubmission`, `SafetyEvent`, HOS
+  (`HosLog`/`HosViolation`/`HosDailyLog`), `SafetySettings`/`DriverAppSettings`, and
+  `MaintenanceDvir`/`DefectRecord` nested records; the relaxed `Driver` model deserializing a
+  payload that omits `id`/`name`; and `CreateTagRequest` serializing its required `name`.
+  **Unit-coverage tests** (14 tests) add path/verb/query-param assertions for six previously
+  untested high-traffic clients: Routes, Hubs, Trailers, Drivers, Documents, and Coaching.
+
+### Added
+
+- **Schema-level spec-drift detection (2026-06-01)** — `tools/check-api-sync.py` now diffs the
+  spec at the **property level**, not just endpoint/schema-name level: for schemas present in both
+  the live spec and the cached baseline it reports fields and `required`-set entries added/removed
+  (the model-drift signal a name-only diff misses). It also prints a **content fingerprint** (op
+  count, schema count, short content hash) and flags *"⚠️ Spec content changed under the same
+  `info.version`"* when the hash moves without a version bump — Samsara mutates the `2025-10-23`
+  spec in place, which previously hid drift. Documented baseline-refresh discipline in
+  `docs/api-sync/README.md`. See `full-sync-completion-plan-2026-05-29.md` (Phase 4).
+- **Model-parity checker (2026-05-29)** — new `tools/check-model-sync.py` codifies the
+  one-time 2026-05-27 property-level audit into a reproducible, CI-gated tool. It compares
+  SDK record *shapes* against the live spec request/response bodies **property by property,
+  matched by endpoint** (unwrapping the `{ data: … }` envelope; resolving the schema the
+  endpoint actually uses, not by type name). Severity: CRITICAL = wrapper-shape mismatch,
+  HIGH = missing/required-drift on a required field or required query param, MEDIUM/LOW =
+  optional fields / extras / intentional flattening / weak `object?` typing (Beta capped at
+  MEDIUM). Gated per-PR in `ci.yml` at `--fail-on-severity HIGH`; full MEDIUM/LOW backlog
+  reported weekly. Current state on `main`: **0 CRITICAL, 0 HIGH**, 162 MEDIUM, 448 LOW
+  (the deferred extra-property / optional-field backlog). See
+  `docs/api-sync/full-sync-completion-plan-2026-05-29.md` (Phase 2).
+- **Fabrication / mis-homing checker (2026-05-29)** — new `tools/check-sdk-fabrication.py`
+  closes the blind spot that let the Hubs bug ship: `check-sdk-sync.py` dedups SDK endpoints
+  by `(verb, path)`, so a method mis-homed to another domain's *real* path is counted as
+  coverage and reported as `0 mismatches`. The new checker verifies the reverse property —
+  every SDK method maps to a **distinct, correctly-homed** spec op — via two signals:
+  **duplicate coverage** (one spec op reached from >1 client file) and **client↔tag drift**
+  (a method reaching a spec tag outside its client's committed allow-set in
+  `tools/sdk-client-tags.json`). Proven against the real pre-fix Hubs code (flags all 5
+  duplicate + 5 tag-drift instances); clean on `main`. Gated per-PR in `ci.yml` and reported
+  in the weekly `api-sync-check.yml`. A repo-wide sweep confirmed **Hubs was the only
+  offender**. See `docs/api-sync/full-sync-completion-plan-2026-05-29.md` (Phase 1).
+- **Places: `GET /places/deletions` (2026-05-29)** — added `IPlacesClient.GetDeletionsAsync()`
+  (operationId `getPlaceDeletions`, beta) to poll soft-deleted places, closing the last
+  endpoint-coverage gap (`check-sdk-sync.py` now reports `missing=0` against the live spec).
+  Introduces a typed `Samsara.Sdk.Models.Beta.PlaceDeletionMarker` (`id` + `deletedAtTime`
+  required, optional `externalIds`) — the first typed model on the otherwise weakly-typed Beta
+  surface — registered in `SamsaraJsonContext`. Additive (no breaking changes). Refreshed the
+  cached spec baseline to `2025-10-23` (absorbing the +13 Places-deletion schemas) so
+  `diff-report.md` reads clean. See `docs/api-sync/full-sync-completion-plan-2026-05-29.md`
+  (Phase 0).
+
 ### Changed
 
+- **Phase 3 model-quality sweep (2026-05-30, targeting v0.3.0)** — driving the
+  `check-model-sync.py` MEDIUM/LOW backlog to zero, domain by domain. Each domain aligns
+  SDK record shapes to the live `2025-10-23` spec: relaxing response fields the spec marks
+  optional (the over-tightening that caused the Hubs `missing required properties`
+  deserialization throw), typing `object?`/`JsonElement` fields where the spec has a concrete
+  schema, adding missing optional fields, fixing type mismatches, and **removing** SDK
+  properties absent from the spec (back-compat extras — **breaking**, batched into v0.3.0).
+  Per-domain detail in the commits; net finding deltas tracked against `check-model-sync.py`.
+  - **Drivers** — added `dateOfBirth` (string) to `Driver`/`CreateDriverRequest`/
+    `UpdateDriverRequest`; relaxed `Driver.Id` and `Driver.Name` to nullable (spec lists them
+    optional on `GET /fleet/drivers`). **Breaking**: consumers can no longer assume non-null
+    `Driver.Id`/`Name`.
+  - **Attributes** — relaxed `AttributeDefinition.Id` to nullable (spec lists `id` optional on
+    `GET /attributes`). Kept `AttributeDefinition.Entities` (flagged extra on the list response,
+    but present and `required` on `GET /attributes/{id}`, `POST /attributes`,
+    `PATCH /attributes/{id}` — one record serves all four; it defaults to an empty list so the
+    list response still deserializes). **Breaking**: consumers can no longer assume non-null
+    `AttributeDefinition.Id`.
+  - **Users** — relaxed `UserRole.Id` to nullable (the spec `UserRole` schema lists `id`
+    optional on `GET /user-roles` and inside `User.roles`). Kept `UserRole.TagId` (flagged extra
+    against `GET /user-roles`, but it is a real spec field on the user create/update role schema
+    `CreateUserRequest_roles.tagId`, since `UserRole` doubles as the request role element);
+    corrected its stale "not in current spec" comment. **Breaking**: consumers can no longer
+    assume non-null `UserRole.Id`.
+  - **Documents** — relaxed `DocumentType.Id` and `DocumentPdfJob.Id` to nullable (spec lists
+    both optional on `GET /fleet/document-types` and `POST /fleet/documents/pdfs`). Kept
+    `DocumentPdfJob.JobStatus`/`RequestedAtTime`/`CompletedAtTime`/`DownloadDocumentPdfUrl`
+    (flagged extra against the POST create response, but all are real fields on
+    `GET /fleet/documents/pdfs/{id}` — `DocumentPdfJob` is the shared response record for both
+    the create and the status-query endpoints). **Breaking**: consumers can no longer assume
+    non-null `DocumentType.Id`/`DocumentPdfJob.Id`.
+  - **Organization Info** — relaxed `OrganizationInfo.Id` to nullable (spec lists `id` optional
+    on `GET /me`) and **removed** `OrganizationInfo.Address`/`City`/`State`/`Zip`/`Country`,
+    which are absent from the `GET /me` response schema (the only endpoint using this record);
+    the canonical office address is `CarrierSettings.MainOfficeAddress`. **Breaking**: those five
+    properties no longer exist and `OrganizationInfo.Id` is now nullable.
+  - **Webhooks** — **removed** `UpdateWebhookRequest.EventTypes`: the `PATCH /webhooks/{id}`
+    request schema (the only consumer of this record) does not accept `eventTypes`, unlike
+    `POST /webhooks` (`CreateWebhookRequest` keeps it). Event subscriptions can only be set at
+    creation. **Breaking**: `UpdateWebhookRequest.EventTypes` no longer exists.
+  - **Safety** — **removed** the legacy flat `SafetyEvent.Vehicle` and `SafetyEvent.Time`
+    properties (plus the now-orphaned `SafetyEventVehicle` record and its `SamsaraJsonContext`
+    registration). Neither appears in the `SafetyEventV2ObjectResponseBody` schema returned by
+    `GET /safety-events` or `GET /safety-events/stream`; the canonical data is already exposed via
+    `SafetyEvent.Asset` (typed) and `SafetyEvent.StartMs`/`EndMs`/`CreatedAtTime`. **Breaking**:
+    `SafetyEvent.Vehicle`/`Time` and the `SafetyEventVehicle` type no longer exist.
+  - **Location and Speed** — **removed** the legacy flat `AssetLocationAndSpeed.Id`/`Name`/`Time`
+    properties. None appears in `LocationAndSpeedResponseResponseBody`
+    (`GET /assets/location-and-speed/stream`, the only consumer): `Id`/`Time` are already exposed
+    canonically via `Asset.Id` and `HappenedAtTime`, and the response asset object carries no
+    `name` (so the hoisted `Name` was always null). **Breaking**: those three properties no longer
+    exist — use `Asset.Id` and `HappenedAtTime`.
+  - **Carrier Proposed Assignments** — **removed** the legacy flat
+    `CarrierProposedAssignment.DriverId`/`DriverName`/`VehicleId`/`VehicleName` scalars. The spec
+    `CarrierProposedAssignment` schema (both `GET` and `POST /fleet/carrier-proposed-assignments`)
+    models these only under the nested `driver`/`vehicle` objects, which the SDK already exposes as
+    the typed `Driver`/`Vehicle` records (with `Id`/`Name`) — so no data is lost. Updated the CLI
+    list view to read `Driver?.Id`. **Breaking**: use `Driver.Id`/`Driver.Name`/`Vehicle.Id`/
+    `Vehicle.Name` instead of the removed flat scalars.
+  - **Live Sharing Links** — **removed** the legacy `LiveSharingLink.Url`/`ExpiresAt`/`EntityId`/
+    `EntityType` aliases. None appears in `LiveSharingLinkFullResponseObjectResponseBody` (the
+    shared response schema for `GET`/`POST`/`PATCH /live-shares`); each already has a canonical
+    spec-backed equivalent the SDK exposes — `LiveSharingUrl`, `ExpiresAtTime`, the typed
+    `*LinkConfig` objects, and `Type`. **Breaking**: those four aliases no longer exist.
+  - **Sensors** — no SDK change: `V1SensorReadingsResponse<T>` was already correctly typed to the
+    v1 `{ groupId, sensors[] }` response shape. The four `weak-typing` findings were a
+    `check-model-sync.py` false positive — its record-resolution helper did not strip the
+    closed-generic argument, so `V1SensorReadingsResponse<V1CargoReading>` failed to match the
+    declared `V1SensorReadingsResponse` record. Added a dedicated `_record_key` for top-level
+    record lookups (property-type comparison still preserves element info). Verified the only
+    finding delta is the 4 sensor entries clearing; no other domain moved. Not breaking.
+  - **Training Courses** — typed `TrainingCourse.Category` (was `object`) as the new
+    `TrainingCourseCategory` record (`id`/`name`) and `TrainingCourse.Labels` (was
+    `IReadOnlyList<object>`) as `TrainingCourseLabel` (`name`/`type`), per the spec
+    `TrainingCategoryObjectResponseBody`/`TrainingCourseLabelObjectResponseBody`; registered both in
+    `SamsaraJsonContext`. **Removed** the spec-absent `Name`/`IsActive`/`CreatedAtTime`/
+    `UpdatedAtTime` properties (`GET /training-courses` is the only consumer; the canonical fields
+    are `Title` and the `Status` enum). Updated the CLI list view to show `Title`. **Breaking**:
+    those four properties no longer exist and `Category`/`Labels` change type.
+  - **Work Orders** — typed three previously weak (`object`) properties against their concrete spec
+    schemas: `WorkOrder.MaintenanceSite` → new `WorkOrderMaintenanceSite` (`name`/`placeId`/
+    `placeExternalIds`), `ServiceTask.EstimatedPartsCost` → new `WorkOrderMoney` (`amount`/
+    `currency`), and `PostInvoiceScanRequest.File` → new `InvoiceScanFile` (`base64Content`/
+    `contentType`); all registered in `SamsaraJsonContext`. **Removed** the spec-absent
+    `InvoiceScan.Id`/`Status`, `ServiceTask.LaborCostCents`, and `PostInvoiceScanRequest.ImageBase64`
+    (the latter superseded by the typed `File.Base64Content`). The remaining `JsonElement` fields on
+    `WorkOrder` (`discount`/`tax`/`items`/`serviceTaskInstances`/…) are left untyped for now (large,
+    nested money/line-item schemas). **Breaking**: `MaintenanceSite`/`EstimatedPartsCost`/`File`
+    change type and the four extra properties no longer exist (use `File.Base64Content` for the
+    invoice image).
+  - **Gateways** — **removed** the eight legacy back-compat properties on `Gateway`
+    (`id`/`name`/`mainBus`/`firmwareVersion`/`wifiMacAddress`/`simCardId`/`vehicle`/`tags`).
+    None appears in the spec gateway schema returned by `GET /gateways` or `POST /gateways`
+    (the only two consumers of this record), which models only `model`/`serial`/`accessoryDevices`/
+    `asset`/`connectionStatus`/`dataUsageLast30Days` — all already typed on the SDK record. Updated
+    the CLI gateway list view to key on `Serial`/`Model`/`ConnectionStatus.HealthStatus` instead of
+    the removed `Id`. **Breaking**: those eight properties no longer exist (gateways are identified
+    by `Serial`).
+  - **Driver-Trailer Assignments** — `DriverTrailerAssignment` is one record shared across three
+    endpoints with two shapes: `GET /driver-trailer-assignments` nests `driver`/`trailer` objects
+    (and marks them required), while the `POST`/`PATCH` responses instead carry flat
+    `driverId`/`trailerId` scalars and omit the nested objects. **Relaxed** `Driver` and `Trailer`
+    from `required` to nullable (the create/update responses lack them — keeping them `required`
+    risked the Hubs-style deserialization throw). **Removed** `driverName`/`trailerName`/`time`,
+    which appear in no spec schema on any of the three endpoints (the nested driver/trailer objects
+    expose only `driverId`/`trailerId`/`externalIds`, never a name, so those scalars were always
+    null). Kept the flat `driverId`/`trailerId` (real on `POST`/`PATCH`) and the nested
+    `driver`/`trailer` (real on `GET`) — the checker reports each as "extra" on the *other* shape's
+    endpoint, but both are spec-backed and required to deserialize all three responses. **Breaking**:
+    `Driver`/`Trailer` are now nullable and `driverName`/`trailerName`/`time` no longer exist.
+  - **Driver-Vehicle Assignments** — `DriverVehicleAssignment` is the response record for `GET`
+    (full assignment object), `POST`, and `PATCH` (the latter two return only `{ message }`).
+    **Relaxed** `Driver`/`Vehicle`/`IsPassenger`/`StartTime` from `required` to nullable — the
+    create/update responses omit them, so `required` risked the Hubs-style deserialization throw.
+    **Removed** the flat `id`/`driverId`/`driverName`/`vehicleId`/`vehicleName` scalars: none appears
+    in any spec response schema, and the canonical driver/vehicle id+name are already exposed via the
+    typed nested `Driver`/`Vehicle` objects (the carrier-proposed-assignments precedent). Updated the
+    CLI list view to read `Driver?.Id`/`Vehicle?.Id`/`StartTime`. The GET full-object fields
+    (`driver`/`vehicle`/`isPassenger`/`startTime`/`assignedAtTime`/`assignmentType`/`endTime`/
+    `metadata`) and the `message` field remain — each is flagged "extra" only on the opposite shape's
+    endpoint but is spec-backed. **Breaking**: those four fields are now nullable and the five flat
+    scalars no longer exist (use `Driver.Id`/`Driver.Name`/`Vehicle.Id`/`Vehicle.Name`).
+  - **Trailer Assignments** — typed the v1 `GET /v1/fleet/trailers/assignments` pagination: added a
+    `V1Pagination` record (`endCursor`/`hasNextPage`, the spec `Paginationv1ResponseBodyResponseBody`)
+    and moved `pagination` from the per-item `TrailerAssignment` record (where it never belonged) onto
+    the top-level `TrailerAssignmentsResponse` (its real spec home, a sibling of `trailerAssignments`),
+    changing it from weak `object?` to `V1Pagination?`. The remaining `TrailerAssignment` per-item
+    scalars (`trailerId`/`trailerName`/`vehicleId`/`vehicleName`/`driverId`/`driverName`/`startTime`/
+    `endTime`/`id`/`name`) are all genuine v1 leaf fields and are kept; `check-model-sync` still
+    reports them (and the `trailerAssignments` wrapper) as "extra" because its one-level
+    `{ data: … }` envelope unwrapper cannot descend the v1 endpoint's deeply-nested auto-generated
+    `trailerAssignments → trailerAssignments → […]` schema to the leaf item — a checker resolution
+    limitation on the legacy v1 shape, not an SDK defect. **Breaking**: `TrailerAssignment.Pagination`
+    moved to `TrailerAssignmentsResponse.Pagination` and is now `V1Pagination?` (was `object?`).
+  - **Readings** — **removed** the legacy aliases on the three reading response records, none of
+    which appears in its endpoint's spec inner schema: `ReadingDefinition.Id`/`Name`/`DataType`/
+    `Units` (`GET /readings/definitions`; the canonical fields are `ReadingId`/`Label`/`Type`),
+    `ReadingHistory.Id`/`Time` (`GET /readings/history`), and `ReadingSnapshot.Id`/`EntityName`/`Time`
+    (`GET /readings/latest`). Each record maps to a single GET endpoint, so the aliases are absent
+    everywhere. **Breaking**: those nine properties no longer exist (use `ReadingId`/`Label`/`Type`/
+    `EntityId`/`HappenedAtTime`).
+  - **Coaching** — `DriverCoachAssignment` is shared across `GET` (nests a `driver` object,
+    spec-required) and `PUT /coaching/driver-coach-assignments` (flat `driverId` scalar, omits the
+    object). **Relaxed** `Driver` to nullable (the `PUT` response lacks it — `required` risked the
+    Hubs-style deserialization throw) and `CoachId` to nullable (the spec lists it optional on the
+    `PUT` response, where it is null when the assignment is cleared — clears the over-tightening).
+    **Removed** `DriverCoachAssignment.DriverName`/`CoachName` (absent from both endpoints; the nested
+    driver object exposes only `driverId`/`externalIds`, never a name) and all five legacy
+    `CoachingSession` aliases `DriverId`/`CoachId`/`Status`/`ScheduledAtTime`/`SessionType` (none in
+    the `GET /coaching/sessions/stream` schema; the canonical fields are the nested `Driver`,
+    `AssignedCoachId`/`CompletedCoachId`, `SessionStatus`, `DueAtTime`, and `CoachingType`). Kept the
+    flat `DriverCoachAssignment.DriverId` (real on `PUT`) and nested `Driver` (real on `GET`), each
+    flagged "extra" only on the opposite shape's endpoint. **Breaking**: `Driver`/`CoachId` are now
+    nullable and the seven removed scalars no longer exist.
+  - **Training Assignments** — typed `TrainingAssignment.Course` and `.Learner` (both were `object`)
+    as the new `TrainingAssignmentCourse` (`id`/`revisionId`) and `TrainingAssignmentLearner`
+    (`id`/`type`) records, per the spec `TrainingCourseObjectResponseBody`/
+    `TrainingLearnerObjectResponseBody`; registered both in `SamsaraJsonContext`. **Removed** the six
+    legacy scalars `DriverId`/`DriverName`/`CourseId`/`CourseName`/`AssignedAtTime`/`Score`, none in
+    the `GET /training-assignments/stream` schema — `DriverId`/`CourseId` are superseded by the now-
+    typed `Learner.Id`/`Course.Id`, and `DriverName`/`CourseName` have no spec field at all (the
+    nested course/learner objects carry no name). Updated the CLI list view to read
+    `Learner.Id`/`Course.Id`. **Breaking**: `Course`/`Learner` change type and the six scalars no
+    longer exist.
+  - **Fuel and Energy** — **removed** the nine back-compat echo properties on the `FuelPurchase`
+    response record (`id`/`driverId`/`vehicleId`/`transactionReference`/`transactionTime`/
+    `transactionLocation`/`fuelQuantityLiters`/`fuelGrade`/`iftaFuelType`). The spec
+    `POST /fuel-purchase` response (the only consumer of this record) returns just `uuid`; the request
+    fields already live on `CreateFuelPurchaseRequest`. **Breaking**: those nine properties no longer
+    exist — read submitted values from your `CreateFuelPurchaseRequest`, and `uuid` from the response.
+  - **Hubs** — **removed** the spec-absent extras on four hub response records, each mapping to
+    endpoints whose schema never lists them: `Hub.Latitude`/`Longitude`/`FormattedAddress`/`Geofence`/
+    `Tags`/`ExternalIds` (`GET /hubs` returns only `id`/`name`/`timeZone`/`createdAt`/`updatedAt`),
+    `HubCapacity.Capacity`/`UsedCapacity`/`TimeSlot` (`GET /hub/capacities`), `HubCustomProperty.Type`
+    (`GET /hub/customProperties`), and `HubLocation.Notes` (absent from the identical
+    `GET`/`POST`/`PATCH /hub/location(s)` response schema). These had been carried as nullable
+    back-compat under the older "keep response extras" reading; Phase 3 removes them. The Hubs
+    deserialization fix (the `required` `id`/`timeZone`/`createdAt`/`updatedAt`) is unchanged.
+    **Breaking**: those eleven properties no longer exist.
+  - **Vehicle Locations** — typed `VehicleLocation.Location` (was `object`) and `.Locations` (was
+    `IReadOnlyList<object>`) as the new `VehicleLocationPoint` record (`latitude`/`longitude`/`time`
+    required, plus `heading`/`speed`/`reverseGeo`), matching the spec's nested `location` object
+    (`GET /fleet/vehicles/locations`) and each element of the `locations` array (`.../feed`,
+    `.../history`); registered `VehicleLocationPoint` in `SamsaraJsonContext`. **Removed** the seven
+    flat scalars `latitude`/`longitude`/`heading`/`speed`/`formattedAddress`/`time`/`reverseGeo`,
+    which were absent from every endpoint's schema — their data now lives on the typed
+    `Location`/`Locations` points (`formattedAddress` has no spec field at all; reverse-geo text is
+    `Location.ReverseGeo.FormattedLocation`). Updated the CLI list view to read
+    `Location?.Latitude`/`Location?.Longitude`. Kept the single `location` and array `locations` (each
+    flagged "extra" only on the opposite shape's endpoint). **Breaking**: `Location`/`Locations` change
+    type and the seven flat scalars no longer exist.
+  - **Speeding Intervals** — typed `SpeedingInterval.Asset` (was `object`) as the new
+    `SpeedingIntervalAsset` record (`id` required, plus `name`/`type`/`vin`, the spec
+    `TripAssetResponseBody`); registered it in `SamsaraJsonContext`. **Removed** the ten flat scalars
+    `id`/`vehicleId`/`vehicleName`/`driverName`/`startTime`/`endTime`/`maxSpeedMph`/`speedLimitMph`/
+    `latitude`/`longitude`, none in the `GET /speeding-intervals/stream` schema — `vehicleId`/
+    `vehicleName` are superseded by the typed `Asset.Id`/`Asset.Name`, and the per-interval speed/
+    time/location data lives inside the `Intervals[]` items (in Km/h, not the removed Mph scalars).
+    Kept `driverId`, which the spec genuinely returns, and left `Intervals` as `IReadOnlyList<object>`
+    (the item schema with its nested `location` is left untyped per the weak-typing escape hatch).
+    **Breaking**: `Asset` changes type and the ten flat scalars no longer exist.
+  - **Vehicles** — typed `Vehicle.GrossVehicleWeight` (was `object`) as `VehicleGrossWeight`
+    (`unit`/`weight`) and `Vehicle.SensorConfiguration` (was `object`) as the `VehicleSensorConfiguration`
+    tree (`areas` → `VehicleSensorArea` with cargo/temperature/humidity `VehicleSensor[]`, `doors` →
+    `VehicleSensorDoor`); registered all five new records in `SamsaraJsonContext`. **Removed** the three
+    vehicle-stats fields `engineHours`/`odometerMeters`/`gatewaySerial`, which appear on none of the
+    three vehicle-metadata response schemas (`GET /fleet/vehicles`, `GET`/`PATCH /fleet/vehicles/{id}`)
+    — those belong to the vehicle *stats* endpoints, not the vehicle record. `Vehicle` is shared across
+    those three endpoints with diverging shapes, so the still-reported "extras" (`grossVehicleWeight` on
+    the list endpoint; `createdAtTime`/`updatedAtTime`/`isRemotePrivacyButtonEnabled`/`vehicleWeight`/
+    `vehicleWeightInKilograms`/`vehicleWeightInPounds` on the by-id endpoint) are each spec-backed on the
+    *other* endpoint and are kept. **Breaking**: `GrossVehicleWeight`/`SensorConfiguration` change type
+    and the three stats fields no longer exist (read them from the vehicle-stats endpoints).
+  - **Equipment** — split the dual-shape `EquipmentStats` record so each endpoint gets its real
+    typed shape: `EquipmentStats` now models the `GET /fleet/equipment/stats` snapshot (single
+    `{time,value}` samples) and the new `EquipmentStatsSample` models the `GET .../stats/feed` and
+    `.../stats/history` time-series (arrays of samples). Both replace the previous `JsonElement?`/
+    `object?` straddle fields with typed `EquipmentStatValue` (numeric), `EquipmentStatStringValue`
+    (engine state), and `EquipmentStatGps` (+ `EquipmentStatAddress`) records — clearing the seven
+    `JsonElement`-vs-array type mismatches and two `object?` weak-typings. `GetStatsFeedAsync`/
+    `GetStatsHistoryAsync` now return `EquipmentStatsSample`. **Removed** the spec-absent extras
+    `Equipment.Attributes`/`EquipmentSerialNumber` (the latter superseded by `AssetSerial`;
+    `UpdateEquipmentRequest` keeps both, which the `PATCH` body does define) and the flat
+    `EquipmentLocation.Latitude`/`Longitude`/`Time`. `EquipmentLocation.Location`/`Locations` are
+    dual-shape (singular on `GET .../locations`, plural array on `.../feed`+`.../history`) and kept.
+    All six new records registered in `SamsaraJsonContext`. **Breaking**: `EquipmentStats` field
+    types change, feed/history return `EquipmentStatsSample`, and the four extras are removed.
+  - **Vehicle Stats** — split the dual-shape `VehicleStats` record (the documented GPS data-loss
+    case): `VehicleStats` now models the `GET /fleet/vehicles/stats` snapshot (single `{time,value}`
+    samples) and the new `VehicleStatsSample` models the `GET .../stats/feed` and `.../stats/history`
+    time-series, where every metric is an **array** of samples — the SDK previously exposed each as a
+    single `object?` (or `IReadOnlyList<object>?`), silently dropping the rest of the series. All 60
+    `object?` weak-typings are replaced with typed element records: `VehicleStatValue` (int64),
+    `VehicleStatDoubleValue` (speed/distance), `VehicleStatStringValue` (engine/spreader/door/seatbelt
+    states), `VehicleStatAuxInput` (aux inputs), `VehicleStatEngineImmobilizer`, `VehicleStatNfcCardScan`
+    (+ `VehicleStatNfcCard`), `VehicleStatGps` (+ `VehicleStatAddress`, reusing `ReverseGeo`), and a
+    fully-typed `VehicleStatFaultCodes` tree (`...J1939`/`...Obdii`/`...Oem` with their DTC sub-records).
+    `externalIds` is now `IReadOnlyDictionary<string,string>?`. The snapshot keeps the singular
+    `engineState`/`fuelPercent`/`nfcCardScan` fields; the sample keeps the plural
+    `engineStates`/`fuelPercents`/`nfcCardScans` arrays — each spec-backed only on its own endpoint, so
+    the split clears the eight singular/plural extra-property mismatches. **Removed** the fabricated
+    `engineSeconds` and flat `time` fields (in neither spec response) and the now-orphaned
+    `EngineState`/`FuelPercent`/`EngineSeconds` helper records (synthetic back-compat aliases, not spec
+    schemas; de-registered from `SamsaraJsonContext`). On the feed/history shape `id`/`name` are
+    spec-optional and now nullable (preventing a Hubs-style deserialization throw). `GetStatsFeedAsync`/
+    `GetStatsHistoryAsync` now return `VehicleStatsSample`; all new records registered in
+    `SamsaraJsonContext`. **Breaking**: `VehicleStats` field types change, the feed/history methods
+    return `VehicleStatsSample` instead of `VehicleStats`, the `engineSeconds`/`time` extras are removed,
+    and the `EngineState`/`FuelPercent`/`EngineSeconds` records no longer exist. Migration: read the
+    single snapshot value from the typed property (e.g. `stats.EngineRpm?.Value`); for feed/history,
+    enumerate the array (e.g. `sample.EngineRpm` is now `IReadOnlyList<VehicleStatValue>`).
+  - **Trailers** — split the dual-shape `TrailerStats` record the same way: `TrailerStats` now models
+    the `GET /fleet/trailers/stats` snapshot (single samples) and the new `TrailerStatsSample` models
+    the `GET .../stats/feed` and `.../stats/history` time-series (arrays of samples — the SDK previously
+    collapsed each reefer/GPS series to a single `object?`). All 23 `object?` weak-typings are replaced
+    with typed element records: `TrailerStatValue` (int64), `TrailerStatStringValue` (door state / run
+    mode), `TrailerStatReeferState` (state + optional `substateValue`), `TrailerStatGps` (note heading
+    and speed are integer-valued here, reusing `ReverseGeo`), and `TrailerStatReeferAlarms`
+    (+ `TrailerStatReeferAlarm`). **Removed** the fabricated `TrailerStats` extras
+    `engineHours`/`location`/`odometer`/`temperature`/`time` (in neither the snapshot nor feed/history
+    spec response) and the now-orphaned `TrailerLocation` record (de-registered from `SamsaraJsonContext`).
+    Also **removed** the spec-absent `make`/`model`/`serial`/`vin`/`year` fields from `Trailer`,
+    `CreateTrailerRequest`, and `UpdateTrailerRequest` (none appear on any trailer endpoint;
+    `trailerSerialNumber` is the real serial field) and the spec-absent `Trailer.enabledForCommunication`.
+    `Trailer.attributes` is **kept** — it is spec-backed on the by-id, create, and update endpoints and
+    only omitted from the `GET /fleet/trailers` list response. `GetStatsFeedAsync`/`GetStatsHistoryAsync`
+    now return `TrailerStatsSample`; all new records registered in `SamsaraJsonContext`. **Breaking**:
+    `TrailerStats` field types change, the feed/history methods return `TrailerStatsSample` instead of
+    `TrailerStats`, the five `TrailerStats` extras and `TrailerLocation` are removed, and
+    `make`/`model`/`serial`/`vin`/`year`/`enabledForCommunication` are removed from the trailer records.
+    Migration: read the single snapshot value from the typed property (e.g. `stats.ReeferFuelPercent?.Value`);
+    for feed/history, enumerate the array; replace `serial` with `TrailerSerialNumber`.
+  - **Industrial** — **removed** the five time-series point arrays
+    (`fftSpectraPoints`/`j1939D1StatusPoints`/`locationPoints`/`numberPoints`/`stringPoints`) from
+    `DataInput`; they are not on the `GET /industrial/data-inputs` response (the only endpoint
+    `DataInput` serves) — those points belong to the data-points endpoints, already modelled by
+    `DataInputDataPoint`. Relaxed `DataInput.Id` to nullable (spec lists it optional). Relaxed
+    `IndustrialAsset.Name` and `IndustrialAsset.IsRunning` to nullable: the record is reused for the
+    `PATCH /industrial/assets/{id}/data-outputs` response (which returns only `id`/`statusCode`/
+    `errorMessage`), so keeping them `required` would throw on that payload. `IndustrialAsset` is
+    dual-shape across the four asset endpoints, so the still-reported "extras" — the 10 standard-asset
+    fields flagged on the data-outputs response, and `errorMessage`/`statusCode` flagged on the
+    standard responses — are each spec-backed on the *other* endpoints and kept. **Breaking**:
+    five `DataInput` properties removed; `DataInput.Id`/`IndustrialAsset.Name`/`IndustrialAsset.IsRunning`
+    now nullable.
+  - **Routes** — **removed** the 11 fabricated `Route` properties
+    (`createdAt`/`updatedAt`/`dispatchRouteId`/`distanceMeters`/`durationSeconds`/`hubId`/`isEdited`/
+    `isPinned`/`planId`/`type`/`quantities`); all four `Route` endpoints (`GET`/`POST /fleet/routes`,
+    `GET`/`PATCH /fleet/routes/{id}`) return the identical schema and none of them define these.
+    Typed `RouteAuditEvent.Changes` (was `JsonElement`) as the new `RouteAuditChanges`
+    (`before`/`after` → `RouteAuditSnapshot` → `RouteAuditStop[]`) and `RouteAuditEvent.Route` (was
+    `JsonElement`) as the existing `Route` record (the spec's `baseRouteResponseObjectResponseBody`
+    matches it); the three new records are registered in `SamsaraJsonContext`. **Removed** the five
+    spec-absent `RouteAuditEvent` extras (`id`/`routeId`/`userId`/`eventType`/`description`).
+    **Breaking**: 11 `Route` properties and 5 `RouteAuditEvent` properties removed;
+    `RouteAuditEvent.Changes`/`Route` change type.
+  - **Trips** — `Trip` conflated three shapes (the v2 `/trips/stream` item, a fabricated v1-flat
+    item, and a `trips` wrapper field). Refocused `Trip` on the v2 `GET /trips/stream` item: typed
+    `asset` (was `object`) as the new `TripAsset`, enriched `TripLocation` to the spec's
+    `LocationResponseResponseBody` (+ `TripLocationAddress`), and kept the v2 time/status fields;
+    **removed** the `trips` wrapper field and the fabricated flat fields (`id`/`driverId`/`driverName`/
+    `vehicleId`/`vehicleName`/`startTime`/`endTime`/`distanceMeters`/`durationMs`/`fuelConsumedMl`/
+    `coDriver`) — none are on the stream schema. Modelled the legacy `GET /v1/fleet/trips` properly:
+    new `V1Trip` (the spec's `V1TripResponse_trips`) and `V1TripsResponse` wrapper (the v1 endpoint
+    returns `{ trips: [...] }`, not a `{ data: [...] }` envelope), and rewired `ITripsClient.ListAsync`
+    to its real required params (`vehicleId`, `startMs`, `endMs`) returning `IReadOnlyList<V1Trip>`
+    (the old signature sent RFC3339 `startTime`/`endTime` and paginated a `data` key the endpoint
+    never returns — it was non-functional). Five new records registered in `SamsaraJsonContext`; CLI
+    trips view updated. **Breaking**: `Trip` loses 12 properties and `asset` changes type;
+    `ListAsync` signature and return type change.
+  - **Safety Scores** — **removed** all 23 legacy flat-shape extras across the four safety-score
+    records, each of which the SDK doc comments already flagged as superseded by a spec field:
+    `VehicleSafetyScore` (`safetyScore`/`totalHarshEventCount`/`totalTimeDrivenMs`/
+    `totalDistanceDrivenMeters`/`timeRange`/`crashCount`/`harshAccelCount`/`harshBrakingCount`/
+    `harshTurningCount`), `DriverSafetyScore` (`safetyScore`/`totalHarshEventCount`/`totalTimeDrivenMs`/
+    `totalDistanceDrivenMeters`/`timeRange`), `TagSafetyScore` (`tagName`/`safetyScore`/
+    `totalHarshEventCount`/`timeRange`), `TagGroupSafetyScore` (`tagGroupId`/`tagGroupName`/
+    `safetyScore`/`totalHarshEventCount`/`timeRange`). The spec-aligned fields (`*Score`, `behaviors`,
+    `speeding`, `driveDistanceMeters`, `driveTimeMilliseconds`) are unchanged. Removed the now-unused
+    `TimeRange` record and its `SamsaraJsonContext` registration; updated `SafetyClientExtensionTests`
+    to assert on spec fields. **Breaking**: 23 properties and the `TimeRange` record removed.
+  - **Media** — **removed** the 11 legacy SDK-only flat fields from `MediaFile`
+    (`id`/`vehicleName`/`driverId`/`driverName`/`capturedAtTime`/`uploadedAtTime`/`url`/`thumbnailUrl`/
+    `cameraId`/`safetyEventId`/`durationMs`), none on the spec's `UploadedMediaObjectResponseBody`
+    (`GET /cameras/media`), and the three legacy `MediaRetrieval` fields `id`/`url`/`cameraId` (absent
+    from both retrieval shapes). `MediaRetrieval` is dual-shape: its remaining fields are spec-backed on
+    `GET /cameras/media/retrieval` (`input`/`mediaType`/`status`/`vehicleId`/`startTime`/`endTime`/
+    `availableAtTime`/`cameraRole`/`urlInfo` — `MediaObjectResponseBody`) or
+    `POST /cameras/media/retrieval` (`quotaStatus`/`retrievalId` — `PostMediaRetrievalObjectResponseBody`),
+    so the 11 still-reported "extras" are each valid on the opposite endpoint and kept. CLI media view
+    updated. **Breaking**: 14 media properties removed.
+  - **Tachograph (EU Only)** — typed the weak (`object`) nested fields and removed the legacy flat
+    fields on both response records. `TachographActivity`: typed `activity` (was `object[]`) as
+    `TachographActivityEntry[]` (start/end time, state, isManualEntry) and `driver` (was `object`) as the
+    new `TachographDriver` (`driverTinyResponse`); **removed** the 11 flat extras (`id`/`driverId`/
+    `driverName`/`vehicleId`/`vehicleName`/`activityType`/`startTime`/`endTime`/`durationMs`/`country`/
+    `region`). `TachographFile` is dual-shape across the driver-files and vehicle-files endpoints: typed
+    `files` (was `object[]`) as `TachographFileEntry[]` (the union of `TachographDriverFile`/
+    `TachographVehicleFile`), `driver` as `TachographDriver`, and `vehicle` as the new
+    `TachographVehicle` (`vehicleTinyResponse`); **removed** the 10 flat extras (`id`/`driverId`/
+    `driverName`/`vehicleId`/`vehicleName`/`fileType`/`downloadUrl`/`createdAtTime`/`startTime`/
+    `endTime`). The two still-reported `TachographFile` "extras" (`driver` flagged on the vehicle-files
+    endpoint, `vehicle` flagged on the driver-files endpoint) are dual-shape and kept. Six new records
+    registered in `SamsaraJsonContext`; CLI tachograph views updated. **Breaking**: `TachographActivity`/
+    `TachographFile` field types change and 21 flat properties are removed.
+  - **Hours of Service** — **removed** the legacy flat convenience scalars from the three nested HOS
+    response records, none of which are on their spec inner schemas: `HosLog`
+    (`id`/`driverId`/`driverName`/`codriverIds`/`vehicleId`/`vehicleName`/`hosStatusType`/`logStartMs`/
+    `locLat`/`locLng`/`locCity`/`locState`/`locName`/`groupId`/`remark` — the canonical shape is
+    `driver` + `hosLogs`), `HosViolation` (`driverId`/`driverName`/`vehicleId`/`violationType`/
+    `startMs`/`endMs`/`severityType` — canonical `violations`), and `HosDailyLog`
+    (`id`/`driverId`/`driverName`/`vehicleId`/`vehicleName`/`certificationState`/`date`/
+    `distanceDrivenMeters` — canonical `driver`/`startTime`/`endTime`/`distanceTraveled`/
+    `dutyStatusDurations`/`logMetaData`/`pendingDutyStatusDurations`). Updated `ComplianceClientTests`
+    and the CLI HOS views to the nested shape. **Checker fix**: `GetHosClocksAsync` returns
+    `IReadOnlyList<HosClocksForDriver>` (already a fully-typed 5-property record), but `check-model-sync`
+    reported a `weak-typing` false positive because `_record_key` reduced a bare collection type to the
+    collection name (`IReadOnlyList`) rather than its element; it now peels collection generics
+    (`IReadOnlyList`/`IList`/`List`/`IEnumerable`/…) to the element record. A full before/after findings
+    diff confirms ONLY this one finding clears with no collateral (precedent: the Sensors closed-generic
+    fix). **Breaking**: 30 HOS properties removed.
+  - **Beta APIs** — `HosEldEvent` (`GET /beta/fleet/hos/drivers/eld-events`): **removed** the nine
+    spec-absent flat fields (`driverId`/`vehicleId`/`eventType`/`eventCode`/`eventTime`/`latitude`/
+    `longitude`/`odometer`/`engineHours`) and modelled the real nested shape — added `externalIds` and
+    the spec-required `eldEvents` as `IReadOnlyList<HosEldEventEntry>` (the
+    `HosEldEventObjectResponseBody` tree: `eldEventCode`/`eldEventType`/`time`/record origin+status/
+    engine+vehicle distances/`location` → `HosEldEventLocation`/`remark` → `HosEldEventRemark`/
+    `vehicle`); four new records registered in `SamsaraJsonContext`. **Corrected the Equipment sweep's
+    over-removal**: `Equipment` is dual-shape between `GET /fleet/equipment` (has `assetSerial`, `id`
+    required) and `PATCH /beta/fleet/equipment/{id}` (has `attributes`/`equipmentSerialNumber`, `id`
+    optional). Restored `Equipment.Attributes`/`EquipmentSerialNumber` (spec-backed on the beta
+    response) and relaxed `Equipment.Id` to nullable; `assetSerial` (GET-only) and
+    `attributes`/`equipmentSerialNumber` (beta-only) are each now reported "extra" on the opposite
+    endpoint and kept. Left as intentional `object?` per the Beta volatility exception: the
+    `HubPlanOrder.Delivery`/`Pickup` and `ListIndustrialJobsAsync` (`GET /beta/industrial/jobs`)
+    weak-typings. **Breaking**: nine `HosEldEvent` flat fields removed and `eldEvents` added;
+    `Equipment.Id` is now nullable.
+  - **Maintenance** — typed nine previously weak nested properties against their concrete spec schemas.
+    `DefectRecord.ResolvedBy` (was `JsonElement`) → new `DefectResolvedBy` (`id`/`name`/`type`),
+    `DefectRecord.Trailer`/`Vehicle` and `MaintenanceDvir.Trailer`/`Vehicle` (were `JsonElement`) → new
+    `MaintenanceDvirAssetRef` (`id`/`externalIds`), `MaintenanceDvir.AuthorSignature`/`SecondSignature`/
+    `ThirdSignature` (were `JsonElement`) → new `MaintenanceDvirSignature`
+    (`signatoryUser` → `MaintenanceSignatoryUser`/`signedAtTime`/`type`), and
+    `UpdateDefectRequest.ResolvedBy` (was `JsonElement`) → new `UpdateDefectResolvedBy` (`id`/`type`, the
+    spec's request-side `ResolvedBy`). Relaxed `DefectRecord.Comment` to nullable: it is spec-required on
+    `GET /defects/stream` and `GET /defects/{id}` but optional on the `PATCH /fleet/defects/{id}` response
+    (`Defect`), so keeping it `required` would throw on that payload. **Removed** the legacy SDK-only flat
+    scalars absent from every endpoint mapping to each record: `MaintenanceDvir.VehicleId`/`VehicleName`/
+    `InspectionType`/`SafeToOperate`/`TimeMs`/`Defects` (and the now-orphaned `MaintenanceDefect` record,
+    de-registered from `SamsaraJsonContext`), `DefectRecord.VehicleId`/`VehicleName`/`DriverId`/
+    `ResolvedAt`/`CreatedAt`, and `DefectType.Name`/`Category` (use the spec `Label`/`SectionType`).
+    `DefectRecord` and `MaintenanceDvir` are dual-shape across their stream/get vs POST/PATCH endpoints,
+    so the still-reported "extras" (e.g. `endTime`/`startTime`/`trailerDefects` on the stream endpoint,
+    `dvirId`/`updatedAtTime` on the PATCH endpoint) are each spec-backed on the *other* endpoint and kept.
+    New records registered in `SamsaraJsonContext`; CLI DVIR list view updated (was rendering the removed
+    `VehicleId`/`Defects`). check-model-sync Maintenance: 42 → 19 (the 19 remaining are deliberately-kept
+    dual-shape fields). **Breaking**: nine properties change type, `DefectRecord.Comment` is now nullable,
+    and 13 properties plus the `MaintenanceDefect` record are removed.
+  - **Forms** — **Breaking**: aligned `FormTemplate` to the spec and typed every weak (`object`) form
+    property. Removed `FormTemplate.Name` and `FormTemplate.Revision` (neither is on the spec's
+    `FormTemplateResponseObjectResponseBody`, the only endpoint mapping to `FormTemplate`; the spec uses
+    `title` and `revisionId`, both already present). Typed 15 previously weak properties against their
+    concrete spec schemas: `FormTemplate.ApprovalConfig` → new `FormsApprovalConfig`
+    (+ `FormsSingleApprovalConfig`, whose deep `requirements` tree is left as `JsonElement`),
+    `FormTemplate.CreatedBy`/`UpdatedBy` and `FormSubmission.SubmittedBy`/`AssignedTo` → new
+    `FormsPolymorphicUser` (`id`/`type`), `FormSubmission.FormTemplate` → new `FormTemplateReference`
+    (`id`/`revisionId`), `FormSubmission.ApprovalDetails` → new `FormSubmissionApprovalDetails`,
+    `FormSubmission.Asset` → new `FormsAsset`, `FormSubmission.Geofence` → new `FormsGeofence`,
+    `FormSubmission.Location` → new `FormsLocation` (`latitude`/`longitude`), `FormSubmission.Score` →
+    new `FormsScore`, `CreateFormSubmissionRequest.FormTemplate` → new `FormTemplateRequest`,
+    `Create`/`UpdateFormSubmissionRequest.AssignedTo` → new `FormSubmissionAssignedTo`, and
+    `UpdateFormSubmissionRequest.ApprovalDetails` → new `FormSubmissionApprovalDetailsRequest`.
+    `FormSubmission.ExternalIds` is now `IReadOnlyDictionary<string,string>?` and the `fields` arrays are
+    `IReadOnlyList<JsonElement>` (heterogeneous per-field-type payloads, left untyped). **Removed** the
+    legacy SDK-only flat extras absent from the spec on every endpoint: `FormSubmission.FormTemplateId`/
+    `FormTemplateName`/`DriverId`/`DriverName`/`VehicleId`/`VehicleName`/`State`/`FieldValues`,
+    `CreateFormSubmissionRequest.FormTemplateId`/`Driver`/`Vehicle`/`FieldValues`,
+    `UpdateFormSubmissionRequest.FieldValues`, `FormPdfExport.Status`/`FormSubmissionId`/`CreatedAt`, and
+    the now-orphaned `FormFieldValue` record. All new records registered in `SamsaraJsonContext`; CLI form
+    template/submission list views updated (were rendering the removed `Name`/`FormTemplateId`/`DriverId`).
+    check-model-sync Forms: 33 → 0. **Breaking**: 15 properties change type and 19 properties plus the
+    `FormFieldValue` record are removed.
+  - **Settings** — **Breaking**: typed every weak (`object`) settings property and dropped the legacy
+    extras absent from the spec. Typed `DriverAppSettings`/`UpdateDriverAppSettingsRequest`'s
+    `GamificationConfig` → new `DriverAppGamificationConfig` and `TrailerSelectionConfig` → new
+    `DriverAppTrailerSelectionConfig`. Typed all 10 `SafetySettings` `object` properties against their
+    concrete spec schemas: `DistractedDrivingDetectionAlerts`/`FollowingDistanceDetectionAlerts`/
+    `ForwardCollisionDetectionAlerts`/`HarshEventSensitivity`/`HarshEventSensitivityV2`/
+    `PolicyViolationsDetectionAlerts`/`RollingStopDetectionAlerts`/`SafetyScoreConfiguration` (a flat
+    30-weight record)/`SpeedingSettings`/`VoiceCoaching` → ten new `Safety*` records. Each top-level
+    record models its direct scalar/enum/array fields; the further-nested sub-objects (per-axis g-force
+    sensitivity, inattentive/mobile-usage detection, speeding severity-level entries) are left as
+    `JsonElement` per the large-nested-schema escape hatch. **Removed** the SDK-only flat extras absent
+    from both the GET and PATCH schemas on every settings endpoint:
+    `ComplianceSettings`/`UpdateComplianceSettingsRequest`'s `HosEnabled`/`DvirEnabled`/`EldExemptEnabled`/
+    `DefaultCycleRule`/`DefaultHosRule`; `DriverAppSettings`/`UpdateDriverAppSettingsRequest`'s
+    `MessageEnabled`/`NavigationEnabled`/`DriverRewardsEnabled`/`VehiclePreviewEnabled` (and
+    `DriverAppSettings.CoachingAlertsEnabled`); and `SafetySettings`'s `ForwardCollisionWarningEnabled`/
+    `LaneDepartureWarningEnabled`/`SpeedingEnabled`/`HarshAccelerationEnabled`/`HarshBrakingEnabled`/
+    `HarshCorneringEnabled`. All new records registered in `SamsaraJsonContext`. check-model-sync
+    Settings: 39 → 0. **Breaking**: 14 properties change type and 25 properties are removed.
+  - **Media nested-pagination runtime fix** — `GET /cameras/media` and
+    `GET /cameras/media/retrieval` return `{ data: { media: [...] }, pagination: {...} }` — the
+    items are nested under `data.media`, not `data` itself, which the SDK did not handle (the
+    list calls would have deserialized to empty/wrong shapes at runtime). Added a
+    `SamsaraNestedListResponse<TData>` envelope and a `PaginateAsync<TData,TItem>` /
+    `GetPageAsync<TData,TItem>` overload that project the nested item list; `MediaClient.ListAsync`
+    now pages `data.media` correctly. **Breaking**: `IMediaClient.GetRetrievalAsync` returns
+    `IReadOnlyList<MediaRetrieval>` (was a single `MediaRetrieval`) — the endpoint returns the
+    retrieved media array. Added `MediaListResponse`/`MediaRetrievalListResponse` (registered in
+    `SamsaraJsonContext`) and `MediaClientTests` covering the nested shape.
+  - **Cleanup: orphaned `ObdOdometer`/`GpsOdometer` records** — removed both synthetic back-compat
+    helper records from `Samsara.Sdk.Models.Fleet` and their two `SamsaraJsonContext` registrations.
+    Neither is in the Samsara OpenAPI spec; both became dead code once the Vehicle Stats
+    snapshot/time-series split re-typed `gps`/`gpsOdometerMeters`/`obdOdometerMeters` to typed
+    `VehicleStat*` records. Not breaking (neither was ever a property of any record or returned by
+    any client method).
+- **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
+  `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
+  as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
+  contradicts). Surfaced by the new `check-model-sync.py` as the sole HIGH finding and verified
+  against the authoritative spec. **Breaking**: callers of `TagsClient.CreateAsync`/`ReplaceAsync`
+  must now set `Name`. `ReplaceAsync` (`PUT /tags/{id}`) shares this record, where the spec lists
+  `name` optional — requiring it there is a deliberate, benign over-tightening (a tag replace
+  should carry a name). No call sites affected (the one test already sets `Name`).
+- **Hubs `ListAsync` fix + read-only cleanup (2026-05-29)** — `IHubsClient.ListAsync()`
+  was wired to `GET /addresses` and threw `JSON deserialization for type 'Hub' was
+  missing required properties: timeZone, createdAt, updatedAt` after the 21-hubs sync
+  tightened `Hub` to the `GET /hubs` schema; `ListAsync()` now lists hubs via `GET /hubs`
+  (delegates to `ListHubsAsync`). **Breaking**: the spec exposes no hub
+  get-by-id/create/update/delete endpoint, so the address-overlay methods `GetAsync`/
+  `CreateAsync`/`UpdateAsync`/`DeleteAsync` and the `CreateHubRequest`/`UpdateHubRequest`
+  models were removed (they duplicated the `Addresses` client) — use `client.Addresses`
+  for `/addresses` CRUD. CLI Hubs menu reduced to read-only `List All`; dropped the
+  `CreateHubRequest`/`UpdateHubRequest` registrations from `SamsaraJsonContext`. See
+  `docs/api-sync/21-hubs.md`.
 - **Model sync 56-work-orders (2026-05-27)** — applied the per-domain remediation
   plan (0 CRIT / 2 HIGH / 20 MED / 4 LOW — 26 total) across the work-order,
   service-task, and invoice-scan endpoints. **Breaking**: `DeleteWorkOrdersAsync`

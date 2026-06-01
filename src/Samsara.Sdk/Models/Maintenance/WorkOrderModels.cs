@@ -23,7 +23,7 @@ public sealed record WorkOrder
     [JsonPropertyName("engineHours")] public long? EngineHours { get; init; }
     [JsonPropertyName("invoiceNumber")] public string? InvoiceNumber { get; init; }
     [JsonPropertyName("items")] public IReadOnlyList<System.Text.Json.JsonElement>? Items { get; init; }
-    [JsonPropertyName("maintenanceSite")] public object? MaintenanceSite { get; init; }
+    [JsonPropertyName("maintenanceSite")] public WorkOrderMaintenanceSite? MaintenanceSite { get; init; }
     [JsonPropertyName("odometerMeters")] public long? OdometerMeters { get; init; }
     [JsonPropertyName("poNumber")] public string? PoNumber { get; init; }
     [JsonPropertyName("priority")] public string? Priority { get; init; }
@@ -95,28 +95,60 @@ public sealed record ServiceTask
     [JsonPropertyName("category")] public string? Category { get; init; }
     [JsonPropertyName("description")] public string? Description { get; init; }
     [JsonPropertyName("estimatedLaborTimeMinutes")] public int? EstimatedLaborTimeMinutes { get; init; }
-    [JsonPropertyName("estimatedPartsCost")] public object? EstimatedPartsCost { get; init; }
+    [JsonPropertyName("estimatedPartsCost")] public WorkOrderMoney? EstimatedPartsCost { get; init; }
     [JsonPropertyName("subcategory")] public string? Subcategory { get; init; }
-    // Not in current spec; retained for back-compat.
-    [JsonPropertyName("laborCostCents")] public long? LaborCostCents { get; init; }
 }
 
-/// <summary>Represents an invoice scan job.</summary>
+/// <summary>Represents an invoice scan job. Mirrors the spec's
+/// <c>PostInvoiceScanResponseDataResponseBody</c>.</summary>
 public sealed record InvoiceScan
 {
     [JsonPropertyName("workOrderId")] public required string WorkOrderId { get; init; }
-    // Not in current spec; retained for back-compat.
-    [JsonPropertyName("id")] public string? Id { get; init; }
-    // Not in current spec; retained for back-compat.
-    [JsonPropertyName("status")] public string? Status { get; init; }
 }
 
 /// <summary>Request body for posting an invoice scan.</summary>
 public sealed record PostInvoiceScanRequest
 {
-    [JsonPropertyName("file")] public required object File { get; init; }
+    [JsonPropertyName("file")] public required InvoiceScanFile File { get; init; }
     [JsonPropertyName("assetId")] public string? AssetId { get; init; }
     [JsonPropertyName("workOrderId")] public string? WorkOrderId { get; init; }
-    // Not in current spec; retained for back-compat.
-    [JsonPropertyName("imageBase64")] public string? ImageBase64 { get; init; }
+}
+
+/// <summary>Invoice file payload for <c>POST /maintenance/invoice-scans</c>. Mirrors the spec's
+/// <c>InvoiceScanFileRequestBody</c>.</summary>
+public sealed record InvoiceScanFile
+{
+    /// <summary>Base64-encoded file content (maximum decoded size 10MB). Spec-required.</summary>
+    [JsonPropertyName("base64Content")] public required string Base64Content { get; init; }
+
+    /// <summary>MIME type of the file. Supported: <c>application/pdf</c>, <c>image/jpeg</c>,
+    /// <c>image/png</c>. Spec-required.</summary>
+    [JsonPropertyName("contentType")] public required string ContentType { get; init; }
+}
+
+/// <summary>The maintenance site (inventory location) where work is performed. Mirrors the spec's
+/// <c>WorkOrderMaintenanceSiteObjectResponseBody</c>.</summary>
+public sealed record WorkOrderMaintenanceSite
+{
+    /// <summary>Display name of the maintenance site.</summary>
+    [JsonPropertyName("name")] public string? Name { get; init; }
+
+    /// <summary>ID of the Place linked to this maintenance site (joinable against the Places API).
+    /// Omitted if the site is not linked to a place.</summary>
+    [JsonPropertyName("placeId")] public string? PlaceId { get; init; }
+
+    /// <summary>External identifiers for the linked Place. Populated only when the request sets
+    /// <c>includeExternalIds=true</c>.</summary>
+    [JsonPropertyName("placeExternalIds")] public IReadOnlyDictionary<string, string>? PlaceExternalIds { get; init; }
+}
+
+/// <summary>A specified amount of money. Mirrors the spec's
+/// <c>WorkOrderMoneyObjectResponseBody</c>.</summary>
+public sealed record WorkOrderMoney
+{
+    /// <summary>Amount of the currency (decimal string, e.g. <c>94.01</c>). Spec-required.</summary>
+    [JsonPropertyName("amount")] public required string Amount { get; init; }
+
+    /// <summary>Currency type. Currently only <c>usd</c> is supported. Spec-required.</summary>
+    [JsonPropertyName("currency")] public required string Currency { get; init; }
 }

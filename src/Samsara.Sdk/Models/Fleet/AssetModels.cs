@@ -93,21 +93,6 @@ public sealed record AssetLocationAndSpeed
     /// <summary>Speed object (optional in the spec — present only when
     /// <c>includeSpeed=true</c> is passed on the request).</summary>
     [JsonPropertyName("speed")] public AssetLocationAndSpeedSpeed? Speed { get; init; }
-
-    /// <summary>Asset id, hoisted from <see cref="Asset"/>. Not part of the
-    /// spec inner schema; retained as a nullable back-compat convenience —
-    /// callers should prefer <c>Asset.Id</c>.</summary>
-    [JsonPropertyName("id")] public string? Id { get; init; }
-
-    /// <summary>Asset name. Not part of the spec inner schema; retained as a
-    /// nullable back-compat convenience — callers should look up the name via
-    /// the <c>Assets</c> endpoint.</summary>
-    [JsonPropertyName("name")] public string? Name { get; init; }
-
-    /// <summary>Event time. Not part of the spec inner schema; retained as a
-    /// nullable back-compat convenience — callers should prefer
-    /// <see cref="HappenedAtTime"/>.</summary>
-    [JsonPropertyName("time")] public DateTimeOffset? Time { get; init; }
 }
 
 /// <summary>Minified asset reference attached to a location-and-speed

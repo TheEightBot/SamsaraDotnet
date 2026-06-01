@@ -66,40 +66,6 @@ public sealed record LiveSharingLink
     /// </summary>
     [JsonPropertyName("assetsOnRouteLinkConfig")]
     public LiveSharingLinkAssetsOnRouteLinkConfig? AssetsOnRouteLinkConfig { get; init; }
-
-    // ── Back-compat (not in spec inner schema) ──────────────────────────────
-
-    /// <summary>
-    /// Legacy alias for <see cref="LiveSharingUrl"/>. Not part of the current
-    /// spec inner schema; retained as a nullable back-compat convenience.
-    /// </summary>
-    [JsonPropertyName("url")]
-    public string? Url { get; init; }
-
-    /// <summary>
-    /// Legacy alias for <see cref="ExpiresAtTime"/> typed as
-    /// <see cref="DateTimeOffset"/>. Not part of the current spec inner schema;
-    /// retained as a nullable back-compat convenience.
-    /// </summary>
-    [JsonPropertyName("expiresAt")]
-    public DateTimeOffset? ExpiresAt { get; init; }
-
-    /// <summary>
-    /// Legacy flat identifier for the entity that this link tracks (asset id,
-    /// address id, or recurring route id depending on <see cref="Type"/>). Not
-    /// part of the current spec inner schema; retained as a nullable back-compat
-    /// convenience. Prefer the typed <c>*LinkConfig</c> properties for new code.
-    /// </summary>
-    [JsonPropertyName("entityId")]
-    public string? EntityId { get; init; }
-
-    /// <summary>
-    /// Legacy entity-type descriptor. Not part of the current spec inner schema;
-    /// retained as a nullable back-compat convenience. Prefer the typed
-    /// <see cref="Type"/> property for new code.
-    /// </summary>
-    [JsonPropertyName("entityType")]
-    public string? EntityType { get; init; }
 }
 
 /// <summary>

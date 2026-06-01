@@ -79,57 +79,6 @@ public sealed record MediaFile
     /// </summary>
     [JsonPropertyName("urlInfo")]
     public MediaUrlInfo? UrlInfo { get; init; }
-
-    // --- Legacy SDK-only flat-scalar convenience properties (not in spec) ---
-    // Retained for back-compat per the workflow precedent established in
-    // earlier model-sync plans (08, 13, 14, 28, 29, 30).
-
-    /// <summary>Legacy SDK-only field (not in spec inner schema).</summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec inner schema).</summary>
-    [JsonPropertyName("vehicleName")]
-    public string? VehicleName { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec inner schema).</summary>
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec inner schema).</summary>
-    [JsonPropertyName("driverName")]
-    public string? DriverName { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec inner schema).</summary>
-    [JsonPropertyName("capturedAtTime")]
-    public string? CapturedAtTime { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec inner schema).</summary>
-    [JsonPropertyName("uploadedAtTime")]
-    public string? UploadedAtTime { get; init; }
-
-    /// <summary>
-    /// Legacy SDK-only field (not in spec inner schema).
-    /// Use <see cref="UrlInfo"/> for the spec-aligned signed URL.
-    /// </summary>
-    [JsonPropertyName("url")]
-    public string? Url { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec inner schema).</summary>
-    [JsonPropertyName("thumbnailUrl")]
-    public string? ThumbnailUrl { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec inner schema).</summary>
-    [JsonPropertyName("cameraId")]
-    public string? CameraId { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec inner schema).</summary>
-    [JsonPropertyName("safetyEventId")]
-    public string? SafetyEventId { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec inner schema).</summary>
-    [JsonPropertyName("durationMs")]
-    public long? DurationMs { get; init; }
 }
 
 /// <summary>
@@ -260,25 +209,6 @@ public sealed record MediaRetrieval
     /// </summary>
     [JsonPropertyName("retrievalId")]
     public string? RetrievalId { get; init; }
-
-    // --- Legacy SDK-only flat-scalar convenience properties (not in spec) ---
-    // Retained for back-compat per the workflow precedent established in
-    // earlier model-sync plans (08, 13, 14, 28, 29, 30).
-
-    /// <summary>Legacy SDK-only field (not in spec inner schema).</summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; init; }
-
-    /// <summary>
-    /// Legacy SDK-only field (not in spec inner schema).
-    /// Use <see cref="UrlInfo"/> for the spec-aligned signed URL.
-    /// </summary>
-    [JsonPropertyName("url")]
-    public string? Url { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec inner schema).</summary>
-    [JsonPropertyName("cameraId")]
-    public string? CameraId { get; init; }
 }
 
 /// <summary>
@@ -328,4 +258,43 @@ public sealed record CreateMediaRetrievalRequest
     /// </summary>
     [JsonPropertyName("mediaType")]
     public required string MediaType { get; init; }
+}
+
+/// <summary>
+/// Wraps the nested <c>{ "media": [ ... ] }</c> object that the Samsara API
+/// returns <em>inside</em> the <c>data</c> envelope of
+/// <c>GET /cameras/media</c>. Mirrors the spec's
+/// <c>ListUploadedMediaObjectResponseBody</c> schema. The full response shape
+/// is <c>{ "data": { "media": [...] }, "pagination": {...} }</c>, so this
+/// record models only the inner <c>data</c> object; the surrounding envelope
+/// and pagination are handled by the HTTP layer.
+/// </summary>
+public sealed record MediaListResponse
+{
+    /// <summary>
+    /// The uploaded media files in this page. Spec-required; defaults to an
+    /// empty list so a missing or empty payload yields no items rather than
+    /// <c>null</c>.
+    /// </summary>
+    [JsonPropertyName("media")]
+    public IReadOnlyList<MediaFile> Media { get; init; } = Array.Empty<MediaFile>();
+}
+
+/// <summary>
+/// Wraps the nested <c>{ "media": [ ... ] }</c> object that the Samsara API
+/// returns <em>inside</em> the <c>data</c> envelope of
+/// <c>GET /cameras/media/retrieval</c>. Mirrors the spec's
+/// <c>GetMediaRetrievalObjectResponseBody</c> schema. The full response shape
+/// is <c>{ "data": { "media": [...] } }</c>, so this record models only the
+/// inner <c>data</c> object; the surrounding envelope is unwrapped by the HTTP
+/// layer.
+/// </summary>
+public sealed record MediaRetrievalListResponse
+{
+    /// <summary>
+    /// The retrieved media items. Spec-required; defaults to an empty list so a
+    /// missing or empty payload yields no items rather than <c>null</c>.
+    /// </summary>
+    [JsonPropertyName("media")]
+    public IReadOnlyList<MediaRetrieval> Media { get; init; } = Array.Empty<MediaRetrieval>();
 }

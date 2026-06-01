@@ -15,16 +15,22 @@ public sealed record IndustrialAsset
     [JsonPropertyName("id")]
     public required string Id { get; init; }
 
-    /// <summary>The name of the asset. Spec-required (<c>AssetName</c>).</summary>
+    /// <summary>
+    /// The name of the asset. Required on the standard asset payloads
+    /// (<c>GET</c>/<c>POST /industrial/assets</c>, <c>PATCH /industrial/assets/{id}</c>);
+    /// nullable here because the same record is reused for the
+    /// <c>PATCH /industrial/assets/{id}/data-outputs</c> response where it is absent.
+    /// </summary>
     [JsonPropertyName("name")]
-    public required string Name { get; init; }
+    public string? Name { get; init; }
 
     /// <summary>
     /// The running status of the asset. <c>true</c> for On, <c>false</c> for Off.
-    /// Spec-required.
+    /// Required on the standard asset payloads; nullable here because the
+    /// data-outputs response (which reuses this record) omits it.
     /// </summary>
     [JsonPropertyName("isRunning")]
-    public required bool IsRunning { get; init; }
+    public bool? IsRunning { get; init; }
 
     /// <summary>
     /// Status code of the data-outputs request (200 = success, 500 = internal
@@ -233,14 +239,15 @@ public sealed record IndustrialAssetTag
 
 /// <summary>
 /// A data input belonging to an industrial asset (used by
-/// <c>GET /industrial/data-inputs</c>). Mirrors the union of
-/// <c>DataInputTinyResponse</c> and <c>DataInputResponse_allOf</c>.
+/// <c>GET /industrial/data-inputs</c>). Mirrors the spec's
+/// <c>DataInputTinyResponse</c> inner schema. The time-series data points live on
+/// the data-points endpoints and are modelled by <see cref="DataInputDataPoint"/>.
 /// </summary>
 public sealed record DataInput
 {
-    /// <summary>Unique identifier for the data input.</summary>
+    /// <summary>Unique identifier for the data input. Optional per the spec list response.</summary>
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     /// <summary>Name of this data input.</summary>
     [JsonPropertyName("name")]
@@ -257,26 +264,6 @@ public sealed record DataInput
     /// <summary>Units of data for this data input.</summary>
     [JsonPropertyName("units")]
     public string? Units { get; init; }
-
-    /// <summary>List of FFT spectra data points from the data input.</summary>
-    [JsonPropertyName("fftSpectraPoints")]
-    public IReadOnlyList<FftSpectraDataPoint>? FftSpectraPoints { get; init; }
-
-    /// <summary>List of active J1939D1 statuses.</summary>
-    [JsonPropertyName("j1939D1StatusPoints")]
-    public IReadOnlyList<J1939D1StatusDataPoint>? J1939D1StatusPoints { get; init; }
-
-    /// <summary>List of location data points from the data input.</summary>
-    [JsonPropertyName("locationPoints")]
-    public IReadOnlyList<LocationDataPoint>? LocationPoints { get; init; }
-
-    /// <summary>List of numeric data points from the data input.</summary>
-    [JsonPropertyName("numberPoints")]
-    public IReadOnlyList<NumberDataPoint>? NumberPoints { get; init; }
-
-    /// <summary>List of string data points from the data input.</summary>
-    [JsonPropertyName("stringPoints")]
-    public IReadOnlyList<StringDataPoint>? StringPoints { get; init; }
 }
 
 /// <summary>

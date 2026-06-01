@@ -93,6 +93,12 @@ jobs:
       - name: Verify every SDK endpoint exists in the live spec
         run: python3 tools/check-sdk-sync.py --fail-on-mismatch
 
+      - name: Verify no fabricated / mis-homed SDK methods
+        run: python3 tools/check-sdk-fabrication.py --fail-on-issues
+
+      - name: Verify SDK model shapes match the spec (CRITICAL/HIGH gate)
+        run: python3 tools/check-model-sync.py --fail-on-severity HIGH
+
   pack-check:
     name: NuGet Pack (dry-run)
     runs-on: ubuntu-latest

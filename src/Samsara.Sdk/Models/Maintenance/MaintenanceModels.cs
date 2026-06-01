@@ -17,11 +17,11 @@ public sealed record MaintenanceDvir
 
     /// <summary>
     /// Author signature for the DVIR. Spec-required for stream/get and present
-    /// on POST/PATCH responses. Modeled as <see cref="JsonElement"/> to preserve
-    /// the nested signature payload (id, signedAt, sigUrl, type, user, etc.).
+    /// on POST/PATCH responses. Mirrors the spec's
+    /// <c>AuthorSignatureObjectResponseBody</c>.
     /// </summary>
     [JsonPropertyName("authorSignature")]
-    public JsonElement? AuthorSignature { get; init; }
+    public MaintenanceDvirSignature? AuthorSignature { get; init; }
 
     /// <summary>
     /// Timestamp at which the DVIR began submission (RFC 3339 string).
@@ -85,21 +85,24 @@ public sealed record MaintenanceDvir
     [JsonPropertyName("safetyStatus")]
     public string? SafetyStatus { get; init; }
 
-    /// <summary>Second signature on the DVIR (optional, nested object).</summary>
+    /// <summary>Second signature on the DVIR. Mirrors the spec's
+    /// <c>AuthorSignatureObjectResponseBody</c>.</summary>
     [JsonPropertyName("secondSignature")]
-    public JsonElement? SecondSignature { get; init; }
+    public MaintenanceDvirSignature? SecondSignature { get; init; }
 
     /// <summary>Time when the DVIR started (RFC 3339).</summary>
     [JsonPropertyName("startTime")]
     public string? StartTime { get; init; }
 
-    /// <summary>Third signature on the DVIR (optional, nested object).</summary>
+    /// <summary>Third signature on the DVIR. Mirrors the spec's
+    /// <c>AuthorSignatureObjectResponseBody</c>.</summary>
     [JsonPropertyName("thirdSignature")]
-    public JsonElement? ThirdSignature { get; init; }
+    public MaintenanceDvirSignature? ThirdSignature { get; init; }
 
-    /// <summary>Trailer associated with the DVIR (nested object).</summary>
+    /// <summary>Trailer associated with the DVIR. Mirrors the spec's
+    /// <c>TrailerDvirObjectResponseBody</c>.</summary>
     [JsonPropertyName("trailer")]
-    public JsonElement? Trailer { get; init; }
+    public MaintenanceDvirAssetRef? Trailer { get; init; }
 
     /// <summary>Trailer defects reported on the DVIR.</summary>
     [JsonPropertyName("trailerDefects")]
@@ -109,9 +112,10 @@ public sealed record MaintenanceDvir
     [JsonPropertyName("trailerName")]
     public string? TrailerName { get; init; }
 
-    /// <summary>Vehicle associated with the DVIR (nested object).</summary>
+    /// <summary>Vehicle associated with the DVIR. Mirrors the spec's
+    /// <c>VehicleDvirObjectResponseBody</c>.</summary>
     [JsonPropertyName("vehicle")]
-    public JsonElement? Vehicle { get; init; }
+    public MaintenanceDvirAssetRef? Vehicle { get; init; }
 
     /// <summary>Vehicle defects reported on the DVIR.</summary>
     [JsonPropertyName("vehicleDefects")]
@@ -120,51 +124,57 @@ public sealed record MaintenanceDvir
     /// <summary>Walkaround photo objects attached to the DVIR.</summary>
     [JsonPropertyName("walkaroundPhotos")]
     public IReadOnlyList<JsonElement>? WalkaroundPhotos { get; init; }
-
-    // --- Legacy SDK-only flat-scalar convenience properties (not in spec) ---
-    // Retained for back-compat per the workflow precedent established in
-    // `08-carrier-proposed-assignments`, `13-driver-trailer-assignments`,
-    // and `14-driver-vehicle-assignments`. Use the spec-aligned `Vehicle`,
-    // `TrailerDefects`/`VehicleDefects` nested objects above for new code.
-
-    /// <summary>Legacy flat scalar (not in spec). Use the nested <see cref="Vehicle"/> object instead.</summary>
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    /// <summary>Legacy flat scalar (not in spec). Use the nested <see cref="Vehicle"/> object instead.</summary>
-    [JsonPropertyName("vehicleName")]
-    public string? VehicleName { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec).</summary>
-    [JsonPropertyName("inspectionType")]
-    public string? InspectionType { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec).</summary>
-    [JsonPropertyName("safeToOperate")]
-    public bool? SafeToOperate { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec).</summary>
-    [JsonPropertyName("timeMs")]
-    public long? TimeMs { get; init; }
-
-    /// <summary>Legacy SDK-only collection (not in spec). Use <see cref="VehicleDefects"/> / <see cref="TrailerDefects"/> instead.</summary>
-    [JsonPropertyName("defects")]
-    public IReadOnlyList<MaintenanceDefect>? Defects { get; init; }
 }
 
 /// <summary>
-/// A defect in a maintenance DVIR.
+/// A trailer or vehicle reference on a DVIR or defect. Mirrors the spec's
+/// <c>TrailerDvirObjectResponseBody</c> / <c>VehicleDvirObjectResponseBody</c>
+/// (and the equivalent <c>DefectTrailerResponseResponseBody</c> /
+/// <c>DefectVehicleResponseResponseBody</c> on the defects endpoints).
 /// </summary>
-public sealed record MaintenanceDefect
+public sealed record MaintenanceDvirAssetRef
 {
-    [JsonPropertyName("defectType")]
-    public string? DefectType { get; init; }
+    /// <summary>Samsara ID of the asset.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
 
-    [JsonPropertyName("comment")]
-    public string? Comment { get; init; }
+    /// <summary>A map of external IDs for the asset.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
 
-    [JsonPropertyName("isResolved")]
-    public bool? IsResolved { get; init; }
+/// <summary>
+/// A signature captured on a DVIR. Mirrors the spec's
+/// <c>AuthorSignatureObjectResponseBody</c>.
+/// </summary>
+public sealed record MaintenanceDvirSignature
+{
+    /// <summary>The user who signed. Spec-required.</summary>
+    [JsonPropertyName("signatoryUser")]
+    public MaintenanceSignatoryUser? SignatoryUser { get; init; }
+
+    /// <summary>Timestamp at which the DVIR was signed (RFC 3339). Spec-required.</summary>
+    [JsonPropertyName("signedAtTime")]
+    public string? SignedAtTime { get; init; }
+
+    /// <summary>Type of signature (e.g. <c>driver</c>, <c>mechanic</c>). Spec-required.</summary>
+    [JsonPropertyName("type")]
+    public string? Type { get; init; }
+}
+
+/// <summary>
+/// The user who signed a DVIR. Mirrors the spec's
+/// <c>SignatoryUserObjectResponseBody</c>.
+/// </summary>
+public sealed record MaintenanceSignatoryUser
+{
+    /// <summary>Samsara ID of the signatory user. Spec-required.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>A map of external IDs for the user.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
 
 /// <summary>
@@ -230,9 +240,13 @@ public sealed record DefectRecord
     [JsonPropertyName("dvirId")]
     public string? DvirId { get; init; }
 
-    /// <summary>Comment describing the defect. Spec-required (response).</summary>
+    /// <summary>
+    /// Comment describing the defect. Spec-required on <c>GET /defects/stream</c>
+    /// and <c>GET /defects/{id}</c>, but optional on the <c>PATCH /fleet/defects/{id}</c>
+    /// response (<c>Defect</c>), so modeled nullable to avoid a deserialization throw.
+    /// </summary>
     [JsonPropertyName("comment")]
-    public required string Comment { get; init; }
+    public string? Comment { get; init; }
 
     /// <summary>Whether the defect has been resolved. Spec-required (response).</summary>
     [JsonPropertyName("isResolved")]
@@ -265,49 +279,51 @@ public sealed record DefectRecord
     [JsonPropertyName("resolvedAtTime")]
     public string? ResolvedAtTime { get; init; }
 
-    /// <summary>Details about who resolved the defect (nested object).</summary>
+    /// <summary>Details about who resolved the defect. Mirrors the spec's
+    /// <c>DvirResolvedByObjectResponseBody</c>.</summary>
     [JsonPropertyName("resolvedBy")]
-    public JsonElement? ResolvedBy { get; init; }
+    public DefectResolvedBy? ResolvedBy { get; init; }
 
-    /// <summary>Trailer the defect was reported against (nested object).</summary>
+    /// <summary>Trailer the defect was reported against. Mirrors the spec's
+    /// <c>DefectTrailerResponseResponseBody</c>.</summary>
     [JsonPropertyName("trailer")]
-    public JsonElement? Trailer { get; init; }
+    public MaintenanceDvirAssetRef? Trailer { get; init; }
 
     /// <summary>Timestamp at which the defect was last updated (RFC 3339).</summary>
     [JsonPropertyName("updatedAtTime")]
     public string? UpdatedAtTime { get; init; }
 
-    /// <summary>Vehicle the defect was reported against (nested object).</summary>
+    /// <summary>Vehicle the defect was reported against. Mirrors the spec's
+    /// <c>DefectVehicleResponseResponseBody</c>.</summary>
     [JsonPropertyName("vehicle")]
-    public JsonElement? Vehicle { get; init; }
+    public MaintenanceDvirAssetRef? Vehicle { get; init; }
 
-    // --- Legacy SDK-only flat-scalar convenience properties (not in spec) ---
-    // Retained for back-compat per the workflow precedent established in
-    // earlier model-sync plans (08, 13, 14).
-
-    /// <summary>Legacy flat scalar (not in spec). Use the nested <see cref="Vehicle"/> object instead.</summary>
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    /// <summary>Legacy flat scalar (not in spec). Use the nested <see cref="Vehicle"/> object instead.</summary>
-    [JsonPropertyName("vehicleName")]
-    public string? VehicleName { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec).</summary>
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec). Use <c>DefectTypeId</c> instead.</summary>
+    /// <summary>
+    /// Type of defect (free-form string). Present on the
+    /// <c>PATCH /fleet/defects/{id}</c> response (<c>Defect</c>); not returned by the
+    /// stream/get endpoints, which expose <see cref="DefectTypeId"/> instead.
+    /// </summary>
     [JsonPropertyName("defectType")]
     public string? DefectType { get; init; }
+}
 
-    /// <summary>Legacy SDK-only field (not in spec). Use <see cref="ResolvedAtTime"/> instead.</summary>
-    [JsonPropertyName("resolvedAt")]
-    public DateTimeOffset? ResolvedAt { get; init; }
+/// <summary>
+/// Details about the user who resolved a defect. Mirrors the spec's
+/// <c>DvirResolvedByObjectResponseBody</c>.
+/// </summary>
+public sealed record DefectResolvedBy
+{
+    /// <summary>Samsara ID of the resolving user. Spec-required.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
 
-    /// <summary>Legacy SDK-only field (not in spec). Use <see cref="CreatedAtTime"/> instead.</summary>
-    [JsonPropertyName("createdAt")]
-    public DateTimeOffset? CreatedAt { get; init; }
+    /// <summary>Name of the resolving user. Spec-required.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>Type of the resolving user (e.g. <c>driver</c>, <c>mechanic</c>). Spec-required.</summary>
+    [JsonPropertyName("type")]
+    public string? Type { get; init; }
 }
 
 /// <summary>
@@ -333,9 +349,25 @@ public sealed record UpdateDefectRequest
     [JsonPropertyName("resolvedAtTime")]
     public string? ResolvedAtTime { get; init; }
 
-    /// <summary>Details about who resolved the defect (nested object).</summary>
+    /// <summary>Details about who is resolving the defect. Mirrors the spec's
+    /// <c>ResolvedBy</c> request schema.</summary>
     [JsonPropertyName("resolvedBy")]
-    public JsonElement? ResolvedBy { get; init; }
+    public UpdateDefectResolvedBy? ResolvedBy { get; init; }
+}
+
+/// <summary>
+/// Information about the user resolving a defect, supplied on
+/// <c>PATCH /fleet/defects/{id}</c>. Mirrors the spec's <c>ResolvedBy</c> schema.
+/// </summary>
+public sealed record UpdateDefectResolvedBy
+{
+    /// <summary>The ID of the user who is resolving the defect. Spec-required.</summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+
+    /// <summary>The type of user resolving the defect. Must be <c>mechanic</c>. Spec-required.</summary>
+    [JsonPropertyName("type")]
+    public required string Type { get; init; }
 }
 
 /// <summary>
@@ -366,16 +398,6 @@ public sealed record DefectType
     /// <summary>Severity associated with the defect type.</summary>
     [JsonPropertyName("severity")]
     public string? Severity { get; init; }
-
-    // --- Legacy SDK-only flat-scalar convenience properties (not in spec) ---
-
-    /// <summary>Legacy SDK-only field (not in spec). Use <see cref="Label"/> instead.</summary>
-    [JsonPropertyName("name")]
-    public string? Name { get; init; }
-
-    /// <summary>Legacy SDK-only field (not in spec). Use <see cref="SectionType"/> instead.</summary>
-    [JsonPropertyName("category")]
-    public string? Category { get; init; }
 }
 
 /// <summary>Request body for creating a DVIR.</summary>

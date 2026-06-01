@@ -15,9 +15,6 @@ public sealed class ComplianceClientTests
             {
                 new
                 {
-                    id = "dl-1",
-                    driverId = "d-1",
-                    date = "2026-04-01",
                     driver = new { id = "d-1", name = "Driver Bob" },
                     startTime = "2026-04-01T07:00:00Z",
                     endTime = "2026-04-02T07:00:00Z",
@@ -33,7 +30,6 @@ public sealed class ComplianceClientTests
             logs.Add(log);
 
         logs.Should().HaveCount(1);
-        logs[0].Id.Should().Be("dl-1");
         logs[0].Driver.Id.Should().Be("d-1");
         logs[0].StartTime.Should().Be("2026-04-01T07:00:00Z");
         logs[0].EndTime.Should().Be("2026-04-02T07:00:00Z");

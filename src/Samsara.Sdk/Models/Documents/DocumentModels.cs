@@ -199,7 +199,7 @@ public sealed record DocumentPhoto
 public sealed record DocumentType
 {
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     [JsonPropertyName("name")]
     public string? Name { get; init; }
@@ -284,11 +284,15 @@ public sealed record DocumentPdfJob
 {
     /// <summary>ID of the PDF file generated (or being generated) for the document.</summary>
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     /// <summary>ID of the source document.</summary>
     [JsonPropertyName("documentId")]
     public string? DocumentId { get; init; }
+
+    // The fields below are returned only by GET /fleet/documents/pdfs/{id}
+    // (DocumentPdfQueryResponse_data), which shares this record; the POST
+    // /fleet/documents/pdfs create response carries only id + documentId.
 
     /// <summary>Status of the PDF generation job (<c>requested</c>, <c>processing</c>, <c>completed</c>).</summary>
     [JsonPropertyName("jobStatus")]

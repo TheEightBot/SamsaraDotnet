@@ -7,6 +7,7 @@ using Samsara.Sdk.Models.Routes;
 /// </summary>
 public interface IHubsClient
 {
+    /// <summary>List all hubs via <c>GET /hubs</c> (no filters) — convenience over <see cref="ListHubsAsync"/>.</summary>
     IAsyncEnumerable<Hub> ListAsync(CancellationToken cancellationToken = default);
 
     /// <summary>List hubs via the dedicated <c>GET /hubs</c> endpoint.</summary>
@@ -42,11 +43,6 @@ public interface IHubsClient
         CancellationToken cancellationToken = default);
 
     Task DeleteRouteTemplatesAsync(string id, CancellationToken cancellationToken = default);
-
-    Task<Hub> GetAsync(string id, CancellationToken cancellationToken = default);
-    Task<Hub> CreateAsync(CreateHubRequest request, CancellationToken cancellationToken = default);
-    Task<Hub> UpdateAsync(string id, UpdateHubRequest request, CancellationToken cancellationToken = default);
-    Task DeleteAsync(string id, CancellationToken cancellationToken = default);
 
     /// <summary>List hub capacities (<c>GET /hub/capacities</c>). <paramref name="hubId"/> is required by the spec.</summary>
     IAsyncEnumerable<HubCapacity> ListCapacitiesAsync(

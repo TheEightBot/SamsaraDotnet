@@ -123,20 +123,91 @@ public sealed record Vehicle
     [JsonPropertyName("vehicleWeightInPounds")]
     public long? VehicleWeightInPounds { get; init; }
 
+    /// <summary>Gross vehicle weight, returned by <c>GET /fleet/vehicles/{id}</c> and the PATCH response.</summary>
     [JsonPropertyName("grossVehicleWeight")]
-    public object? GrossVehicleWeight { get; init; }
+    public VehicleGrossWeight? GrossVehicleWeight { get; init; }
 
+    /// <summary>Trailer sensor configuration (cargo/temperature/humidity/door sensors by area).</summary>
     [JsonPropertyName("sensorConfiguration")]
-    public object? SensorConfiguration { get; init; }
+    public VehicleSensorConfiguration? SensorConfiguration { get; init; }
+}
 
-    [JsonPropertyName("engineHours")]
-    public long? EngineHours { get; init; }
+/// <summary>
+/// Gross vehicle weight on a <see cref="Vehicle"/>. Mirrors the spec's
+/// <c>grossVehicleWeight</c> object.
+/// </summary>
+public sealed record VehicleGrossWeight
+{
+    /// <summary>Unit of the weight value (e.g. <c>pounds</c>, <c>kilograms</c>).</summary>
+    [JsonPropertyName("unit")]
+    public string? Unit { get; init; }
 
-    [JsonPropertyName("odometerMeters")]
-    public double? OdometerMeters { get; init; }
+    /// <summary>Gross vehicle weight value, expressed in <see cref="Unit"/>.</summary>
+    [JsonPropertyName("weight")]
+    public long? Weight { get; init; }
+}
 
-    [JsonPropertyName("gatewaySerial")]
-    public string? GatewaySerial { get; init; }
+/// <summary>
+/// Trailer sensor configuration on a <see cref="Vehicle"/>. Mirrors the spec's
+/// <c>sensorConfiguration</c> object.
+/// </summary>
+public sealed record VehicleSensorConfiguration
+{
+    /// <summary>Sensor areas (each grouping cargo/temperature/humidity sensors by position).</summary>
+    [JsonPropertyName("areas")]
+    public IReadOnlyList<VehicleSensorArea>? Areas { get; init; }
+
+    /// <summary>Door sensors by position.</summary>
+    [JsonPropertyName("doors")]
+    public IReadOnlyList<VehicleSensorDoor>? Doors { get; init; }
+}
+
+/// <summary>A sensor area within a <see cref="VehicleSensorConfiguration"/>.</summary>
+public sealed record VehicleSensorArea
+{
+    /// <summary>Position label for the area.</summary>
+    [JsonPropertyName("position")]
+    public string? Position { get; init; }
+
+    /// <summary>Cargo sensors in this area.</summary>
+    [JsonPropertyName("cargoSensors")]
+    public IReadOnlyList<VehicleSensor>? CargoSensors { get; init; }
+
+    /// <summary>Temperature sensors in this area.</summary>
+    [JsonPropertyName("temperatureSensors")]
+    public IReadOnlyList<VehicleSensor>? TemperatureSensors { get; init; }
+
+    /// <summary>Humidity sensors in this area.</summary>
+    [JsonPropertyName("humiditySensors")]
+    public IReadOnlyList<VehicleSensor>? HumiditySensors { get; init; }
+}
+
+/// <summary>A door sensor within a <see cref="VehicleSensorConfiguration"/>.</summary>
+public sealed record VehicleSensorDoor
+{
+    /// <summary>Position label for the door.</summary>
+    [JsonPropertyName("position")]
+    public string? Position { get; init; }
+
+    /// <summary>The door sensor.</summary>
+    [JsonPropertyName("sensor")]
+    public VehicleSensor? Sensor { get; init; }
+}
+
+/// <summary>A single Samsara sensor (cargo/temperature/humidity/door).</summary>
+public sealed record VehicleSensor
+{
+    /// <summary>Sensor ID.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Sensor MAC address.</summary>
+    [JsonPropertyName("mac")]
+    public string? Mac { get; init; }
+
+    /// <summary>Sensor name.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
 }
 
 /// <summary>
@@ -294,40 +365,58 @@ public sealed record VehicleLocation
     [JsonPropertyName("name")]
     public required string Name { get; init; }
 
-    /// <summary>Single location object (snapshot shape, <c>GET /fleet/vehicles/locations</c>).</summary>
+    /// <summary>
+    /// Single location point (snapshot shape, <c>GET /fleet/vehicles/locations</c>).
+    /// Null on the feed/history shapes, which populate <see cref="Locations"/> instead.
+    /// </summary>
     [JsonPropertyName("location")]
-    public object? Location { get; init; }
+    public VehicleLocationPoint? Location { get; init; }
 
-    /// <summary>Location entries (feed/history shapes, <c>.../locations/feed</c> and <c>.../locations/history</c>).</summary>
+    /// <summary>
+    /// Location points (feed/history shapes, <c>.../locations/feed</c> and
+    /// <c>.../locations/history</c>). Null on the snapshot shape, which populates
+    /// <see cref="Location"/> instead.
+    /// </summary>
     [JsonPropertyName("locations")]
-    public IReadOnlyList<object>? Locations { get; init; }
+    public IReadOnlyList<VehicleLocationPoint>? Locations { get; init; }
+}
 
-    // Not in current spec; retained for back-compat.
+/// <summary>
+/// A single vehicle location point — the nested object the spec returns under
+/// <c>location</c> (snapshot) and each element of <c>locations</c> (feed/history).
+/// </summary>
+public sealed record VehicleLocationPoint
+{
+    /// <summary>Latitude of the vehicle (degrees). Spec marks REQUIRED.</summary>
     [JsonPropertyName("latitude")]
-    public double? Latitude { get; init; }
+    public required double Latitude { get; init; }
 
+    /// <summary>Longitude of the vehicle (degrees). Spec marks REQUIRED.</summary>
     [JsonPropertyName("longitude")]
-    public double? Longitude { get; init; }
+    public required double Longitude { get; init; }
 
+    /// <summary>Time the location was recorded, in RFC 3339 format. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("time")]
+    public required DateTimeOffset Time { get; init; }
+
+    /// <summary>Heading of the vehicle in degrees (0 = north).</summary>
     [JsonPropertyName("heading")]
     public double? Heading { get; init; }
 
+    /// <summary>Speed of the vehicle in miles per hour.</summary>
     [JsonPropertyName("speed")]
     public double? Speed { get; init; }
 
-    [JsonPropertyName("formattedAddress")]
-    public string? FormattedAddress { get; init; }
-
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
-
-    /// <summary>Reverse-geocoded location (returned by the location feeds).</summary>
+    /// <summary>Reverse-geocoded location for this point.</summary>
     [JsonPropertyName("reverseGeo")]
     public ReverseGeo? ReverseGeo { get; init; }
 }
 
 /// <summary>
-/// Vehicle statistics data point (fuel, engine hours, odometer, etc).
+/// Vehicle statistics snapshot, returned by <c>GET /fleet/vehicles/stats</c>
+/// (<c>IVehiclesClient.ListStatsAsync</c>). Each metric is the single
+/// most-recent <c>{ time, value }</c> sample. The time-series feed/history
+/// endpoints return arrays of samples instead; see <see cref="VehicleStatsSample"/>.
 /// </summary>
 public sealed record VehicleStats
 {
@@ -337,273 +426,754 @@ public sealed record VehicleStats
     [JsonPropertyName("name")]
     public required string Name { get; init; }
 
+    /// <summary>Ambient air temperature, in milli-degrees Celsius.</summary>
     [JsonPropertyName("ambientAirTemperatureMilliC")]
-    public object? AmbientAirTemperatureMilliC { get; init; }
+    public VehicleStatValue? AmbientAirTemperatureMilliC { get; init; }
 
     [JsonPropertyName("auxInput1")]
-    public object? AuxInput1 { get; init; }
+    public VehicleStatAuxInput? AuxInput1 { get; init; }
 
     [JsonPropertyName("auxInput2")]
-    public object? AuxInput2 { get; init; }
+    public VehicleStatAuxInput? AuxInput2 { get; init; }
 
     [JsonPropertyName("auxInput3")]
-    public object? AuxInput3 { get; init; }
+    public VehicleStatAuxInput? AuxInput3 { get; init; }
 
     [JsonPropertyName("auxInput4")]
-    public object? AuxInput4 { get; init; }
+    public VehicleStatAuxInput? AuxInput4 { get; init; }
 
     [JsonPropertyName("auxInput5")]
-    public object? AuxInput5 { get; init; }
+    public VehicleStatAuxInput? AuxInput5 { get; init; }
 
     [JsonPropertyName("auxInput6")]
-    public object? AuxInput6 { get; init; }
+    public VehicleStatAuxInput? AuxInput6 { get; init; }
 
     [JsonPropertyName("auxInput7")]
-    public object? AuxInput7 { get; init; }
+    public VehicleStatAuxInput? AuxInput7 { get; init; }
 
     [JsonPropertyName("auxInput8")]
-    public object? AuxInput8 { get; init; }
+    public VehicleStatAuxInput? AuxInput8 { get; init; }
 
     [JsonPropertyName("auxInput9")]
-    public object? AuxInput9 { get; init; }
+    public VehicleStatAuxInput? AuxInput9 { get; init; }
 
     [JsonPropertyName("auxInput10")]
-    public object? AuxInput10 { get; init; }
+    public VehicleStatAuxInput? AuxInput10 { get; init; }
 
     [JsonPropertyName("auxInput11")]
-    public object? AuxInput11 { get; init; }
+    public VehicleStatAuxInput? AuxInput11 { get; init; }
 
     [JsonPropertyName("auxInput12")]
-    public object? AuxInput12 { get; init; }
+    public VehicleStatAuxInput? AuxInput12 { get; init; }
 
     [JsonPropertyName("auxInput13")]
-    public object? AuxInput13 { get; init; }
+    public VehicleStatAuxInput? AuxInput13 { get; init; }
 
+    /// <summary>Barometric pressure, in pascals.</summary>
     [JsonPropertyName("barometricPressurePa")]
-    public object? BarometricPressurePa { get; init; }
+    public VehicleStatValue? BarometricPressurePa { get; init; }
 
+    /// <summary>Battery voltage, in millivolts.</summary>
     [JsonPropertyName("batteryMilliVolts")]
-    public object? BatteryMilliVolts { get; init; }
+    public VehicleStatValue? BatteryMilliVolts { get; init; }
 
+    /// <summary>Diesel exhaust fluid level, in milli-percent.</summary>
     [JsonPropertyName("defLevelMilliPercent")]
-    public object? DefLevelMilliPercent { get; init; }
+    public VehicleStatValue? DefLevelMilliPercent { get; init; }
 
+    /// <summary>Door status as read from the ECU (or AUX as a fallback).</summary>
     [JsonPropertyName("ecuDoorStatus")]
-    public object? EcuDoorStatus { get; init; }
+    public VehicleStatStringValue? EcuDoorStatus { get; init; }
 
+    /// <summary>ECU-reported road speed, in miles per hour.</summary>
     [JsonPropertyName("ecuSpeedMph")]
-    public object? EcuSpeedMph { get; init; }
+    public VehicleStatDoubleValue? EcuSpeedMph { get; init; }
 
+    /// <summary>Engine coolant temperature, in milli-degrees Celsius.</summary>
     [JsonPropertyName("engineCoolantTemperatureMilliC")]
-    public object? EngineCoolantTemperatureMilliC { get; init; }
+    public VehicleStatValue? EngineCoolantTemperatureMilliC { get; init; }
 
+    /// <summary>Engine immobilizer state.</summary>
     [JsonPropertyName("engineImmobilizer")]
-    public object? EngineImmobilizer { get; init; }
+    public VehicleStatEngineImmobilizer? EngineImmobilizer { get; init; }
 
+    /// <summary>Engine load, as a percentage.</summary>
     [JsonPropertyName("engineLoadPercent")]
-    public object? EngineLoadPercent { get; init; }
+    public VehicleStatValue? EngineLoadPercent { get; init; }
 
+    /// <summary>Engine oil pressure, in kilopascals.</summary>
     [JsonPropertyName("engineOilPressureKPa")]
-    public object? EngineOilPressureKPa { get; init; }
+    public VehicleStatValue? EngineOilPressureKPa { get; init; }
 
+    /// <summary>Engine RPM.</summary>
     [JsonPropertyName("engineRpm")]
-    public object? EngineRpm { get; init; }
+    public VehicleStatValue? EngineRpm { get; init; }
 
-    [JsonPropertyName("evAverageBatteryTemperatureMilliCelsius")]
-    public object? EvAverageBatteryTemperatureMilliCelsius { get; init; }
-
-    [JsonPropertyName("evBatteryCurrentMilliAmp")]
-    public object? EvBatteryCurrentMilliAmp { get; init; }
-
-    [JsonPropertyName("evBatteryStateOfHealthMilliPercent")]
-    public object? EvBatteryStateOfHealthMilliPercent { get; init; }
-
-    [JsonPropertyName("evBatteryVoltageMilliVolt")]
-    public object? EvBatteryVoltageMilliVolt { get; init; }
-
-    [JsonPropertyName("evChargingCurrentMilliAmp")]
-    public object? EvChargingCurrentMilliAmp { get; init; }
-
-    [JsonPropertyName("evChargingEnergyMicroWh")]
-    public object? EvChargingEnergyMicroWh { get; init; }
-
-    [JsonPropertyName("evChargingStatus")]
-    public object? EvChargingStatus { get; init; }
-
-    [JsonPropertyName("evChargingVoltageMilliVolt")]
-    public object? EvChargingVoltageMilliVolt { get; init; }
-
-    [JsonPropertyName("evConsumedEnergyMicroWh")]
-    public object? EvConsumedEnergyMicroWh { get; init; }
-
-    [JsonPropertyName("evDistanceDrivenMeters")]
-    public object? EvDistanceDrivenMeters { get; init; }
-
-    [JsonPropertyName("evRegeneratedEnergyMicroWh")]
-    public object? EvRegeneratedEnergyMicroWh { get; init; }
-
-    [JsonPropertyName("evStateOfChargeMilliPercent")]
-    public object? EvStateOfChargeMilliPercent { get; init; }
-
-    [JsonPropertyName("externalIds")]
-    public object? ExternalIds { get; init; }
-
-    [JsonPropertyName("faultCodes")]
-    public object? FaultCodes { get; init; }
-
-    [JsonPropertyName("fuelConsumedMilliliters")]
-    public object? FuelConsumedMilliliters { get; init; }
-
-    [JsonPropertyName("gpsDistanceMeters")]
-    public object? GpsDistanceMeters { get; init; }
-
-    [JsonPropertyName("idlingDurationMilliseconds")]
-    public object? IdlingDurationMilliseconds { get; init; }
-
-    [JsonPropertyName("intakeManifoldTemperatureMilliC")]
-    public object? IntakeManifoldTemperatureMilliC { get; init; }
-
-    [JsonPropertyName("nfcCardScan")]
-    public object? NfcCardScan { get; init; }
-
-    [JsonPropertyName("obdEngineSeconds")]
-    public object? ObdEngineSeconds { get; init; }
-
-    [JsonPropertyName("seatbeltDriver")]
-    public object? SeatbeltDriver { get; init; }
-
-    [JsonPropertyName("spreaderActive")]
-    public object? SpreaderActive { get; init; }
-
-    [JsonPropertyName("spreaderAirTemp")]
-    public object? SpreaderAirTemp { get; init; }
-
-    [JsonPropertyName("spreaderBlastState")]
-    public object? SpreaderBlastState { get; init; }
-
-    [JsonPropertyName("spreaderGranularName")]
-    public object? SpreaderGranularName { get; init; }
-
-    [JsonPropertyName("spreaderGranularRate")]
-    public object? SpreaderGranularRate { get; init; }
-
-    [JsonPropertyName("spreaderLiquidName")]
-    public object? SpreaderLiquidName { get; init; }
-
-    [JsonPropertyName("spreaderLiquidRate")]
-    public object? SpreaderLiquidRate { get; init; }
-
-    [JsonPropertyName("spreaderOnState")]
-    public object? SpreaderOnState { get; init; }
-
-    [JsonPropertyName("spreaderPlowStatus")]
-    public object? SpreaderPlowStatus { get; init; }
-
-    [JsonPropertyName("spreaderPrewetName")]
-    public object? SpreaderPrewetName { get; init; }
-
-    [JsonPropertyName("spreaderPrewetRate")]
-    public object? SpreaderPrewetRate { get; init; }
-
-    [JsonPropertyName("spreaderRoadTemp")]
-    public object? SpreaderRoadTemp { get; init; }
-
-    [JsonPropertyName("syntheticEngineSeconds")]
-    public object? SyntheticEngineSeconds { get; init; }
-
-    [JsonPropertyName("engineStates")]
-    public IReadOnlyList<object>? EngineStates { get; init; }
-
-    [JsonPropertyName("fuelPercents")]
-    public IReadOnlyList<object>? FuelPercents { get; init; }
-
-    [JsonPropertyName("nfcCardScans")]
-    public IReadOnlyList<object>? NfcCardScans { get; init; }
-
-    /// <summary>GPS data: single object on the snapshot endpoint, array on feed/history; exposed as object to accept either shape.</summary>
-    [JsonPropertyName("gps")]
-    public object? Gps { get; init; }
-
-    /// <summary>GPS-calculated odometer: single object on the snapshot endpoint, array on feed/history; exposed as object to accept either shape.</summary>
-    [JsonPropertyName("gpsOdometerMeters")]
-    public object? GpsOdometerMeters { get; init; }
-
-    /// <summary>OBD-reported odometer: single object on the snapshot endpoint, array on feed/history; exposed as object to accept either shape.</summary>
-    [JsonPropertyName("obdOdometerMeters")]
-    public object? ObdOdometerMeters { get; init; }
-
-    // Not in current spec; retained for back-compat.
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
-
+    /// <summary>Engine on/off state (<c>Off</c>, <c>On</c>, or <c>Idle</c>).</summary>
     [JsonPropertyName("engineState")]
-    public EngineState? EngineState { get; init; }
+    public VehicleStatStringValue? EngineState { get; init; }
 
+    /// <summary>Average EV battery temperature, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("evAverageBatteryTemperatureMilliCelsius")]
+    public VehicleStatValue? EvAverageBatteryTemperatureMilliCelsius { get; init; }
+
+    /// <summary>EV battery current, in milliamps.</summary>
+    [JsonPropertyName("evBatteryCurrentMilliAmp")]
+    public VehicleStatValue? EvBatteryCurrentMilliAmp { get; init; }
+
+    /// <summary>EV battery state of health, in milli-percent.</summary>
+    [JsonPropertyName("evBatteryStateOfHealthMilliPercent")]
+    public VehicleStatValue? EvBatteryStateOfHealthMilliPercent { get; init; }
+
+    /// <summary>EV battery voltage, in millivolts.</summary>
+    [JsonPropertyName("evBatteryVoltageMilliVolt")]
+    public VehicleStatValue? EvBatteryVoltageMilliVolt { get; init; }
+
+    /// <summary>EV charging current, in milliamps.</summary>
+    [JsonPropertyName("evChargingCurrentMilliAmp")]
+    public VehicleStatValue? EvChargingCurrentMilliAmp { get; init; }
+
+    /// <summary>EV charging energy, in micro-watt-hours.</summary>
+    [JsonPropertyName("evChargingEnergyMicroWh")]
+    public VehicleStatValue? EvChargingEnergyMicroWh { get; init; }
+
+    /// <summary>EV charging status code.</summary>
+    [JsonPropertyName("evChargingStatus")]
+    public VehicleStatValue? EvChargingStatus { get; init; }
+
+    /// <summary>EV charging voltage, in millivolts.</summary>
+    [JsonPropertyName("evChargingVoltageMilliVolt")]
+    public VehicleStatValue? EvChargingVoltageMilliVolt { get; init; }
+
+    /// <summary>EV energy consumed, in micro-watt-hours.</summary>
+    [JsonPropertyName("evConsumedEnergyMicroWh")]
+    public VehicleStatValue? EvConsumedEnergyMicroWh { get; init; }
+
+    /// <summary>EV distance driven, in meters.</summary>
+    [JsonPropertyName("evDistanceDrivenMeters")]
+    public VehicleStatValue? EvDistanceDrivenMeters { get; init; }
+
+    /// <summary>EV energy regenerated, in micro-watt-hours.</summary>
+    [JsonPropertyName("evRegeneratedEnergyMicroWh")]
+    public VehicleStatValue? EvRegeneratedEnergyMicroWh { get; init; }
+
+    /// <summary>EV state of charge, in milli-percent.</summary>
+    [JsonPropertyName("evStateOfChargeMilliPercent")]
+    public VehicleStatValue? EvStateOfChargeMilliPercent { get; init; }
+
+    /// <summary>External IDs associated with the vehicle.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
+    /// <summary>Engine fault codes read from J1939, OBD-II, and OEM vehicles.</summary>
+    [JsonPropertyName("faultCodes")]
+    public VehicleStatFaultCodes? FaultCodes { get; init; }
+
+    /// <summary>Fuel consumed, in milliliters.</summary>
+    [JsonPropertyName("fuelConsumedMilliliters")]
+    public VehicleStatValue? FuelConsumedMilliliters { get; init; }
+
+    /// <summary>Fuel level, as a percentage.</summary>
     [JsonPropertyName("fuelPercent")]
-    public FuelPercent? FuelPercent { get; init; }
+    public VehicleStatValue? FuelPercent { get; init; }
 
-    [JsonPropertyName("engineSeconds")]
-    public EngineSeconds? EngineSeconds { get; init; }
+    /// <summary>GPS reading.</summary>
+    [JsonPropertyName("gps")]
+    public VehicleStatGps? Gps { get; init; }
+
+    /// <summary>GPS-measured trip distance, in meters.</summary>
+    [JsonPropertyName("gpsDistanceMeters")]
+    public VehicleStatDoubleValue? GpsDistanceMeters { get; init; }
+
+    /// <summary>GPS-derived odometer, in meters.</summary>
+    [JsonPropertyName("gpsOdometerMeters")]
+    public VehicleStatValue? GpsOdometerMeters { get; init; }
+
+    /// <summary>Idling duration, in milliseconds.</summary>
+    [JsonPropertyName("idlingDurationMilliseconds")]
+    public VehicleStatValue? IdlingDurationMilliseconds { get; init; }
+
+    /// <summary>Intake manifold temperature, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("intakeManifoldTemperatureMilliC")]
+    public VehicleStatValue? IntakeManifoldTemperatureMilliC { get; init; }
+
+    /// <summary>Most-recent NFC card scan.</summary>
+    [JsonPropertyName("nfcCardScan")]
+    public VehicleStatNfcCardScan? NfcCardScan { get; init; }
+
+    /// <summary>OBD-reported engine seconds.</summary>
+    [JsonPropertyName("obdEngineSeconds")]
+    public VehicleStatValue? ObdEngineSeconds { get; init; }
+
+    /// <summary>OBD-reported odometer, in meters.</summary>
+    [JsonPropertyName("obdOdometerMeters")]
+    public VehicleStatValue? ObdOdometerMeters { get; init; }
+
+    /// <summary>Driver seatbelt state (<c>Buckled</c> / <c>Unbuckled</c>).</summary>
+    [JsonPropertyName("seatbeltDriver")]
+    public VehicleStatStringValue? SeatbeltDriver { get; init; }
+
+    /// <summary>Whether the spreader is active (<c>On</c> / <c>Off</c>).</summary>
+    [JsonPropertyName("spreaderActive")]
+    public VehicleStatStringValue? SpreaderActive { get; init; }
+
+    /// <summary>Spreader air temperature.</summary>
+    [JsonPropertyName("spreaderAirTemp")]
+    public VehicleStatValue? SpreaderAirTemp { get; init; }
+
+    /// <summary>Spreader blast state (<c>On</c> / <c>Off</c>).</summary>
+    [JsonPropertyName("spreaderBlastState")]
+    public VehicleStatStringValue? SpreaderBlastState { get; init; }
+
+    /// <summary>Spreader granular material name.</summary>
+    [JsonPropertyName("spreaderGranularName")]
+    public VehicleStatStringValue? SpreaderGranularName { get; init; }
+
+    /// <summary>Spreader granular material application rate.</summary>
+    [JsonPropertyName("spreaderGranularRate")]
+    public VehicleStatValue? SpreaderGranularRate { get; init; }
+
+    /// <summary>Spreader liquid material name.</summary>
+    [JsonPropertyName("spreaderLiquidName")]
+    public VehicleStatStringValue? SpreaderLiquidName { get; init; }
+
+    /// <summary>Spreader liquid material application rate.</summary>
+    [JsonPropertyName("spreaderLiquidRate")]
+    public VehicleStatValue? SpreaderLiquidRate { get; init; }
+
+    /// <summary>Spreader on state (<c>On</c> / <c>Off</c>).</summary>
+    [JsonPropertyName("spreaderOnState")]
+    public VehicleStatStringValue? SpreaderOnState { get; init; }
+
+    /// <summary>Spreader plow status (<c>Up</c> / <c>Down</c>).</summary>
+    [JsonPropertyName("spreaderPlowStatus")]
+    public VehicleStatStringValue? SpreaderPlowStatus { get; init; }
+
+    /// <summary>Spreader pre-wet material name.</summary>
+    [JsonPropertyName("spreaderPrewetName")]
+    public VehicleStatStringValue? SpreaderPrewetName { get; init; }
+
+    /// <summary>Spreader pre-wet material application rate.</summary>
+    [JsonPropertyName("spreaderPrewetRate")]
+    public VehicleStatValue? SpreaderPrewetRate { get; init; }
+
+    /// <summary>Spreader road temperature.</summary>
+    [JsonPropertyName("spreaderRoadTemp")]
+    public VehicleStatValue? SpreaderRoadTemp { get; init; }
+
+    /// <summary>Synthetic (Samsara-computed) engine seconds.</summary>
+    [JsonPropertyName("syntheticEngineSeconds")]
+    public VehicleStatValue? SyntheticEngineSeconds { get; init; }
 }
 
 /// <summary>
-/// Engine on/off state.
+/// Vehicle statistics time-series row, returned by
+/// <c>GET /fleet/vehicles/stats/feed</c> (<c>IVehiclesClient.GetStatsFeedAsync</c>)
+/// and <c>GET /fleet/vehicles/stats/history</c> (<c>IVehiclesClient.GetStatsHistoryAsync</c>).
+/// Each metric is an array of <c>{ time, value }</c> samples covering the
+/// requested window. The snapshot endpoint returns single values instead; see
+/// <see cref="VehicleStats"/>.
 /// </summary>
-public sealed record EngineState
+/// <remarks>
+/// On the feed/history endpoints <c>id</c> and <c>name</c> are spec-optional, so
+/// they are nullable here (unlike the snapshot shape where they are required).
+/// </remarks>
+public sealed record VehicleStatsSample
 {
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
 
-    [JsonPropertyName("value")]
-    public string? Value { get; init; }
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>Ambient air temperature samples, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("ambientAirTemperatureMilliC")]
+    public IReadOnlyList<VehicleStatValue>? AmbientAirTemperatureMilliC { get; init; }
+
+    [JsonPropertyName("auxInput1")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput1 { get; init; }
+
+    [JsonPropertyName("auxInput2")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput2 { get; init; }
+
+    [JsonPropertyName("auxInput3")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput3 { get; init; }
+
+    [JsonPropertyName("auxInput4")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput4 { get; init; }
+
+    [JsonPropertyName("auxInput5")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput5 { get; init; }
+
+    [JsonPropertyName("auxInput6")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput6 { get; init; }
+
+    [JsonPropertyName("auxInput7")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput7 { get; init; }
+
+    [JsonPropertyName("auxInput8")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput8 { get; init; }
+
+    [JsonPropertyName("auxInput9")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput9 { get; init; }
+
+    [JsonPropertyName("auxInput10")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput10 { get; init; }
+
+    [JsonPropertyName("auxInput11")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput11 { get; init; }
+
+    [JsonPropertyName("auxInput12")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput12 { get; init; }
+
+    [JsonPropertyName("auxInput13")]
+    public IReadOnlyList<VehicleStatAuxInput>? AuxInput13 { get; init; }
+
+    /// <summary>Barometric pressure samples, in pascals.</summary>
+    [JsonPropertyName("barometricPressurePa")]
+    public IReadOnlyList<VehicleStatValue>? BarometricPressurePa { get; init; }
+
+    /// <summary>Battery voltage samples, in millivolts.</summary>
+    [JsonPropertyName("batteryMilliVolts")]
+    public IReadOnlyList<VehicleStatValue>? BatteryMilliVolts { get; init; }
+
+    /// <summary>Diesel exhaust fluid level samples, in milli-percent.</summary>
+    [JsonPropertyName("defLevelMilliPercent")]
+    public IReadOnlyList<VehicleStatValue>? DefLevelMilliPercent { get; init; }
+
+    /// <summary>Door status samples.</summary>
+    [JsonPropertyName("ecuDoorStatus")]
+    public IReadOnlyList<VehicleStatStringValue>? EcuDoorStatus { get; init; }
+
+    /// <summary>ECU road speed samples, in miles per hour.</summary>
+    [JsonPropertyName("ecuSpeedMph")]
+    public IReadOnlyList<VehicleStatDoubleValue>? EcuSpeedMph { get; init; }
+
+    /// <summary>Engine coolant temperature samples, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("engineCoolantTemperatureMilliC")]
+    public IReadOnlyList<VehicleStatValue>? EngineCoolantTemperatureMilliC { get; init; }
+
+    /// <summary>Engine immobilizer samples.</summary>
+    [JsonPropertyName("engineImmobilizer")]
+    public IReadOnlyList<VehicleStatEngineImmobilizer>? EngineImmobilizer { get; init; }
+
+    /// <summary>Engine load samples, as a percentage.</summary>
+    [JsonPropertyName("engineLoadPercent")]
+    public IReadOnlyList<VehicleStatValue>? EngineLoadPercent { get; init; }
+
+    /// <summary>Engine oil pressure samples, in kilopascals.</summary>
+    [JsonPropertyName("engineOilPressureKPa")]
+    public IReadOnlyList<VehicleStatValue>? EngineOilPressureKPa { get; init; }
+
+    /// <summary>Engine RPM samples.</summary>
+    [JsonPropertyName("engineRpm")]
+    public IReadOnlyList<VehicleStatValue>? EngineRpm { get; init; }
+
+    /// <summary>Engine on/off state samples.</summary>
+    [JsonPropertyName("engineStates")]
+    public IReadOnlyList<VehicleStatStringValue>? EngineStates { get; init; }
+
+    /// <summary>Average EV battery temperature samples, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("evAverageBatteryTemperatureMilliCelsius")]
+    public IReadOnlyList<VehicleStatValue>? EvAverageBatteryTemperatureMilliCelsius { get; init; }
+
+    /// <summary>EV battery current samples, in milliamps.</summary>
+    [JsonPropertyName("evBatteryCurrentMilliAmp")]
+    public IReadOnlyList<VehicleStatValue>? EvBatteryCurrentMilliAmp { get; init; }
+
+    /// <summary>EV battery state of health samples, in milli-percent.</summary>
+    [JsonPropertyName("evBatteryStateOfHealthMilliPercent")]
+    public IReadOnlyList<VehicleStatValue>? EvBatteryStateOfHealthMilliPercent { get; init; }
+
+    /// <summary>EV battery voltage samples, in millivolts.</summary>
+    [JsonPropertyName("evBatteryVoltageMilliVolt")]
+    public IReadOnlyList<VehicleStatValue>? EvBatteryVoltageMilliVolt { get; init; }
+
+    /// <summary>EV charging current samples, in milliamps.</summary>
+    [JsonPropertyName("evChargingCurrentMilliAmp")]
+    public IReadOnlyList<VehicleStatValue>? EvChargingCurrentMilliAmp { get; init; }
+
+    /// <summary>EV charging energy samples, in micro-watt-hours.</summary>
+    [JsonPropertyName("evChargingEnergyMicroWh")]
+    public IReadOnlyList<VehicleStatValue>? EvChargingEnergyMicroWh { get; init; }
+
+    /// <summary>EV charging status samples.</summary>
+    [JsonPropertyName("evChargingStatus")]
+    public IReadOnlyList<VehicleStatValue>? EvChargingStatus { get; init; }
+
+    /// <summary>EV charging voltage samples, in millivolts.</summary>
+    [JsonPropertyName("evChargingVoltageMilliVolt")]
+    public IReadOnlyList<VehicleStatValue>? EvChargingVoltageMilliVolt { get; init; }
+
+    /// <summary>EV energy consumed samples, in micro-watt-hours.</summary>
+    [JsonPropertyName("evConsumedEnergyMicroWh")]
+    public IReadOnlyList<VehicleStatValue>? EvConsumedEnergyMicroWh { get; init; }
+
+    /// <summary>EV distance driven samples, in meters.</summary>
+    [JsonPropertyName("evDistanceDrivenMeters")]
+    public IReadOnlyList<VehicleStatValue>? EvDistanceDrivenMeters { get; init; }
+
+    /// <summary>EV energy regenerated samples, in micro-watt-hours.</summary>
+    [JsonPropertyName("evRegeneratedEnergyMicroWh")]
+    public IReadOnlyList<VehicleStatValue>? EvRegeneratedEnergyMicroWh { get; init; }
+
+    /// <summary>EV state of charge samples, in milli-percent.</summary>
+    [JsonPropertyName("evStateOfChargeMilliPercent")]
+    public IReadOnlyList<VehicleStatValue>? EvStateOfChargeMilliPercent { get; init; }
+
+    /// <summary>External IDs associated with the vehicle.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
+    /// <summary>Engine fault code samples.</summary>
+    [JsonPropertyName("faultCodes")]
+    public IReadOnlyList<VehicleStatFaultCodes>? FaultCodes { get; init; }
+
+    /// <summary>Fuel consumed samples, in milliliters.</summary>
+    [JsonPropertyName("fuelConsumedMilliliters")]
+    public IReadOnlyList<VehicleStatValue>? FuelConsumedMilliliters { get; init; }
+
+    /// <summary>Fuel level samples, as a percentage.</summary>
+    [JsonPropertyName("fuelPercents")]
+    public IReadOnlyList<VehicleStatValue>? FuelPercents { get; init; }
+
+    /// <summary>GPS reading samples.</summary>
+    [JsonPropertyName("gps")]
+    public IReadOnlyList<VehicleStatGps>? Gps { get; init; }
+
+    /// <summary>GPS-measured trip distance samples, in meters.</summary>
+    [JsonPropertyName("gpsDistanceMeters")]
+    public IReadOnlyList<VehicleStatDoubleValue>? GpsDistanceMeters { get; init; }
+
+    /// <summary>GPS-derived odometer samples, in meters.</summary>
+    [JsonPropertyName("gpsOdometerMeters")]
+    public IReadOnlyList<VehicleStatValue>? GpsOdometerMeters { get; init; }
+
+    /// <summary>Idling duration samples, in milliseconds.</summary>
+    [JsonPropertyName("idlingDurationMilliseconds")]
+    public IReadOnlyList<VehicleStatValue>? IdlingDurationMilliseconds { get; init; }
+
+    /// <summary>Intake manifold temperature samples, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("intakeManifoldTemperatureMilliC")]
+    public IReadOnlyList<VehicleStatValue>? IntakeManifoldTemperatureMilliC { get; init; }
+
+    /// <summary>NFC card scan samples.</summary>
+    [JsonPropertyName("nfcCardScans")]
+    public IReadOnlyList<VehicleStatNfcCardScan>? NfcCardScans { get; init; }
+
+    /// <summary>OBD-reported engine seconds samples.</summary>
+    [JsonPropertyName("obdEngineSeconds")]
+    public IReadOnlyList<VehicleStatValue>? ObdEngineSeconds { get; init; }
+
+    /// <summary>OBD-reported odometer samples, in meters.</summary>
+    [JsonPropertyName("obdOdometerMeters")]
+    public IReadOnlyList<VehicleStatValue>? ObdOdometerMeters { get; init; }
+
+    /// <summary>Driver seatbelt state samples.</summary>
+    [JsonPropertyName("seatbeltDriver")]
+    public IReadOnlyList<VehicleStatStringValue>? SeatbeltDriver { get; init; }
+
+    /// <summary>Spreader active samples.</summary>
+    [JsonPropertyName("spreaderActive")]
+    public IReadOnlyList<VehicleStatStringValue>? SpreaderActive { get; init; }
+
+    /// <summary>Spreader air temperature samples.</summary>
+    [JsonPropertyName("spreaderAirTemp")]
+    public IReadOnlyList<VehicleStatValue>? SpreaderAirTemp { get; init; }
+
+    /// <summary>Spreader blast state samples.</summary>
+    [JsonPropertyName("spreaderBlastState")]
+    public IReadOnlyList<VehicleStatStringValue>? SpreaderBlastState { get; init; }
+
+    /// <summary>Spreader granular material name samples.</summary>
+    [JsonPropertyName("spreaderGranularName")]
+    public IReadOnlyList<VehicleStatStringValue>? SpreaderGranularName { get; init; }
+
+    /// <summary>Spreader granular material application rate samples.</summary>
+    [JsonPropertyName("spreaderGranularRate")]
+    public IReadOnlyList<VehicleStatValue>? SpreaderGranularRate { get; init; }
+
+    /// <summary>Spreader liquid material name samples.</summary>
+    [JsonPropertyName("spreaderLiquidName")]
+    public IReadOnlyList<VehicleStatStringValue>? SpreaderLiquidName { get; init; }
+
+    /// <summary>Spreader liquid material application rate samples.</summary>
+    [JsonPropertyName("spreaderLiquidRate")]
+    public IReadOnlyList<VehicleStatValue>? SpreaderLiquidRate { get; init; }
+
+    /// <summary>Spreader on state samples.</summary>
+    [JsonPropertyName("spreaderOnState")]
+    public IReadOnlyList<VehicleStatStringValue>? SpreaderOnState { get; init; }
+
+    /// <summary>Spreader plow status samples.</summary>
+    [JsonPropertyName("spreaderPlowStatus")]
+    public IReadOnlyList<VehicleStatStringValue>? SpreaderPlowStatus { get; init; }
+
+    /// <summary>Spreader pre-wet material name samples.</summary>
+    [JsonPropertyName("spreaderPrewetName")]
+    public IReadOnlyList<VehicleStatStringValue>? SpreaderPrewetName { get; init; }
+
+    /// <summary>Spreader pre-wet material application rate samples.</summary>
+    [JsonPropertyName("spreaderPrewetRate")]
+    public IReadOnlyList<VehicleStatValue>? SpreaderPrewetRate { get; init; }
+
+    /// <summary>Spreader road temperature samples.</summary>
+    [JsonPropertyName("spreaderRoadTemp")]
+    public IReadOnlyList<VehicleStatValue>? SpreaderRoadTemp { get; init; }
+
+    /// <summary>Synthetic (Samsara-computed) engine seconds samples.</summary>
+    [JsonPropertyName("syntheticEngineSeconds")]
+    public IReadOnlyList<VehicleStatValue>? SyntheticEngineSeconds { get; init; }
 }
 
 /// <summary>
-/// Vehicle fuel level as percentage.
+/// A single integer-valued vehicle statistic sample (<c>{ time, value }</c>),
+/// shared by the vehicle stats snapshot and feed/history endpoints.
 /// </summary>
-public sealed record FuelPercent
+public sealed record VehicleStatValue
 {
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
+    /// <summary>Timestamp of the sample, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
 
-    [JsonPropertyName("value")]
-    public double? Value { get; init; }
+    /// <summary>The measured value. Spec-required.</summary>
+    [JsonPropertyName("value")] public required long Value { get; init; }
 }
 
 /// <summary>
-/// OBD-reported odometer reading.
+/// A single floating-point vehicle statistic sample (<c>{ time, value }</c>),
+/// e.g. a speed or distance reading.
 /// </summary>
-public sealed record ObdOdometer
+public sealed record VehicleStatDoubleValue
 {
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
+    /// <summary>Timestamp of the sample, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
 
-    [JsonPropertyName("value")]
-    public double? Value { get; init; }
+    /// <summary>The measured value. Spec-required.</summary>
+    [JsonPropertyName("value")] public required double Value { get; init; }
 }
 
 /// <summary>
-/// GPS-calculated odometer reading.
+/// A single string- or enum-valued vehicle statistic sample
+/// (<c>{ time, value }</c>), e.g. an engine state or spreader status. The value
+/// is exposed as a string to remain forward-compatible with new enum members.
 /// </summary>
-public sealed record GpsOdometer
+public sealed record VehicleStatStringValue
 {
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
+    /// <summary>Timestamp of the sample, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
 
-    [JsonPropertyName("value")]
-    public double? Value { get; init; }
+    /// <summary>The measured value. Spec-required.</summary>
+    [JsonPropertyName("value")] public required string Value { get; init; }
 }
 
 /// <summary>
-/// Total engine run time.
+/// A single auxiliary-input vehicle statistic sample. Carries a boolean state
+/// and an optional human-readable input name.
 /// </summary>
-public sealed record EngineSeconds
+public sealed record VehicleStatAuxInput
 {
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
+    /// <summary>Timestamp of the sample, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
 
-    [JsonPropertyName("value")]
-    public long? Value { get; init; }
+    /// <summary>Whether the auxiliary input is active. Spec-required.</summary>
+    [JsonPropertyName("value")] public required bool Value { get; init; }
+
+    /// <summary>Human-readable name configured for this auxiliary input.</summary>
+    [JsonPropertyName("name")] public string? Name { get; init; }
+}
+
+/// <summary>
+/// Engine immobilizer sample. Reports whether the immobilizer is connected and
+/// its current ignition state.
+/// </summary>
+public sealed record VehicleStatEngineImmobilizer
+{
+    /// <summary>Timestamp of the sample, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
+
+    /// <summary>Whether the engine immobilizer is connected. Spec-required.</summary>
+    [JsonPropertyName("connected")] public required bool Connected { get; init; }
+
+    /// <summary>Immobilizer state (<c>ignition_disabled</c> / <c>ignition_enabled</c>). Spec-required.</summary>
+    [JsonPropertyName("state")] public required string State { get; init; }
+}
+
+/// <summary>
+/// NFC card scan sample. Carries the scanned card reference and the scan time.
+/// </summary>
+public sealed record VehicleStatNfcCardScan
+{
+    /// <summary>Timestamp of the scan, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
+
+    /// <summary>The scanned NFC card. Spec-required.</summary>
+    [JsonPropertyName("card")] public required VehicleStatNfcCard Card { get; init; }
+}
+
+/// <summary>An NFC card reference on a <see cref="VehicleStatNfcCardScan"/>.</summary>
+public sealed record VehicleStatNfcCard
+{
+    /// <summary>Samsara ID of the NFC card.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+}
+
+/// <summary>
+/// A single GPS reading sample on a vehicle stats response. Mirrors the spec's
+/// <c>VehicleStatsGps</c> schema.
+/// </summary>
+public sealed record VehicleStatGps
+{
+    /// <summary>Latitude in degrees. Spec-required.</summary>
+    [JsonPropertyName("latitude")] public required double Latitude { get; init; }
+
+    /// <summary>Longitude in degrees. Spec-required.</summary>
+    [JsonPropertyName("longitude")] public required double Longitude { get; init; }
+
+    /// <summary>Timestamp of the reading, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
+
+    /// <summary>Heading in degrees from true north.</summary>
+    [JsonPropertyName("headingDegrees")] public double? HeadingDegrees { get; init; }
+
+    /// <summary>Speed in miles per hour.</summary>
+    [JsonPropertyName("speedMilesPerHour")] public double? SpeedMilesPerHour { get; init; }
+
+    /// <summary>Whether the reported speed is sourced from the ECU rather than GPS.</summary>
+    [JsonPropertyName("isEcuSpeed")] public bool? IsEcuSpeed { get; init; }
+
+    /// <summary>The nearest known address (place) to the reading.</summary>
+    [JsonPropertyName("address")] public VehicleStatAddress? Address { get; init; }
+
+    /// <summary>Reverse-geocoded address for the reading.</summary>
+    [JsonPropertyName("reverseGeo")] public ReverseGeo? ReverseGeo { get; init; }
+}
+
+/// <summary>
+/// The nearest known address (place) to a GPS reading. Mirrors the spec's
+/// <c>addressTinyResponse</c> schema.
+/// </summary>
+public sealed record VehicleStatAddress
+{
+    /// <summary>Samsara ID of the address.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>Name of the address.</summary>
+    [JsonPropertyName("name")] public string? Name { get; init; }
+}
+
+/// <summary>
+/// Engine fault codes sample, read from J1939, OBD-II, and OEM vehicles. Mirrors
+/// the spec's <c>VehicleStatsFaultCodes</c> schema.
+/// </summary>
+public sealed record VehicleStatFaultCodes
+{
+    /// <summary>Timestamp of the reading, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
+
+    /// <summary>The CAN bus protocol the fault codes were read from.</summary>
+    [JsonPropertyName("canBusType")] public string? CanBusType { get; init; }
+
+    /// <summary>J1939 (heavy-duty) fault codes.</summary>
+    [JsonPropertyName("j1939")] public VehicleStatFaultCodesJ1939? J1939 { get; init; }
+
+    /// <summary>OBD-II (light-duty) fault codes.</summary>
+    [JsonPropertyName("obdii")] public VehicleStatFaultCodesObdii? Obdii { get; init; }
+
+    /// <summary>OEM-specific fault codes.</summary>
+    [JsonPropertyName("oem")] public VehicleStatFaultCodesOem? Oem { get; init; }
+}
+
+/// <summary>J1939 fault-code detail on a <see cref="VehicleStatFaultCodes"/> reading.</summary>
+public sealed record VehicleStatFaultCodesJ1939
+{
+    /// <summary>Check-engine indicator lamp states.</summary>
+    [JsonPropertyName("checkEngineLights")] public VehicleStatCheckEngineLights? CheckEngineLights { get; init; }
+
+    /// <summary>Active diagnostic trouble codes.</summary>
+    [JsonPropertyName("diagnosticTroubleCodes")] public IReadOnlyList<VehicleStatJ1939Dtc>? DiagnosticTroubleCodes { get; init; }
+}
+
+/// <summary>Check-engine lamp states reported over J1939.</summary>
+public sealed record VehicleStatCheckEngineLights
+{
+    [JsonPropertyName("emissionsIsOn")] public bool? EmissionsIsOn { get; init; }
+    [JsonPropertyName("protectIsOn")] public bool? ProtectIsOn { get; init; }
+    [JsonPropertyName("stopIsOn")] public bool? StopIsOn { get; init; }
+    [JsonPropertyName("warningIsOn")] public bool? WarningIsOn { get; init; }
+}
+
+/// <summary>A single J1939 diagnostic trouble code.</summary>
+public sealed record VehicleStatJ1939Dtc
+{
+    /// <summary>Suspect Parameter Number.</summary>
+    [JsonPropertyName("spnId")] public int? SpnId { get; init; }
+
+    /// <summary>Failure Mode Identifier.</summary>
+    [JsonPropertyName("fmiId")] public int? FmiId { get; init; }
+
+    /// <summary>Human-readable description of the SPN.</summary>
+    [JsonPropertyName("spnDescription")] public string? SpnDescription { get; init; }
+
+    /// <summary>Human-readable description of the FMI.</summary>
+    [JsonPropertyName("fmiDescription")] public string? FmiDescription { get; init; }
+
+    /// <summary>Occurrence count for this trouble code.</summary>
+    [JsonPropertyName("occurrenceCount")] public int? OccurrenceCount { get; init; }
+
+    /// <summary>Transmitting source address.</summary>
+    [JsonPropertyName("txId")] public int? TxId { get; init; }
+}
+
+/// <summary>OBD-II fault-code detail on a <see cref="VehicleStatFaultCodes"/> reading.</summary>
+public sealed record VehicleStatFaultCodesObdii
+{
+    /// <summary>Whether the malfunction-indicator (check-engine) lamp is on.</summary>
+    [JsonPropertyName("checkEngineLightIsOn")] public bool? CheckEngineLightIsOn { get; init; }
+
+    /// <summary>Diagnostic trouble code groupings, by transmitting source.</summary>
+    [JsonPropertyName("diagnosticTroubleCodes")] public IReadOnlyList<VehicleStatObdiiDtcGroup>? DiagnosticTroubleCodes { get; init; }
+}
+
+/// <summary>A grouping of OBD-II diagnostic trouble codes from one transmitter.</summary>
+public sealed record VehicleStatObdiiDtcGroup
+{
+    /// <summary>Transmitting source identifier.</summary>
+    [JsonPropertyName("txId")] public int? TxId { get; init; }
+
+    /// <summary>Ignition type (<c>spark</c> / <c>compression</c>).</summary>
+    [JsonPropertyName("ignitionType")] public string? IgnitionType { get; init; }
+
+    /// <summary>Whether the malfunction-indicator lamp is set.</summary>
+    [JsonPropertyName("milStatus")] public bool? MilStatus { get; init; }
+
+    /// <summary>Confirmed diagnostic trouble codes.</summary>
+    [JsonPropertyName("confirmedDtcs")] public IReadOnlyList<VehicleStatObdiiDtc>? ConfirmedDtcs { get; init; }
+
+    /// <summary>Pending diagnostic trouble codes.</summary>
+    [JsonPropertyName("pendingDtcs")] public IReadOnlyList<VehicleStatObdiiDtc>? PendingDtcs { get; init; }
+
+    /// <summary>Permanent diagnostic trouble codes.</summary>
+    [JsonPropertyName("permanentDtcs")] public IReadOnlyList<VehicleStatObdiiDtc>? PermanentDtcs { get; init; }
+}
+
+/// <summary>A single OBD-II diagnostic trouble code.</summary>
+public sealed record VehicleStatObdiiDtc
+{
+    /// <summary>Numeric DTC identifier.</summary>
+    [JsonPropertyName("dtcId")] public int? DtcId { get; init; }
+
+    /// <summary>Short code (e.g. <c>P0420</c>).</summary>
+    [JsonPropertyName("dtcShortCode")] public string? DtcShortCode { get; init; }
+
+    /// <summary>Human-readable description of the DTC.</summary>
+    [JsonPropertyName("dtcDescription")] public string? DtcDescription { get; init; }
+}
+
+/// <summary>OEM-specific fault-code detail on a <see cref="VehicleStatFaultCodes"/> reading.</summary>
+public sealed record VehicleStatFaultCodesOem
+{
+    /// <summary>OEM-specific diagnostic trouble codes (shape varies by manufacturer).</summary>
+    [JsonPropertyName("diagnosticTroubleCodes")] public IReadOnlyList<JsonElement>? DiagnosticTroubleCodes { get; init; }
 }
 
 /// <summary>
@@ -695,23 +1265,23 @@ public sealed record UpdateEquipmentRequest
 /// </summary>
 public sealed record Equipment
 {
+    /// <summary>Unique identifier of the equipment. Required on <c>GET /fleet/equipment</c>;
+    /// nullable because the same record is reused for the <c>PATCH /beta/fleet/equipment/{id}</c>
+    /// response where the spec lists <c>id</c> optional.</summary>
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
-    /// <summary>Asset serial number (spec property; preferred over legacy <c>equipmentSerialNumber</c>).</summary>
+    /// <summary>Asset serial number. Returned by the standard <c>GET /fleet/equipment</c>
+    /// (the beta equipment update uses <see cref="EquipmentSerialNumber"/> instead).</summary>
     [JsonPropertyName("assetSerial")]
     public string? AssetSerial { get; init; }
 
     /// <summary>Information about the gateway installed on this equipment.</summary>
     [JsonPropertyName("installedGateway")]
     public EquipmentInstalledGateway? InstalledGateway { get; init; }
-
-    /// <summary>Legacy serial-number field retained for backward compatibility; prefer <see cref="AssetSerial"/>.</summary>
-    [JsonPropertyName("equipmentSerialNumber")]
-    public string? EquipmentSerialNumber { get; init; }
 
     [JsonPropertyName("tags")]
     public IReadOnlyList<TagReference>? Tags { get; init; }
@@ -722,6 +1292,13 @@ public sealed record Equipment
     [JsonPropertyName("notes")]
     public string? Notes { get; init; }
 
+    /// <summary>Serial number as returned by the beta <c>PATCH /beta/fleet/equipment/{id}</c>
+    /// response (the standard equipment endpoints use <see cref="AssetSerial"/>).</summary>
+    [JsonPropertyName("equipmentSerialNumber")]
+    public string? EquipmentSerialNumber { get; init; }
+
+    /// <summary>Custom attributes on the equipment. Returned by the beta
+    /// <c>PATCH /beta/fleet/equipment/{id}</c> response.</summary>
     [JsonPropertyName("attributes")]
     public IReadOnlyList<object>? Attributes { get; init; }
 }
@@ -758,18 +1335,6 @@ public sealed record EquipmentLocation
     /// <summary>Time-ordered locations for this equipment (populated by the locations feed and history endpoints).</summary>
     [JsonPropertyName("locations")]
     public IReadOnlyList<EquipmentLocationPoint>? Locations { get; init; }
-
-    /// <summary>Legacy flat latitude; retained for backward compatibility. Prefer <c>Location.Latitude</c>.</summary>
-    [JsonPropertyName("latitude")]
-    public double? Latitude { get; init; }
-
-    /// <summary>Legacy flat longitude; retained for backward compatibility. Prefer <c>Location.Longitude</c>.</summary>
-    [JsonPropertyName("longitude")]
-    public double? Longitude { get; init; }
-
-    /// <summary>Legacy flat timestamp; retained for backward compatibility. Prefer <c>Location.Time</c>.</summary>
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
 }
 
 /// <summary>
@@ -793,98 +1358,207 @@ public sealed record EquipmentLocationPoint
     public required DateTimeOffset Time { get; init; }
 }
 
-/// <summary>Represents a speeding interval event.</summary>
+/// <summary>
+/// Represents a trip's speeding intervals, returned by
+/// <c>GET /speeding-intervals/stream</c>.
+/// </summary>
 public sealed record SpeedingInterval
 {
-    [JsonPropertyName("asset")] public required object Asset { get; init; }
+    /// <summary>The asset (vehicle) the speeding occurred on. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("asset")] public required SpeedingIntervalAsset Asset { get; init; }
+
+    /// <summary>Time the record was created, in RFC 3339 format. Spec marks REQUIRED.</summary>
     [JsonPropertyName("createdAtTime")] public required DateTimeOffset CreatedAtTime { get; init; }
+
+    /// <summary>The individual speeding intervals within the trip. Spec marks REQUIRED.</summary>
     [JsonPropertyName("intervals")] public required IReadOnlyList<object> Intervals { get; init; }
+
+    /// <summary>Start time of the trip, in RFC 3339 format. Spec marks REQUIRED.</summary>
     [JsonPropertyName("tripStartTime")] public required DateTimeOffset TripStartTime { get; init; }
+
+    /// <summary>Time the record was last updated, in RFC 3339 format. Spec marks REQUIRED.</summary>
     [JsonPropertyName("updatedAtTime")] public required DateTimeOffset UpdatedAtTime { get; init; }
 
-    // Not in current spec; retained for back-compat.
-    [JsonPropertyName("id")] public string? Id { get; init; }
-    [JsonPropertyName("vehicleId")] public string? VehicleId { get; init; }
-    [JsonPropertyName("vehicleName")] public string? VehicleName { get; init; }
+    /// <summary>Samsara ID of the driver on the trip, when available.</summary>
     [JsonPropertyName("driverId")] public string? DriverId { get; init; }
-    [JsonPropertyName("driverName")] public string? DriverName { get; init; }
-    [JsonPropertyName("startTime")] public DateTimeOffset? StartTime { get; init; }
-    [JsonPropertyName("endTime")] public DateTimeOffset? EndTime { get; init; }
-    [JsonPropertyName("maxSpeedMph")] public double? MaxSpeedMph { get; init; }
-    [JsonPropertyName("speedLimitMph")] public double? SpeedLimitMph { get; init; }
-    [JsonPropertyName("latitude")] public double? Latitude { get; init; }
-    [JsonPropertyName("longitude")] public double? Longitude { get; init; }
 }
 
 /// <summary>
-/// Equipment statistics data point, returned by the equipment stats endpoints
-/// (<c>/fleet/equipment/stats</c>, <c>/feed</c>, and <c>/history</c>).
+/// Asset (vehicle) reference on a <see cref="SpeedingInterval"/>. Mirrors the
+/// spec's <c>TripAssetResponseBody</c>.
 /// </summary>
-/// <remarks>
-/// Several properties (e.g. <c>engineRpm</c>, <c>engineSeconds</c>, <c>gps</c>,
-/// <c>gpsOdometerMeters</c>) are serialized as a single object on the snapshot
-/// endpoint and as an array on the feed/history endpoints. They are exposed as
-/// <see cref="System.Text.Json.JsonElement"/> so callers can inspect either
-/// shape directly.
-/// </remarks>
+public sealed record SpeedingIntervalAsset
+{
+    /// <summary>Samsara ID of the asset. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")] public required string Id { get; init; }
+
+    /// <summary>Name of the asset.</summary>
+    [JsonPropertyName("name")] public string? Name { get; init; }
+
+    /// <summary>Asset type (e.g. <c>vehicle</c>).</summary>
+    [JsonPropertyName("type")] public string? Type { get; init; }
+
+    /// <summary>Vehicle identification number (VIN) of the asset.</summary>
+    [JsonPropertyName("vin")] public string? Vin { get; init; }
+}
+
+/// <summary>
+/// Equipment statistics snapshot, returned by <c>GET /fleet/equipment/stats</c>.
+/// Each metric is the single most-recent <c>{ time, value }</c> sample. The
+/// time-series feed/history endpoints return arrays instead; see
+/// <see cref="EquipmentStatsSample"/>.
+/// </summary>
 public sealed record EquipmentStats
 {
     [JsonPropertyName("id")] public required string Id { get; init; }
     [JsonPropertyName("name")] public required string Name { get; init; }
 
-    /// <summary>Engine RPM. Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
-    [JsonPropertyName("engineRpm")] public System.Text.Json.JsonElement? EngineRpm { get; init; }
+    /// <summary>Engine RPM.</summary>
+    [JsonPropertyName("engineRpm")] public EquipmentStatValue? EngineRpm { get; init; }
 
-    /// <summary>Total engine seconds. Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
-    [JsonPropertyName("engineSeconds")] public System.Text.Json.JsonElement? EngineSeconds { get; init; }
+    /// <summary>Total engine seconds.</summary>
+    [JsonPropertyName("engineSeconds")] public EquipmentStatValue? EngineSeconds { get; init; }
 
-    /// <summary>Engine state samples (array, returned by <c>/feed</c> and <c>/history</c>).</summary>
-    [JsonPropertyName("engineStates")] public IReadOnlyList<object>? EngineStates { get; init; }
+    /// <summary>Engine on/off state.</summary>
+    [JsonPropertyName("engineState")] public EquipmentStatStringValue? EngineState { get; init; }
 
-    /// <summary>Engine total idle time, in minutes. Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
-    [JsonPropertyName("engineTotalIdleTimeMinutes")] public System.Text.Json.JsonElement? EngineTotalIdleTimeMinutes { get; init; }
+    /// <summary>Engine total idle time, in minutes.</summary>
+    [JsonPropertyName("engineTotalIdleTimeMinutes")] public EquipmentStatValue? EngineTotalIdleTimeMinutes { get; init; }
 
-    /// <summary>Fuel percent samples (array, returned by <c>/feed</c> and <c>/history</c>).</summary>
-    [JsonPropertyName("fuelPercents")] public IReadOnlyList<object>? FuelPercents { get; init; }
+    /// <summary>Fuel level, as a percentage.</summary>
+    [JsonPropertyName("fuelPercent")] public EquipmentStatValue? FuelPercent { get; init; }
 
-    /// <summary>Gateway-reported engine seconds. Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
-    [JsonPropertyName("gatewayEngineSeconds")] public System.Text.Json.JsonElement? GatewayEngineSeconds { get; init; }
+    /// <summary>Gateway-reported engine seconds.</summary>
+    [JsonPropertyName("gatewayEngineSeconds")] public EquipmentStatValue? GatewayEngineSeconds { get; init; }
 
-    /// <summary>Gateway engine state (single object, returned by <c>/stats</c>).</summary>
-    [JsonPropertyName("gatewayEngineState")] public object? GatewayEngineState { get; init; }
+    /// <summary>Gateway-reported engine on/off state.</summary>
+    [JsonPropertyName("gatewayEngineState")] public EquipmentStatStringValue? GatewayEngineState { get; init; }
 
-    /// <summary>Gateway engine state samples (array, returned by <c>/feed</c> and <c>/history</c>).</summary>
-    [JsonPropertyName("gatewayEngineStates")] public IReadOnlyList<object>? GatewayEngineStates { get; init; }
+    /// <summary>GPS reading.</summary>
+    [JsonPropertyName("gps")] public EquipmentStatGps? Gps { get; init; }
 
-    /// <summary>Gateway J1939 engine seconds samples (array, returned by <c>/feed</c> and <c>/history</c>).</summary>
-    [JsonPropertyName("gatewayJ1939EngineSeconds")] public IReadOnlyList<object>? GatewayJ1939EngineSeconds { get; init; }
+    /// <summary>GPS-derived odometer, in meters.</summary>
+    [JsonPropertyName("gpsOdometerMeters")] public EquipmentStatValue? GpsOdometerMeters { get; init; }
 
-    /// <summary>GPS reading. Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
-    [JsonPropertyName("gps")] public System.Text.Json.JsonElement? Gps { get; init; }
+    /// <summary>OBD-reported engine seconds.</summary>
+    [JsonPropertyName("obdEngineSeconds")] public EquipmentStatValue? ObdEngineSeconds { get; init; }
 
-    /// <summary>GPS-derived odometer (meters). Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
-    [JsonPropertyName("gpsOdometerMeters")] public System.Text.Json.JsonElement? GpsOdometerMeters { get; init; }
+    /// <summary>OBD-reported engine on/off state.</summary>
+    [JsonPropertyName("obdEngineState")] public EquipmentStatStringValue? ObdEngineState { get; init; }
+}
 
-    /// <summary>OBD-reported engine seconds. Object on <c>/stats</c>, array on <c>/feed</c> and <c>/history</c>.</summary>
-    [JsonPropertyName("obdEngineSeconds")] public System.Text.Json.JsonElement? ObdEngineSeconds { get; init; }
+/// <summary>
+/// Equipment statistics time-series row, returned by
+/// <c>GET /fleet/equipment/stats/feed</c> and <c>GET /fleet/equipment/stats/history</c>.
+/// Each metric is an array of <c>{ time, value }</c> samples covering the
+/// requested window. The snapshot endpoint returns single values instead; see
+/// <see cref="EquipmentStats"/>.
+/// </summary>
+public sealed record EquipmentStatsSample
+{
+    [JsonPropertyName("id")] public required string Id { get; init; }
+    [JsonPropertyName("name")] public required string Name { get; init; }
 
-    /// <summary>OBD engine state (single object, returned by <c>/stats</c>).</summary>
-    [JsonPropertyName("obdEngineState")] public object? ObdEngineState { get; init; }
+    /// <summary>Engine RPM samples.</summary>
+    [JsonPropertyName("engineRpm")] public IReadOnlyList<EquipmentStatValue>? EngineRpm { get; init; }
 
-    /// <summary>OBD engine state samples (array, returned by <c>/feed</c> and <c>/history</c>).</summary>
-    [JsonPropertyName("obdEngineStates")] public IReadOnlyList<object>? ObdEngineStates { get; init; }
+    /// <summary>Total engine seconds samples.</summary>
+    [JsonPropertyName("engineSeconds")] public IReadOnlyList<EquipmentStatValue>? EngineSeconds { get; init; }
 
-    // -- Legacy back-compat aliases retained for downstream consumers. Not part of the spec response inner schema. --
+    /// <summary>Engine on/off state samples.</summary>
+    [JsonPropertyName("engineStates")] public IReadOnlyList<EquipmentStatStringValue>? EngineStates { get; init; }
 
-    /// <summary>Legacy engine state alias; retained for backward compatibility. Prefer <see cref="GatewayEngineState"/> / <see cref="EngineStates"/>.</summary>
-    [JsonPropertyName("engineState")] public EngineState? EngineState { get; init; }
+    /// <summary>Engine total idle time (minutes) samples.</summary>
+    [JsonPropertyName("engineTotalIdleTimeMinutes")] public IReadOnlyList<EquipmentStatValue>? EngineTotalIdleTimeMinutes { get; init; }
 
-    /// <summary>Legacy fuel percent alias; retained for backward compatibility. Prefer <see cref="FuelPercents"/>.</summary>
-    [JsonPropertyName("fuelPercent")] public FuelPercent? FuelPercent { get; init; }
+    /// <summary>Fuel percent samples.</summary>
+    [JsonPropertyName("fuelPercents")] public IReadOnlyList<EquipmentStatValue>? FuelPercents { get; init; }
 
-    /// <summary>Legacy OBD odometer alias; retained for backward compatibility. Prefer <see cref="GpsOdometerMeters"/>.</summary>
-    [JsonPropertyName("obdOdometer")] public ObdOdometer? ObdOdometer { get; init; }
+    /// <summary>Gateway-reported engine seconds samples.</summary>
+    [JsonPropertyName("gatewayEngineSeconds")] public IReadOnlyList<EquipmentStatValue>? GatewayEngineSeconds { get; init; }
 
-    /// <summary>Legacy flat timestamp; retained for backward compatibility. Each nested sample carries its own <c>time</c>.</summary>
-    [JsonPropertyName("time")] public DateTimeOffset? Time { get; init; }
+    /// <summary>Gateway engine on/off state samples.</summary>
+    [JsonPropertyName("gatewayEngineStates")] public IReadOnlyList<EquipmentStatStringValue>? GatewayEngineStates { get; init; }
+
+    /// <summary>Gateway J1939 engine seconds samples.</summary>
+    [JsonPropertyName("gatewayJ1939EngineSeconds")] public IReadOnlyList<EquipmentStatValue>? GatewayJ1939EngineSeconds { get; init; }
+
+    /// <summary>GPS reading samples.</summary>
+    [JsonPropertyName("gps")] public IReadOnlyList<EquipmentStatGps>? Gps { get; init; }
+
+    /// <summary>GPS-derived odometer (meters) samples.</summary>
+    [JsonPropertyName("gpsOdometerMeters")] public IReadOnlyList<EquipmentStatValue>? GpsOdometerMeters { get; init; }
+
+    /// <summary>OBD-reported engine seconds samples.</summary>
+    [JsonPropertyName("obdEngineSeconds")] public IReadOnlyList<EquipmentStatValue>? ObdEngineSeconds { get; init; }
+
+    /// <summary>OBD engine on/off state samples.</summary>
+    [JsonPropertyName("obdEngineStates")] public IReadOnlyList<EquipmentStatStringValue>? ObdEngineStates { get; init; }
+}
+
+/// <summary>
+/// A single numeric equipment statistic sample (<c>{ time, value }</c>), shared
+/// by the equipment stats snapshot and feed/history endpoints.
+/// </summary>
+public sealed record EquipmentStatValue
+{
+    /// <summary>Timestamp of the sample, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
+
+    /// <summary>The measured value. Spec-required.</summary>
+    [JsonPropertyName("value")] public required long Value { get; init; }
+}
+
+/// <summary>
+/// A single string-valued equipment statistic sample (<c>{ time, value }</c>),
+/// e.g. an engine on/off state.
+/// </summary>
+public sealed record EquipmentStatStringValue
+{
+    /// <summary>Timestamp of the sample, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
+
+    /// <summary>The measured value (e.g. <c>On</c> / <c>Off</c>). Spec-required.</summary>
+    [JsonPropertyName("value")] public required string Value { get; init; }
+}
+
+/// <summary>
+/// A single GPS reading sample on an equipment stats response. Mirrors the
+/// spec's <c>EquipmentStatsGps</c> schema.
+/// </summary>
+public sealed record EquipmentStatGps
+{
+    /// <summary>Latitude in degrees. Spec-required.</summary>
+    [JsonPropertyName("latitude")] public required double Latitude { get; init; }
+
+    /// <summary>Longitude in degrees. Spec-required.</summary>
+    [JsonPropertyName("longitude")] public required double Longitude { get; init; }
+
+    /// <summary>Timestamp of the reading, in RFC 3339 format. Spec-required.</summary>
+    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
+
+    /// <summary>Heading in degrees from true north.</summary>
+    [JsonPropertyName("headingDegrees")] public double? HeadingDegrees { get; init; }
+
+    /// <summary>Speed in miles per hour.</summary>
+    [JsonPropertyName("speedMilesPerHour")] public double? SpeedMilesPerHour { get; init; }
+
+    /// <summary>The nearest known address (place) to the reading.</summary>
+    [JsonPropertyName("address")] public EquipmentStatAddress? Address { get; init; }
+
+    /// <summary>Reverse-geocoded address for the reading.</summary>
+    [JsonPropertyName("reverseGeo")] public ReverseGeo? ReverseGeo { get; init; }
+}
+
+/// <summary>
+/// The nearest known address (place) to a GPS reading. Mirrors the spec's
+/// <c>addressTinyResponse</c> schema.
+/// </summary>
+public sealed record EquipmentStatAddress
+{
+    /// <summary>Samsara ID of the address.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>Name of the address.</summary>
+    [JsonPropertyName("name")] public string? Name { get; init; }
 }
