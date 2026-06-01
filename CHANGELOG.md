@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> ### ⚠️ Migration to v0.3.0 — breaking changes summary
+>
+> This release batches the full endpoint + model sync to the live `2025-10-23` spec. All the
+> breaking changes below land **once** (nothing here shipped in `v0.2.x`). Detailed per-item notes
+> are in the dated entries further down; this is the at-a-glance migration list.
+>
+> **Removed / renamed methods & request types**
+> - `IHubsClient`: removed `GetAsync`/`CreateAsync`/`UpdateAsync`/`DeleteAsync` and the
+>   `CreateHubRequest`/`UpdateHubRequest` types — the spec has no hub CRUD (only `GET /hubs`). Use
+>   `client.Addresses` for `/addresses` CRUD. `Hubs.ListAsync` now calls `GET /hubs`.
+> - `IMediaClient.GetRetrievalAsync` now returns `IReadOnlyList<MediaRetrieval>` (was a single
+>   `MediaRetrieval`) — the endpoint returns the retrieved-media array.
+> - `IWorkOrdersClient.DeleteWorkOrdersAsync` takes a single `string id` (was `string[] ids`).
+>
+> **Response record type splits** (time-series endpoints silently lost data before this)
+> - `VehicleStats` / `TrailerStats` / `EquipmentStats` now model the snapshot shape; the
+>   `…/stats/feed` and `…/stats/history` methods return new `VehicleStatsSample` /
+>   `TrailerStatsSample` / `EquipmentStatsSample` records whose metric fields are **arrays** of
+>   timestamped points. Re-point feed/history call sites to the `*Sample` types.
+>
+> **Required-ness changes**
+> - Request: `CreateTagRequest.Name` is now `required`; some `Create*Request` records gained
+>   spec-required fields. Response: spec-required fields tightened to non-null (e.g.
+>   `Webhook.SecretKey/Name/Url/Version`), and over-tightened fields **relaxed to nullable** to match
+>   the spec (e.g. `Driver.Id/Name`) — relaxation prevents the deserialization throw the tightened
+>   `Hub` record hit. Code assuming non-null on a now-nullable field needs a null-check.
+>
+> **Removed spec-absent properties** — back-compat/denormalized fields not in the spec were removed
+> across many records (e.g. `FormTemplate.Name`/`Revision` → use `Title`/`RevisionId`; flat
+> `*Id`/`*Name` scalars superseded by nested objects). The spec-shaped replacement is noted in each
+> per-domain entry.
+>
+> **New**: `IPlacesClient.GetDeletionsAsync` (`GET /places/deletions`); full endpoint parity (319/319).
+
 ### Tests
 
 - **Contract + client test layer for the Phase 3 model rework (2026-06-01)** — added 39 tests
