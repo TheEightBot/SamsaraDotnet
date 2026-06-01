@@ -259,3 +259,42 @@ public sealed record CreateMediaRetrievalRequest
     [JsonPropertyName("mediaType")]
     public required string MediaType { get; init; }
 }
+
+/// <summary>
+/// Wraps the nested <c>{ "media": [ ... ] }</c> object that the Samsara API
+/// returns <em>inside</em> the <c>data</c> envelope of
+/// <c>GET /cameras/media</c>. Mirrors the spec's
+/// <c>ListUploadedMediaObjectResponseBody</c> schema. The full response shape
+/// is <c>{ "data": { "media": [...] }, "pagination": {...} }</c>, so this
+/// record models only the inner <c>data</c> object; the surrounding envelope
+/// and pagination are handled by the HTTP layer.
+/// </summary>
+public sealed record MediaListResponse
+{
+    /// <summary>
+    /// The uploaded media files in this page. Spec-required; defaults to an
+    /// empty list so a missing or empty payload yields no items rather than
+    /// <c>null</c>.
+    /// </summary>
+    [JsonPropertyName("media")]
+    public IReadOnlyList<MediaFile> Media { get; init; } = Array.Empty<MediaFile>();
+}
+
+/// <summary>
+/// Wraps the nested <c>{ "media": [ ... ] }</c> object that the Samsara API
+/// returns <em>inside</em> the <c>data</c> envelope of
+/// <c>GET /cameras/media/retrieval</c>. Mirrors the spec's
+/// <c>GetMediaRetrievalObjectResponseBody</c> schema. The full response shape
+/// is <c>{ "data": { "media": [...] } }</c>, so this record models only the
+/// inner <c>data</c> object; the surrounding envelope is unwrapped by the HTTP
+/// layer.
+/// </summary>
+public sealed record MediaRetrievalListResponse
+{
+    /// <summary>
+    /// The retrieved media items. Spec-required; defaults to an empty list so a
+    /// missing or empty payload yields no items rather than <c>null</c>.
+    /// </summary>
+    [JsonPropertyName("media")]
+    public IReadOnlyList<MediaRetrieval> Media { get; init; } = Array.Empty<MediaRetrieval>();
+}

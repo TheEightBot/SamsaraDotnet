@@ -90,8 +90,6 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(VehicleStatObdiiDtcGroup))]
 [JsonSerializable(typeof(VehicleStatObdiiDtc))]
 [JsonSerializable(typeof(VehicleStatFaultCodesOem))]
-[JsonSerializable(typeof(ObdOdometer))]
-[JsonSerializable(typeof(GpsOdometer))]
 [JsonSerializable(typeof(GpsData))]
 [JsonSerializable(typeof(ReverseGeo))]
 [JsonSerializable(typeof(Equipment))]
@@ -342,6 +340,8 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(MediaFile))]
 [JsonSerializable(typeof(MediaUrlInfo))]
 [JsonSerializable(typeof(MediaRetrieval))]
+[JsonSerializable(typeof(MediaListResponse))]
+[JsonSerializable(typeof(MediaRetrievalListResponse))]
 [JsonSerializable(typeof(CreateMediaRetrievalRequest))]
 // Fleet - Assets
 [JsonSerializable(typeof(Asset))]

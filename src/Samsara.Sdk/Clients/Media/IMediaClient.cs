@@ -48,10 +48,16 @@ public interface IMediaClient
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get details for a media retrieval request
-    /// (<c>GET /cameras/media/retrieval</c>).
+    /// Get the media items for a retrieval request
+    /// (<c>GET /cameras/media/retrieval</c>). The response nests the items under
+    /// <c>data.media</c>, so this returns the list of retrieved media. The list
+    /// is empty while a retrieval is still pending and has produced no media.
     /// </summary>
-    Task<MediaRetrieval> GetRetrievalAsync(
+    /// <param name="retrievalId">
+    /// Spec-required. The retrieval ID returned by <see cref="CreateRetrievalAsync"/>.
+    /// </param>
+    /// <param name="cancellationToken">Token to observe while waiting for the operation.</param>
+    Task<IReadOnlyList<MediaRetrieval>> GetRetrievalAsync(
         string retrievalId,
         CancellationToken cancellationToken = default);
 

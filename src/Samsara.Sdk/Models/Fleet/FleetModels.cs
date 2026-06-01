@@ -1177,30 +1177,6 @@ public sealed record VehicleStatFaultCodesOem
 }
 
 /// <summary>
-/// OBD-reported odometer reading.
-/// </summary>
-public sealed record ObdOdometer
-{
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
-
-    [JsonPropertyName("value")]
-    public double? Value { get; init; }
-}
-
-/// <summary>
-/// GPS-calculated odometer reading.
-/// </summary>
-public sealed record GpsOdometer
-{
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; init; }
-
-    [JsonPropertyName("value")]
-    public double? Value { get; init; }
-}
-
-/// <summary>
 /// GPS position data.
 /// </summary>
 public sealed record GpsData

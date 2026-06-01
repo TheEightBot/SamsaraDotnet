@@ -73,6 +73,30 @@ internal sealed class SamsaraHttpClient
     }
 
     /// <summary>
+    /// Sends a GET request for a paginated list endpoint whose <c>data</c> is an object
+    /// that wraps the page's items (e.g. <c>{ "data": { "media": [...] }, "pagination": {...} }</c>)
+    /// rather than a bare array, and returns a <see cref="PagedResponse{TItem}"/>. The
+    /// <c>selectItems</c> projection extracts the item list from the deserialized data object.
+    /// </summary>
+    public async Task<PagedResponse<TItem>> GetPageAsync<TData, TItem>(
+        string path,
+        Func<TData, IReadOnlyList<TItem>> selectItems,
+        string? cursor = null,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        var url = AppendPaginationParams(path, cursor, limit);
+
+        var wrapper = await GetAsync<SamsaraNestedListResponse<TData>>(url, cancellationToken).ConfigureAwait(false);
+
+        return new PagedResponse<TItem>
+        {
+            Data = selectItems(wrapper.Data),
+            Pagination = wrapper.Pagination,
+        };
+    }
+
+    /// <summary>
     /// Sends a POST request with a JSON body and deserializes the <c>{ "data": T }</c> response.
     /// </summary>
     public async Task<T> PostDataAsync<T>(string path, object body, CancellationToken cancellationToken = default)

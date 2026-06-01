@@ -64,3 +64,20 @@ public sealed record SamsaraListResponse<T>
     [JsonPropertyName("pagination")]
     public Samsara.Sdk.Pagination.PaginationInfo? Pagination { get; init; }
 }
+
+/// <summary>
+/// A wrapper for paginated Samsara responses whose <c>data</c> is a single
+/// object that itself wraps the page's items (e.g. <c>{ "data": { "media":
+/// [...] }, "pagination": {...} }</c>), rather than the more common
+/// <c>{ "data": [...], "pagination": {...} }</c> handled by
+/// <see cref="SamsaraListResponse{T}"/>.
+/// </summary>
+/// <typeparam name="TData">The type of the inner <c>data</c> object.</typeparam>
+public sealed record SamsaraNestedListResponse<TData>
+{
+    [JsonPropertyName("data")]
+    public required TData Data { get; init; }
+
+    [JsonPropertyName("pagination")]
+    public Samsara.Sdk.Pagination.PaginationInfo? Pagination { get; init; }
+}

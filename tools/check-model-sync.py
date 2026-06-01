@@ -401,6 +401,22 @@ def _split_top_args(s: str) -> list[str]:
     return args
 
 
+def _split_generic_args(s: str) -> list[str]:
+    """Split a top-level generic argument list (the text already inside the
+    outer ``<>``) at top-level commas, respecting nested angle brackets."""
+    args, depth, start = [], 0, 0
+    for i, ch in enumerate(s):
+        if ch == "<":
+            depth += 1
+        elif ch == ">":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            args.append(s[start:i])
+            start = i + 1
+    args.append(s[start:])
+    return [a.strip() for a in args if a.strip()]
+
+
 def _parse_params(text: str, header_match) -> dict[str, str]:
     """Return {param_name: param_type} for the method whose header regex match
     is given. Captures the parenthesized parameter list following the name."""
@@ -485,7 +501,12 @@ def parse_client_types() -> dict[tuple[str, str], dict]:
             else:
                 pm = PAGINATE_GENERIC_RE.search(body)
                 if pm:
-                    response_type = pm.group(1).strip()
+                    # PaginateAsync<TItem> -> TItem. The nested-wrapper overload
+                    # PaginateAsync<TData, TItem> -> TItem: the last generic arg
+                    # is the element type that maps to the spec's paginated array
+                    # item (TData is the inner { items: [...] } wrapper object).
+                    gen_args = _split_generic_args(pm.group(1))
+                    response_type = gen_args[-1] if gen_args else pm.group(1).strip()
 
             request_type = None
             bm = BODY_HELPER_RE.search(body)

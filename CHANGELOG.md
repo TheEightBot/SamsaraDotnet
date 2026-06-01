@@ -484,6 +484,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `LaneDepartureWarningEnabled`/`SpeedingEnabled`/`HarshAccelerationEnabled`/`HarshBrakingEnabled`/
     `HarshCorneringEnabled`. All new records registered in `SamsaraJsonContext`. check-model-sync
     Settings: 39 → 0. **Breaking**: 14 properties change type and 25 properties are removed.
+  - **Media nested-pagination runtime fix** — `GET /cameras/media` and
+    `GET /cameras/media/retrieval` return `{ data: { media: [...] }, pagination: {...} }` — the
+    items are nested under `data.media`, not `data` itself, which the SDK did not handle (the
+    list calls would have deserialized to empty/wrong shapes at runtime). Added a
+    `SamsaraNestedListResponse<TData>` envelope and a `PaginateAsync<TData,TItem>` /
+    `GetPageAsync<TData,TItem>` overload that project the nested item list; `MediaClient.ListAsync`
+    now pages `data.media` correctly. **Breaking**: `IMediaClient.GetRetrievalAsync` returns
+    `IReadOnlyList<MediaRetrieval>` (was a single `MediaRetrieval`) — the endpoint returns the
+    retrieved media array. Added `MediaListResponse`/`MediaRetrievalListResponse` (registered in
+    `SamsaraJsonContext`) and `MediaClientTests` covering the nested shape.
+  - **Cleanup: orphaned `ObdOdometer`/`GpsOdometer` records** — removed both synthetic back-compat
+    helper records from `Samsara.Sdk.Models.Fleet` and their two `SamsaraJsonContext` registrations.
+    Neither is in the Samsara OpenAPI spec; both became dead code once the Vehicle Stats
+    snapshot/time-series split re-typed `gps`/`gpsOdometerMeters`/`obdOdometerMeters` to typed
+    `VehicleStat*` records. Not breaking (neither was ever a property of any record or returned by
+    any client method).
 - **`CreateTagRequest.Name` is now `required` (2026-05-29)** — the live 2025-10-23 spec marks
   `name` required on `POST /tags` (`CreateTagRequest.required = ["name"]`), but the SDK had it
   as `string?` (the 45-tags model sync had dropped `required` on a spec read the current spec
