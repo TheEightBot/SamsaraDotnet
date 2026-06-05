@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-06-01
+
+### Fixed
+
+- **Lenient deserialization is now the default — no more per-call "missing required properties"
+  log noise (or double work).** v0.4.0 deserialized strict-first and only fell back to the lenient
+  path on a `JsonException`, logging a warning each time. Because the Samsara spec marks fields
+  `required` that the live API omits on nearly every response, that failover (and its warning, with
+  the exception attached) fired on essentially every call — and deserialized twice. The HTTP layer
+  now uses the lenient, source-generated `SamsaraSerializerOptions.Default` as a single pass: an
+  absent spec-`required` field is left at its default/`null`, with no exception, no retry, and no
+  log. Models still declare `required` per the spec (and request-DTO compile-time `required` is
+  unchanged); a new `SamsaraSerializerOptions.Strict` enforces the spec for callers that want to
+  validate conformance (tests/audits). Net effect: quieter and faster, same data.
+
 ## [0.4.0] - 2026-06-01
 
 ### Changed

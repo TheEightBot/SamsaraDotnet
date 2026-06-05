@@ -513,34 +513,33 @@ internal sealed partial class SamsaraJsonContext : JsonSerializerContext
 internal static class SamsaraSerializerOptions
 {
     /// <summary>
-    /// Strict, source-generated options — used for serialization and as the PRIMARY
-    /// deserialization path. Resolves types through <see cref="SamsaraJsonContext"/> source
-    /// generation (fast, AOT-friendly), with a reflection fallback only for types the context
-    /// does not register — chiefly the thin generic <c>{ data, pagination }</c> response
-    /// envelopes, whose inner model types still bind through source generation. Honors the
-    /// spec-declared <c>required</c> members: a response that omits one throws here, and the
-    /// HTTP layer then retries with <see cref="Resilient"/>.
+    /// Primary (de)serialization options — source-generated for performance, and LENIENT on
+    /// <c>required</c> members. The live Samsara API omits fields its own spec marks <c>required</c>
+    /// on nearly every response, so enforcing them at runtime would fail constantly; instead an
+    /// absent field is left at its default/<c>null</c>. Resolves through
+    /// <see cref="SamsaraJsonContext"/> source generation with a reflection fallback only for the
+    /// thin generic <c>{ data, pagination }</c> envelopes (their inner model types still bind via
+    /// source generation). This relaxes the RUNTIME deserialization check only — models still
+    /// declare <c>required</c> per the spec, and the C# <c>required</c> modifier still enforces
+    /// request-DTO construction at compile time.
     /// </summary>
-    public static JsonSerializerOptions Default { get; } = Create(resilient: false);
+    public static JsonSerializerOptions Default { get; } = Create(relaxRequired: true);
 
     /// <summary>
-    /// Failover options — identical to <see cref="Default"/> (same source-generated resolver)
-    /// but with the runtime <c>required</c>-member check relaxed, so a response that omits a
-    /// spec-<c>required</c> field still deserializes (the field is left at its default/<c>null</c>).
-    /// Used ONLY by the HTTP layer as a logged fallback after a strict attempt throws.
-    /// Deserialization-only: the C# <c>required</c> modifier still enforces request-DTO
-    /// construction at compile time.
+    /// Strict source-generated options that ENFORCE every spec-declared <c>required</c> member
+    /// (deserialization throws if one is absent). NOT used on the runtime response path — provided
+    /// for callers that want to VALIDATE a payload against the spec (conformance tests / audits).
     /// </summary>
-    public static JsonSerializerOptions Resilient { get; } = Create(resilient: true);
+    public static JsonSerializerOptions Strict { get; } = Create(relaxRequired: false);
 
-    private static JsonSerializerOptions Create(bool resilient)
+    private static JsonSerializerOptions Create(bool relaxRequired)
     {
         // Source generation first; reflection only as a fallback for unregistered types.
         IJsonTypeInfoResolver resolver = JsonTypeInfoResolver.Combine(
             SamsaraJsonContext.Default,
             new DefaultJsonTypeInfoResolver());
 
-        if (resilient)
+        if (relaxRequired)
         {
             resolver = resolver.WithAddedModifier(RelaxRequiredMembers);
         }
