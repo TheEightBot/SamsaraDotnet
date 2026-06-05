@@ -9,11 +9,12 @@ using Samsara.Sdk.Serialization;
 using Samsara.Sdk.Tests.Helpers;
 
 /// <summary>
-/// Locks in the deserialization architecture: spec-honest <c>required</c> on the strict path
-/// (<see cref="SamsaraSerializerOptions.Default"/>), source generation for performance, and a
-/// resilient failover (<see cref="SamsaraSerializerOptions.Resilient"/>) so a response that
-/// doesn't match the spec — e.g. the live API omitting <c>Vehicle.createdAtTime</c> — still
-/// deserializes instead of crashing.
+/// Locks in the deserialization architecture: the primary path
+/// (<see cref="SamsaraSerializerOptions.Default"/>) is source-generated for performance and
+/// LENIENT on <c>required</c> — the live Samsara API omits spec-<c>required</c> fields on nearly
+/// every response, so a single fast pass tolerates them rather than throwing/retrying. A separate
+/// strict path (<see cref="SamsaraSerializerOptions.Strict"/>) enforces the spec for callers that
+/// want to validate conformance.
 /// </summary>
 public sealed class DeserializationToleranceTests
 {
@@ -35,14 +36,14 @@ public sealed class DeserializationToleranceTests
 
     [Theory]
     [MemberData(nameof(AllModelTypes))]
-    public void Resilient_DeserializesEveryModelFromEmptyObject(Type modelType)
+    public void Default_DeserializesEveryModelFromEmptyObject(Type modelType)
     {
-        // `{}` omits EVERY field — the worst case the API can hand us. The resilient failover
-        // path must tolerate it for every model in the SDK.
-        var act = () => JsonSerializer.Deserialize("{}", modelType, SamsaraSerializerOptions.Resilient);
+        // `{}` omits EVERY field — the worst case the API can hand us. The default (primary) path
+        // must tolerate it for every model in the SDK, with no exception and no retry.
+        var act = () => JsonSerializer.Deserialize("{}", modelType, SamsaraSerializerOptions.Default);
 
         act.Should().NotThrow(
-            $"the resilient failover must tolerate a response that omits any field on {modelType.Name}");
+            $"the default deserialization path must tolerate a response that omits any field on {modelType.Name}");
     }
 
     [Fact]
@@ -53,25 +54,27 @@ public sealed class DeserializationToleranceTests
     }
 
     [Fact]
-    public void Default_IsStrict_AndHonorsSpecRequired()
+    public void Default_Tolerates_MissingSpecRequiredField()
     {
-        // The strict/source-gen path stays honest to the spec: a payload missing a
-        // spec-`required` field (Vehicle.createdAtTime) throws here.
-        var act = () => JsonSerializer.Deserialize<Vehicle>("{}", SamsaraSerializerOptions.Default);
-
-        act.Should().Throw<JsonException>().WithMessage("*createdAtTime*");
-    }
-
-    [Fact]
-    public void Resilient_IsTheFailover_DeserializesWhatStrictRejects()
-    {
+        // The exact production scenario: the API returns a Vehicle without the spec-required
+        // createdAtTime. The default path deserializes it (no throw, no log, single pass).
         const string json = """{ "id": "v-1", "name": "Truck 1" }""";
 
-        var vehicle = JsonSerializer.Deserialize<Vehicle>(json, SamsaraSerializerOptions.Resilient);
+        var vehicle = JsonSerializer.Deserialize<Vehicle>(json, SamsaraSerializerOptions.Default);
 
         vehicle.Should().NotBeNull();
         vehicle!.Id.Should().Be("v-1");
         vehicle.CreatedAtTime.Should().Be(default(DateTimeOffset));
+    }
+
+    [Fact]
+    public void Strict_HonorsSpecRequired_ForConformanceValidation()
+    {
+        // The opt-in strict path stays honest to the spec: a payload missing a spec-`required`
+        // field (Vehicle.createdAtTime) throws, so callers can validate conformance when they want.
+        var act = () => JsonSerializer.Deserialize<Vehicle>("{}", SamsaraSerializerOptions.Strict);
+
+        act.Should().Throw<JsonException>().WithMessage("*createdAtTime*");
     }
 
     [Fact]
@@ -103,11 +106,10 @@ public sealed class DeserializationToleranceTests
     }
 
     [Fact]
-    public async Task HttpClient_FailsOver_WhenApiOmitsSpecRequiredField()
+    public async Task HttpClient_Tolerates_WhenApiOmitsSpecRequiredField()
     {
-        // End-to-end: the exact production scenario through the real client + deserialization
-        // path. The API returns a Vehicle without the spec-required createdAtTime; the client
-        // must fail over and return the vehicle rather than throw.
+        // End-to-end: the exact production scenario through the real client. The API returns a
+        // Vehicle without the spec-required createdAtTime; the client returns it rather than throw.
         var resp = new { data = new { id = "v-1", name = "Truck 1" } };
         var handler = MockHttpMessageHandler.WithJsonResponse(resp);
         var client = new VehiclesClient(TestFactory.CreateHttpClient(handler));
@@ -120,9 +122,8 @@ public sealed class DeserializationToleranceTests
     }
 
     [Fact]
-    public async Task HttpClient_UsesStrictPath_WhenResponseConforms()
+    public async Task HttpClient_Deserializes_ConformingResponse()
     {
-        // A conforming response deserializes on the strict/source-gen path (no failover).
         var resp = new { data = new { id = "v-2", name = "Truck 2", createdAtTime = "2024-01-01T00:00:00Z" } };
         var handler = MockHttpMessageHandler.WithJsonResponse(resp);
         var client = new VehiclesClient(TestFactory.CreateHttpClient(handler));
