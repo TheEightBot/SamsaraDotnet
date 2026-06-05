@@ -253,8 +253,34 @@ internal sealed class SamsaraHttpClient
 
     private async Task<T> DeserializeAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
     {
-        var result = await response.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken)
-            .ConfigureAwait(false);
+        // Buffer the body once so a failed strict (spec-honest) pass can be retried
+        // leniently without a second network read.
+#if NET5_0_OR_GREATER
+        var utf8 = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+#else
+        cancellationToken.ThrowIfCancellationRequested();
+        var utf8 = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+#endif
+
+        T? result;
+        try
+        {
+            // Primary path: strict + source-generated. Honors the spec's `required` members.
+            result = JsonSerializer.Deserialize<T>(utf8, _jsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            // The live API can return a response that doesn't match its own spec (most often by
+            // omitting a field the spec marks `required`). Fail over to the resilient options so
+            // the caller still gets data, and surface the deviation so it is observable, not silent.
+            _logger.LogWarning(
+                ex,
+                "Samsara API response for {Type} did not match the spec ({Reason}); retrying deserialization in resilient mode.",
+                typeof(T),
+                ex.Message);
+
+            result = JsonSerializer.Deserialize<T>(utf8, SamsaraSerializerOptions.Resilient);
+        }
 
         return result ?? throw new SamsaraApiException(
             response.StatusCode,
