@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-01
+
+### Changed
+
+- **Deserialization architecture: source-gen primary, spec-honest, observable failover.** Replaces
+  the v0.3.1 blanket required-relaxation with an approach that satisfies all three goals at once:
+  (1) **honest** — `SamsaraSerializerOptions.Default` is strict and honors every spec-declared
+  `required` member (models are unchanged); (2) **fast** — it now actually wires the
+  `SamsaraJsonContext` **source generator** (previously dead code; the runtime used reflection),
+  via `Combine(SamsaraJsonContext.Default, reflection-fallback)`, so all model types bind through
+  source generation — a test (`EveryModelType_IsRegisteredInSourceGenContext`) enforces full
+  registration, and only the thin generic `{ data, pagination }` envelopes use reflection (their
+  inner models still bind via source-gen); (3) **resilient** — `SamsaraHttpClient` buffers the
+  response, tries the strict path, and **only on a `JsonException`** retries with
+  `SamsaraSerializerOptions.Resilient` (same source-gen resolver + `required` relaxed) **and logs
+  the deviation**. So a response that violates the spec (e.g. omits `Vehicle.createdAtTime`) still
+  deserializes — observably, not via an always-on workaround. Note: source generation does not honor
+  C# property initializers the way reflection did, so `MediaClient` coalesces the nested media list
+  to empty. Deserialization-only — request-DTO compile-time `required` is unchanged.
+
+### Added
+
+- **`Driver.Email` / `CreateDriverRequest.Email` / `UpdateDriverRequest.Email`** — the spec carries
+  an optional `email` on all three driver schemas; the SDK now models it (`string?`, near
+  `dateOfBirth`).
+- **`MediaFile.AuxCamSerial`** (`string?`) — serial of the auxiliary camera that captured a media
+  item; optional in the spec.
+- **Typed hub-order pickup/delivery** — `HubPlanOrder.Pickup`/`Delivery` and
+  `CreateHubPlanOrderInput.Pickup`/`Delivery` are no longer `object?`. New `HubOrderTask` record
+  (mirrors spec `OrderTaskRequestBody`: `address`, `appointmentWindow`, `customerLocationId`,
+  `latitude`, `longitude`, `notes`, `position`, `serviceTimeSeconds`, all optional) plus
+  `HubOrderAppointmentWindow` (`startTime`/`endTime`). Both registered in `SamsaraJsonContext`. The
+  Hub Plans API is Beta; the shape may still evolve.
+
+### Changed
+
+- **`tools/check-model-sync.py` — dual-shape & composed-schema accuracy.** The model-parity checker
+  no longer mis-reports a shared SDK record's fields as `extra-property` when they belong to a
+  *sibling* endpoint the same record serves. Three correctness fixes:
+  - **Cross-endpoint union for the EXTRA check.** A property is now `extra-property` only when it is
+    absent from the **union** of spec properties across *every* endpoint (request and response)
+    mapped to that record — the correct comparison for a record that legitimately serves multiple
+    endpoints with diverging shapes (e.g. `DriverVehicleAssignment`'s GET-stream nests a `driver`
+    object while POST returns flat `message`). MISSING / type / required checks remain per-endpoint.
+  - **Multi-branch `allOf` composition.** `deref` now merges the properties/required of a
+    multi-branch `allOf` (proper OpenAPI composition), so v1 composed bodies like
+    `V1TrailerBase + { trailerAssignments }` and `Attribute + { entities }` (`AttributeExpanded`) are
+    no longer seen as propertyless.
+  - **Nested element-record union.** When a record maps to an endpoint only *nested* inside another
+    record's property (e.g. `UserRole` in `CreateUserRequest.roles[]`, `MediaRetrieval` in
+    `MediaRetrievalListResponse.media[]`), the nested item schema now contributes to that element
+    record's union.
+
+  Net effect against the `2025-10-23` spec: 101 → 0 active findings (CRITICAL/HIGH/MEDIUM/LOW all 0).
+  A guardrail proof confirms a property present in **no** mapped endpoint's schema is still flagged
+  and still fails the gate, and a before/after diff confirms only `extra-property` false-positives
+  were cleared (zero MISSING/type/required findings dropped).
+- **`tools/check-model-sync.py` — documented allowlist.** Added a small `(sdk_type, property,
+  finding_type) → reason` allowlist for the genuinely-intentional remainder, printed in its own
+  "Allowlisted (intentional)" report section and excluded from the gate (13 entries): `Tag.id`/`name`
+  and `DataInputDataPoint.id` deliberate non-null over-tightening; `CreateTagRequest.name` required on
+  create (shared with PUT replace); `TrailerAssignment` seven back-compat v1 fields plus its
+  nested-envelope `pagination` weak-typing; and the `object`-typed Beta/preview/volatile-v1 responses.
+
 ## [0.3.1] - 2026-06-01
 
 ### Fixed

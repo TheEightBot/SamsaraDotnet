@@ -30,7 +30,7 @@ internal sealed class MediaClient : SamsaraServiceClientBase, IMediaClient
                 ("mediaTypes", mediaTypes is null ? null : string.Join(",", mediaTypes)),
                 ("triggerReasons", triggerReasons is null ? null : string.Join(",", triggerReasons)),
                 ("availableAfterTime", availableAfterTime)),
-            static data => data.Media,
+            static data => data.Media ?? Array.Empty<MediaFile>(),
             cancellationToken: cancellationToken);
 
     public async Task<IReadOnlyList<MediaRetrieval>> GetRetrievalAsync(string retrievalId, CancellationToken cancellationToken = default)
@@ -41,7 +41,7 @@ internal sealed class MediaClient : SamsaraServiceClientBase, IMediaClient
             QueryBuilder.WithParams("cameras/media/retrieval", ("retrievalId", retrievalId)),
             cancellationToken).ConfigureAwait(false);
 
-        return response.Media;
+        return response.Media ?? Array.Empty<MediaRetrieval>();
     }
 
     public Task<MediaRetrieval> CreateRetrievalAsync(CreateMediaRetrievalRequest request, CancellationToken cancellationToken = default)

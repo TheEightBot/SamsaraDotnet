@@ -79,6 +79,13 @@ public sealed record MediaFile
     /// </summary>
     [JsonPropertyName("urlInfo")]
     public MediaUrlInfo? UrlInfo { get; init; }
+
+    /// <summary>
+    /// Serial number of the auxiliary camera that captured this media, when
+    /// the media came from an aux cam. Optional in spec.
+    /// </summary>
+    [JsonPropertyName("auxCamSerial")]
+    public string? AuxCamSerial { get; init; }
 }
 
 /// <summary>

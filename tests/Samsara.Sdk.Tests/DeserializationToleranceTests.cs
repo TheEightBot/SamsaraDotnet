@@ -1,17 +1,19 @@
 namespace Samsara.Sdk.Tests;
 
-using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using FluentAssertions;
+using Samsara.Sdk.Clients;
 using Samsara.Sdk.Models.Fleet;
 using Samsara.Sdk.Serialization;
+using Samsara.Sdk.Tests.Helpers;
 
 /// <summary>
-/// Guards the resilient-deserialization contract: the live Samsara API routinely omits
-/// response fields its own OpenAPI spec marks <c>required</c> (e.g. <c>Vehicle.createdAtTime</c>).
-/// The SDK must deserialize such responses anyway — never throw a "missing required properties"
-/// <see cref="JsonException"/> over an absent field. This is enforced centrally by the
-/// <c>TolerateMissingRequiredMembers</c> modifier on <see cref="SamsaraSerializerOptions.Default"/>.
+/// Locks in the deserialization architecture: spec-honest <c>required</c> on the strict path
+/// (<see cref="SamsaraSerializerOptions.Default"/>), source generation for performance, and a
+/// resilient failover (<see cref="SamsaraSerializerOptions.Resilient"/>) so a response that
+/// doesn't match the spec — e.g. the live API omitting <c>Vehicle.createdAtTime</c> — still
+/// deserializes instead of crashing.
 /// </summary>
 public sealed class DeserializationToleranceTests
 {
@@ -22,7 +24,7 @@ public sealed class DeserializationToleranceTests
         foreach (var type in assembly.GetTypes())
         {
             if (type is { IsPublic: true, IsClass: true, IsAbstract: false }
-                && !type.ContainsGenericParameters // skip open generic envelopes (e.g. SamsaraListResponse<>)
+                && !type.ContainsGenericParameters
                 && type.Namespace?.StartsWith("Samsara.Sdk.Models", StringComparison.Ordinal) == true
                 && type.GetConstructor(Type.EmptyTypes) is not null)
             {
@@ -33,14 +35,14 @@ public sealed class DeserializationToleranceTests
 
     [Theory]
     [MemberData(nameof(AllModelTypes))]
-    public void EveryModel_DeserializesFromEmptyObject_WithoutThrowing(Type modelType)
+    public void Resilient_DeserializesEveryModelFromEmptyObject(Type modelType)
     {
-        // `{}` omits EVERY field — the worst case the API can hand us. None of the SDK's
-        // models may throw on it.
-        var act = () => JsonSerializer.Deserialize("{}", modelType, SamsaraSerializerOptions.Default);
+        // `{}` omits EVERY field — the worst case the API can hand us. The resilient failover
+        // path must tolerate it for every model in the SDK.
+        var act = () => JsonSerializer.Deserialize("{}", modelType, SamsaraSerializerOptions.Resilient);
 
         act.Should().NotThrow(
-            $"the Samsara API may omit any field on {modelType.Name}; the SDK must tolerate a missing member");
+            $"the resilient failover must tolerate a response that omits any field on {modelType.Name}");
     }
 
     [Fact]
@@ -51,31 +53,83 @@ public sealed class DeserializationToleranceTests
     }
 
     [Fact]
-    public void TheModifier_IsLoadBearing_StrictOptionsStillThrowForVehicle()
+    public void Default_IsStrict_AndHonorsSpecRequired()
     {
-        // Proves the tolerance comes from our modifier, not from Vehicle being lenient:
-        // with stock options (no modifier), the exact production failure reproduces.
-        var strict = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        // The strict/source-gen path stays honest to the spec: a payload missing a
+        // spec-`required` field (Vehicle.createdAtTime) throws here.
+        var act = () => JsonSerializer.Deserialize<Vehicle>("{}", SamsaraSerializerOptions.Default);
 
-        var strictAct = () => JsonSerializer.Deserialize<Vehicle>("{}", strict);
-        strictAct.Should().Throw<JsonException>().WithMessage("*createdAtTime*");
-
-        // ...and with the SDK's configured options, the same payload deserializes cleanly.
-        var tolerantAct = () => JsonSerializer.Deserialize<Vehicle>("{}", SamsaraSerializerOptions.Default);
-        tolerantAct.Should().NotThrow();
+        act.Should().Throw<JsonException>().WithMessage("*createdAtTime*");
     }
 
     [Fact]
-    public void Vehicle_DeserializesWhenApiOmitsCreatedAtTime()
+    public void Resilient_IsTheFailover_DeserializesWhatStrictRejects()
     {
-        // The exact reported failure, end to end through the model.
         const string json = """{ "id": "v-1", "name": "Truck 1" }""";
 
-        var vehicle = JsonSerializer.Deserialize<Vehicle>(json, SamsaraSerializerOptions.Default);
+        var vehicle = JsonSerializer.Deserialize<Vehicle>(json, SamsaraSerializerOptions.Resilient);
 
         vehicle.Should().NotBeNull();
         vehicle!.Id.Should().Be("v-1");
-        vehicle.Name.Should().Be("Truck 1");
         vehicle.CreatedAtTime.Should().Be(default(DateTimeOffset));
+    }
+
+    [Fact]
+    public void EveryModelType_IsRegisteredInSourceGenContext()
+    {
+        // For full source-gen performance (no reflection fallback), every model the SDK
+        // deserializes must be registered in SamsaraJsonContext.
+        var unregistered = AllModelTypes()
+            .Select(row => (Type)row[0])
+            .Where(t => SamsaraJsonContext.Default.GetTypeInfo(t) is null)
+            .Select(t => t.FullName)
+            .OrderBy(n => n)
+            .ToList();
+
+        unregistered.Should().BeEmpty(
+            "these model types fall back to reflection; add [JsonSerializable(typeof(X))] to SamsaraJsonContext:\n"
+            + string.Join("\n", unregistered));
+    }
+
+    [Fact]
+    public void SourceGeneration_IsWired_ForModelTypes()
+    {
+        // The model types resolve through the source-generated context (not reflection),
+        // which is where the performance win comes from.
+        var info = SamsaraJsonContext.Default.GetTypeInfo(typeof(Vehicle));
+
+        info.Should().NotBeNull("Vehicle must be registered in the source-generated context");
+        info!.Kind.Should().Be(JsonTypeInfoKind.Object);
+    }
+
+    [Fact]
+    public async Task HttpClient_FailsOver_WhenApiOmitsSpecRequiredField()
+    {
+        // End-to-end: the exact production scenario through the real client + deserialization
+        // path. The API returns a Vehicle without the spec-required createdAtTime; the client
+        // must fail over and return the vehicle rather than throw.
+        var resp = new { data = new { id = "v-1", name = "Truck 1" } };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new VehiclesClient(TestFactory.CreateHttpClient(handler));
+
+        var act = async () => await client.GetAsync("v-1");
+
+        var vehicle = await act.Should().NotThrowAsync();
+        vehicle.Subject.Id.Should().Be("v-1");
+        vehicle.Subject.Name.Should().Be("Truck 1");
+    }
+
+    [Fact]
+    public async Task HttpClient_UsesStrictPath_WhenResponseConforms()
+    {
+        // A conforming response deserializes on the strict/source-gen path (no failover).
+        var resp = new { data = new { id = "v-2", name = "Truck 2", createdAtTime = "2024-01-01T00:00:00Z" } };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new VehiclesClient(TestFactory.CreateHttpClient(handler));
+
+        var vehicle = await client.GetAsync("v-2");
+
+        vehicle.Id.Should().Be("v-2");
+        vehicle.CreatedAtTime.Should().Be(DateTimeOffset.Parse("2024-01-01T00:00:00Z"));
     }
 }

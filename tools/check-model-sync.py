@@ -56,6 +56,84 @@ SDK_MODELS = SDK_ROOT / "Models"
 SEVERITIES = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
 SEV_RANK = {s: i for i, s in enumerate(SEVERITIES)}  # lower index == more severe
 
+# ----------------------------------------------------------------- allowlist
+# Findings that are DELIBERATE, not defects. Keyed by (sdk_type, property,
+# finding_type) -> human reason. These are suppressed from the gating counts but
+# printed in their own "Allowlisted (intentional)" section so they stay visible
+# and reviewable. Anything NOT in this map is a real finding.
+#
+# RULE FOR ADDITIONS: only put something here once you've confirmed it is an
+# intentional modelling decision (back-compat, deliberate over-tightening, or
+# intentional Beta weak-typing) — never to paper over a genuine drift. Each
+# entry carries the rationale inline.
+ALLOWLIST: dict[tuple[str, str, str], str] = {
+    # --- TrailerAssignment: v1 dual-envelope record, deliberately weak/back-compat ---
+    # This single record deserializes BOTH v1 wrapper shapes (list endpoint
+    # { pagination, trailers } and per-trailer endpoint { id, name,
+    # trailerAssignments }). The 7 fields below are NOT in the current spec for
+    # either shape; they are retained on the record for backward compatibility
+    # with older Samsara v1 payloads and existing consumers. See
+    # Models/Assignments/AssignmentModels.cs (TrailerAssignment).
+    ("TrailerAssignment", "trailerId", "extra-property"):
+        "back-compat: legacy v1 field, not in current spec (documented on record)",
+    ("TrailerAssignment", "trailerName", "extra-property"):
+        "back-compat: legacy v1 field, not in current spec (documented on record)",
+    ("TrailerAssignment", "vehicleId", "extra-property"):
+        "back-compat: legacy v1 field, not in current spec (documented on record)",
+    ("TrailerAssignment", "vehicleName", "extra-property"):
+        "back-compat: legacy v1 field, not in current spec (documented on record)",
+    ("TrailerAssignment", "driverId", "extra-property"):
+        "back-compat: legacy v1 field, not in current spec (documented on record)",
+    ("TrailerAssignment", "startTime", "extra-property"):
+        "back-compat: legacy v1 field, not in current spec (documented on record)",
+    ("TrailerAssignment", "endTime", "extra-property"):
+        "back-compat: legacy v1 field, not in current spec (documented on record)",
+    # The list-shape `pagination` is a nested v1 envelope cursor the SDK models
+    # as object? (the surrounding pagination is handled by the HTTP layer for
+    # the v2 shapes; on this v1 endpoint it rides inside the data object). Left
+    # weak deliberately — typing it would not change call-site ergonomics.
+    ("TrailerAssignment", "pagination", "weak-typing"):
+        "intentional v1 nested-envelope weak-typing (cursor handled by HTTP layer)",
+
+    # --- Tags: deliberate over-tightening ---
+    # The shared Tag record marks id/name `required`: every tag the API returns
+    # has both, so requiring them gives consumers non-null guarantees. The spec
+    # lists them optional only because the Tag schema carries no `required`
+    # block. Deliberate, not drift.
+    ("Tag", "id", "over-tightened"):
+        "intentional: every returned Tag has an id; SDK guarantees non-null",
+    ("Tag", "name", "over-tightened"):
+        "intentional: every returned Tag has a name; SDK guarantees non-null",
+    # CreateTagRequest.name is required for POST /tags (create) where a name is
+    # mandatory; the same record also serves PUT /tags/{id} (replace) where the
+    # spec marks name optional. Requiring a name on replace is deliberate.
+    ("CreateTagRequest", "name", "over-tightened"):
+        "intentional: name required on create; shared with PUT replace where spec lists it optional",
+
+    # --- Industrial: deliberate over-tightening ---
+    # Every data-input data point returned by the snapshot/feed/history
+    # endpoints carries an id; SDK requires it for a non-null guarantee. Spec
+    # lists it optional. Deliberate.
+    ("DataInputDataPoint", "id", "over-tightened"):
+        "intentional: every returned data point has an id; SDK guarantees non-null",
+
+    # --- Beta / preview / v1-legacy: intentional weak-typing ---
+    # A large family of Beta, preview, and low-priority/volatile v1-legacy
+    # endpoints (BetaClient, FunctionsClient, PlacesClient, PreferredStations,
+    # QualificationRecords, Reports, Ridership, LegacyApis, PreviewApis, etc.)
+    # return `object` by design rather than committing to a hand-maintained
+    # model for surfaces that are unstable or out of the SDK's typed scope.
+    # Already capped at MEDIUM by the beta/weak logic; allowlisted so the
+    # gate reaches a true zero. Revisit if/when these endpoints are promoted to
+    # typed models.
+    ("object", "*", "weak-typing"):
+        "intentional: Beta/preview/volatile-v1 endpoints weakly typed (object) by design",
+}
+
+
+def allowlist_reason(sdk_type: str, prop: str, ftype: str) -> str | None:
+    return ALLOWLIST.get((sdk_type, prop, ftype))
+
 # Pagination query params handled by PaginateAsync; never flag as missing.
 PAGINATION_PARAMS = {"limit", "after", "endcursor", "startcursor"}
 # Time-range query params handled by QueryBuilder.WithTimeRange. The helper
@@ -102,6 +180,36 @@ class SpecResolver:
                 branch = schema.get(key)
                 if isinstance(branch, list) and len(branch) == 1:
                     return self.deref(branch[0], depth + 1)
+            # Multi-branch allOf is COMPOSITION: the effective object is the union
+            # of every branch's properties (required = union of each branch's
+            # required). Several v1 response bodies use this (e.g.
+            # `V1TrailerBase` + `{ trailerAssignments }`, or
+            # `Attribute` + `{ entities }` => `AttributeExpanded`). Without
+            # merging, deref returns a propertyless schema and those composed
+            # fields look "missing"/"extra". oneOf/anyOf are alternatives, not
+            # composition, so we do NOT merge them. Already-deref'd branches keep
+            # this O(branches) and bounded by `depth`.
+            all_of = schema.get("allOf")
+            if isinstance(all_of, list) and len(all_of) > 1:
+                merged_props: dict = {}
+                merged_required: list = []
+                obj_type = None
+                for branch in all_of:
+                    bd = self.deref(branch, depth + 1)
+                    if not isinstance(bd, dict):
+                        continue
+                    bp = bd.get("properties")
+                    if isinstance(bp, dict):
+                        merged_props.update(bp)
+                    for r in bd.get("required", []) or []:
+                        if r not in merged_required:
+                            merged_required.append(r)
+                    obj_type = obj_type or bd.get("type")
+                if merged_props:
+                    out = {"type": obj_type or "object", "properties": merged_props}
+                    if merged_required:
+                        out["required"] = merged_required
+                    return out
         return schema
 
     def op_schema(self, op: dict, kind: str) -> dict | None:
@@ -702,7 +810,20 @@ def compare_record(
     tag: str,
     beta_capped: bool,
     findings: list[Finding],
+    union_spec_names: set[str] | None = None,
 ):
+    """Compare one SDK record against one endpoint's inner spec schema.
+
+    ``union_spec_names`` is the UNION of every spec property name that appears on
+    ANY endpoint (request or response) mapped to this same SDK record. A shared
+    SDK record legitimately serves multiple endpoints with diverging shapes
+    (e.g. the GET-stream response nests a ``driver`` object while the POST
+    response returns a flat ``message``); a property valid on a *different*
+    mapped endpoint must therefore NOT be flagged ``extra-property`` here. When
+    provided, the EXTRA check uses this union so a property is only flagged when
+    it is in NO mapped endpoint's schema. The MISSING / type / required checks
+    deliberately stay per-endpoint (those are about THIS endpoint's contract).
+    """
     if not isinstance(inner_schema, dict):
         return
     spec_props = inner_schema.get("properties")
@@ -802,11 +923,16 @@ def compare_record(
                     f"SDK marks response '{sname}' 'required' but spec lists it optional",
                     endpoint, tag))
 
-    # SDK -> spec: EXTRA.
-    for sdk_name in sdk_json_names - spec_names:
+    # SDK -> spec: EXTRA. A property is only truly extra when it is absent from
+    # the UNION of every endpoint mapped to this record (dual-shape records share
+    # one C# type across endpoints whose schemas diverge — see docstring). Fall
+    # back to this endpoint's schema only when no union was supplied.
+    extra_baseline = union_spec_names if union_spec_names is not None else spec_names
+    for sdk_name in sdk_json_names - extra_baseline:
         findings.append(Finding(
             cap("LOW"), "extra-property", sdk_record_name, sdk_name,
-            f"SDK property '{sdk_name}' not present in spec {side} schema",
+            f"SDK property '{sdk_name}' not present in spec schema of any endpoint "
+            f"mapped to '{sdk_record_name}'",
             endpoint, tag))
 
 
@@ -869,6 +995,63 @@ def analyze(spec: dict):
     findings: list[Finding] = []
     examined = 0
 
+    # Record comparisons are deferred into "jobs" so we can compute, per SDK
+    # record, the UNION of spec property names across every endpoint mapped to
+    # it BEFORE emitting extra-property findings. A shared C# record may back
+    # several endpoints with diverging shapes; without the union, fields valid on
+    # a sibling endpoint are mis-flagged as extras. See compare_record's
+    # docstring. Each job carries everything compare_record needs.
+    jobs: list[dict] = []
+    # rec_label -> set of every spec property name seen on any mapped endpoint.
+    record_union: dict[str, set[str]] = defaultdict(set)
+
+    def _fold_nested_union(sdk_props, inner):
+        """Contribute nested element-record property names to the union.
+
+        A shared record can map to an endpoint not as the top-level body but
+        NESTED inside another record's property (e.g. ``UserRole`` lives in
+        ``CreateUserRequest.roles[]``; ``MediaRetrieval`` lives in
+        ``MediaRetrievalListResponse.media[]``). For such a property, the spec's
+        same-named member carries the element's real schema. Folding its
+        property names into that element record's union lets the EXTRA check see
+        fields the element legitimately has on THIS (nested) endpoint shape,
+        exactly as the top-level union does for direct endpoints. Only descends
+        one level into record-typed SDK properties — enough for the SDK's
+        single-level request/response nesting and bounded work."""
+        if not (isinstance(sdk_props, dict) and isinstance(inner, dict)):
+            return
+        spec_props = inner.get("properties")
+        if not isinstance(spec_props, dict):
+            return
+        for pname, pmeta in sdk_props.items():
+            if pname not in spec_props:
+                continue
+            elem = _record_key(_collection_element(pmeta["ctype"]))
+            if elem not in models:
+                continue  # not a known SDK record — nothing to fold
+            child = resolver.deref(spec_props[pname])
+            if not isinstance(child, dict):
+                continue
+            # Descend an array's items to the element object schema if needed.
+            if child.get("type") == "array" or "items" in child:
+                child = resolver.deref(child.get("items"))
+            if isinstance(child, dict) and isinstance(child.get("properties"), dict):
+                record_union[elem] |= set(child["properties"].keys())
+
+    def _queue(rec_label, sdk_props, inner, required, side, endpoint, tag, beta_capped):
+        if isinstance(inner, dict):
+            sp = inner.get("properties")
+            if isinstance(sp, dict):
+                record_union[rec_label] |= set(sp.keys())
+            else:
+                record_union[rec_label]  # touch so key exists (empty union)
+        _fold_nested_union(sdk_props, inner)
+        jobs.append({
+            "rec_label": rec_label, "sdk_props": sdk_props, "inner": inner,
+            "required": required, "side": side, "endpoint": endpoint,
+            "tag": tag, "beta_capped": beta_capped,
+        })
+
     for e in eps:
         verb, np = e["verb"], e["path"]
         if np is None:
@@ -914,16 +1097,15 @@ def analyze(spec: dict):
                         # Envelope present — compare the INNER record against inner schema.
                         data_ctype = sdk_req_props["data"]["ctype"]
                         inner_rec = _strip_generic_suffix(_collection_element(data_ctype))
-                        compare_record(
-                            inner_rec, models.get(inner_rec), inner, req_required,
-                            resolver, "request", endpoint, tag, beta_capped, findings)
+                        _queue(inner_rec, models.get(inner_rec), inner, req_required,
+                               "request", endpoint, tag, beta_capped)
                 else:
                     examined += 1
                     if req_type is None:
                         pass  # no typed body param (e.g. builds inline) — skip
                     elif is_weak_type(req_type):
-                        compare_record(req_type, None, inner, req_required,
-                                       resolver, "request", endpoint, tag, beta_capped, findings)
+                        _queue(req_type, None, inner, req_required,
+                               "request", endpoint, tag, beta_capped)
                     else:
                         rec = _record_key(req_type)
                         sdk_props = models.get(rec)
@@ -931,8 +1113,8 @@ def analyze(spec: dict):
                         if sdk_props is not None and isinstance(inner, dict):
                             inner, req_required = resolver.resolve_named_wrapper(
                                 inner, set(sdk_props.keys()))
-                        compare_record(rec_label, sdk_props, inner, req_required,
-                                       resolver, "request", endpoint, tag, beta_capped, findings)
+                        _queue(rec_label, sdk_props, inner, req_required,
+                               "request", endpoint, tag, beta_capped)
 
         # ---- Response side ----------------------------------------------
         resp_schema_top = resolver.op_schema(op, "response")
@@ -958,11 +1140,21 @@ def analyze(spec: dict):
                 if sdk_props is not None and isinstance(inner, dict):
                     inner, resp_required = resolver.resolve_named_wrapper(
                         inner, set(sdk_props.keys()))
-                compare_record(rec_label, sdk_props, inner, resp_required,
-                               resolver, "response", endpoint, tag, beta_capped, findings)
+                _queue(rec_label, sdk_props, inner, resp_required,
+                       "response", endpoint, tag, beta_capped)
 
         # ---- Query params -----------------------------------------------
         compare_query_params(op, op_uses_paginate, info, endpoint, tag, beta_capped, findings)
+
+    # Second pass: now that record_union holds the cross-endpoint property union
+    # for every shared record, emit the per-endpoint comparisons. The union is
+    # passed so extra-property fires ONLY when a property is in NO mapped
+    # endpoint's schema; MISSING/type/required checks remain per-endpoint.
+    for j in jobs:
+        compare_record(
+            j["rec_label"], j["sdk_props"], j["inner"], j["required"],
+            resolver, j["side"], j["endpoint"], j["tag"], j["beta_capped"],
+            findings, union_spec_names=record_union.get(j["rec_label"]))
 
     return findings, examined, len(eps)
 
@@ -1020,7 +1212,27 @@ def dedup(findings: list[Finding]):
     return list(grouped.values())
 
 
-def report_human(groups, examined, n_eps, by_domain: bool):
+def split_allowlisted(groups):
+    """Partition deduped groups into (active, allowlisted).
+
+    `active` is the set of REAL findings used for the headline counts and the
+    severity gate. `allowlisted` carries the documented, intentional ones with
+    their `reason` attached, reported separately so they stay visible and are
+    never silently dropped."""
+    active, allowlisted = [], []
+    for g in groups:
+        reason = allowlist_reason(g["sdk_type"], g["prop"], g["ftype"])
+        if reason is None:
+            active.append(g)
+        else:
+            g = dict(g)
+            g["reason"] = reason
+            allowlisted.append(g)
+    return active, allowlisted
+
+
+def report_human(groups, examined, n_eps, by_domain: bool, allowlisted=None):
+    allowlisted = allowlisted or []
     by_sev = defaultdict(int)
     by_type = defaultdict(int)
     domain = defaultdict(lambda: defaultdict(int))
@@ -1035,7 +1247,8 @@ def report_human(groups, examined, n_eps, by_domain: bool):
     print(line)
     print(f"SDK endpoints scanned:     {n_eps}")
     print(f"Endpoint bodies compared:  {examined}")
-    print(f"Findings (deduped):        {len(groups)}")
+    print(f"Active findings (deduped): {len(groups)}")
+    print(f"Allowlisted (intentional): {len(allowlisted)}")
     print()
     print("By severity:")
     for s in SEVERITIES:
@@ -1081,12 +1294,22 @@ def report_human(groups, examined, n_eps, by_domain: bool):
             for g in sorted(bd[d], key=lambda x: SEV_RANK[x["severity"]]):
                 print(f"  [{g['severity']:8}] {g['ftype']:24} {g['sdk_type']}.{g['prop']}")
 
+    # Allowlisted, intentional findings — always shown so they stay reviewable.
+    if allowlisted:
+        print()
+        print(f"--- Allowlisted (intentional, suppressed from gate): {len(allowlisted)} ---")
+        for g in sorted(allowlisted, key=lambda x: (x["sdk_type"], x["prop"], x["ftype"])):
+            print(f"  [{g['severity']}] {g['ftype']} :: {g['sdk_type']}.{g['prop']}")
+            print(f"      reason: {g['reason']}")
 
-def report_json(groups, examined, n_eps):
+
+def report_json(groups, examined, n_eps, allowlisted=None):
+    allowlisted = allowlisted or []
     print(json.dumps({
         "sdk_endpoints_scanned": n_eps,
         "bodies_compared": examined,
         "finding_count": len(groups),
+        "allowlisted_count": len(allowlisted),
         "by_severity": {
             s: sum(1 for g in groups if g["severity"] == s) for s in SEVERITIES
         },
@@ -1101,6 +1324,18 @@ def report_json(groups, examined, n_eps):
                 "endpoints": g["endpoints"],
             }
             for g in sorted(groups, key=lambda x: (SEV_RANK[x["severity"]], x["sdk_type"], x["prop"]))
+        ],
+        "allowlisted": [
+            {
+                "severity": g["severity"],
+                "type": g["ftype"],
+                "sdk_type": g["sdk_type"],
+                "property": g["prop"],
+                "domain": g["tag"],
+                "reason": g["reason"],
+                "endpoints": g["endpoints"],
+            }
+            for g in sorted(allowlisted, key=lambda x: (x["sdk_type"], x["prop"], x["ftype"]))
         ],
     }, indent=2))
 
@@ -1118,15 +1353,18 @@ def main() -> None:
     spec = cs.load_spec(args.spec_url, args.spec_file)
     findings, examined, n_eps = analyze(spec)
     groups = dedup(findings)
+    # Intentional, documented findings are partitioned out: they remain visible
+    # in the report but do NOT count toward the headline totals or the gate.
+    active, allowlisted = split_allowlisted(groups)
 
     if args.json:
-        report_json(groups, examined, n_eps)
+        report_json(active, examined, n_eps, allowlisted)
     else:
-        report_human(groups, examined, n_eps, args.by_domain)
+        report_human(active, examined, n_eps, args.by_domain, allowlisted)
 
     if args.fail_on_severity:
         threshold = SEV_RANK[args.fail_on_severity]
-        worst = min((SEV_RANK[g["severity"]] for g in groups), default=99)
+        worst = min((SEV_RANK[g["severity"]] for g in active), default=99)
         if worst <= threshold:
             sys.exit(1)
 

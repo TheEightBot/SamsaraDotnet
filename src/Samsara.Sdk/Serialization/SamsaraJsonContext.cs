@@ -468,6 +468,8 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(HubPlanOrder))]
 [JsonSerializable(typeof(CreateHubPlanOrderInput))]
 [JsonSerializable(typeof(CreateHubPlanOrdersRequest))]
+[JsonSerializable(typeof(HubOrderTask))]
+[JsonSerializable(typeof(HubOrderAppointmentWindow))]
 // Organization - Settings
 [JsonSerializable(typeof(ComplianceSettings))]
 [JsonSerializable(typeof(UpdateComplianceSettingsRequest))]
@@ -488,6 +490,19 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(SafetyVoiceCoachingSettings))]
 // Beta — Places
 [JsonSerializable(typeof(PlaceDeletionMarker))]
+// Source-gen completeness (kept in sync by DeserializationToleranceTests
+// .EveryModelType_IsRegisteredInSourceGenContext)
+[JsonSerializable(typeof(EntityReference))]
+[JsonSerializable(typeof(CreateContactRequest))]
+[JsonSerializable(typeof(UpdateContactRequest))]
+[JsonSerializable(typeof(DeleteDriverVehicleAssignmentsRequest))]
+[JsonSerializable(typeof(HosClocksForDriver))]
+[JsonSerializable(typeof(HosCurrentDutyStatus))]
+[JsonSerializable(typeof(HosViolationClocks))]
+[JsonSerializable(typeof(HosBreakClock))]
+[JsonSerializable(typeof(HosCycleClock))]
+[JsonSerializable(typeof(HosDriveClock))]
+[JsonSerializable(typeof(HosShiftClock))]
 internal sealed partial class SamsaraJsonContext : JsonSerializerContext
 {
 }
@@ -497,23 +512,46 @@ internal sealed partial class SamsaraJsonContext : JsonSerializerContext
 /// </summary>
 internal static class SamsaraSerializerOptions
 {
-    public static JsonSerializerOptions Default { get; } = CreateDefault();
+    /// <summary>
+    /// Strict, source-generated options — used for serialization and as the PRIMARY
+    /// deserialization path. Resolves types through <see cref="SamsaraJsonContext"/> source
+    /// generation (fast, AOT-friendly), with a reflection fallback only for types the context
+    /// does not register — chiefly the thin generic <c>{ data, pagination }</c> response
+    /// envelopes, whose inner model types still bind through source generation. Honors the
+    /// spec-declared <c>required</c> members: a response that omits one throws here, and the
+    /// HTTP layer then retries with <see cref="Resilient"/>.
+    /// </summary>
+    public static JsonSerializerOptions Default { get; } = Create(resilient: false);
 
-    private static JsonSerializerOptions CreateDefault()
+    /// <summary>
+    /// Failover options — identical to <see cref="Default"/> (same source-generated resolver)
+    /// but with the runtime <c>required</c>-member check relaxed, so a response that omits a
+    /// spec-<c>required</c> field still deserializes (the field is left at its default/<c>null</c>).
+    /// Used ONLY by the HTTP layer as a logged fallback after a strict attempt throws.
+    /// Deserialization-only: the C# <c>required</c> modifier still enforces request-DTO
+    /// construction at compile time.
+    /// </summary>
+    public static JsonSerializerOptions Resilient { get; } = Create(resilient: true);
+
+    private static JsonSerializerOptions Create(bool resilient)
     {
+        // Source generation first; reflection only as a fallback for unregistered types.
+        IJsonTypeInfoResolver resolver = JsonTypeInfoResolver.Combine(
+            SamsaraJsonContext.Default,
+            new DefaultJsonTypeInfoResolver());
+
+        if (resilient)
+        {
+            resolver = resolver.WithAddedModifier(RelaxRequiredMembers);
+        }
+
         var options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             WriteIndented = false,
             PropertyNameCaseInsensitive = true,
-            // Tolerate response fields the API omits even though the spec marks them
-            // `required` (see TolerateMissingRequiredMembers). Without this, a single
-            // absent field fails the whole deserialization.
-            TypeInfoResolver = new DefaultJsonTypeInfoResolver
-            {
-                Modifiers = { TolerateMissingRequiredMembers },
-            },
+            TypeInfoResolver = resolver,
         };
 
         options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
@@ -522,20 +560,13 @@ internal static class SamsaraSerializerOptions
     }
 
     /// <summary>
-    /// Clears the runtime <see cref="JsonPropertyInfo.IsRequired"/> check on every
-    /// property so a response that omits a field the OpenAPI spec marks <c>required</c>
-    /// still deserializes (the field is left at its default / <c>null</c>) instead of
-    /// throwing <see cref="JsonException"/>. The Samsara spec over-declares required
-    /// fields relative to what the live API actually returns — e.g.
-    /// <c>Vehicle.createdAtTime</c> — so for a resilient client the API, not the spec,
-    /// is the source of truth on presence.
-    /// <para>
-    /// This affects deserialization only. The C# <c>required</c> modifier still enforces
-    /// initialization at compile time, so consumers building request DTOs must still set
-    /// required fields.
-    /// </para>
+    /// Failover modifier: clears the runtime <see cref="JsonPropertyInfo.IsRequired"/> check on
+    /// every property. The live Samsara API omits fields its own OpenAPI spec marks
+    /// <c>required</c> (e.g. <c>Vehicle.createdAtTime</c>); when the strict path throws on one,
+    /// the HTTP layer retries with these relaxed options so the caller still gets data. The
+    /// missing field is left at its default/<c>null</c>. Deserialization only.
     /// </summary>
-    private static void TolerateMissingRequiredMembers(JsonTypeInfo typeInfo)
+    private static void RelaxRequiredMembers(JsonTypeInfo typeInfo)
     {
         if (typeInfo.Kind != JsonTypeInfoKind.Object)
         {
