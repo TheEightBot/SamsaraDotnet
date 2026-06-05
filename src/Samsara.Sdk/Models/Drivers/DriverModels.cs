@@ -18,6 +18,10 @@ public sealed record Driver
     [JsonPropertyName("dateOfBirth")]
     public string? DateOfBirth { get; init; }
 
+    /// <summary>The driver's email address. Optional.</summary>
+    [JsonPropertyName("email")]
+    public string? Email { get; init; }
+
     [JsonPropertyName("username")]
     public string? Username { get; init; }
 
@@ -181,6 +185,10 @@ public sealed record CreateDriverRequest
     [JsonPropertyName("dateOfBirth")]
     public string? DateOfBirth { get; init; }
 
+    /// <summary>The driver's email address. Optional.</summary>
+    [JsonPropertyName("email")]
+    public string? Email { get; init; }
+
     [JsonPropertyName("phone")]
     public string? Phone { get; init; }
 
@@ -307,6 +315,10 @@ public sealed record UpdateDriverRequest
 
     [JsonPropertyName("dateOfBirth")]
     public string? DateOfBirth { get; init; }
+
+    /// <summary>The driver's email address. Optional.</summary>
+    [JsonPropertyName("email")]
+    public string? Email { get; init; }
 
     [JsonPropertyName("phone")]
     public string? Phone { get; init; }

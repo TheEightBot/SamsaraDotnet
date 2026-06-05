@@ -354,8 +354,8 @@ public sealed record HubPlanOrder
     [JsonPropertyName("quantities")] public required IReadOnlyList<object> Quantities { get; init; }
     [JsonPropertyName("skillsRequired")] public required IReadOnlyList<object> SkillsRequired { get; init; }
     [JsonPropertyName("routeId")] public string? RouteId { get; init; }
-    [JsonPropertyName("pickup")] public object? Pickup { get; init; }
-    [JsonPropertyName("delivery")] public object? Delivery { get; init; }
+    [JsonPropertyName("pickup")] public HubOrderTask? Pickup { get; init; }
+    [JsonPropertyName("delivery")] public HubOrderTask? Delivery { get; init; }
 }
 
 /// <summary>
@@ -385,11 +385,11 @@ public sealed record CreateHubPlanOrderInput
 
     /// <summary>Delivery task details (spec ref <c>OrderTaskRequestBody</c>).</summary>
     [JsonPropertyName("delivery")]
-    public object? Delivery { get; init; }
+    public HubOrderTask? Delivery { get; init; }
 
     /// <summary>Pickup task details (spec ref <c>OrderTaskRequestBody</c>).</summary>
     [JsonPropertyName("pickup")]
-    public object? Pickup { get; init; }
+    public HubOrderTask? Pickup { get; init; }
 
     /// <summary>Priority of the order (e.g., 1 for high, 5 for low).</summary>
     [JsonPropertyName("priority")]
@@ -412,4 +412,60 @@ public sealed record CreateHubPlanOrdersRequest
 {
     [JsonPropertyName("data")]
     public required IReadOnlyList<CreateHubPlanOrderInput> Data { get; init; }
+}
+
+/// <summary>
+/// Pickup or delivery task on a hub plan order. Mirrors the spec
+/// <c>OrderTaskRequestBody</c> schema (used on the request) and the matching
+/// task object returned on the order response. All fields are optional. Note
+/// the Hub Plans API is Beta; this shape may evolve.
+/// </summary>
+public sealed record HubOrderTask
+{
+    /// <summary>Street address for the task location.</summary>
+    [JsonPropertyName("address")]
+    public string? Address { get; init; }
+
+    /// <summary>Appointment window during which the task should occur.</summary>
+    [JsonPropertyName("appointmentWindow")]
+    public HubOrderAppointmentWindow? AppointmentWindow { get; init; }
+
+    /// <summary>Identifier of a saved customer location for the task.</summary>
+    [JsonPropertyName("customerLocationId")]
+    public string? CustomerLocationId { get; init; }
+
+    /// <summary>Latitude of the task location (decimal degrees).</summary>
+    [JsonPropertyName("latitude")]
+    public double? Latitude { get; init; }
+
+    /// <summary>Longitude of the task location (decimal degrees).</summary>
+    [JsonPropertyName("longitude")]
+    public double? Longitude { get; init; }
+
+    /// <summary>Free-form notes for the task.</summary>
+    [JsonPropertyName("notes")]
+    public string? Notes { get; init; }
+
+    /// <summary>Ordering position of the task within the order.</summary>
+    [JsonPropertyName("position")]
+    public string? Position { get; init; }
+
+    /// <summary>Expected service time at the task location, in seconds.</summary>
+    [JsonPropertyName("serviceTimeSeconds")]
+    public int? ServiceTimeSeconds { get; init; }
+}
+
+/// <summary>
+/// Appointment window for a <see cref="HubOrderTask"/>. Mirrors the spec
+/// <c>AppointmentWindowRequestBody</c> schema.
+/// </summary>
+public sealed record HubOrderAppointmentWindow
+{
+    /// <summary>Start of the appointment window in RFC 3339 format.</summary>
+    [JsonPropertyName("startTime")]
+    public DateTimeOffset? StartTime { get; init; }
+
+    /// <summary>End of the appointment window in RFC 3339 format.</summary>
+    [JsonPropertyName("endTime")]
+    public DateTimeOffset? EndTime { get; init; }
 }
