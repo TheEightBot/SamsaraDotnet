@@ -2,6 +2,7 @@ namespace Samsara.Sdk.Serialization;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Samsara.Sdk.Exceptions;
 using Samsara.Sdk.Models.Addresses;
 using Samsara.Sdk.Models.Beta;
@@ -506,10 +507,44 @@ internal static class SamsaraSerializerOptions
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             WriteIndented = false,
             PropertyNameCaseInsensitive = true,
+            // Tolerate response fields the API omits even though the spec marks them
+            // `required` (see TolerateMissingRequiredMembers). Without this, a single
+            // absent field fails the whole deserialization.
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver
+            {
+                Modifiers = { TolerateMissingRequiredMembers },
+            },
         };
 
         options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
 
         return options;
+    }
+
+    /// <summary>
+    /// Clears the runtime <see cref="JsonPropertyInfo.IsRequired"/> check on every
+    /// property so a response that omits a field the OpenAPI spec marks <c>required</c>
+    /// still deserializes (the field is left at its default / <c>null</c>) instead of
+    /// throwing <see cref="JsonException"/>. The Samsara spec over-declares required
+    /// fields relative to what the live API actually returns — e.g.
+    /// <c>Vehicle.createdAtTime</c> — so for a resilient client the API, not the spec,
+    /// is the source of truth on presence.
+    /// <para>
+    /// This affects deserialization only. The C# <c>required</c> modifier still enforces
+    /// initialization at compile time, so consumers building request DTOs must still set
+    /// required fields.
+    /// </para>
+    /// </summary>
+    private static void TolerateMissingRequiredMembers(JsonTypeInfo typeInfo)
+    {
+        if (typeInfo.Kind != JsonTypeInfoKind.Object)
+        {
+            return;
+        }
+
+        foreach (var property in typeInfo.Properties)
+        {
+            property.IsRequired = false;
+        }
     }
 }
