@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-01
+
+### Changed
+
+- **Deserialization architecture: source-gen primary, spec-honest, observable failover.** Replaces
+  the v0.3.1 blanket required-relaxation with an approach that satisfies all three goals at once:
+  (1) **honest** — `SamsaraSerializerOptions.Default` is strict and honors every spec-declared
+  `required` member (models are unchanged); (2) **fast** — it now actually wires the
+  `SamsaraJsonContext` **source generator** (previously dead code; the runtime used reflection),
+  via `Combine(SamsaraJsonContext.Default, reflection-fallback)`, so all model types bind through
+  source generation — a test (`EveryModelType_IsRegisteredInSourceGenContext`) enforces full
+  registration, and only the thin generic `{ data, pagination }` envelopes use reflection (their
+  inner models still bind via source-gen); (3) **resilient** — `SamsaraHttpClient` buffers the
+  response, tries the strict path, and **only on a `JsonException`** retries with
+  `SamsaraSerializerOptions.Resilient` (same source-gen resolver + `required` relaxed) **and logs
+  the deviation**. So a response that violates the spec (e.g. omits `Vehicle.createdAtTime`) still
+  deserializes — observably, not via an always-on workaround. Note: source generation does not honor
+  C# property initializers the way reflection did, so `MediaClient` coalesces the nested media list
+  to empty. Deserialization-only — request-DTO compile-time `required` is unchanged.
+
 ### Added
 
 - **`Driver.Email` / `CreateDriverRequest.Email` / `UpdateDriverRequest.Email`** — the spec carries
