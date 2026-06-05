@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Tolerant response deserialization — never crash on a missing field (2026-06-01)** — the live
+  Samsara API routinely omits response fields its own OpenAPI spec marks `required` (e.g.
+  `Vehicle.createdAtTime`), and the SDK's `required` modifier made `System.Text.Json` throw
+  *"JSON deserialization … was missing required properties, including the following: createdAtTime"*,
+  failing the entire response over one absent field. **Root cause**: every sync check compares the
+  SDK to the spec, and the spec over-declares `required` versus what the API actually returns — so
+  "perfect spec parity" still crashed. The shared `SamsaraSerializerOptions.Default` now applies a
+  `TypeInfoResolver` modifier (`TolerateMissingRequiredMembers`) that clears the runtime
+  required-check on **every** property, so responses always deserialize — an omitted field is left at
+  its default/`null`. Deserialization-only: the C# `required` modifier still enforces request-DTO
+  construction at compile time. A reflection-driven test proves **all ~417 model records** deserialize
+  from `{}` without throwing, with a load-bearing proof that stock options still reproduce the crash.
+  Targeting v0.3.1.
+
 ## [0.3.0] - 2026-06-01
 
 > ### ⚠️ Migration to v0.3.0 — breaking changes summary
