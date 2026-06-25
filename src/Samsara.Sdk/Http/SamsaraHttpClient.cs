@@ -111,6 +111,22 @@ internal sealed class SamsaraHttpClient
     }
 
     /// <summary>
+    /// Sends a POST request with a JSON body and unwraps a <c>{ "data": [ T ] }</c> list envelope.
+    /// Used by bulk endpoints (e.g. <c>POST /hub/locations</c>) whose response wraps the created
+    /// resources in a <c>data</c> array rather than a single <c>data</c> object.
+    /// </summary>
+    public async Task<IReadOnlyList<T>> PostListDataAsync<T>(string path, object body, CancellationToken cancellationToken = default)
+    {
+        var content = JsonContent.Create(body, options: _jsonOptions);
+
+        using var response = await SendAndValidateAsync(HttpMethod.Post, path, content, cancellationToken)
+            .ConfigureAwait(false);
+
+        var wrapper = await DeserializeAsync<SamsaraListResponse<T>>(response, cancellationToken).ConfigureAwait(false);
+        return wrapper.Data ?? [];
+    }
+
+    /// <summary>
     /// Sends a POST request with a JSON body.
     /// </summary>
     public async Task PostAsync(string path, object body, CancellationToken cancellationToken = default)

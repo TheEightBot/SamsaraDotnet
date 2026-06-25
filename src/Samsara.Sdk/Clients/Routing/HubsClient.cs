@@ -143,9 +143,21 @@ internal sealed class HubsClient : SamsaraServiceClientBase, IHubsClient
                 ("endTime", endTime)),
             cancellationToken: cancellationToken);
 
-    /// <summary>Create hub locations in bulk (<c>POST /hub/locations</c>). The spec wraps the array in <c>{ data: T[] }</c>.</summary>
-    public Task<HubLocation> CreateLocationAsync(CreateHubLocationsRequest request, CancellationToken cancellationToken = default)
-        => HttpClient.PostDataAsync<HubLocation>("hub/locations", request, cancellationToken);
+    /// <summary>
+    /// Create hub locations in bulk (<c>POST /hub/locations</c>). The spec wraps the array in
+    /// <c>{ data: T[] }</c> on <em>both</em> the request and the response, so the response is read
+    /// as a list and the first created location is returned.
+    /// </summary>
+    public async Task<HubLocation> CreateLocationAsync(CreateHubLocationsRequest request, CancellationToken cancellationToken = default)
+    {
+        var created = await HttpClient.PostListDataAsync<HubLocation>("hub/locations", request, cancellationToken)
+            .ConfigureAwait(false);
+
+        return created.Count > 0
+            ? created[0]
+            : throw new InvalidOperationException(
+                "Samsara returned an empty 'data' array for the POST /hub/locations request.");
+    }
 
     /// <summary>List hub skills (<c>GET /hub/skills</c>) — <paramref name="hubId"/> required by spec.</summary>
     public IAsyncEnumerable<HubSkill> ListSkillsAsync(

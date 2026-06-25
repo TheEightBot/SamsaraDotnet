@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`Hubs.CreateLocationAsync` now parses the bulk `{ "data": [ ... ] }` response.** `POST
+  /hub/locations` is a bulk endpoint — the request wraps its inputs in `{ "data": [...] }` and the
+  response mirrors that with a `data` **array**. The client was deserializing the response through
+  the single-object `{ "data": T }` envelope, so every call threw `JsonException: The JSON value
+  could not be converted to ...HubLocation. Path: $.data` the moment the reader hit the array. The
+  HTTP layer gains a `PostListDataAsync<T>` helper that unwraps the list envelope, and
+  `CreateLocationAsync` uses it and returns the first created location (public signature unchanged).
+
 ## [0.4.1] - 2026-06-01
 
 ### Fixed
