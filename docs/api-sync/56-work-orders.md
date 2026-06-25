@@ -125,6 +125,10 @@ See `src/Samsara.Sdk/Models/Maintenance/WorkOrderModels.cs` for model definition
 - Query params: `ListServiceTasksAsync` +`ids`/`includeArchived`; `ListWorkOrdersAsync` +`ids`/`includeExternalIds`; `GetWorkOrdersStreamAsync` +`assetIds`/`assignedUserIds`/`workOrderStatuses`/`includeExternalIds`.
 - **Breaking**: consumers may now rely on non-null `InvoiceScan.WorkOrderId`/`ServiceTask.Name`; `PostInvoiceScanRequest` requires `file` instead of `imageBase64`.
 
+**2026-06-22 sync:** `GET /maintenance/work-order-templates` added (beta) →
+`IWorkOrdersClient.GetWorkOrderTemplatesAsync` (paginated, loosely typed `object` pending a stable
+template schema).
+
 **Model audit (2025-05-13):** All three Work Order models were rebuilt from scratch with correct API fields.
 
 - `WorkOrder`, `CreateWorkOrderRequest`, `UpdateWorkOrderRequest`: all replaced with correct schema fields including `assetId` (required on create), `serviceTaskInstances`, `items`, `discount`, `tax`, `assignedUserIds`, `dueDate`, `notes`, `status`, and related fields. Previous implementation did not match the API schema.

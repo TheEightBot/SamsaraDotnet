@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Caught the SDK up to the latest live Samsara spec (content drift under `info.version`
+  `2025-10-23`, hash `ed27c33d1e1f` → `85ab44b87e78`).** Implemented the 7 endpoints the weekly
+  api-sync check flagged as new. All are beta/preview and follow the SDK's loosely-typed
+  (`object`) convention for volatile endpoints:
+  - `GET /agent-studio/voice-sessions` → `IBetaClient.GetVoiceSessionsAsync`
+  - `GET /agent-studio/voice-sessions/stream` → `IBetaClient.GetVoiceSessionsStreamAsync`
+  - `GET /maintenance/preventive/schedules` → `IMaintenanceClient.ListPreventiveMaintenanceSchedulesAsync`
+  - `GET /maintenance/preventive/upcoming` → `IMaintenanceClient.ListUpcomingPreventiveMaintenanceAsync`
+  - `GET /maintenance/work-order-templates` → `IWorkOrdersClient.GetWorkOrderTemplatesAsync`
+  - `POST /preview/fleet/tachograph/file-uploads` → `IPreviewApisClient.CreateTachographFileUploadAsync`
+
+### Changed
+
+- **Gateway pairing moved with the spec: `POST /preview/gateways/pair` → `POST /gateways/pair`.**
+  Samsara removed the preview path and re-homed pairing under the (beta) `Gateways` tag. The SDK
+  method moved accordingly — **breaking**: `IPreviewApisClient.PairGatewaysAsync` was removed and
+  re-added as `IGatewaysClient.PairGatewaysAsync` (same `Task<object> (object request)` signature).
+  This also clears the `SDK ↔ Spec endpoint check` failure, which flagged the dead preview path as
+  a mismatch.
+
+### Fixed
+
+- **CI tooling: `check-sdk-sync.py` now recognizes the `PostListDataAsync` HTTP helper** (added in
+  the hub-location bulk-response fix), so `POST /hub/locations` is no longer dropped from SDK
+  endpoint coverage.
+- **`api-sync-check` workflow no longer crashes when filing a drift issue.** The "Create/Update
+  issue" `github-script` steps interpolated the multi-line, backtick-laden diff report straight
+  into the JS source, throwing `SyntaxError: Invalid or unexpected token` on every weekly run (so
+  no drift issue was ever filed). The report, versions, and issue number now pass through `env`
+  vars and are read via `process.env`.
+
 ## [0.4.1] - 2026-06-01
 
 ### Fixed

@@ -118,10 +118,18 @@ jobs:
       - name: Create GitHub Issue for API drift
         if: steps.diff_status.outputs.has_diff == 'true' && steps.existing_issue.outputs.exists == 'false'
         uses: actions/github-script@v7
+        # Pass the (multi-line, backtick-laden) report and versions through env vars rather
+        # than interpolating them into the script source — inlining `${{ ... }}` markdown
+        # into the JS body breaks parsing (SyntaxError: Invalid or unexpected token).
+        env:
+          OLD_VER: ${{ steps.diff_status.outputs.old_version }}
+          NEW_VER: ${{ steps.diff_status.outputs.new_version }}
+          REPORT: ${{ steps.read_report.outputs.report }}
         with:
           script: |
-            const oldVer = '${{ steps.diff_status.outputs.old_version }}';
-            const newVer = '${{ steps.diff_status.outputs.new_version }}';
+            const oldVer = process.env.OLD_VER;
+            const newVer = process.env.NEW_VER;
+            const report = process.env.REPORT;
             const versionNote = oldVer !== newVer
               ? `**API version changed**: \`${oldVer}\` → \`${newVer}\``
               : `**API version**: \`${newVer}\` (no version bump, but content changed)`;
@@ -136,7 +144,7 @@ jobs:
               '',
               '### Diff Report',
               '',
-              '${{ steps.read_report.outputs.report }}',
+              report,
               '',
               '---',
               '',
@@ -164,11 +172,14 @@ jobs:
       - name: Update existing issue with new diff
         if: steps.diff_status.outputs.has_diff == 'true' && steps.existing_issue.outputs.exists == 'true'
         uses: actions/github-script@v7
+        # See note above: pass report/issue number via env, not script interpolation.
+        env:
+          ISSUE_NUMBER: ${{ steps.existing_issue.outputs.issue_number }}
+          REPORT: ${{ steps.read_report.outputs.report }}
         with:
           script: |
-            const issueNumber = parseInt('${{ steps.existing_issue.outputs.issue_number }}');
-            const oldVer = '${{ steps.diff_status.outputs.old_version }}';
-            const newVer = '${{ steps.diff_status.outputs.new_version }}';
+            const issueNumber = parseInt(process.env.ISSUE_NUMBER, 10);
+            const report = process.env.REPORT;
             const runDate = new Date().toISOString().split('T')[0];
 
             await github.rest.issues.createComment({
@@ -178,7 +189,7 @@ jobs:
               body: [
                 `## Updated Diff — ${runDate}`,
                 '',
-                '${{ steps.read_report.outputs.report }}',
+                report,
               ].join('\n'),
             });
             console.log(`Updated existing issue #${issueNumber}`);

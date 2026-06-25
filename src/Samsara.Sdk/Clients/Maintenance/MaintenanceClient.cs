@@ -89,4 +89,12 @@ internal sealed class MaintenanceClient : SamsaraServiceClientBase, IMaintenance
     /// <summary>List maintenance vendor categories (beta).</summary>
     public IAsyncEnumerable<object> ListVendorCategoriesAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<object>("fleet/maintenance/vendor-categories", cancellationToken: cancellationToken);
+
+    /// <summary>List preventive maintenance schedules (<c>GET /maintenance/preventive/schedules</c>) — beta.</summary>
+    public IAsyncEnumerable<object> ListPreventiveMaintenanceSchedulesAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<object>("maintenance/preventive/schedules", cancellationToken: cancellationToken);
+
+    /// <summary>List upcoming preventive maintenance (<c>GET /maintenance/preventive/upcoming</c>) — beta.</summary>
+    public IAsyncEnumerable<object> ListUpcomingPreventiveMaintenanceAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<object>("maintenance/preventive/upcoming", cancellationToken: cancellationToken);
 }

@@ -143,6 +143,14 @@ See `src/Samsara.Sdk/Models/Maintenance/MaintenanceModels.cs` for model definiti
 
 ## Notes
 
+**2026-06-22 sync — preventive maintenance added (beta, loosely typed `object`):**
+
+- `GET /maintenance/preventive/schedules` → `IMaintenanceClient.ListPreventiveMaintenanceSchedulesAsync` (paginated)
+- `GET /maintenance/preventive/upcoming` → `IMaintenanceClient.ListUpcomingPreventiveMaintenanceAsync` (paginated)
+
+`GET /maintenance/work-order-templates` was also added in the same sync — see
+[`56-work-orders.md`](56-work-orders.md). All three follow the beta weak-typing convention.
+
 **Model audit (2025-05-13):** DVIR models were completely wrong (v1 API fields). Both models fully replaced.
 
 - `CreateDvirRequest`: replaced v1 fields (`inspectorName`, `odometer`, `safeToOperate`, `trailerIds`) with correct v2 fields: `authorId` (required), `safetyStatus` (required), `type` (required), plus optional `vehicleId`, `trailerId`, `licensePlate`, `location`, `mechanicNotes`, `odometerMeters`, `resolvedDefectIds`.

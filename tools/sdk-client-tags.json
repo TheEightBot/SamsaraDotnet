@@ -62,6 +62,7 @@
     "Beta APIs"
   ],
   "GatewaysClient.cs": [
+    "Beta APIs",
     "Gateways"
   ],
   "HubsClient.cs": [
@@ -177,6 +178,7 @@
     "Webhooks"
   ],
   "WorkOrdersClient.cs": [
+    "Beta APIs",
     "Work Orders"
   ]
 }

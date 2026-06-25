@@ -59,6 +59,17 @@ public interface IBetaClient
         IReadOnlyList<string>? driverParentTagIds = null,
         string? driverActivationStatus = null,
         CancellationToken cancellationToken = default);
+
+    // Agent Studio — voice agent sessions (beta)
+
+    /// <summary>Get voice agent session details (<c>GET /agent-studio/voice-sessions</c>) — beta.</summary>
+    Task<object> GetVoiceSessionsAsync(string? after = null, CancellationToken cancellationToken = default);
+
+    /// <summary>Stream voice agent session summaries (<c>GET /agent-studio/voice-sessions/stream</c>) — beta.</summary>
+    IAsyncEnumerable<object> GetVoiceSessionsStreamAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        CancellationToken cancellationToken = default);
 }
 
 internal sealed class BetaClient : SamsaraServiceClientBase, IBetaClient
@@ -166,4 +177,17 @@ internal sealed class BetaClient : SamsaraServiceClientBase, IBetaClient
                 ("driverParentTagIds", driverParentTagIds is null ? null : string.Join(",", driverParentTagIds)),
                 ("driverActivationStatus", driverActivationStatus)),
             cancellationToken);
+
+    public Task<object> GetVoiceSessionsAsync(string? after = null, CancellationToken cancellationToken = default)
+        => HttpClient.GetAsync<object>(
+            QueryBuilder.WithParams("agent-studio/voice-sessions", ("after", after)),
+            cancellationToken);
+
+    public IAsyncEnumerable<object> GetVoiceSessionsStreamAsync(
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<object>(
+            QueryBuilder.WithTimeRange("agent-studio/voice-sessions/stream", startTime, endTime),
+            cancellationToken: cancellationToken);
 }
