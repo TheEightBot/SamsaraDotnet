@@ -50,6 +50,19 @@
 - [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
 - [ ] Unit/integration test coverage
 
+### ✅ `POST /gateways/pair`
+**Operation ID**: `pairGateways`  
+**Summary**: [beta] Pair gateways to devices (relocated from `POST /preview/gateways/pair` on the
+2026-06-22 sync)  
+**Request Body**: Yes  
+
+- [x] Method defined in `IGatewaysClient` (`PairGatewaysAsync`)
+- [x] Method implemented in `GatewaysClient.cs`
+- [x] Request model(s) defined (if applicable) — loosely typed `object` (beta)
+- [x] Response model(s) defined — loosely typed `object` (beta)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`) — n/a for `object`
+- [x] Unit/integration test coverage (`GatewaysClientTests.PairGatewaysAsync_PostsToGatewaysPair`)
+
 ---
 
 ## Models

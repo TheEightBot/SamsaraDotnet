@@ -60,4 +60,10 @@ public interface IMaintenanceClient
 
     /// <summary>List maintenance vendor categories (beta).</summary>
     IAsyncEnumerable<object> ListVendorCategoriesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>List preventive maintenance schedules (<c>GET /maintenance/preventive/schedules</c>) — beta.</summary>
+    IAsyncEnumerable<object> ListPreventiveMaintenanceSchedulesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>List upcoming preventive maintenance (<c>GET /maintenance/preventive/upcoming</c>) — beta.</summary>
+    IAsyncEnumerable<object> ListUpcomingPreventiveMaintenanceAsync(CancellationToken cancellationToken = default);
 }

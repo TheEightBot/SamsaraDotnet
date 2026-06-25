@@ -33,16 +33,18 @@ SDK_CLIENTS = REPO_ROOT / "src" / "Samsara.Sdk" / "Clients"
 BASELINE = REPO_ROOT / ".github" / "cache" / "samsara-api-baseline.json"
 
 HTTP_VERB = {
-    "Get": "GET", "GetData": "GET",
-    "Post": "POST", "PostData": "POST",
+    "Get": "GET", "GetData": "GET", "GetListData": "GET",
+    "Post": "POST", "PostData": "POST", "PostListData": "POST",
     "Patch": "PATCH", "PatchData": "PATCH",
     "Put": "PUT", "PutData": "PUT",
     "Delete": "DELETE", "DeleteData": "DELETE",
 }
 
 # A call to one of the HTTP helpers, capturing verb + first argument expression.
+# Longer helper names (e.g. PostListData) must precede their prefixes (Post) in the
+# alternation so the verb is captured whole.
 CALL_RE = re.compile(
-    r'HttpClient\.(Get|GetData|Post|PostData|Patch|PatchData|Put|PutData|Delete|DeleteData)Async'
+    r'HttpClient\.(GetListData|GetData|Get|PostListData|PostData|Post|PatchData|Patch|PutData|Put|DeleteData|Delete)Async'
     r'(?:<(?:[^<>]|<(?:[^<>]|<[^<>]*>)*>)*>)?\(\s*([^,;]+)'
 )
 PAGINATE_RE = re.compile(
