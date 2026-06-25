@@ -2,6 +2,7 @@ namespace Samsara.Sdk.Http;
 
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Samsara.Sdk.Exceptions;
@@ -106,7 +107,7 @@ internal sealed class SamsaraHttpClient
         using var response = await SendAndValidateAsync(HttpMethod.Post, path, content, cancellationToken)
             .ConfigureAwait(false);
 
-        var wrapper = await DeserializeAsync<SamsaraResponse<T>>(response, cancellationToken).ConfigureAwait(false);
+        var wrapper = await DeserializeAsync<SamsaraResponse<T>>(response, cancellationToken, body).ConfigureAwait(false);
         return wrapper.Data;
     }
 
@@ -148,7 +149,7 @@ internal sealed class SamsaraHttpClient
         using var response = await SendAndValidateAsync(HttpMethod.Post, path, content, cancellationToken)
             .ConfigureAwait(false);
 
-        return await DeserializeAsync<T>(response, cancellationToken).ConfigureAwait(false);
+        return await DeserializeAsync<T>(response, cancellationToken, body).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -161,7 +162,7 @@ internal sealed class SamsaraHttpClient
         using var response = await SendAndValidateAsync(PatchMethod, path, content, cancellationToken)
             .ConfigureAwait(false);
 
-        var wrapper = await DeserializeAsync<SamsaraResponse<T>>(response, cancellationToken).ConfigureAwait(false);
+        var wrapper = await DeserializeAsync<SamsaraResponse<T>>(response, cancellationToken, body).ConfigureAwait(false);
         return wrapper.Data;
     }
 
@@ -175,7 +176,7 @@ internal sealed class SamsaraHttpClient
         using var response = await SendAndValidateAsync(HttpMethod.Put, path, content, cancellationToken)
             .ConfigureAwait(false);
 
-        var wrapper = await DeserializeAsync<SamsaraResponse<T>>(response, cancellationToken).ConfigureAwait(false);
+        var wrapper = await DeserializeAsync<SamsaraResponse<T>>(response, cancellationToken, body).ConfigureAwait(false);
         return wrapper.Data;
     }
 
@@ -267,19 +268,110 @@ internal sealed class SamsaraHttpClient
         throw SamsaraApiException.Create(response.StatusCode, message, requestId);
     }
 
-    private async Task<T> DeserializeAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
+    private async Task<T> DeserializeAsync<T>(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken,
+        object? requestBody = null)
     {
-        // Single source-generated pass with `required` relaxed (SamsaraSerializerOptions.Default).
-        // The Samsara API omits spec-`required` fields on nearly every response, so an absent field
-        // is left at its default rather than throwing. Callers that want to validate conformance can
-        // use SamsaraSerializerOptions.Strict.
-        var result = await response.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken)
-            .ConfigureAwait(false);
+        // Buffer the full payload up front so it can be attached to a SamsaraDeserializationException
+        // when parsing fails. The happy path deserializes straight from the UTF-8 bytes; the response
+        // is only decoded to a string on the failure path (for diagnostics).
+#if NET5_0_OR_GREATER
+        var payload = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+#else
+        var payload = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+#endif
 
-        return result ?? throw new SamsaraApiException(
-            response.StatusCode,
-            "Received null response body from Samsara API.",
-            requestId: null);
+        try
+        {
+            // Single source-generated pass with `required` relaxed (SamsaraSerializerOptions.Default).
+            // The Samsara API omits spec-`required` fields on nearly every response, so an absent field
+            // is left at its default rather than throwing. Callers that want to validate conformance can
+            // use SamsaraSerializerOptions.Strict.
+            var result = JsonSerializer.Deserialize<T>(payload, _jsonOptions);
+
+            return result ?? throw new SamsaraApiException(
+                response.StatusCode,
+                "Received null response body from Samsara API.",
+                requestId: null);
+        }
+        catch (JsonException ex)
+        {
+            var exception = SamsaraDeserializationException.Create(
+                response.StatusCode,
+                typeof(T),
+                responseBody: DecodeForDiagnostics(payload),
+                requestBody: SerializeForDiagnostics(requestBody),
+                requestPath: DescribeRequest(response),
+                requestId: TryGetRequestId(response),
+                innerException: ex);
+
+            _logger.LogError(
+                ex,
+                "Failed to deserialize Samsara API response into {TargetType} for {Request} (RequestId: {RequestId})",
+                typeof(T),
+                exception.RequestPath,
+                exception.RequestId);
+
+            throw exception;
+        }
+    }
+
+    private static readonly string[] RequestIdHeaderNames =
+    {
+        "x-request-id",
+        "x-samsara-request-id",
+        "request-id",
+    };
+
+    /// <summary>Best-effort lookup of a request-correlation id from the response headers.</summary>
+    private static string? TryGetRequestId(HttpResponseMessage response)
+    {
+        foreach (var name in RequestIdHeaderNames)
+        {
+            if (response.Headers.TryGetValues(name, out var values))
+            {
+                var value = values.FirstOrDefault();
+                if (!string.IsNullOrEmpty(value))
+                {
+                    return value;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Describes the originating request (method + absolute URI) for diagnostics, when known.</summary>
+    private static string? DescribeRequest(HttpResponseMessage response)
+    {
+        var request = response.RequestMessage;
+        return request is null ? null : $"{request.Method} {request.RequestUri}";
+    }
+
+    private static string DecodeForDiagnostics(byte[] payload)
+        => payload.Length == 0 ? string.Empty : Encoding.UTF8.GetString(payload);
+
+    /// <summary>
+    /// Re-serializes the request body to JSON (using the same options it was sent with) so it can be
+    /// embedded in a <see cref="SamsaraDeserializationException"/>. Never throws — serialization
+    /// problems are reported inline rather than masking the original deserialization failure.
+    /// </summary>
+    private string? SerializeForDiagnostics(object? requestBody)
+    {
+        if (requestBody is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Serialize(requestBody, requestBody.GetType(), _jsonOptions);
+        }
+        catch (Exception ex) when (ex is JsonException or NotSupportedException)
+        {
+            return $"<unable to serialize request body: {ex.Message}>";
+        }
     }
 
     private static string AppendPaginationParams(string path, string? cursor, int? limit)

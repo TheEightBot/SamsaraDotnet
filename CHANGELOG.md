@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`SamsaraDeserializationException` — failed response parsing now carries the raw payloads.**
+  When a successful (2xx) response can't be deserialized into its model type, the SDK no longer
+  surfaces a bare `System.Text.Json.JsonException`. Instead it throws a
+  `SamsaraDeserializationException` (a `SamsaraApiException`, so existing catch blocks still work)
+  exposing `ResponseBody`, `RequestBody` (for POST/PATCH/PUT), `RequestPath`, `TargetType`, and the
+  original `JsonException` as `InnerException`. A truncated preview of both payloads is embedded in
+  `Message` (full text on the properties; see `SamsaraDeserializationException.MessagePreviewLength`),
+  and the failure is also logged at `Error`. This makes shape mismatches (e.g. an array returned
+  where a single object is expected) diagnosable from the exception alone. The response is now
+  buffered before parsing; the happy path still deserializes directly from the UTF-8 bytes.
 - **Caught the SDK up to the latest live Samsara spec (content drift under `info.version`
   `2025-10-23`, hash `ed27c33d1e1f` → `85ab44b87e78`).** Implemented the 7 endpoints the weekly
   api-sync check flagged as new. All are beta/preview and follow the SDK's loosely-typed

@@ -362,6 +362,7 @@ The SDK throws strongly-typed exceptions. All exceptions inherit from `SamsaraAp
 | `SamsaraNotFoundException` | 404 | Resource does not exist |
 | `SamsaraRateLimitException` | 429 | Includes `RetryAfter` property |
 | `SamsaraServerException` | 500, 502, 503, 504 | Transient server errors |
+| `SamsaraDeserializationException` | 2xx | A successful response couldn't be parsed into its model. Exposes `ResponseBody`, `RequestBody`, `RequestPath`, and `TargetType` for debugging |
 
 ```csharp
 try
@@ -376,6 +377,14 @@ catch (SamsaraRateLimitException ex) when (ex.RetryAfter.HasValue)
 {
     await Task.Delay(ex.RetryAfter.Value, ct);
     // retry...
+}
+catch (SamsaraDeserializationException ex)
+{
+    // The API returned a payload that didn't match the SDK model. The raw JSON is captured
+    // so you can see exactly what came back (and what was sent) without re-running with a debugger.
+    Console.Error.WriteLine($"Could not parse {ex.TargetType.Name} from {ex.RequestPath}");
+    Console.Error.WriteLine($"Response body: {ex.ResponseBody}");
+    Console.Error.WriteLine($"Request body:  {ex.RequestBody}");
 }
 catch (SamsaraApiException ex)
 {

@@ -25,12 +25,17 @@ internal sealed class MockHttpMessageHandler : HttpMessageHandler
     {
     }
 
-    protected override Task<HttpResponseMessage> SendAsync(
+    protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
         _requests.Add(request);
-        return _handler(request, cancellationToken);
+        var response = await _handler(request, cancellationToken).ConfigureAwait(false);
+
+        // Mirror the real handlers (HttpClientHandler/SocketsHttpHandler), which attach the
+        // originating request to the response. The SDK reads this to describe failed requests.
+        response.RequestMessage ??= request;
+        return response;
     }
 
     public static MockHttpMessageHandler WithJsonResponse<T>(T body, HttpStatusCode statusCode = HttpStatusCode.OK)

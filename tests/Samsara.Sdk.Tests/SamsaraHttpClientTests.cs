@@ -191,4 +191,65 @@ public sealed class SamsaraHttpClientTests
         await act.Should().NotThrowAsync();
         handler.LastRequest.Method.Should().Be(HttpMethod.Post);
     }
+
+    [Fact]
+    public async Task GetAsync_ThrowsDeserializationException_WithRawResponseBody()
+    {
+        // A string where TagReference (an object) is expected — a shape mismatch lenient mode can't fix.
+        const string body = "{ \"data\": \"not-an-object\" }";
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(body, Encoding.UTF8, "application/json"),
+        };
+        var handler = new MockHttpMessageHandler(response);
+        var client = TestFactory.CreateHttpClient(handler);
+
+        var act = () => client.GetAsync<SamsaraResponse<TagReference>>("tags/123");
+
+        var ex = await act.Should().ThrowAsync<SamsaraDeserializationException>();
+        ex.Which.ResponseBody.Should().Be(body);
+        ex.Which.RequestBody.Should().BeNull(); // GET has no request body
+        ex.Which.TargetType.Should().Be(typeof(SamsaraResponse<TagReference>));
+        ex.Which.RequestPath.Should().Contain("tags/123");
+        ex.Which.InnerException.Should().BeOfType<JsonException>();
+        ex.Which.Message.Should().Contain("not-an-object");
+    }
+
+    [Fact]
+    public async Task PostDataAsync_ThrowsDeserializationException_WithRequestAndResponseBodies()
+    {
+        // Bulk-style response: a `data` array where PostDataAsync expects a single `data` object
+        // (this is exactly the Hubs.CreateLocationAsync failure mode).
+        const string responseBody = "{ \"data\": [ { \"id\": \"loc-1\" } ] }";
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(responseBody, Encoding.UTF8, "application/json"),
+        };
+        var handler = new MockHttpMessageHandler(response);
+        var client = TestFactory.CreateHttpClient(handler);
+
+        var act = () => client.PostDataAsync<TagReference>("hub/locations", new { name = "Depot A", hubId = "hub-7" });
+
+        var ex = await act.Should().ThrowAsync<SamsaraDeserializationException>();
+        ex.Which.ResponseBody.Should().Be(responseBody);
+        ex.Which.RequestBody.Should().NotBeNull();
+        ex.Which.RequestBody.Should().Contain("Depot A").And.Contain("hub-7");
+        ex.Which.RequestPath.Should().Contain("hub/locations");
+        ex.Which.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task DeserializationException_IsCatchableAsSamsaraApiException()
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("not json at all", Encoding.UTF8, "application/json"),
+        };
+        var handler = new MockHttpMessageHandler(response);
+        var client = TestFactory.CreateHttpClient(handler);
+
+        var act = () => client.GetAsync<SamsaraResponse<TagReference>>("tags");
+
+        await act.Should().ThrowAsync<SamsaraApiException>();
+    }
 }
