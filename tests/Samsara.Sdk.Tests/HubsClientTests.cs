@@ -59,6 +59,65 @@ public sealed class HubsClientTests
         url.Should().Contain("orderIds=ord-1");
     }
 
+    [Fact]
+    public async Task CreateLocationAsync_ParsesBulkDataArrayResponse()
+    {
+        // POST /hub/locations is a bulk endpoint: the response wraps the created
+        // locations in a `data` ARRAY, not a single `data` object. Regression test for
+        // the envelope mismatch that made every create throw a JsonException at $.data.
+        var resp = new
+        {
+            data = new[]
+            {
+                new
+                {
+                    id = "loc-1",
+                    name = "Acme Foods",
+                    address = "1 Main St, Atlanta, GA",
+                    customerLocationId = "D:123|456",
+                    hubId = "hub-1",
+                    isDepot = false,
+                    latitude = 33.7490,
+                    longitude = -84.3880,
+                    driverInstructions = "",
+                    plannerNotes = "",
+                    serviceTimeSeconds = 900,
+                    serviceWindows = Array.Empty<object>(),
+                    skillsRequired = Array.Empty<object>(),
+                    createdAt = "2026-06-24T00:00:00Z",
+                    updatedAt = "2026-06-24T00:00:00Z",
+                },
+            },
+        };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new HubsClient(TestFactory.CreateHttpClient(handler));
+
+        var request = new CreateHubLocationsRequest
+        {
+            Data = new[]
+            {
+                new CreateHubLocationInput
+                {
+                    HubId = "hub-1",
+                    CustomerLocationId = "D:123|456",
+                    Name = "Acme Foods",
+                    Address = "1 Main St, Atlanta, GA",
+                    IsDepot = false,
+                },
+            },
+        };
+
+        var created = await client.CreateLocationAsync(request);
+
+        created.Id.Should().Be("loc-1");
+        created.CustomerLocationId.Should().Be("D:123|456");
+        created.HubId.Should().Be("hub-1");
+
+        var lastRequest = handler.LastRequest;
+        lastRequest.Method.Method.Should().Be("POST");
+        lastRequest.RequestUri!.PathAndQuery.Should().Contain("hub/locations");
+    }
+
     private static async Task<IReadOnlyList<T>> CollectAsync<T>(IAsyncEnumerable<T> source)
     {
         var list = new List<T>();
