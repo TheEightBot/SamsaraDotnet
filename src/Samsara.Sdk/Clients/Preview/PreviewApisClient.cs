@@ -13,12 +13,13 @@ public interface IPreviewApisClient
     /// <summary>Unlock a vehicle remotely (<c>DELETE /preview/fleet/vehicles/{id}/lock</c>).</summary>
     Task UnlockVehicleAsync(string id, CancellationToken cancellationToken = default);
 
-    /// <summary>Pair a set of gateways (<c>POST /preview/gateways/pair</c>).</summary>
-    Task<object> PairGatewaysAsync(object request, CancellationToken cancellationToken = default);
-
     /// <summary>Create a driver auth token via the preview endpoint
     /// (<c>POST /preview/fleet/drivers/create-auth-token</c>).</summary>
     Task<object> CreateDriverAuthTokenAsync(object request, CancellationToken cancellationToken = default);
+
+    /// <summary>Create a tachograph file upload
+    /// (<c>POST /preview/fleet/tachograph/file-uploads</c>) — preview. Loosely typed.</summary>
+    Task<object> CreateTachographFileUploadAsync(object request, CancellationToken cancellationToken = default);
 }
 
 internal sealed class PreviewApisClient : SamsaraServiceClientBase, IPreviewApisClient
@@ -31,9 +32,9 @@ internal sealed class PreviewApisClient : SamsaraServiceClientBase, IPreviewApis
     public Task UnlockVehicleAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"preview/fleet/vehicles/{Uri.EscapeDataString(id)}/lock", cancellationToken);
 
-    public Task<object> PairGatewaysAsync(object request, CancellationToken cancellationToken = default)
-        => HttpClient.PostAsync<object>("preview/gateways/pair", request, cancellationToken);
-
     public Task<object> CreateDriverAuthTokenAsync(object request, CancellationToken cancellationToken = default)
         => HttpClient.PostAsync<object>("preview/fleet/drivers/create-auth-token", request, cancellationToken);
+
+    public Task<object> CreateTachographFileUploadAsync(object request, CancellationToken cancellationToken = default)
+        => HttpClient.PostAsync<object>("preview/fleet/tachograph/file-uploads", request, cancellationToken);
 }

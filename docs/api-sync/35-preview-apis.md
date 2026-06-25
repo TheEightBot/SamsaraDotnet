@@ -48,16 +48,22 @@
 - [ ] JSON serialization context updated (`SamsaraJsonContext.cs`)
 - [ ] Unit/integration test coverage
 
-### ⚠️ `POST /preview/gateways/pair`
+### ➡️ `POST /preview/gateways/pair` — REMOVED (relocated)
 **Operation ID**: `pairGateways`  
-**Summary**: [preview] Pair gateways to devices  
+**Summary**: Removed from the spec on the 2026-06-22 sync; pairing moved to the (beta)
+`POST /gateways/pair`. Implemented as `IGatewaysClient.PairGatewaysAsync` — see
+[`19-gateways.md`](19-gateways.md).
+
+### ✅ `POST /preview/fleet/tachograph/file-uploads`
+**Operation ID**: `postTachographFileUpload`  
+**Summary**: [preview] Create a tachograph file upload  
 **Request Body**: Yes  
 
-- [ ] Method defined in `multiple`
-- [ ] Method implemented in `multiple.cs`
-- [ ] Request model(s) defined (if applicable)
-- [ ] Response model(s) defined
-- [ ] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Method defined in `IPreviewApisClient` (`CreateTachographFileUploadAsync`)
+- [x] Method implemented in `PreviewApisClient.cs`
+- [x] Request model(s) defined (if applicable) — loosely typed `object` (preview)
+- [x] Response model(s) defined — loosely typed `object` (preview)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`) — n/a for `object`
 - [ ] Unit/integration test coverage
 
 ---

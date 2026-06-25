@@ -869,4 +869,10 @@ See `src/Samsara.Sdk/various` for model definitions used by this domain.
 
 ## Notes
 
-_Add any implementation notes, breaking changes, or special considerations here._
+**2026-06-22 sync — Agent Studio voice sessions added (beta, loosely typed `object`):**
+
+- `GET /agent-studio/voice-sessions` → `IBetaClient.GetVoiceSessionsAsync(after?)`
+- `GET /agent-studio/voice-sessions/stream` → `IBetaClient.GetVoiceSessionsStreamAsync(startTime?, endTime?)` (paginated stream)
+
+These follow the established beta convention: weakly typed pending stable schemas. Tighten to
+records if/when the endpoints leave beta.
