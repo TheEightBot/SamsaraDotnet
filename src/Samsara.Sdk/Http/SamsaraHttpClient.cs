@@ -229,10 +229,19 @@ internal sealed class SamsaraHttpClient
         string? message = null;
         string? requestId = null;
 
+        // Read the raw body once so it can both be parsed for the structured message and attached
+        // verbatim to the exception for diagnostics (a 404 with no parseable body still tells us a lot).
+#if NET5_0_OR_GREATER
+        var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#else
+        var rawBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#endif
+
         try
         {
-            var errorBody = await response.Content.ReadFromJsonAsync<SamsaraErrorResponse>(
-                _jsonOptions, cancellationToken).ConfigureAwait(false);
+            var errorBody = string.IsNullOrWhiteSpace(rawBody)
+                ? null
+                : JsonSerializer.Deserialize<SamsaraErrorResponse>(rawBody, _jsonOptions);
 
             message = errorBody?.Message;
             requestId = errorBody?.RequestId;
@@ -250,6 +259,8 @@ internal sealed class SamsaraHttpClient
             message,
             requestId);
 
+        SamsaraApiException exception;
+
         if ((int)response.StatusCode == 429)
         {
             TimeSpan? retryAfter = null;
@@ -262,10 +273,18 @@ internal sealed class SamsaraHttpClient
                 }
             }
 
-            throw new SamsaraRateLimitException(message, requestId, retryAfter);
+            exception = new SamsaraRateLimitException(message, requestId, retryAfter);
+        }
+        else
+        {
+            exception = SamsaraApiException.Create(response.StatusCode, message, requestId);
         }
 
-        throw SamsaraApiException.Create(response.StatusCode, message, requestId);
+        exception.RequestMethod = response.RequestMessage?.Method.Method;
+        exception.RequestUri = response.RequestMessage?.RequestUri?.ToString();
+        exception.ResponseBody = string.IsNullOrWhiteSpace(rawBody) ? null : rawBody;
+
+        throw exception;
     }
 
     private async Task<T> DeserializeAsync<T>(

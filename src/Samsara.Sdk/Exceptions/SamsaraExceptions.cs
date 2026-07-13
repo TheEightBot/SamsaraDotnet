@@ -18,11 +18,37 @@ public class SamsaraApiException : Exception
     /// </summary>
     public string? RequestId { get; }
 
+    /// <summary>
+    /// The HTTP method of the originating request (e.g. <c>POST</c>), when known.
+    /// Populated for errors surfaced from an actual HTTP response.
+    /// </summary>
+    public string? RequestMethod { get; internal set; }
+
+    /// <summary>
+    /// The absolute URI the request was sent to, when known. This is the fully
+    /// resolved URL (base address + relative path), which is the single most useful
+    /// value for diagnosing a 404 — it shows exactly where the request landed.
+    /// </summary>
+    public string? RequestUri { get; internal set; }
+
+    /// <summary>
+    /// The raw response body returned by the API, when available. For error responses
+    /// Samsara typically includes a human-readable message and a request id here.
+    /// </summary>
+    public string? ResponseBody { get; internal set; }
+
+    /// <summary>
+    /// The API-supplied message, without the request diagnostics that <see cref="Message"/> appends.
+    /// Exposed to subclasses that compose their own fully-formed message and opt out of enrichment.
+    /// </summary>
+    protected string ApiMessage { get; }
+
     public SamsaraApiException(HttpStatusCode statusCode, string message, string? requestId)
         : base(message)
     {
         StatusCode = statusCode;
         RequestId = requestId;
+        ApiMessage = message;
     }
 
     public SamsaraApiException(HttpStatusCode statusCode, string message, string? requestId, Exception innerException)
@@ -30,7 +56,48 @@ public class SamsaraApiException : Exception
     {
         StatusCode = statusCode;
         RequestId = requestId;
+        ApiMessage = message;
     }
+
+    /// <summary>
+    /// The exception message, enriched with the request method, absolute URI, status code, and a
+    /// truncated response body when those are known. Falls back to the bare API message otherwise,
+    /// so callers that only log <see cref="Exception.Message"/> get an actionable, self-explanatory
+    /// error without having to enable HTTP logging.
+    /// </summary>
+    public override string Message
+    {
+        get
+        {
+            if (RequestUri is null && ResponseBody is null)
+            {
+                return ApiMessage;
+            }
+
+            var builder = new StringBuilder(ApiMessage);
+
+            if (RequestUri is not null)
+            {
+                builder.Append(" [")
+                    .Append(RequestMethod ?? "?")
+                    .Append(' ')
+                    .Append(RequestUri)
+                    .Append(" -> ")
+                    .Append((int)StatusCode)
+                    .Append(']');
+            }
+
+            if (!string.IsNullOrEmpty(ResponseBody))
+            {
+                builder.Append(" Response: ").Append(Truncate(ResponseBody!, 2000));
+            }
+
+            return builder.ToString();
+        }
+    }
+
+    private static string Truncate(string value, int maxLength)
+        => value.Length <= maxLength ? value : value.Substring(0, maxLength) + "… (truncated)";
 
     internal static SamsaraApiException Create(HttpStatusCode statusCode, string message, string? requestId)
     {
@@ -115,18 +182,21 @@ public sealed class SamsaraDeserializationException : SamsaraApiException
     /// <summary>
     /// Maximum number of characters of each payload embedded in <see cref="Exception.Message"/>
     /// (so logs that capture only the message stay bounded). The full, untruncated payloads are
-    /// always available on <see cref="ResponseBody"/> and <see cref="RequestBody"/>.
+    /// always available on <see cref="SamsaraApiException.ResponseBody"/> and <see cref="RequestBody"/>.
     /// </summary>
     public const int MessagePreviewLength = 4096;
 
     /// <summary>The CLR type the response body was being deserialized into.</summary>
     public Type TargetType { get; }
 
-    /// <summary>The raw response body returned by the API, verbatim. Empty when the body was empty.</summary>
-    public string? ResponseBody { get; }
-
     /// <summary>The JSON request body that was sent, or <c>null</c> for requests without one (e.g. GET/DELETE).</summary>
     public string? RequestBody { get; }
+
+    /// <summary>
+    /// This exception composes its own fully-detailed message (response/request bodies included), so it
+    /// returns that message verbatim rather than the request-diagnostics enrichment the base applies.
+    /// </summary>
+    public override string Message => ApiMessage;
 
     /// <summary>
     /// The HTTP method and URI of the request (e.g. <c>POST https://api.samsara.com/hub/locations</c>),
