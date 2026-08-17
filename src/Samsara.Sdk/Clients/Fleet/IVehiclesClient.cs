@@ -80,8 +80,7 @@ public interface IVehiclesClient
 
     /// <summary>
     /// Update an engine immobilizer state (beta). The spec declares a
-    /// <c>202 Accepted</c> with no response body, so no response record is
-    /// mirrored and the returned value carries no schema.
+    /// <c>202 Accepted</c> with no response content, so nothing is returned.
     /// </summary>
-    Task<object> UpdateImmobilizerStateAsync(string id, UpdateEngineImmobilizerStateRequest request, CancellationToken cancellationToken = default);
+    Task UpdateImmobilizerStateAsync(string id, UpdateEngineImmobilizerStateRequest request, CancellationToken cancellationToken = default);
 }

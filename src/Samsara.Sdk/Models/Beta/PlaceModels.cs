@@ -1059,3 +1059,53 @@ public sealed record PlaceTagInput
     [JsonPropertyName("id")]
     public required string Id { get; init; }
 }
+
+/// <summary>
+/// One forward-geocode candidate for an address, returned by
+/// <c>GET /places/geocode</c> (<c>getPlaceGeocode</c>, beta). Mirrors the spec's
+/// <c>PlaceGeocodeResultResponseResponseBody</c>.
+/// </summary>
+public sealed record PlaceGeocodeResult
+{
+    /// <summary>Latitude in WGS84 decimal degrees. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("latitude")]
+    public double? Latitude { get; init; }
+
+    /// <summary>Longitude in WGS84 decimal degrees. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("longitude")]
+    public double? Longitude { get; init; }
+}
+
+/// <summary>
+/// One geofence suggestion candidate around a seed point, returned by
+/// <c>GET /places/geofence</c> (<c>getPlaceGeofence</c>, beta). Mirrors the
+/// spec's <c>PlaceGeofenceSuggestionCandidateResponseResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// The spec's envelope also carries a sibling <c>recommended</c> candidate
+/// alongside <c>data</c> and <c>pagination</c>. The SDK surfaces the paginated
+/// <c>data</c> array; the recommended candidate is the first element of the
+/// first page in the server's chosen sort order (<c>sizeOrder</c>).
+/// </remarks>
+public sealed record PlaceGeofenceSuggestion
+{
+    /// <summary>Candidate name from map data when available. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>
+    /// Candidate source: <c>building</c>, <c>parcel</c>, <c>landUse</c>,
+    /// <c>boundary</c>, <c>facility</c>, <c>infrastructure</c> or <c>unknown</c>.
+    /// Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("type")]
+    public string? Type { get; init; }
+
+    /// <summary>Candidate area in square meters. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("areaSquareMeters")]
+    public double? AreaSquareMeters { get; init; }
+
+    /// <summary>The suggested geofence geometry. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("geofence")]
+    public PlaceGeofence? Geofence { get; init; }
+}

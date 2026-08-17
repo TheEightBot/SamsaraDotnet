@@ -42,9 +42,18 @@ public sealed record AttributeDefinition
 
 public sealed record AttributeEntity
 {
-    [JsonPropertyName("id")]
-    public string? Id { get; init; }
-
+    /// <summary>
+    /// Identifier of the entity the attribute is applied to.
+    /// </summary>
+    /// <remarks>
+    /// The spec's <c>AttributeEntity.entityId</c> is typed <c>integer/int64</c>
+    /// with no description or example, while its own request-side sibling
+    /// <c>CreateAttributeRequest_entities.entityId</c> is <c>string</c> ("Entity
+    /// id, based on the entity type") and every other v2 entity id in the spec is
+    /// a string. The SDK keeps <c>string</c> so the request and response records
+    /// agree and so ids stay comparable with the rest of the SDK;
+    /// <c>check-model-sync</c> reports this as a <c>type-mismatch</c> by design.
+    /// </remarks>
     [JsonPropertyName("entityId")]
     public string? EntityId { get; init; }
 

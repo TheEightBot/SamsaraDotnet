@@ -7,8 +7,14 @@ using System.Text.Json.Serialization;
 /// </summary>
 public sealed record TagReference
 {
+    /// <summary>
+    /// Samsara ID of the tag. Nullable: the spec lists <c>id</c> as optional on
+    /// the tag references reached from <c>Address.tags</c>, and deserialization
+    /// relaxes <c>required</c>, so a non-nullable property would silently hold
+    /// null when the API omits it.
+    /// </summary>
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     [JsonPropertyName("name")]
     public string? Name { get; init; }
@@ -28,6 +34,28 @@ public sealed record EntityReference
 
     [JsonPropertyName("name")]
     public string? Name { get; init; }
+
+    /// <summary>
+    /// External identifiers for the referenced object. Present on the
+    /// <c>*TinyResponse</c> variants that carry an external-ID map (e.g. the
+    /// vehicle reference on an IFTA vehicle report).
+    /// </summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
+    /// <summary>
+    /// Given name of the referenced person. Present on the contact-shaped
+    /// variants (e.g. <c>Address.contacts</c>).
+    /// </summary>
+    [JsonPropertyName("firstName")]
+    public string? FirstName { get; init; }
+
+    /// <summary>
+    /// Family name of the referenced person. Present on the contact-shaped
+    /// variants (e.g. <c>Address.contacts</c>).
+    /// </summary>
+    [JsonPropertyName("lastName")]
+    public string? LastName { get; init; }
 }
 
 /// <summary>

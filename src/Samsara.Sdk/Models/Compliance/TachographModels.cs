@@ -106,8 +106,36 @@ public sealed record TachographDriver
 
 /// <summary>
 /// A minified vehicle reference on a tachograph response. Mirrors the spec's
-/// <c>vehicleTinyResponse</c>.
+/// <c>vehicleTinyResponse</c>, reached via
+/// <c>TachographVehicleFileListWrapper.vehicle</c> on
+/// <c>GET /fleet/vehicles/tachograph-files/history</c> — the only schema this
+/// record serves.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <b>The capital-E <c>ExternalIds</c> is copied from the spec verbatim and must
+/// not be "corrected".</b> <c>vehicleTinyResponse</c> is the <b>only</b> one of
+/// the 123 spec schemas carrying an external-ID map that spells it with a capital
+/// E. The other 122 use <c>externalIds</c> — including its own siblings
+/// <c>VehicleDvirObjectResponseBody</c>, <c>GoaVehicleTinyResponseResponseBody</c>
+/// and <c>VehicleWithGatewayTinyResponseResponseBody</c>, and including
+/// <c>trailerTinyResponse</c>'s v2 counterpart. It is believed to be an upstream
+/// typo in Samsara's own spec.
+/// </para>
+/// <para>
+/// The SDK mirrors the spec rather than the presumed intent. Flipping the
+/// <c>JsonPropertyName</c> to <c>externalIds</c> would still deserialize —
+/// <c>SamsaraJsonContext</c> sets <c>PropertyNameCaseInsensitive</c> — which is
+/// exactly why the regression would be invisible to a wire test: the only visible
+/// effects are that <c>check-model-sync</c> starts reporting a
+/// <c>missing-optional</c> finding for <c>ExternalIds</c> (plus an
+/// <c>extra-property</c> for <c>externalIds</c>) on
+/// <c>GET /fleet/vehicles/tachograph-files/history</c>, and that the
+/// reflection-based test in <c>TachographContractTests</c> fails. See the
+/// matching remarks on <c>V1MaintenanceVehicleRef</c> in
+/// <c>Models/Maintenance/MaintenanceModels.cs</c>.
+/// </para>
+/// </remarks>
 public sealed record TachographVehicle
 {
     /// <summary>Samsara ID of the vehicle.</summary>
@@ -118,8 +146,12 @@ public sealed record TachographVehicle
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
-    /// <summary>External identifiers for the vehicle.</summary>
-    [JsonPropertyName("externalIds")]
+    /// <summary>
+    /// A map of external IDs for the vehicle. The capital <c>E</c> is the spec's
+    /// own spelling for <c>vehicleTinyResponse</c> — see the remarks on this
+    /// record before changing it.
+    /// </summary>
+    [JsonPropertyName("ExternalIds")]
     public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
 

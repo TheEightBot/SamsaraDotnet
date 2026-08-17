@@ -39,6 +39,24 @@ public sealed record ReadingDefinition
     /// type structure including <c>dataType</c>, <c>unit</c>, <c>enumValues</c>,
     /// <c>fields</c>, etc. Spec marks REQUIRED on the response.</summary>
     [JsonPropertyName("type")] public required JsonElement Type { get; init; }
+
+    /// <summary>The grouping this reading belongs to. Readings sharing a
+    /// grouping measure the same property across different positions or
+    /// components.</summary>
+    [JsonPropertyName("grouping")] public ReadingGrouping? Grouping { get; init; }
+}
+
+/// <summary>The grouping a <see cref="ReadingDefinition"/> belongs to. Mirrors
+/// the spec's <c>ReadingGroupingResponseBody</c>.</summary>
+public sealed record ReadingGrouping
+{
+    /// <summary>The ID of the grouping (e.g. <c>brakeLiningRemaining</c>). Spec
+    /// marks REQUIRED; nullable because this is a response record.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>The user-facing label for the grouping (translated to English).
+    /// Spec marks REQUIRED; nullable because this is a response record.</summary>
+    [JsonPropertyName("label")] public string? Label { get; init; }
 }
 
 /// <summary>Enumeration value attached to a <see cref="ReadingDefinition"/>.

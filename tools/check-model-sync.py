@@ -759,6 +759,17 @@ def _spec_scalar_types(prop_schema: dict) -> set[str] | None:
     if st == "integer":
         return {"int", "long", "Int32", "Int64"}
     if st == "number":
+        # `format: int32` / `int64` are OpenAPI's *integer* formats. Where the
+        # Samsara spec pairs them with `type: number` the format is the
+        # authoritative signal and an integral C# type is correct — see
+        # V1FleetVehicleLocation.timeMs (number/int64, a Unix-ms timestamp),
+        # inline_object_1.vehicle_id (number/int64, an ID) and the eight
+        # J1939D1StatusDataPoint_value fields (number/int32: SPN, FMI, lamp
+        # states, occurrence count). Accepting int/long here avoids pushing
+        # correct models to `double`; floating-point spellings stay accepted so
+        # a widened C# type is never flagged either.
+        if fmt in ("int32", "int64"):
+            return {"int", "long", "Int32", "Int64", "double", "float", "decimal"}
         return {"double", "float", "decimal"}
     if st == "boolean":
         return {"bool", "Boolean"}
@@ -846,8 +857,8 @@ class Finding:
 # Type tokens that carry NO schema information: the C# compiler cannot tell a
 # caller anything about the payload's shape.
 WEAK_LEAVES = {"object", "JsonElement", "JsonNode", "JsonObject", "JsonDocument"}
-# Collection wrappers we peel exactly ONE level of: IReadOnlyList<JsonElement> is
-# every bit as weakly typed as JsonElement.
+# Collection wrappers we peel through: IReadOnlyList<JsonElement> is every bit as
+# weakly typed as JsonElement, and so is IReadOnlyList<IReadOnlyList<JsonElement>>.
 _COLLECTION_WRAPPERS = {
     "IReadOnlyList", "IList", "List", "IEnumerable", "IReadOnlyCollection",
     "ICollection", "Collection",
@@ -868,12 +879,22 @@ def _strip_nullable(t: str) -> str:
     return t
 
 
+# How many collection wrappers is_weak_type() peels before giving up. One level
+# was not enough: `IReadOnlyList<IReadOnlyList<JsonElement>>` (ReportRunData.Rows,
+# a genuine free-form grid) peeled to `IReadOnlyList<JsonElement>`, whose leaf
+# token is `IReadOnlyList` — not in WEAK_LEAVES — so the property produced no
+# finding at all. Anything nested deeper than this is vanishingly rare in the SDK.
+_MAX_COLLECTION_PEEL = 4
+
+
 def is_weak_type(ctype: str | None) -> bool:
     """True when the C# type conveys no shape at all.
 
     Recognises, beyond the bare tokens: nullable (`JsonElement?`),
-    namespace-qualified (`System.Text.Json.JsonElement?`) and ONE level of
-    collection wrapping (`IReadOnlyList<JsonElement>`, `object[]`). Dictionaries
+    namespace-qualified (`System.Text.Json.JsonElement?`) and up to
+    ``_MAX_COLLECTION_PEEL`` levels of collection wrapping
+    (`IReadOnlyList<JsonElement>`, `object[]`,
+    `IReadOnlyList<IReadOnlyList<JsonElement>>`, `JsonElement[][]`). Dictionaries
     are deliberately NOT handled here — a `Dictionary<string, object>` is a
     legitimate model for a genuine free-form map, so it is only weak in context
     (see ``is_weak_dictionary``).
@@ -881,11 +902,15 @@ def is_weak_type(ctype: str | None) -> bool:
     if not ctype:
         return False
     t = _strip_nullable(ctype)
-    m = _GENERIC_RE.match(t)
-    if m and _leaf_token(m.group(1)) in _COLLECTION_WRAPPERS:
-        t = _strip_nullable(m.group(2))
-    elif t.endswith("[]"):
-        t = _strip_nullable(t[:-2])
+    for _ in range(_MAX_COLLECTION_PEEL):
+        m = _GENERIC_RE.match(t)
+        if m and _leaf_token(m.group(1)) in _COLLECTION_WRAPPERS:
+            t = _strip_nullable(m.group(2))
+            continue
+        if t.endswith("[]"):
+            t = _strip_nullable(t[:-2])
+            continue
+        break
     return _leaf_token(t) in WEAK_LEAVES
 
 

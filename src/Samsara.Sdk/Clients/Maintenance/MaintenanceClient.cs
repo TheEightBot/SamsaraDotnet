@@ -72,8 +72,18 @@ internal sealed class MaintenanceClient : SamsaraServiceClientBase, IMaintenance
             cancellationToken: cancellationToken);
 
     /// <summary>Legacy v1 fleet maintenance list (<c>GET /v1/fleet/maintenance/list</c>).</summary>
-    public IAsyncEnumerable<V1VehicleMaintenance> V1ListMaintenanceAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<V1VehicleMaintenance>("v1/fleet/maintenance/list", cancellationToken: cancellationToken);
+    /// <remarks>
+    /// The v1 body is a <c>{ vehicles: [...] }</c> object (spec
+    /// <c>inline_response_200_4</c>) — it has neither a <c>data</c> array nor a
+    /// <c>pagination</c> block, so it must NOT be paginated. This mirrors
+    /// <c>TripsClient.ListAsync</c>: fetch the wrapper, return its array.
+    /// </remarks>
+    public async Task<IReadOnlyList<V1VehicleMaintenance>> V1ListMaintenanceAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await HttpClient.GetAsync<V1MaintenanceListResponse>("v1/fleet/maintenance/list", cancellationToken)
+            .ConfigureAwait(false);
+        return response.Vehicles ?? [];
+    }
 
     /// <summary>List maintenance vendors (beta).</summary>
     public IAsyncEnumerable<MaintenanceVendor> ListVendorsAsync(

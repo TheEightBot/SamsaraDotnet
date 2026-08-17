@@ -226,6 +226,10 @@ public sealed record DriverReference
 
     [JsonPropertyName("name")]
     public string? Name { get; init; }
+
+    /// <summary>External identifiers for the driver.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
 
 /// <summary>
@@ -945,6 +949,12 @@ public sealed record VehicleStatValue
 
     /// <summary>The measured value. Spec-required.</summary>
     [JsonPropertyName("value")] public required long Value { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>VehicleStatsDecorations</c>) — the other metrics as of the same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public VehicleStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>
@@ -958,6 +968,12 @@ public sealed record VehicleStatDoubleValue
 
     /// <summary>The measured value. Spec-required.</summary>
     [JsonPropertyName("value")] public required double Value { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>VehicleStatsDecorations</c>) — the other metrics as of the same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public VehicleStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>
@@ -972,6 +988,12 @@ public sealed record VehicleStatStringValue
 
     /// <summary>The measured value. Spec-required.</summary>
     [JsonPropertyName("value")] public required string Value { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>VehicleStatsDecorations</c>) — the other metrics as of the same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public VehicleStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>
@@ -980,14 +1002,26 @@ public sealed record VehicleStatStringValue
 /// </summary>
 public sealed record VehicleStatAuxInput
 {
-    /// <summary>Timestamp of the sample, in RFC 3339 format. Spec-required.</summary>
-    [JsonPropertyName("time")] public required DateTimeOffset Time { get; init; }
+    /// <summary>
+    /// Timestamp of the sample, in RFC 3339 format. Nullable: the spec's
+    /// <c>VehicleStatsAuxInput</c> declares no <c>required</c> list at all.
+    /// </summary>
+    [JsonPropertyName("time")] public DateTimeOffset? Time { get; init; }
 
-    /// <summary>Whether the auxiliary input is active. Spec-required.</summary>
-    [JsonPropertyName("value")] public required bool Value { get; init; }
+    /// <summary>
+    /// Whether the auxiliary input is active. Nullable: the spec's
+    /// <c>VehicleStatsAuxInput</c> declares no <c>required</c> list at all.
+    /// </summary>
+    [JsonPropertyName("value")] public bool? Value { get; init; }
 
     /// <summary>Human-readable name configured for this auxiliary input.</summary>
     [JsonPropertyName("name")] public string? Name { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>VehicleStatsDecorations</c>) — the other metrics as of the same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public VehicleStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>
@@ -1004,6 +1038,12 @@ public sealed record VehicleStatEngineImmobilizer
 
     /// <summary>Immobilizer state (<c>ignition_disabled</c> / <c>ignition_enabled</c>). Spec-required.</summary>
     [JsonPropertyName("state")] public required string State { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>VehicleStatsDecorations</c>) — the other metrics as of the same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public VehicleStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>
@@ -1016,6 +1056,12 @@ public sealed record VehicleStatNfcCardScan
 
     /// <summary>The scanned NFC card. Spec-required.</summary>
     [JsonPropertyName("card")] public required VehicleStatNfcCard Card { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>VehicleStatsDecorations</c>) — the other metrics as of the same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public VehicleStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>An NFC card reference on a <see cref="VehicleStatNfcCardScan"/>.</summary>
@@ -1054,6 +1100,12 @@ public sealed record VehicleStatGps
 
     /// <summary>Reverse-geocoded address for the reading.</summary>
     [JsonPropertyName("reverseGeo")] public ReverseGeo? ReverseGeo { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>VehicleStatsDecorations</c>) — the other metrics as of the same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public VehicleStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>
@@ -1089,6 +1141,12 @@ public sealed record VehicleStatFaultCodes
 
     /// <summary>OEM-specific fault codes.</summary>
     [JsonPropertyName("oem")] public VehicleStatFaultCodesOem? Oem { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>VehicleStatsDecorations</c>) — the other metrics as of the same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public VehicleStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>J1939 fault-code detail on a <see cref="VehicleStatFaultCodes"/> reading.</summary>
@@ -1136,6 +1194,12 @@ public sealed record VehicleStatJ1939Dtc
     /// nullable because this is a response record.
     /// </summary>
     [JsonPropertyName("milStatus")] public int? MilStatus { get; init; }
+
+    /// <summary>The source address name corresponding to the <c>txId</c>.</summary>
+    [JsonPropertyName("sourceAddressName")] public string? SourceAddressName { get; init; }
+
+    /// <summary>Vendor-specific data for J1939 vehicles.</summary>
+    [JsonPropertyName("vendorSpecificFields")] public VehicleStatJ1939VendorSpecificFields? VendorSpecificFields { get; init; }
 }
 
 /// <summary>OBD-II fault-code detail on a <see cref="VehicleStatFaultCodes"/> reading.</summary>
@@ -1159,6 +1223,9 @@ public sealed record VehicleStatObdiiDtcGroup
 
     /// <summary>Whether the malfunction-indicator lamp is set.</summary>
     [JsonPropertyName("milStatus")] public bool? MilStatus { get; init; }
+
+    /// <summary>Readings from the engine readiness monitors.</summary>
+    [JsonPropertyName("monitorStatus")] public VehicleStatObdiiMonitorStatus? MonitorStatus { get; init; }
 
     /// <summary>Confirmed diagnostic trouble codes.</summary>
     [JsonPropertyName("confirmedDtcs")] public IReadOnlyList<VehicleStatObdiiDtc>? ConfirmedDtcs { get; init; }
@@ -1216,6 +1283,368 @@ public sealed record VehicleStatOemDtc
 
     /// <summary>The OEM code source.</summary>
     [JsonPropertyName("codeSource")] public string? CodeSource { get; init; }
+}
+
+/// <summary>
+/// The other vehicle metrics captured alongside a single stats sample. Mirrors
+/// the spec's <c>VehicleStatsDecorations</c>, which every
+/// <c>...WithDecoration</c> response body hangs off its <c>decorations</c>
+/// property.
+/// </summary>
+/// <remarks>
+/// Decoration entries are NOT the same shape as the metric they decorate: most
+/// carry only a <c>value</c> (no <c>time</c>, since the time is the decorated
+/// sample's own). Only the entries the spec genuinely gives a <c>time</c> reuse
+/// the <c>{ time, value }</c> records. Everything here is nullable — a
+/// decoration is populated only when the caller asked for it via the
+/// <c>decorations</c> query parameter.
+/// </remarks>
+public sealed record VehicleStatDecorations
+{
+    /// <summary>Ambient air temperature, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("ambientAirTemperatureMilliC")] public VehicleStatDecorationValue? AmbientAirTemperatureMilliC { get; init; }
+
+    /// <summary>Auxiliary input 1 as of this sample.</summary>
+    [JsonPropertyName("auxInput1")] public VehicleStatDecorationAuxInput? AuxInput1 { get; init; }
+
+    /// <summary>Auxiliary input 2 as of this sample.</summary>
+    [JsonPropertyName("auxInput2")] public VehicleStatDecorationAuxInput? AuxInput2 { get; init; }
+
+    /// <summary>Auxiliary input 3 as of this sample.</summary>
+    [JsonPropertyName("auxInput3")] public VehicleStatDecorationAuxInput? AuxInput3 { get; init; }
+
+    /// <summary>Auxiliary input 4 as of this sample.</summary>
+    [JsonPropertyName("auxInput4")] public VehicleStatDecorationAuxInput? AuxInput4 { get; init; }
+
+    /// <summary>Auxiliary input 5 as of this sample.</summary>
+    [JsonPropertyName("auxInput5")] public VehicleStatDecorationAuxInput? AuxInput5 { get; init; }
+
+    /// <summary>Auxiliary input 6 as of this sample.</summary>
+    [JsonPropertyName("auxInput6")] public VehicleStatDecorationAuxInput? AuxInput6 { get; init; }
+
+    /// <summary>Auxiliary input 7 as of this sample.</summary>
+    [JsonPropertyName("auxInput7")] public VehicleStatDecorationAuxInput? AuxInput7 { get; init; }
+
+    /// <summary>Auxiliary input 8 as of this sample.</summary>
+    [JsonPropertyName("auxInput8")] public VehicleStatDecorationAuxInput? AuxInput8 { get; init; }
+
+    /// <summary>Auxiliary input 9 as of this sample.</summary>
+    [JsonPropertyName("auxInput9")] public VehicleStatDecorationAuxInput? AuxInput9 { get; init; }
+
+    /// <summary>Auxiliary input 10 as of this sample.</summary>
+    [JsonPropertyName("auxInput10")] public VehicleStatDecorationAuxInput? AuxInput10 { get; init; }
+
+    /// <summary>Auxiliary input 11 as of this sample.</summary>
+    [JsonPropertyName("auxInput11")] public VehicleStatDecorationAuxInput? AuxInput11 { get; init; }
+
+    /// <summary>Auxiliary input 12 as of this sample.</summary>
+    [JsonPropertyName("auxInput12")] public VehicleStatDecorationAuxInput? AuxInput12 { get; init; }
+
+    /// <summary>Auxiliary input 13 as of this sample.</summary>
+    [JsonPropertyName("auxInput13")] public VehicleStatDecorationAuxInput? AuxInput13 { get; init; }
+
+    /// <summary>Barometric pressure, in pascals.</summary>
+    [JsonPropertyName("barometricPressurePa")] public VehicleStatDecorationValue? BarometricPressurePa { get; init; }
+
+    /// <summary>Battery voltage, in millivolts.</summary>
+    [JsonPropertyName("batteryMilliVolts")] public VehicleStatDecorationValue? BatteryMilliVolts { get; init; }
+
+    /// <summary>Diesel exhaust fluid level, in milli-percent.</summary>
+    [JsonPropertyName("defLevelMilliPercent")] public VehicleStatDecorationValue? DefLevelMilliPercent { get; init; }
+
+    /// <summary>Door status as read from the ECU. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("ecuDoorStatus")] public VehicleStatStringValue? EcuDoorStatus { get; init; }
+
+    /// <summary>ECU-reported road speed, in miles per hour.</summary>
+    [JsonPropertyName("ecuSpeedMph")] public VehicleStatDecorationDoubleValue? EcuSpeedMph { get; init; }
+
+    /// <summary>Engine coolant temperature, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("engineCoolantTemperatureMilliC")] public VehicleStatDecorationValue? EngineCoolantTemperatureMilliC { get; init; }
+
+    /// <summary>Engine immobilizer state. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("engineImmobilizer")] public VehicleStatEngineImmobilizer? EngineImmobilizer { get; init; }
+
+    /// <summary>Engine load, as a percentage.</summary>
+    [JsonPropertyName("engineLoadPercent")] public VehicleStatDecorationValue? EngineLoadPercent { get; init; }
+
+    /// <summary>Engine oil pressure, in kilopascals.</summary>
+    [JsonPropertyName("engineOilPressureKPa")] public VehicleStatDecorationValue? EngineOilPressureKPa { get; init; }
+
+    /// <summary>Engine RPM.</summary>
+    [JsonPropertyName("engineRpm")] public VehicleStatDecorationValue? EngineRpm { get; init; }
+
+    /// <summary>Engine on/off state (<c>Off</c>, <c>On</c>, or <c>Idle</c>).</summary>
+    [JsonPropertyName("engineStates")] public VehicleStatDecorationStringValue? EngineStates { get; init; }
+
+    /// <summary>Average EV battery temperature, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("evAverageBatteryTemperatureMilliCelsius")] public VehicleStatValue? EvAverageBatteryTemperatureMilliCelsius { get; init; }
+
+    /// <summary>EV battery current, in milliamps.</summary>
+    [JsonPropertyName("evBatteryCurrentMilliAmp")] public VehicleStatValue? EvBatteryCurrentMilliAmp { get; init; }
+
+    /// <summary>EV battery state of health, in milli-percent.</summary>
+    [JsonPropertyName("evBatteryStateOfHealthMilliPercent")] public VehicleStatValue? EvBatteryStateOfHealthMilliPercent { get; init; }
+
+    /// <summary>EV battery voltage, in millivolts.</summary>
+    [JsonPropertyName("evBatteryVoltageMilliVolt")] public VehicleStatValue? EvBatteryVoltageMilliVolt { get; init; }
+
+    /// <summary>EV charging current, in milliamps.</summary>
+    [JsonPropertyName("evChargingCurrentMilliAmp")] public VehicleStatValue? EvChargingCurrentMilliAmp { get; init; }
+
+    /// <summary>EV charging energy, in micro-watt-hours.</summary>
+    [JsonPropertyName("evChargingEnergyMicroWh")] public VehicleStatValue? EvChargingEnergyMicroWh { get; init; }
+
+    /// <summary>EV charging status code.</summary>
+    [JsonPropertyName("evChargingStatus")] public VehicleStatValue? EvChargingStatus { get; init; }
+
+    /// <summary>EV charging voltage, in millivolts.</summary>
+    [JsonPropertyName("evChargingVoltageMilliVolt")] public VehicleStatValue? EvChargingVoltageMilliVolt { get; init; }
+
+    /// <summary>EV energy consumed, in micro-watt-hours.</summary>
+    [JsonPropertyName("evConsumedEnergyMicroWh")] public VehicleStatValue? EvConsumedEnergyMicroWh { get; init; }
+
+    /// <summary>EV distance driven, in meters.</summary>
+    [JsonPropertyName("evDistanceDrivenMeters")] public VehicleStatValue? EvDistanceDrivenMeters { get; init; }
+
+    /// <summary>EV energy regenerated, in micro-watt-hours.</summary>
+    [JsonPropertyName("evRegeneratedEnergyMicroWh")] public VehicleStatValue? EvRegeneratedEnergyMicroWh { get; init; }
+
+    /// <summary>EV state of charge, in milli-percent.</summary>
+    [JsonPropertyName("evStateOfChargeMilliPercent")] public VehicleStatValue? EvStateOfChargeMilliPercent { get; init; }
+
+    /// <summary>Engine fault codes. Has no <c>time</c> of its own.</summary>
+    [JsonPropertyName("faultCodes")] public VehicleStatDecorationFaultCodes? FaultCodes { get; init; }
+
+    /// <summary>Fuel consumed, in milliliters.</summary>
+    [JsonPropertyName("fuelConsumedMilliliters")] public VehicleStatDecorationValue? FuelConsumedMilliliters { get; init; }
+
+    /// <summary>Fuel level, as a percentage.</summary>
+    [JsonPropertyName("fuelPercents")] public VehicleStatDecorationValue? FuelPercents { get; init; }
+
+    /// <summary>GPS reading. Has no <c>time</c> of its own.</summary>
+    [JsonPropertyName("gps")] public VehicleStatDecorationGps? Gps { get; init; }
+
+    /// <summary>GPS-measured trip distance, in meters.</summary>
+    [JsonPropertyName("gpsDistanceMeters")] public VehicleStatDecorationDoubleValue? GpsDistanceMeters { get; init; }
+
+    /// <summary>GPS-derived odometer, in meters.</summary>
+    [JsonPropertyName("gpsOdometerMeters")] public VehicleStatDecorationValue? GpsOdometerMeters { get; init; }
+
+    /// <summary>Idling duration, in milliseconds.</summary>
+    [JsonPropertyName("idlingDurationMilliseconds")] public VehicleStatDecorationValue? IdlingDurationMilliseconds { get; init; }
+
+    /// <summary>Intake manifold temperature, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("intakeManifoldTemperatureMilliC")] public VehicleStatDecorationValue? IntakeManifoldTemperatureMilliC { get; init; }
+
+    /// <summary>OBD-reported engine seconds.</summary>
+    [JsonPropertyName("obdEngineSeconds")] public VehicleStatDecorationValue? ObdEngineSeconds { get; init; }
+
+    /// <summary>OBD-reported odometer, in meters.</summary>
+    [JsonPropertyName("obdOdometerMeters")] public VehicleStatDecorationValue? ObdOdometerMeters { get; init; }
+
+    /// <summary>Driver seatbelt state. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("seatbeltDriver")] public VehicleStatStringValue? SeatbeltDriver { get; init; }
+
+    /// <summary>Whether the spreader is active. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("spreaderActive")] public VehicleStatStringValue? SpreaderActive { get; init; }
+
+    /// <summary>Spreader air temperature. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("spreaderAirTemp")] public VehicleStatValue? SpreaderAirTemp { get; init; }
+
+    /// <summary>Spreader blast state. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("spreaderBlastState")] public VehicleStatStringValue? SpreaderBlastState { get; init; }
+
+    /// <summary>Spreader granular material name. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("spreaderGranularName")] public VehicleStatStringValue? SpreaderGranularName { get; init; }
+
+    /// <summary>Spreader granular application rate. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("spreaderGranularRate")] public VehicleStatValue? SpreaderGranularRate { get; init; }
+
+    /// <summary>Spreader liquid material name. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("spreaderLiquidName")] public VehicleStatStringValue? SpreaderLiquidName { get; init; }
+
+    /// <summary>Spreader liquid application rate. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("spreaderLiquidRate")] public VehicleStatValue? SpreaderLiquidRate { get; init; }
+
+    /// <summary>Spreader on state. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("spreaderOnState")] public VehicleStatStringValue? SpreaderOnState { get; init; }
+
+    /// <summary>Spreader plow status. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("spreaderPlowStatus")] public VehicleStatStringValue? SpreaderPlowStatus { get; init; }
+
+    /// <summary>Spreader pre-wet material name. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("spreaderPrewetName")] public VehicleStatStringValue? SpreaderPrewetName { get; init; }
+
+    /// <summary>Spreader pre-wet application rate. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("spreaderPrewetRate")] public VehicleStatValue? SpreaderPrewetRate { get; init; }
+
+    /// <summary>Spreader road temperature. Carries its own <c>time</c>.</summary>
+    [JsonPropertyName("spreaderRoadTemp")] public VehicleStatValue? SpreaderRoadTemp { get; init; }
+
+    /// <summary>Tire pressures, in kilopascals.</summary>
+    [JsonPropertyName("tirePressure")] public VehicleStatTirePressure? TirePressure { get; init; }
+}
+
+/// <summary>
+/// An integer-valued decoration entry (<c>{ value }</c>) — the decorated
+/// sample's own <c>time</c> applies, so the spec gives these no timestamp.
+/// </summary>
+public sealed record VehicleStatDecorationValue
+{
+    /// <summary>The measured value. Spec marks REQUIRED; nullable because this is a response record.</summary>
+    [JsonPropertyName("value")] public long? Value { get; init; }
+}
+
+/// <summary>A floating-point decoration entry (<c>{ value }</c>).</summary>
+public sealed record VehicleStatDecorationDoubleValue
+{
+    /// <summary>The measured value. Spec marks REQUIRED; nullable because this is a response record.</summary>
+    [JsonPropertyName("value")] public double? Value { get; init; }
+}
+
+/// <summary>A string- or enum-valued decoration entry (<c>{ value }</c>).</summary>
+public sealed record VehicleStatDecorationStringValue
+{
+    /// <summary>The measured value. Spec marks REQUIRED; nullable because this is a response record.</summary>
+    [JsonPropertyName("value")] public string? Value { get; init; }
+}
+
+/// <summary>
+/// An auxiliary-input decoration entry. Mirrors the spec's
+/// <c>VehicleStatsAuxInputDecoration</c> (<c>{ name, value }</c> — no time).
+/// </summary>
+public sealed record VehicleStatDecorationAuxInput
+{
+    /// <summary>Human-readable name configured for this auxiliary input. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")] public string? Name { get; init; }
+
+    /// <summary>Whether the auxiliary input is active. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("value")] public bool? Value { get; init; }
+}
+
+/// <summary>
+/// A GPS decoration entry. Mirrors the spec's <c>VehicleStatsDecorations_gps</c>,
+/// which is <see cref="VehicleStatGps"/> without the <c>time</c>.
+/// </summary>
+public sealed record VehicleStatDecorationGps
+{
+    /// <summary>Latitude in degrees. Spec marks REQUIRED; nullable because this is a response record.</summary>
+    [JsonPropertyName("latitude")] public double? Latitude { get; init; }
+
+    /// <summary>Longitude in degrees. Spec marks REQUIRED; nullable because this is a response record.</summary>
+    [JsonPropertyName("longitude")] public double? Longitude { get; init; }
+
+    /// <summary>Heading in degrees from true north.</summary>
+    [JsonPropertyName("headingDegrees")] public double? HeadingDegrees { get; init; }
+
+    /// <summary>Speed in miles per hour.</summary>
+    [JsonPropertyName("speedMilesPerHour")] public double? SpeedMilesPerHour { get; init; }
+
+    /// <summary>Whether the reported speed is sourced from the ECU rather than GPS.</summary>
+    [JsonPropertyName("isEcuSpeed")] public bool? IsEcuSpeed { get; init; }
+
+    /// <summary>The nearest known address (place) to the reading.</summary>
+    [JsonPropertyName("address")] public VehicleStatAddress? Address { get; init; }
+
+    /// <summary>Reverse-geocoded address for the reading.</summary>
+    [JsonPropertyName("reverseGeo")] public ReverseGeo? ReverseGeo { get; init; }
+}
+
+/// <summary>
+/// A fault-code decoration entry. Mirrors the spec's
+/// <c>VehicleStatsFaultCodesValue</c>, which is <see cref="VehicleStatFaultCodes"/>
+/// without the <c>time</c>.
+/// </summary>
+public sealed record VehicleStatDecorationFaultCodes
+{
+    /// <summary>The CAN bus protocol the fault codes were read from.</summary>
+    [JsonPropertyName("canBusType")] public string? CanBusType { get; init; }
+
+    /// <summary>J1939 (heavy-duty) fault codes.</summary>
+    [JsonPropertyName("j1939")] public VehicleStatFaultCodesJ1939? J1939 { get; init; }
+
+    /// <summary>OBD-II (light-duty) fault codes.</summary>
+    [JsonPropertyName("obdii")] public VehicleStatFaultCodesObdii? Obdii { get; init; }
+
+    /// <summary>OEM-specific fault codes.</summary>
+    [JsonPropertyName("oem")] public VehicleStatFaultCodesOem? Oem { get; init; }
+}
+
+/// <summary>
+/// Tire pressures, in kilopascals. Mirrors the spec's
+/// <c>VehicleStatsTirePressures</c>.
+/// </summary>
+public sealed record VehicleStatTirePressure
+{
+    /// <summary>Back-left tire pressure, in kilopascals.</summary>
+    [JsonPropertyName("backLeftTirePressureKPa")] public long? BackLeftTirePressureKPa { get; init; }
+
+    /// <summary>Back-right tire pressure, in kilopascals.</summary>
+    [JsonPropertyName("backRightTirePressureKPa")] public long? BackRightTirePressureKPa { get; init; }
+
+    /// <summary>Front-left tire pressure, in kilopascals.</summary>
+    [JsonPropertyName("frontLeftTirePressureKPa")] public long? FrontLeftTirePressureKPa { get; init; }
+
+    /// <summary>Front-right tire pressure, in kilopascals.</summary>
+    [JsonPropertyName("frontRightTirePressureKPa")] public long? FrontRightTirePressureKPa { get; init; }
+}
+
+/// <summary>
+/// Vendor-specific J1939 fault-code data. Mirrors the spec's
+/// <c>VehicleStatsFaultCodesVendorSpecificFields</c>.
+/// </summary>
+public sealed record VehicleStatJ1939VendorSpecificFields
+{
+    /// <summary>The DTC description, if available.</summary>
+    [JsonPropertyName("dtcDescription")] public string? DtcDescription { get; init; }
+
+    /// <summary>A link to vendor repair instructions, if available.</summary>
+    [JsonPropertyName("repairInstructionsUrl")] public string? RepairInstructionsUrl { get; init; }
+}
+
+/// <summary>
+/// OBD-II engine-sensor monitor readiness. Mirrors the spec's
+/// <c>VehicleStatsFaultCodesPassengerMonitorStatus</c>. Each reading is
+/// <c>U</c> (unsupported), <c>N</c> (not complete) or <c>R</c> (complete), kept
+/// as a string to stay forward-compatible with new enum members.
+/// </summary>
+public sealed record VehicleStatObdiiMonitorStatus
+{
+    /// <summary>Catalyst monitor readiness.</summary>
+    [JsonPropertyName("catalyst")] public string? Catalyst { get; init; }
+
+    /// <summary>Comprehensive-component monitor readiness.</summary>
+    [JsonPropertyName("comprehensive")] public string? Comprehensive { get; init; }
+
+    /// <summary>EGR system monitor readiness.</summary>
+    [JsonPropertyName("egr")] public string? Egr { get; init; }
+
+    /// <summary>Evaporative system monitor readiness.</summary>
+    [JsonPropertyName("evapSystem")] public string? EvapSystem { get; init; }
+
+    /// <summary>Fuel system monitor readiness.</summary>
+    [JsonPropertyName("fuel")] public string? Fuel { get; init; }
+
+    /// <summary>Heated-catalyst monitor readiness.</summary>
+    [JsonPropertyName("heatedCatalyst")] public string? HeatedCatalyst { get; init; }
+
+    /// <summary>Heated-O2-sensor monitor readiness.</summary>
+    [JsonPropertyName("heatedO2Sensor")] public string? HeatedO2Sensor { get; init; }
+
+    /// <summary>ISO/SAE-reserved monitor readiness.</summary>
+    [JsonPropertyName("isoSaeReserved")] public string? IsoSaeReserved { get; init; }
+
+    /// <summary>Misfire monitor readiness.</summary>
+    [JsonPropertyName("misfire")] public string? Misfire { get; init; }
+
+    /// <summary>Count of sensors reporting <c>N</c> (not complete).</summary>
+    [JsonPropertyName("notReadyCount")] public int? NotReadyCount { get; init; }
+
+    /// <summary>O2-sensor monitor readiness.</summary>
+    [JsonPropertyName("o2Sensor")] public string? O2Sensor { get; init; }
+
+    /// <summary>Secondary-air monitor readiness.</summary>
+    [JsonPropertyName("secondaryAir")] public string? SecondaryAir { get; init; }
 }
 
 /// <summary>
@@ -1862,4 +2291,53 @@ public sealed record GatewayPairGateway
 
     /// <summary>The serial number of the gateway. Spec marks REQUIRED.</summary>
     [JsonPropertyName("serial")] public string? Serial { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>PATCH /fleet/equipment/{id}/digital-output</c>
+/// (<c>setEquipmentDigitalOutput</c>, beta). Mirrors the spec's
+/// <c>EquipmentOutputControlSetEquipmentDigitalOutputRequestBody</c>.
+/// </summary>
+public sealed record SetEquipmentDigitalOutputRequest
+{
+    /// <summary>
+    /// The digital output pin to control. Only pin <c>1</c> is currently
+    /// supported. Spec REQUIRED.
+    /// </summary>
+    [JsonPropertyName("pinId")] public required int PinId { get; init; }
+
+    /// <summary>
+    /// The desired output state — <c>true</c> to energize the output,
+    /// <c>false</c> to de-energize it. Spec REQUIRED.
+    /// </summary>
+    [JsonPropertyName("state")] public required bool State { get; init; }
+
+    /// <summary>
+    /// How long, in seconds, to hold the requested state before the device
+    /// automatically reverts it. Omit (or <c>0</c>) to hold indefinitely.
+    /// </summary>
+    [JsonPropertyName("durationSeconds")] public int? DurationSeconds { get; init; }
+}
+
+/// <summary>
+/// The applied digital-output state returned by
+/// <c>PATCH /fleet/equipment/{id}/digital-output</c> (beta). Mirrors the spec's
+/// <c>SetEquipmentDigitalOutputDataResponseBody</c>.
+/// </summary>
+public sealed record EquipmentDigitalOutputState
+{
+    /// <summary>The Samsara ID of the gateway whose digital output was controlled. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")] public long? Id { get; init; }
+
+    /// <summary>The digital output pin that was controlled. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("pinId")] public int? PinId { get; init; }
+
+    /// <summary>The output state that was applied. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("state")] public bool? State { get; init; }
+
+    /// <summary>
+    /// The duration, in seconds, the state will be held. <c>0</c> means
+    /// indefinitely. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("durationSeconds")] public int? DurationSeconds { get; init; }
 }

@@ -1023,6 +1023,18 @@ public sealed record MaintenanceVendorCategory
 }
 
 /// <summary>
+/// The top-level response of the legacy <c>GET /v1/fleet/maintenance/list</c>.
+/// Mirrors the spec's <c>inline_response_200_4</c> (a <c>{ vehicles: [...] }</c>
+/// wrapper, not the standard <c>{ data, pagination }</c> envelope).
+/// </summary>
+public sealed record V1MaintenanceListResponse
+{
+    /// <summary>The vehicles with engine faults or check-engine lights.</summary>
+    [JsonPropertyName("vehicles")]
+    public IReadOnlyList<V1VehicleMaintenance>? Vehicles { get; init; }
+}
+
+/// <summary>
 /// A vehicle with engine faults or check-engine lights, as returned by the legacy
 /// <c>GET /v1/fleet/maintenance/list</c>. Mirrors the spec's
 /// <c>V1VehicleMaintenance</c>.

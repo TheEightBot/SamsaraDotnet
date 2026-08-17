@@ -100,7 +100,7 @@ public interface IComplianceClient
     /// <param name="endTime">End of the time range. Converted to milliseconds for the v1
     /// query parameter <c>endMs</c>.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    IAsyncEnumerable<V1HosAuthenticationLog> V1ListHosAuthenticationLogsAsync(
+    Task<IReadOnlyList<V1HosAuthenticationLog>> V1ListHosAuthenticationLogsAsync(
         long driverId,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,

@@ -23,8 +23,18 @@ public sealed record OrganizationInfo
 /// </summary>
 public sealed record OrganizationCarrierSettings
 {
+    /// <summary>Carrier name for the organization.</summary>
+    [JsonPropertyName("carrierName")]
+    public string? CarrierName { get; init; }
+
+    /// <summary>
+    /// Carrier US DOT number for the organization. The spec types this
+    /// <c>integer/int64</c>, matching <c>OrganizationSettings.dotNumber</c> and
+    /// <c>DriverCarrierSettings.dotNumber</c>, which the SDK already models as
+    /// <c>long?</c>.
+    /// </summary>
     [JsonPropertyName("dotNumber")]
-    public string? DotNumber { get; init; }
+    public long? DotNumber { get; init; }
 
     [JsonPropertyName("mainOfficeAddress")]
     public string? MainOfficeAddress { get; init; }

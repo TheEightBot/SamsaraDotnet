@@ -708,6 +708,19 @@ public sealed record UpdateShippingDocsRequest
 }
 
 /// <summary>
+/// The top-level response of the legacy <c>GET /v1/fleet/hos_authentication_logs</c>.
+/// Mirrors the spec's <c>V1HosAuthenticationLogsResponse</c> (an
+/// <c>{ authenticationLogs: [...] }</c> wrapper, not the standard
+/// <c>{ data, pagination }</c> envelope).
+/// </summary>
+public sealed record V1HosAuthenticationLogsResponse
+{
+    /// <summary>The sign-in / sign-out logs in the requested time range.</summary>
+    [JsonPropertyName("authenticationLogs")]
+    public IReadOnlyList<V1HosAuthenticationLog>? AuthenticationLogs { get; init; }
+}
+
+/// <summary>
 /// A driver HOS authentication-log entry, returned by the legacy
 /// <c>GET /v1/fleet/hos_authentication_logs</c>. Mirrors the item schema of
 /// <c>V1HosAuthenticationLogsResponse.authenticationLogs</c>.

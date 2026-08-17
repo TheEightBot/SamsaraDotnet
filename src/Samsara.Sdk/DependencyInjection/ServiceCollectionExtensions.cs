@@ -122,6 +122,10 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped<IFunctionsClient, FunctionsClient>();
         services.TryAddScoped<IReportsClient, ReportsClient>();
         services.TryAddScoped<IBetaClient, BetaClient>();
+        services.TryAddScoped<IAssetSharingClient, AssetSharingClient>();
+        services.TryAddScoped<IGroundIntelligenceClient, GroundIntelligenceClient>();
+        services.TryAddScoped<IPartsClient, PartsClient>();
+        services.TryAddScoped<IInstallerClient, InstallerClient>();
 
         // Register the aggregate facade
         services.TryAddScoped<ISamsaraClient, SamsaraClient>();

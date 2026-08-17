@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Diagnostics.CodeAnalysis;
 using Samsara.Sdk.Models.Fleet;
 
 /// <summary>
@@ -63,5 +64,23 @@ public interface IEquipmentClient
         IReadOnlyList<string>? parentTagIds = null,
         IReadOnlyList<string>? tagIds = null,
         IReadOnlyList<string>? equipmentIds = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Set an equipment digital-output state
+    /// (<c>PATCH /fleet/equipment/{id}/digital-output</c>,
+    /// <c>setEquipmentDigitalOutput</c>, beta).
+    /// </summary>
+    /// <remarks>
+    /// This is the one beta operation in this group that identifies its resource
+    /// with a <b>path</b> segment rather than a query parameter.
+    /// </remarks>
+    /// <param name="id">The Samsara ID of the gateway whose digital output is being controlled. Must be an AG53-connected gateway.</param>
+    /// <param name="request">The pin, state and optional hold duration.</param>
+    /// <param name="cancellationToken">Token to cancel the request.</param>
+    [Experimental("SAMSARA001")]
+    Task<EquipmentDigitalOutputState> SetDigitalOutputAsync(
+        string id,
+        SetEquipmentDigitalOutputRequest request,
         CancellationToken cancellationToken = default);
 }

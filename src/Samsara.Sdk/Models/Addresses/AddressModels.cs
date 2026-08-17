@@ -57,6 +57,24 @@ public sealed record Geofence
 
     [JsonPropertyName("polygon")]
     public GeofencePolygon? Polygon { get; init; }
+
+    /// <summary>Reporting settings for this geofence.</summary>
+    [JsonPropertyName("settings")]
+    public GeofenceSettings? Settings { get; init; }
+}
+
+/// <summary>
+/// Reporting settings on a geofence. Mirrors the spec's
+/// <c>AddressGeofence_settings</c>.
+/// </summary>
+public sealed record GeofenceSettings
+{
+    /// <summary>
+    /// When true, the underlying geofence addresses are shown in reports instead
+    /// of the geofence's name.
+    /// </summary>
+    [JsonPropertyName("showAddresses")]
+    public bool? ShowAddresses { get; init; }
 }
 
 /// <summary>
@@ -64,11 +82,19 @@ public sealed record Geofence
 /// </summary>
 public sealed record GeofenceCircle
 {
+    /// <summary>
+    /// Latitude of the circle's centre. Nullable: only <c>radiusMeters</c> is
+    /// spec-required on <c>AddressGeofence_circle</c>.
+    /// </summary>
     [JsonPropertyName("latitude")]
-    public required double Latitude { get; init; }
+    public double? Latitude { get; init; }
 
+    /// <summary>
+    /// Longitude of the circle's centre. Nullable: only <c>radiusMeters</c> is
+    /// spec-required on <c>AddressGeofence_circle</c>.
+    /// </summary>
     [JsonPropertyName("longitude")]
-    public required double Longitude { get; init; }
+    public double? Longitude { get; init; }
 
     [JsonPropertyName("radiusMeters")]
     public required long RadiusMeters { get; init; }

@@ -64,6 +64,10 @@ public sealed record RouteDriver
 
     [JsonPropertyName("name")]
     public string? Name { get; init; }
+
+    /// <summary>External identifiers for the driver.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
 
 /// <summary>
@@ -76,6 +80,10 @@ public sealed record RouteVehicle
 
     [JsonPropertyName("name")]
     public string? Name { get; init; }
+
+    /// <summary>External identifiers for the vehicle.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
 
 /// <summary>
@@ -326,6 +334,12 @@ public sealed record SingleUseLocation
 
     [JsonPropertyName("longitude")]
     public required double Longitude { get; init; }
+
+    /// <summary>
+    /// Radius in meters for the geofence around this location. Must be positive.
+    /// </summary>
+    [JsonPropertyName("radiusMeters")]
+    public double? RadiusMeters { get; init; }
 }
 
 /// <summary>

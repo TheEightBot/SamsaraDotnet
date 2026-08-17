@@ -167,6 +167,34 @@ internal sealed class SamsaraHttpClient
     }
 
     /// <summary>
+    /// Sends a PATCH request with a JSON body and ignores the response body. Used by
+    /// endpoints (e.g. <c>PATCH /beta/fleet/vehicles/{id}/immobilizer</c>) whose success
+    /// response declares no content at all — deserializing an empty body would throw.
+    /// </summary>
+    public async Task PatchAsync(string path, object body, CancellationToken cancellationToken = default)
+    {
+        var content = JsonContent.Create(body, options: _jsonOptions);
+
+        using var response = await SendAndValidateAsync(PatchMethod, path, content, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Sends a PATCH request with a JSON body and deserializes the response directly
+    /// (no <c>{ "data": ... }</c> envelope). Used by endpoints such as
+    /// <c>PATCH /safety-events/batch</c> whose payload sits at the top level.
+    /// </summary>
+    public async Task<T> PatchAsync<T>(string path, object body, CancellationToken cancellationToken = default)
+    {
+        var content = JsonContent.Create(body, options: _jsonOptions);
+
+        using var response = await SendAndValidateAsync(PatchMethod, path, content, cancellationToken)
+            .ConfigureAwait(false);
+
+        return await DeserializeAsync<T>(response, cancellationToken, body).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Sends a PUT request with a JSON body and deserializes the <c>{ "data": T }</c> response.
     /// </summary>
     public async Task<T> PutDataAsync<T>(string path, object body, CancellationToken cancellationToken = default)

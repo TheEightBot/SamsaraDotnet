@@ -133,9 +133,13 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
 
     /// <summary>
     /// Update an engine immobilizer state (beta, <c>PATCH /beta/fleet/vehicles/{id}/immobilizer</c>).
-    /// The spec declares a <c>202 Accepted</c> with no response body, so there is
-    /// no schema to mirror on the return type.
     /// </summary>
-    public Task<object> UpdateImmobilizerStateAsync(string id, UpdateEngineImmobilizerStateRequest request, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<object>($"beta/fleet/vehicles/{Uri.EscapeDataString(id)}/immobilizer", request, cancellationToken);
+    /// <remarks>
+    /// The spec declares the success case as <c>202 Accepted</c> with <c>content: {}</c> —
+    /// literally no response body — so this returns a bare <see cref="Task"/> and never
+    /// attempts to deserialize. (It previously used <c>PatchDataAsync&lt;object&gt;</c>,
+    /// which threw on the empty payload.)
+    /// </remarks>
+    public Task UpdateImmobilizerStateAsync(string id, UpdateEngineImmobilizerStateRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PatchAsync($"beta/fleet/vehicles/{Uri.EscapeDataString(id)}/immobilizer", request, cancellationToken);
 }

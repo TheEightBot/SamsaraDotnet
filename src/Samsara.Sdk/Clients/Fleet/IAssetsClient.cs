@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Diagnostics.CodeAnalysis;
 using Samsara.Sdk.Models.Fleet;
 
 /// <summary>Client for managing Samsara assets.</summary>
@@ -172,4 +173,54 @@ public interface IAssetsClient
 
     /// <summary>Mark an asset as recovered (beta).</summary>
     Task<DeviceRecoveryRecoveredState> RecoverAssetAsync(string id, RecoverAssetRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// List active asset assignments (<c>GET /fleet/assets/assignments</c>,
+    /// <c>listAssetAssignments</c>, beta). Pagination is handled transparently.
+    /// </summary>
+    /// <param name="includeExternalIds">Whether to return external IDs for the referenced asset and assignee objects.</param>
+    /// <param name="assetIds">Optional asset IDs to filter on. Samsara IDs or external ID tokens.</param>
+    /// <param name="assigneeIds">Optional assignee IDs to filter on. Samsara IDs or external ID tokens.</param>
+    /// <param name="cancellationToken">Token to cancel enumeration.</param>
+    [Experimental("SAMSARA001")]
+    IAsyncEnumerable<AssetAssignment> ListAssignmentsAsync(
+        bool? includeExternalIds = null,
+        IReadOnlyList<string>? assetIds = null,
+        IReadOnlyList<string>? assigneeIds = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Create an asset assignment (<c>POST /fleet/assets/assignments</c>,
+    /// <c>createAssetAssignment</c>, beta).
+    /// </summary>
+    [Experimental("SAMSARA001")]
+    Task<AssetAssignment> CreateAssignmentAsync(
+        CreateAssetAssignmentRequest request,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// End an asset's active assignment
+    /// (<c>POST /fleet/assets/assignments/unassign</c>,
+    /// <c>unassignAssetAssignment</c>, beta). Returns <c>204 No Content</c>.
+    /// </summary>
+    [Experimental("SAMSARA001")]
+    Task UnassignAsync(
+        UnassignAssetAssignmentRequest request,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// List asset associations between peripheral and central devices
+    /// (<c>GET /fleet/assets/associations</c>, <c>listAssociations</c>, beta).
+    /// Pagination is handled transparently.
+    /// </summary>
+    /// <param name="peripheralIds">Peripheral asset IDs to filter associations by. Required by the spec.</param>
+    /// <param name="startTime">RFC 3339 start of the window. Required by the spec.</param>
+    /// <param name="endTime">Optional RFC 3339 end of the window.</param>
+    /// <param name="cancellationToken">Token to cancel enumeration.</param>
+    [Experimental("SAMSARA001")]
+    IAsyncEnumerable<AssetAssociation> ListAssociationsAsync(
+        IReadOnlyList<string> peripheralIds,
+        DateTimeOffset startTime,
+        DateTimeOffset? endTime = null,
+        CancellationToken cancellationToken = default);
 }

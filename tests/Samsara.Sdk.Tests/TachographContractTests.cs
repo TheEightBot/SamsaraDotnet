@@ -1,5 +1,7 @@
 namespace Samsara.Sdk.Tests;
 
+using System.Reflection;
+using System.Text.Json.Serialization;
 using FluentAssertions;
 using Samsara.Sdk.Clients;
 using Samsara.Sdk.Models.Compliance;
@@ -98,6 +100,34 @@ public sealed class TachographContractTests
         handler.LastRequest.RequestUri!.ToString()
             .Should().Contain("fleet/tachograph/file-uploads")
             .And.NotContain("preview", "the shim must forward to the live path, not the dead one");
+    }
+
+    /// <summary>
+    /// <see cref="TachographVehicle"/> mirrors the spec's
+    /// <c>vehicleTinyResponse</c>, reached via
+    /// <c>TachographVehicleFileListWrapper.vehicle</c> on
+    /// <c>GET /fleet/vehicles/tachograph-files/history</c>. That schema is the only
+    /// one of the 123 spec schemas carrying an external-ID map that spells it
+    /// <c>ExternalIds</c> with a capital E — believed to be an upstream Samsara
+    /// typo, but the SDK mirrors the spec rather than the presumed intent.
+    /// <para>
+    /// This has to be a reflection test: <c>SamsaraJsonContext</c> sets
+    /// <c>PropertyNameCaseInsensitive</c>, so a revert to <c>externalIds</c> would
+    /// still deserialize correctly and no wire test could catch it.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public void TachographVehicle_ExternalIds_KeepsTheSpecsCapitalESpelling()
+    {
+        var attribute = typeof(TachographVehicle)
+            .GetProperty(nameof(TachographVehicle.ExternalIds))!
+            .GetCustomAttribute<JsonPropertyNameAttribute>();
+
+        attribute.Should().NotBeNull();
+        attribute!.Name.Should().Be(
+            "ExternalIds",
+            "vehicleTinyResponse spells the map with a capital E and the SDK mirrors the spec verbatim; "
+            + "a lowercase spelling would still deserialize (PropertyNameCaseInsensitive) but would drift from the spec");
     }
 }
 #pragma warning restore SAMSARA001

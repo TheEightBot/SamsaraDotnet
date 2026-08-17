@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Diagnostics.CodeAnalysis;
 using Samsara.Sdk.Http;
 using Samsara.Sdk.Models.Fleet;
 
@@ -107,4 +108,13 @@ internal sealed class EquipmentClient : SamsaraServiceClientBase, IEquipmentClie
                 ("tagIds", tagIds is null ? null : string.Join(",", tagIds)),
                 ("equipmentIds", equipmentIds is null ? null : string.Join(",", equipmentIds))),
             cancellationToken: cancellationToken);
+
+    /// <summary>Set an equipment digital-output state (<c>PATCH /fleet/equipment/{id}/digital-output</c>, beta).</summary>
+    [Experimental("SAMSARA001")]
+    public Task<EquipmentDigitalOutputState> SetDigitalOutputAsync(
+        string id,
+        SetEquipmentDigitalOutputRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<EquipmentDigitalOutputState>(
+            $"{BasePath}/{Uri.EscapeDataString(id)}/digital-output", request, cancellationToken);
 }

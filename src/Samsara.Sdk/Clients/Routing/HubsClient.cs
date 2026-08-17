@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Diagnostics.CodeAnalysis;
 using Samsara.Sdk.Http;
 using Samsara.Sdk.Models.Routes;
 
@@ -197,4 +198,20 @@ internal sealed class HubsClient : SamsaraServiceClientBase, IHubsClient
     /// <summary>Create hub plan orders in bulk (<c>POST /hub/plan/orders</c>). The spec wraps the array in <c>{ data: T[] }</c>.</summary>
     public Task<HubPlanOrder> CreatePlanOrdersAsync(CreateHubPlanOrdersRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<HubPlanOrder>("hub/plan/orders", request, cancellationToken);
+
+    /// <summary>Create a hub route template (<c>POST /hub/route-templates</c>, beta).</summary>
+    [Experimental("SAMSARA001")]
+    public Task<HubRouteTemplate> CreateRouteTemplateAsync(
+        CreateHubRouteTemplateRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<HubRouteTemplate>("hub/route-templates", request, cancellationToken);
+
+    /// <summary>Update a hub route template (<c>PATCH /hub/route-templates</c>, beta).</summary>
+    [Experimental("SAMSARA001")]
+    public Task<HubRouteTemplate> UpdateRouteTemplateAsync(
+        string id,
+        UpdateHubRouteTemplateRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<HubRouteTemplate>(
+            QueryBuilder.WithParams("hub/route-templates", ("id", id)), request, cancellationToken);
 }

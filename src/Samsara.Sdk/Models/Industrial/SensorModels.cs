@@ -15,6 +15,28 @@ public sealed record V1Sensor
 
     [JsonPropertyName("macAddress")]
     public string? MacAddress { get; init; }
+
+    /// <summary>Product type of the sensor (e.g. <c>EM21</c>).</summary>
+    [JsonPropertyName("sensorType")]
+    public string? SensorType { get; init; }
+
+    /// <summary>Current sensor health status (e.g. <c>RequiresInvestigation</c>).</summary>
+    [JsonPropertyName("healthStatus")]
+    public string? HealthStatus { get; init; }
+
+    /// <summary>
+    /// Sensor activation time, in Unix milliseconds. Null if the sensor has no
+    /// monitor.
+    /// </summary>
+    [JsonPropertyName("activatedAtMs")]
+    public long? ActivatedAtMs { get; init; }
+
+    /// <summary>
+    /// Last sensor transmission time, in Unix milliseconds. Null when the sensor
+    /// is connected or has never connected.
+    /// </summary>
+    [JsonPropertyName("lastTransmissionAtMs")]
+    public long? LastTransmissionAtMs { get; init; }
 }
 
 /// <summary>Response wrapper for <c>POST /v1/sensors/list</c>.</summary>

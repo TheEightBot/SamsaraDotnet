@@ -5,6 +5,9 @@
   "AlertsClient.cs": [
     "Alerts"
   ],
+  "AssetSharingClient.cs": [
+    "Beta APIs"
+  ],
   "AssetsClient.cs": [
     "Assets",
     "Beta APIs",
@@ -65,6 +68,9 @@
     "Beta APIs",
     "Gateways"
   ],
+  "GroundIntelligenceClient.cs": [
+    "Beta APIs"
+  ],
   "HubsClient.cs": [
     "Beta APIs",
     "Hubs",
@@ -79,6 +85,9 @@
   ],
   "IndustrialClient.cs": [
     "Industrial"
+  ],
+  "InstallerClient.cs": [
+    "Beta APIs"
   ],
   "IssuesClient.cs": [
     "Issues"
@@ -101,6 +110,9 @@
   ],
   "OrganizationClient.cs": [
     "Organization Info"
+  ],
+  "PartsClient.cs": [
+    "Beta APIs"
   ],
   "PlacesClient.cs": [
     "Beta APIs"
@@ -169,6 +181,7 @@
   ],
   "VehiclesClient.cs": [
     "Beta APIs",
+    "Fleet",
     "Speeding Intervals",
     "Vehicle Locations",
     "Vehicle Stats",

@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Diagnostics.CodeAnalysis;
 using Samsara.Sdk.Models.Routes;
 
 /// <summary>
@@ -99,4 +100,26 @@ public interface IHubsClient
 
     /// <summary>Create hub plan orders in bulk (<c>POST /hub/plan/orders</c>) — the body is wrapped in <c>{ data: T[] }</c>.</summary>
     Task<HubPlanOrder> CreatePlanOrdersAsync(CreateHubPlanOrdersRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Create a hub route template (<c>POST /hub/route-templates</c>,
+    /// <c>createHubRouteTemplate</c>, beta).
+    /// </summary>
+    [Experimental("SAMSARA001")]
+    Task<HubRouteTemplate> CreateRouteTemplateAsync(
+        CreateHubRouteTemplateRequest request,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Update a hub route template (<c>PATCH /hub/route-templates</c>,
+    /// <c>updateHubRouteTemplate</c>, beta).
+    /// </summary>
+    /// <param name="id">The unique identifier of the route template. Required by the spec (query param).</param>
+    /// <param name="request">The fields to change.</param>
+    /// <param name="cancellationToken">Token to cancel the request.</param>
+    [Experimental("SAMSARA001")]
+    Task<HubRouteTemplate> UpdateRouteTemplateAsync(
+        string id,
+        UpdateHubRouteTemplateRequest request,
+        CancellationToken cancellationToken = default);
 }

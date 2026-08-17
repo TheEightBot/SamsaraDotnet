@@ -1064,3 +1064,88 @@ public sealed record HubRouteTemplateLocation
     [JsonPropertyName("position")]
     public long? Position { get; init; }
 }
+
+/// <summary>
+/// A depot reference on a hub route-template create request. Mirrors the spec's
+/// <c>CreateHubRouteTemplateDepotStartInputRequestBody</c> and
+/// <c>CreateHubRouteTemplateDepotEndInputRequestBody</c> — structurally
+/// identical, so one record serves both.
+/// </summary>
+public sealed record HubRouteTemplateDepotInput
+{
+    /// <summary>External ID of the depot location.</summary>
+    [JsonPropertyName("externalId")]
+    public string? ExternalId { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>POST /hub/route-templates</c>
+/// (<c>createHubRouteTemplate</c>, beta). Mirrors the spec's
+/// <c>HubRouteTemplatesCreateHubRouteTemplateRequestBody</c>.
+/// </summary>
+public sealed record CreateHubRouteTemplateRequest
+{
+    /// <summary>The ID of the hub. Spec REQUIRED.</summary>
+    [JsonPropertyName("hubId")]
+    public required string HubId { get; init; }
+
+    /// <summary>The name of the route template. Spec REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+
+    /// <summary>The depot the template starts from.</summary>
+    [JsonPropertyName("defaultDepotStart")]
+    public HubRouteTemplateDepotInput? DefaultDepotStart { get; init; }
+
+    /// <summary>The depot the template ends at.</summary>
+    [JsonPropertyName("defaultDepotEnd")]
+    public HubRouteTemplateDepotInput? DefaultDepotEnd { get; init; }
+
+    /// <summary>
+    /// Default start time in <c>HH:MM</c> format in the hub's local timezone
+    /// (e.g. <c>08:00</c>).
+    /// </summary>
+    [JsonPropertyName("defaultStartTimeOfDay")]
+    public string? DefaultStartTimeOfDay { get; init; }
+
+    /// <summary>External IDs of the stop locations, in route order.</summary>
+    [JsonPropertyName("locationExternalIds")]
+    public IReadOnlyList<string>? LocationExternalIds { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>PATCH /hub/route-templates</c>
+/// (<c>updateHubRouteTemplate</c>, beta). Mirrors the spec's
+/// <c>HubRouteTemplatesUpdateHubRouteTemplateRequestBody</c>, which uses flat
+/// <c>defaultDepot*ExternalId</c> strings rather than the nested depot objects
+/// the create body takes — hence a separate record.
+/// </summary>
+public sealed record UpdateHubRouteTemplateRequest
+{
+    /// <summary>The new name of the route template.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>
+    /// The external identifier of the default start depot, as configured in the hub.
+    /// </summary>
+    [JsonPropertyName("defaultDepotStartExternalId")]
+    public string? DefaultDepotStartExternalId { get; init; }
+
+    /// <summary>
+    /// The external identifier of the default end depot, as configured in the hub.
+    /// </summary>
+    [JsonPropertyName("defaultDepotEndExternalId")]
+    public string? DefaultDepotEndExternalId { get; init; }
+
+    /// <summary>
+    /// Default start time in <c>HH:MM</c> format in the hub's local timezone
+    /// (e.g. <c>08:00</c>).
+    /// </summary>
+    [JsonPropertyName("defaultStartTimeOfDay")]
+    public string? DefaultStartTimeOfDay { get; init; }
+
+    /// <summary>External IDs of the stop locations, in route order.</summary>
+    [JsonPropertyName("locationsByExternalIds")]
+    public IReadOnlyList<string>? LocationsByExternalIds { get; init; }
+}

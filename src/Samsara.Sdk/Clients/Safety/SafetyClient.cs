@@ -99,7 +99,14 @@ internal sealed class SafetyClient : SamsaraServiceClientBase, ISafetyClient
                 ("endMs", endMs.ToString())),
             cancellationToken);
 
-    /// <summary>Batch update safety events (beta, <c>PATCH /safety-events/batch</c>).</summary>
+    /// <summary>
+    /// Batch update safety events (beta, <c>PATCH /safety-events/batch</c>).
+    /// </summary>
+    /// <remarks>
+    /// The 202 payload (<c>SafetyEventsV2PatchSafetyEventsV2BatchResponseBody</c>) is
+    /// <c>{ requestId, responses }</c> at the TOP level — there is no <c>{ data: ... }</c>
+    /// envelope — so this uses the non-unwrapping <c>PatchAsync&lt;T&gt;</c> helper.
+    /// </remarks>
     public Task<SafetyEventsBatchResult> PatchEventsBatchAsync(PatchSafetyEventsBatchRequest request, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<SafetyEventsBatchResult>("safety-events/batch", request, cancellationToken);
+        => HttpClient.PatchAsync<SafetyEventsBatchResult>("safety-events/batch", request, cancellationToken);
 }

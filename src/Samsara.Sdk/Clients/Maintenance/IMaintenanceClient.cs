@@ -60,8 +60,11 @@ public interface IMaintenanceClient
         IReadOnlyList<string>? ids = null,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Legacy v1 fleet maintenance list.</summary>
-    IAsyncEnumerable<V1VehicleMaintenance> V1ListMaintenanceAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Legacy v1 fleet maintenance list. The v1 body is a <c>{ vehicles: [...] }</c>
+    /// object with no pagination, so the whole list is returned at once.
+    /// </summary>
+    Task<IReadOnlyList<V1VehicleMaintenance>> V1ListMaintenanceAsync(CancellationToken cancellationToken = default);
 
     /// <summary>List maintenance vendors (beta).</summary>
     IAsyncEnumerable<MaintenanceVendor> ListVendorsAsync(

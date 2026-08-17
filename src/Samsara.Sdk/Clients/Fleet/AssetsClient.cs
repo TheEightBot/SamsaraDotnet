@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Samsara.Sdk.Http;
 using Samsara.Sdk.Models.Fleet;
@@ -174,4 +175,45 @@ internal sealed class AssetsClient : SamsaraServiceClientBase, IAssetsClient
     /// <summary>Mark an asset as recovered (beta).</summary>
     public Task<DeviceRecoveryRecoveredState> RecoverAssetAsync(string id, RecoverAssetRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostDataAsync<DeviceRecoveryRecoveredState>($"fleet/assets/device-recovery/{Uri.EscapeDataString(id)}/recovered", request, cancellationToken);
+
+    /// <summary>List active asset assignments (<c>GET /fleet/assets/assignments</c>, beta).</summary>
+    [Experimental("SAMSARA001")]
+    public IAsyncEnumerable<AssetAssignment> ListAssignmentsAsync(
+        bool? includeExternalIds = null,
+        IReadOnlyList<string>? assetIds = null,
+        IReadOnlyList<string>? assigneeIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<AssetAssignment>(
+            QueryBuilder.WithParams("fleet/assets/assignments",
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant()),
+                ("assetIds", assetIds is null ? null : string.Join(",", assetIds)),
+                ("assigneeIds", assigneeIds is null ? null : string.Join(",", assigneeIds))),
+            cancellationToken: cancellationToken);
+
+    /// <summary>Create an asset assignment (<c>POST /fleet/assets/assignments</c>, beta).</summary>
+    [Experimental("SAMSARA001")]
+    public Task<AssetAssignment> CreateAssignmentAsync(
+        CreateAssetAssignmentRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<AssetAssignment>("fleet/assets/assignments", request, cancellationToken);
+
+    /// <summary>End an asset's active assignment (<c>POST /fleet/assets/assignments/unassign</c>, beta).</summary>
+    [Experimental("SAMSARA001")]
+    public Task UnassignAsync(
+        UnassignAssetAssignmentRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostAsync("fleet/assets/assignments/unassign", request, cancellationToken);
+
+    /// <summary>List asset associations (<c>GET /fleet/assets/associations</c>, beta).</summary>
+    [Experimental("SAMSARA001")]
+    public IAsyncEnumerable<AssetAssociation> ListAssociationsAsync(
+        IReadOnlyList<string> peripheralIds,
+        DateTimeOffset startTime,
+        DateTimeOffset? endTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<AssetAssociation>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("fleet/assets/associations", startTime, endTime),
+                ("peripheralIds", string.Join(",", peripheralIds))),
+            cancellationToken: cancellationToken);
 }

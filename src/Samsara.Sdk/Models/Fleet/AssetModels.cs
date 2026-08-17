@@ -207,3 +207,119 @@ public sealed record AssetLocationGeofence
     /// <summary>A map of external IDs.</summary>
     [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
+
+/// <summary>
+/// The asset side of an asset assignment. Mirrors the spec's
+/// <c>AssetResponseResponseBody</c> as reached from
+/// <c>GET|POST /fleet/assets/assignments</c>.
+/// </summary>
+public sealed record AssetAssignmentAsset
+{
+    /// <summary>ID of the asset. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>A map of external ids.</summary>
+    [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// The assignee side of an asset assignment. Mirrors the spec's
+/// <c>AssetAssignmentAssigneeResponseObjectResponseBody</c>.
+/// </summary>
+public sealed record AssetAssignmentAssignee
+{
+    /// <summary>ID of the assignee. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>
+    /// Kind of assignee: <c>unknown</c>, <c>driver</c>, <c>asset</c>,
+    /// <c>geofence</c> or <c>job</c>. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("assigneeType")] public string? AssigneeType { get; init; }
+
+    /// <summary>A map of external ids for the assignee.</summary>
+    [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// An active asset assignment (beta). Mirrors the spec's
+/// <c>AssetAssignmentResponseObjectResponseBody</c>, the payload of
+/// <c>GET /fleet/assets/assignments</c> (<c>listAssetAssignments</c>) and
+/// <c>POST /fleet/assets/assignments</c> (<c>createAssetAssignment</c>).
+/// </summary>
+public sealed record AssetAssignment
+{
+    /// <summary>The asset that is assigned. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("asset")] public AssetAssignmentAsset? Asset { get; init; }
+
+    /// <summary>The entity the asset is assigned to. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("assignee")] public AssetAssignmentAssignee? Assignee { get; init; }
+
+    /// <summary>The start time of the assignment in RFC 3339 format. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("startTime")] public DateTimeOffset? StartTime { get; init; }
+
+    /// <summary>The end time of the assignment in RFC 3339 format, if the assignment has ended.</summary>
+    [JsonPropertyName("endTime")] public DateTimeOffset? EndTime { get; init; }
+
+    /// <summary>The expected end time of the assignment in RFC 3339 format, if one was set at creation.</summary>
+    [JsonPropertyName("expectedEndTime")] public DateTimeOffset? ExpectedEndTime { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>POST /fleet/assets/assignments</c>
+/// (<c>createAssetAssignment</c>, beta). Mirrors the spec's
+/// <c>AssetAssignmentsCreateAssetAssignmentRequestBody</c>.
+/// </summary>
+public sealed record CreateAssetAssignmentRequest
+{
+    /// <summary>Samsara ID of the asset. Spec REQUIRED.</summary>
+    [JsonPropertyName("assetId")] public required string AssetId { get; init; }
+
+    /// <summary>Samsara ID of the assignee. Spec REQUIRED.</summary>
+    [JsonPropertyName("assigneeId")] public required string AssigneeId { get; init; }
+
+    /// <summary>
+    /// Kind of assignee: <c>driver</c>, <c>asset</c> or <c>geofence</c>. Spec REQUIRED.
+    /// </summary>
+    [JsonPropertyName("assigneeType")] public required string AssigneeType { get; init; }
+
+    /// <summary>
+    /// Optional expected end time of the assignment in RFC 3339 format. Must be
+    /// strictly after the assignment start.
+    /// </summary>
+    [JsonPropertyName("expectedEndTime")] public DateTimeOffset? ExpectedEndTime { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>POST /fleet/assets/assignments/unassign</c>
+/// (<c>unassignAssetAssignment</c>, beta). Mirrors the spec's
+/// <c>AssetAssignmentsUnassignAssetAssignmentRequestBody</c>.
+/// </summary>
+public sealed record UnassignAssetAssignmentRequest
+{
+    /// <summary>Samsara ID of the asset. Spec REQUIRED.</summary>
+    [JsonPropertyName("assetId")] public required string AssetId { get; init; }
+}
+
+/// <summary>
+/// An association between a peripheral device and the central device it was
+/// detected by (beta). Mirrors the spec's <c>AssociationResponseBody</c>, the
+/// payload of <c>GET /fleet/assets/associations</c> (<c>listAssociations</c>).
+/// </summary>
+public sealed record AssetAssociation
+{
+    /// <summary>The Samsara ID of the central device in this association. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("centralId")] public string? CentralId { get; init; }
+
+    /// <summary>The Samsara ID of the peripheral device in this association. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("peripheralId")] public string? PeripheralId { get; init; }
+
+    /// <summary>The human-readable name of the peripheral device, if available.</summary>
+    [JsonPropertyName("peripheralName")] public string? PeripheralName { get; init; }
+
+    /// <summary>The time when this association started, in RFC 3339 format. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("associationStartTime")] public string? AssociationStartTime { get; init; }
+
+    /// <summary>The time when this association ended, in RFC 3339 format. Null if still active.</summary>
+    [JsonPropertyName("associationEndTime")] public string? AssociationEndTime { get; init; }
+}
