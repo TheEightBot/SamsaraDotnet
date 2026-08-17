@@ -306,6 +306,8 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(OrganizationCarrierSettings))]
 [JsonSerializable(typeof(User))]
 [JsonSerializable(typeof(UserRole))]
+[JsonSerializable(typeof(UserRoleAssignment))]
+[JsonSerializable(typeof(UserRoleInput))]
 [JsonSerializable(typeof(CreateUserRequest))]
 [JsonSerializable(typeof(UpdateUserRequest))]
 // Assignments

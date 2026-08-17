@@ -22,6 +22,7 @@ internal sealed class DriverVehicleAssignmentsClient : SamsaraServiceClientBase,
         string? driverTagIds = null,
         string? vehicleTagIds = null,
         string? assignmentType = null,
+        string? sourceName = null,
         CancellationToken cancellationToken = default)
         => PaginateAsync<DriverVehicleAssignment>(
             QueryBuilder.WithParams(
@@ -31,7 +32,8 @@ internal sealed class DriverVehicleAssignmentsClient : SamsaraServiceClientBase,
                 ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds)),
                 ("driverTagIds", driverTagIds),
                 ("vehicleTagIds", vehicleTagIds),
-                ("assignmentType", assignmentType)),
+                ("assignmentType", assignmentType),
+                ("sourceName", sourceName)),
             cancellationToken: cancellationToken);
 
     public Task<DriverVehicleAssignment> CreateAsync(CreateDriverVehicleAssignmentRequest request, CancellationToken cancellationToken = default)

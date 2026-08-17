@@ -11,6 +11,10 @@ public interface IDriverVehicleAssignmentsClient
     /// List assignments. <paramref name="filterBy"/> is required by the spec
     /// (e.g. <c>"drivers"</c>, <c>"vehicles"</c>).
     /// </summary>
+    /// <remarks>
+    /// <paramref name="sourceName"/> filters by the exact metadata source name supplied when
+    /// the assignment was created; the spec requires <c>filterBy=drivers</c> to use it.
+    /// </remarks>
     IAsyncEnumerable<DriverVehicleAssignment> ListAsync(
         string filterBy,
         DateTimeOffset? startTime = null,
@@ -20,6 +24,7 @@ public interface IDriverVehicleAssignmentsClient
         string? driverTagIds = null,
         string? vehicleTagIds = null,
         string? assignmentType = null,
+        string? sourceName = null,
         CancellationToken cancellationToken = default);
 
     Task<DriverVehicleAssignment> CreateAsync(CreateDriverVehicleAssignmentRequest request, CancellationToken cancellationToken = default);

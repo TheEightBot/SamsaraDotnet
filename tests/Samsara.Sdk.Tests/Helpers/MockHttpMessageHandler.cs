@@ -11,9 +11,20 @@ internal sealed class MockHttpMessageHandler : HttpMessageHandler
 {
     private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> _handler;
     private readonly List<HttpRequestMessage> _requests = new();
+    private readonly List<string?> _requestBodies = new();
 
     public IReadOnlyList<HttpRequestMessage> Requests => _requests;
     public HttpRequestMessage LastRequest => _requests[^1];
+
+    /// <summary>
+    /// Request bodies captured as text, positionally matching <see cref="Requests"/>.
+    /// Captured during send because <c>HttpClient</c> disposes request content once the
+    /// request completes, so reading <c>LastRequest.Content</c> afterwards throws.
+    /// </summary>
+    public IReadOnlyList<string?> RequestBodies => _requestBodies;
+
+    /// <summary>Body of the most recent request, or null if it had none.</summary>
+    public string? LastRequestBody => _requestBodies[^1];
 
     public MockHttpMessageHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler)
     {
@@ -30,6 +41,10 @@ internal sealed class MockHttpMessageHandler : HttpMessageHandler
         CancellationToken cancellationToken)
     {
         _requests.Add(request);
+        _requestBodies.Add(
+            request.Content is null
+                ? null
+                : await request.Content.ReadAsStringAsync().ConfigureAwait(false));
         var response = await _handler(request, cancellationToken).ConfigureAwait(false);
 
         // Mirror the real handlers (HttpClientHandler/SocketsHttpHandler), which attach the

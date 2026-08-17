@@ -24,6 +24,7 @@ public interface IReadingsClient
     /// <param name="externalIds">Comma-separated <c>name:value</c> external ID pairs. Optional.</param>
     /// <param name="feed">When <c>true</c>, returns a continuous feed of new readings. Optional.</param>
     /// <param name="includeExternalIds">When <c>true</c>, includes external IDs on the response. Optional.</param>
+    /// <param name="assetTypes">Comma-separated asset types to filter by. Only supported when <paramref name="entityType"/> is <c>asset</c>. Optional.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     IAsyncEnumerable<ReadingHistory> GetHistoryAsync(
         string readingId,
@@ -34,6 +35,7 @@ public interface IReadingsClient
         string? externalIds = null,
         bool? feed = null,
         bool? includeExternalIds = null,
+        string? assetTypes = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>Get the latest reading snapshot (<c>GET /readings/latest</c>).</summary>
@@ -43,6 +45,7 @@ public interface IReadingsClient
     /// <param name="externalIds">Comma-separated <c>name:value</c> external ID pairs. Optional.</param>
     /// <param name="asOfTime">RFC 3339 timestamp to query a historical snapshot at. Optional.</param>
     /// <param name="includeExternalIds">When <c>true</c>, includes external IDs on the response. Optional.</param>
+    /// <param name="assetTypes">Comma-separated asset types to filter by. Only supported when <paramref name="entityType"/> is <c>asset</c>. Optional.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     IAsyncEnumerable<ReadingSnapshot> GetSnapshotAsync(
         string readingIds,
@@ -51,6 +54,7 @@ public interface IReadingsClient
         string? externalIds = null,
         string? asOfTime = null,
         bool? includeExternalIds = null,
+        string? assetTypes = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>Submit one or more readings (beta).</summary>
