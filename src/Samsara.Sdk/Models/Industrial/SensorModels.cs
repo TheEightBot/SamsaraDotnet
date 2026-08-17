@@ -50,17 +50,33 @@ public sealed record V1SensorHistoryRequest
     public string? FillMissing { get; init; }
 }
 
-/// <summary>A single sensor/field series request.</summary>
+/// <summary>
+/// A single sensor/field series request. Mirrors an item of the spec's
+/// <c>series</c> array on <c>POST /v1/sensors/history</c>, which marks both
+/// members REQUIRED.
+/// </summary>
+/// <remarks>
+/// The 2026-08-17 spec-parity sweep found this record produced a body the API
+/// cannot accept: it posted <c>sensorId</c> and <c>widgetField</c> — neither
+/// name appears anywhere in the spec — while omitting the required
+/// <c>widgetId</c>. Both were replaced by <see cref="WidgetId"/>.
+/// </remarks>
 public sealed record V1SensorHistorySeries
 {
+    /// <summary>
+    /// Field to query, e.g. <c>ambientTemperature</c>, <c>cargoPercent</c>,
+    /// <c>doorClosed</c>, <c>humidity</c>, <c>probeTemperature</c>.
+    /// Spec marks REQUIRED.
+    /// </summary>
     [JsonPropertyName("field")]
     public required string Field { get; init; }
 
-    [JsonPropertyName("sensorId")]
-    public required long SensorId { get; init; }
-
-    [JsonPropertyName("widgetField")]
-    public string? WidgetField { get; init; }
+    /// <summary>
+    /// ID of the v1 sensor to query — the <c>id</c> of a <see cref="V1Sensor"/>
+    /// returned by <c>POST /v1/sensors/list</c>. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("widgetId")]
+    public required long WidgetId { get; init; }
 }
 
 /// <summary>One timestamped row from <c>POST /v1/sensors/history</c>.</summary>

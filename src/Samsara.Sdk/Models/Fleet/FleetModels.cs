@@ -1122,6 +1122,12 @@ public sealed record VehicleStatJ1939Dtc
 
     /// <summary>Transmitting source address.</summary>
     [JsonPropertyName("txId")] public int? TxId { get; init; }
+
+    /// <summary>
+    /// The MIL status, indicating a check engine light. Spec marks REQUIRED;
+    /// nullable because this is a response record.
+    /// </summary>
+    [JsonPropertyName("milStatus")] public int? MilStatus { get; init; }
 }
 
 /// <summary>OBD-II fault-code detail on a <see cref="VehicleStatFaultCodes"/> reading.</summary>

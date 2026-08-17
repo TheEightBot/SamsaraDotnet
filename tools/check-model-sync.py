@@ -501,20 +501,34 @@ def parse_models() -> dict[str, dict[str, dict]]:
 # ============================================================================
 # Extended SDK client parsing (response/request C# types)
 # ============================================================================
-# Generic helper call: HttpClient.<Verb>Async<TYPE>( ... )  -> capture TYPE
+# Generic helper call: HttpClient.<Verb>Async<TYPE>( ... )  -> capture TYPE.
+#
+# The alternation must spell out EVERY public generic helper on
+# src/Samsara.Sdk/Http/SamsaraHttpClient.cs, longest name first. A helper the
+# regex does not know about makes its endpoint invisible to this checker: the
+# response type is never resolved, so neither the response NOR the request body
+# is ever compared against the spec. `PostListDataAsync` was missing, which hid
+# POST /hub/locations (HubsClient.CreateLocationAsync) entirely.
 GENERIC_HELPER_RE = re.compile(
-    r'HttpClient\.(GetData|Get|PostData|Post|PatchData|Patch|PutData|Put)Async'
+    r'HttpClient\.(GetPage|GetData|Get|PostListData|PostData|Post'
+    r'|PatchData|Patch|PutData|Put)Async'
     r'<((?:[^<>]|<(?:[^<>]|<[^<>]*>)*>)*)>\('
 )
 PAGINATE_GENERIC_RE = re.compile(
     r'Paginate(?:Data)?Async<((?:[^<>]|<(?:[^<>]|<[^<>]*>)*>)*)>\('
 )
-# Body-bearing helper call capturing verb + full arg list start.
+# Body-bearing helper call capturing verb + full arg list start. Covers every
+# public helper that takes an `object body` argument, including the
+# DeleteAsync(path, body, ct) overload.
 BODY_HELPER_RE = re.compile(
-    r'HttpClient\.(PostData|Post|PatchData|Patch|PutData|Put)Async'
+    r'HttpClient\.(PostListData|PostData|Post|PatchData|Patch|PutData|Put'
+    r'|Delete)Async'
     r'(?:<(?:[^<>]|<(?:[^<>]|<[^<>]*>)*>)*>)?\(\s*(.*)$',
     re.S,
 )
+# Parameter types that are never a request body (the bodyless DeleteAsync /
+# PostAsync overloads put the cancellation token where a body would sit).
+NON_BODY_PARAM_TYPES = {"CancellationToken", "System.Threading.CancellationToken"}
 # Parameter list capture for a method header.
 PARAM_METHOD_RE = re.compile(
     r'public\s+(?:async\s+)?[\w<>,\.\?\[\]\s]+?\s+([A-Za-z0-9_]+)Async\s*\(', re.M
@@ -638,7 +652,11 @@ def parse_client_types() -> dict[tuple[str, str], dict]:
             response_type = None
             gm = GENERIC_HELPER_RE.search(body)
             if gm:
-                response_type = gm.group(2).strip()
+                # GetPageAsync<TData, TItem> mirrors PaginateAsync<TData, TItem>:
+                # the last generic arg is the element type that maps to the
+                # spec's paginated array item.
+                gen_args = _split_generic_args(gm.group(2))
+                response_type = gen_args[-1] if gen_args else gm.group(2).strip()
             else:
                 pm = PAGINATE_GENERIC_RE.search(body)
                 if pm:
@@ -660,6 +678,9 @@ def parse_client_types() -> dict[tuple[str, str], dict]:
                     ident = re.match(r'^([A-Za-z_][A-Za-z0-9_]*)\b', body_arg)
                     if ident and ident.group(1) in params:
                         request_type = params[ident.group(1)]
+                        if request_type in NON_BODY_PARAM_TYPES:
+                            # Bodyless overload, e.g. DeleteAsync(path, ct).
+                            request_type = None
                     elif ident:
                         # Could be a local var built in-method; try a local decl.
                         decl = re.search(
@@ -1347,8 +1368,11 @@ def analyze(spec: dict):
             info.get("response_type") and verb == "GET" and _method_paginates(e["file"], e["method"])
         )
 
-        # ---- Request side (Post/Patch/Put) -------------------------------
-        if verb in ("POST", "PATCH", "PUT"):
+        # ---- Request side (Post/Patch/Put/Delete) ------------------------
+        # DELETE is included because SamsaraHttpClient exposes a
+        # DeleteAsync(path, body, ct) overload and the spec defines request
+        # bodies on four DELETE operations.
+        if verb in ("POST", "PATCH", "PUT", "DELETE"):
             req_schema_top = resolver.op_schema(op, "request")
             if req_schema_top is not None:
                 inner, is_list, req_required = resolver.unwrap_envelope(req_schema_top)

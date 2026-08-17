@@ -109,32 +109,48 @@ public sealed record FormsPolymorphicUser
     public string? Type { get; init; }
 }
 
+/// <summary>
+/// A section of a form template. Mirrors the spec's
+/// <c>FormsTemplateSectionObjectResponseBody</c>
+/// (<c>GET /form-templates</c> → <c>data.sections</c>).
+/// </summary>
+/// <remarks>
+/// The 2026-08-17 spec-parity sweep found this record modelled a shape the API
+/// never sends. A section does NOT carry its own <c>fields</c> array or a
+/// <c>title</c>; it carries a <c>label</c> plus an inclusive index range into
+/// the template's flat <c>fields</c> array. Spec marks all four members
+/// REQUIRED; they stay nullable because this is a response record.
+/// </remarks>
 public sealed record FormSection
 {
+    /// <summary>Identifier of the section (UUID). Spec marks REQUIRED.</summary>
     [JsonPropertyName("id")]
     public string? Id { get; init; }
 
-    [JsonPropertyName("title")]
-    public string? Title { get; init; }
-
-    [JsonPropertyName("fields")]
-    public IReadOnlyList<FormFieldDefinition>? Fields { get; init; }
-}
-
-public sealed record FormFieldDefinition
-{
-    [JsonPropertyName("id")]
-    public string? Id { get; init; }
-
+    /// <summary>Label of the section. Spec marks REQUIRED.</summary>
     [JsonPropertyName("label")]
     public string? Label { get; init; }
 
-    [JsonPropertyName("type")]
-    public string? Type { get; init; }
+    /// <summary>
+    /// Index of the first field of <c>FormTemplate.Fields</c> that belongs to
+    /// this section; index 0 is the first field. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("fieldIndexFirstInclusive")]
+    public long? FieldIndexFirstInclusive { get; init; }
 
-    [JsonPropertyName("required")]
-    public bool? Required { get; init; }
+    /// <summary>
+    /// Index of the last field of <c>FormTemplate.Fields</c> that belongs to
+    /// this section (inclusive). Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("fieldIndexLastInclusive")]
+    public long? FieldIndexLastInclusive { get; init; }
 }
+
+// FormFieldDefinition was removed in the 2026-08-17 spec-parity sweep. It was
+// only ever reachable through FormSection.Fields, which the spec does not
+// define, and its own {id,label,type,required} shape matches no spec schema:
+// form-template fields live in the flat FormTemplate.Fields array, which
+// sections address by index.
 
 /// <summary>
 /// Response object for a form submission (mirrors spec

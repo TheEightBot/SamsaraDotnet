@@ -12,8 +12,13 @@ using Samsara.Sdk.Models.Common;
 /// </summary>
 public sealed record FuelEnergyVehicleReport
 {
+    /// <summary>
+    /// The vehicle this report row belongs to, including its
+    /// <c>energyType</c> discriminator (spec ref
+    /// <c>VehicleEnergyTypeTinyResponseResponseBody</c>).
+    /// </summary>
     [JsonPropertyName("vehicle")]
-    public required EntityReference Vehicle { get; init; }
+    public required FuelEnergyVehicleReference Vehicle { get; init; }
 
     [JsonPropertyName("distanceTraveledMeters")]
     public required double DistanceTraveledMeters { get; init; }
@@ -75,11 +80,53 @@ public sealed record FuelEnergyDriverReport
     public double? FuelConsumedMl { get; init; }
 }
 
-/// <summary>Cost values returned inside a fuel/energy report.</summary>
+/// <summary>
+/// Cost values returned inside a fuel/energy report. Mirrors the spec's
+/// <c>estFuelEnergyCost</c> object.
+/// </summary>
+/// <remarks>
+/// Spec marks both members REQUIRED; they stay nullable because this is a
+/// response record. The property was named <c>currency</c> before the
+/// 2026-08-17 spec-parity sweep — a name the API never sends.
+/// </remarks>
 public sealed record FuelEnergyCost
 {
+    /// <summary>Amount of the currency. Spec marks REQUIRED.</summary>
     [JsonPropertyName("amount")] public double? Amount { get; init; }
-    [JsonPropertyName("currency")] public string? Currency { get; init; }
+
+    /// <summary>Type of the currency (e.g. <c>USD</c>). Spec marks REQUIRED.</summary>
+    [JsonPropertyName("currencyCode")] public string? CurrencyCode { get; init; }
+}
+
+/// <summary>
+/// A minified vehicle reference on a fuel/energy vehicle report. Mirrors the
+/// spec's <c>VehicleEnergyTypeTinyResponseResponseBody</c>
+/// (<c>GET /fleet/reports/vehicles/fuel-energy</c> → <c>vehicleReports.vehicle</c>).
+/// </summary>
+/// <remarks>
+/// Introduced by the 2026-08-17 spec-parity sweep. This report's vehicle object
+/// carries an <c>energyType</c> discriminator that the shared
+/// <c>EntityReference</c> must not grow: <c>EntityReference</c> backs dozens of
+/// plain <c>{id, name}</c> references across every domain, and energy type is
+/// specific to fuel/energy reporting.
+/// </remarks>
+public sealed record FuelEnergyVehicleReference
+{
+    /// <summary>ID of the vehicle.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>Name of the vehicle.</summary>
+    [JsonPropertyName("name")] public string? Name { get; init; }
+
+    /// <summary>
+    /// Type of energy used by the vehicle: <c>fuel</c>, <c>hybrid</c> or
+    /// <c>electric</c>. Spec marks REQUIRED; nullable because this is a
+    /// response record.
+    /// </summary>
+    [JsonPropertyName("energyType")] public string? EnergyType { get; init; }
+
+    /// <summary>A map of external IDs associated with the vehicle.</summary>
+    [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
 
 /// <summary><c>data</c> wrapper for the vehicle fuel-energy report endpoint.</summary>

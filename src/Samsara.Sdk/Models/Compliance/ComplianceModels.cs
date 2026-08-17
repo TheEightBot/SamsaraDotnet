@@ -140,6 +140,13 @@ public sealed record HosViolationEntry
     /// <summary>The string value of the violation type (e.g., <c>shiftDrivingHours</c>).</summary>
     [JsonPropertyName("type")]
     public string? Type { get; init; }
+
+    /// <summary>
+    /// The start time of the violation in RFC 3339 format. Spec marks REQUIRED;
+    /// nullable because this is a response record.
+    /// </summary>
+    [JsonPropertyName("violationStartTime")]
+    public string? ViolationStartTime { get; init; }
 }
 
 /// <summary>

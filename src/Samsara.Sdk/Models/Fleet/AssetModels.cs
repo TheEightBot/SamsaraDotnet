@@ -117,11 +117,85 @@ public sealed record AssetLocationAndSpeedSpeed
     [JsonPropertyName("gpsSpeedMetersPerSecond")] public double? GpsSpeedMetersPerSecond { get; init; }
 }
 
-/// <summary>Asset location details.</summary>
+/// <summary>
+/// Asset location details on a location-and-speed reading. Mirrors the spec's
+/// <c>LocationResponseResponseBody</c> (the only schema this record is reached
+/// from is <c>GET /assets/location-and-speed/stream</c>).
+/// </summary>
+/// <remarks>
+/// Spec marks <c>headingDegrees</c>, <c>latitude</c> and <c>longitude</c>
+/// REQUIRED. They stay nullable here: the live API omits fields its own spec
+/// marks required and <c>SamsaraSerializerOptions.Default</c> is deliberately
+/// lenient, so <c>required</c> on a response record would turn a sparse payload
+/// into a deserialization crash.
+/// </remarks>
 public sealed record AssetLocation
 {
+    /// <summary>Latitude of the location of the asset. Spec marks REQUIRED.</summary>
     [JsonPropertyName("latitude")] public double? Latitude { get; init; }
+
+    /// <summary>Longitude of the location of the asset. Spec marks REQUIRED.</summary>
     [JsonPropertyName("longitude")] public double? Longitude { get; init; }
-    [JsonPropertyName("heading")] public double? Heading { get; init; }
-    [JsonPropertyName("reverseGeo")] public ReverseGeo? ReverseGeo { get; init; }
+
+    /// <summary>
+    /// Heading of the asset in degrees; may be 0 when the asset is not moving.
+    /// Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("headingDegrees")] public long? HeadingDegrees { get; init; }
+
+    /// <summary>
+    /// Radial accuracy of the GPS location in meters. Only returned when strong
+    /// GPS is not available.
+    /// </summary>
+    [JsonPropertyName("accuracyMeters")] public double? AccuracyMeters { get; init; }
+
+    /// <summary>Closest address that the GPS latitude and longitude match to.</summary>
+    [JsonPropertyName("address")] public AssetLocationAddress? Address { get; init; }
+
+    /// <summary>Closest geofence based on a 1000 meter radial search.</summary>
+    [JsonPropertyName("geofence")] public AssetLocationGeofence? Geofence { get; init; }
+}
+
+/// <summary>
+/// Closest address matched to an asset location. Mirrors the spec's
+/// <c>AddressResponseResponseBody</c>.
+/// </summary>
+public sealed record AssetLocationAddress
+{
+    /// <summary>Street number of the address.</summary>
+    [JsonPropertyName("streetNumber")] public string? StreetNumber { get; init; }
+
+    /// <summary>The street name.</summary>
+    [JsonPropertyName("street")] public string? Street { get; init; }
+
+    /// <summary>The name of the neighborhood if one exists.</summary>
+    [JsonPropertyName("neighborhood")] public string? Neighborhood { get; init; }
+
+    /// <summary>The name of the city.</summary>
+    [JsonPropertyName("city")] public string? City { get; init; }
+
+    /// <summary>The name of the state.</summary>
+    [JsonPropertyName("state")] public string? State { get; init; }
+
+    /// <summary>The zip code.</summary>
+    [JsonPropertyName("postalCode")] public string? PostalCode { get; init; }
+
+    /// <summary>The country.</summary>
+    [JsonPropertyName("country")] public string? Country { get; init; }
+
+    /// <summary>A point that may be of interest to the user.</summary>
+    [JsonPropertyName("pointOfInterest")] public string? PointOfInterest { get; init; }
+}
+
+/// <summary>
+/// Closest geofence to an asset location. Mirrors the spec's
+/// <c>GeofenceResponseResponseBody</c>.
+/// </summary>
+public sealed record AssetLocationGeofence
+{
+    /// <summary>Unique ID of the geofence object.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>A map of external IDs.</summary>
+    [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }

@@ -379,10 +379,23 @@ public sealed record DriverHosSetting
 /// the property to <c>null</c> on a request deletes the driver's override.
 /// </summary>
 /// <remarks>
-/// The spec marks all four members <c>required</c>, but the same schema backs
-/// both the request bodies and the driver response, and the SDK deliberately
-/// deserializes responses leniently, so every member is modeled as nullable.
-/// Callers building a request should populate all four.
+/// <para>
+/// The spec marks all four members <c>required</c> on BOTH the request and the
+/// response. This response-side record keeps every member nullable: the live
+/// API omits fields its own spec marks required, and
+/// <c>SamsaraSerializerOptions.Default</c> is deliberately lenient, so
+/// <c>required</c> here has previously caused runtime deserialization crashes.
+/// </para>
+/// <para>
+/// The 2026-08-17 spec-parity sweep split the request half out into
+/// <see cref="UsDriverRulesetOverrideInput"/> rather than leaving this record
+/// serving both sides. Keeping one all-nullable record was not viable: the
+/// override is replace-semantics — the API applies the object wholesale, so a
+/// caller who populates only <c>cycle</c> silently blanks the other three
+/// settings. Encoding all four as <c>required</c> on the request DTO makes that
+/// a compile error instead of a production surprise, which is exactly the split
+/// precedent set by <c>ServiceTaskInstanceInput</c> / <c>PartInstanceInput</c>.
+/// </para>
 /// </remarks>
 public sealed record UsDriverRulesetOverride
 {
@@ -418,6 +431,57 @@ public sealed record UsDriverRulesetOverride
     /// </summary>
     [JsonPropertyName("usStateToOverride")]
     public string? UsStateToOverride { get; init; }
+}
+
+/// <summary>
+/// US Driver Ruleset override posted on <see cref="CreateDriverRequest"/> and
+/// <see cref="UpdateDriverRequest"/>. Mirrors the request half of the spec's
+/// <c>UsDriverRulesetOverride</c> schema, which marks all four members REQUIRED.
+/// </summary>
+/// <remarks>
+/// The API applies the override wholesale (replace, not merge), so all four
+/// members are <c>required</c>: an override built from a subset of them would
+/// silently blank the settings the caller left out. Serializing the enclosing
+/// <c>usDriverRulesetOverride</c> property as <c>null</c> deletes the driver's
+/// existing override. The response half is
+/// <see cref="UsDriverRulesetOverride"/>, which stays all-nullable.
+/// </remarks>
+public sealed record UsDriverRulesetOverrideInput
+{
+    /// <summary>
+    /// The driver's working cycle (e.g. <c>USA Property (8/70)</c>,
+    /// <c>Texas (7/70)</c>). Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("cycle")]
+    public required string Cycle { get; init; }
+
+    /// <summary>
+    /// Amount of rest necessary for the driver to restart their cycle. Valid
+    /// values: <c>34-hour Restart</c>, <c>24-hour Restart</c>,
+    /// <c>36-hour Restart</c>, <c>72-hour Restart</c>, <c>None</c>.
+    /// Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("restart")]
+    public required string Restart { get; init; }
+
+    /// <summary>
+    /// The rest break required for this driver. Valid values:
+    /// <c>Property (off-duty/sleeper)</c>,
+    /// <c>California Mealbreak (off-duty/sleeper)</c>, <c>None</c>.
+    /// Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("restbreak")]
+    public required string Restbreak { get; init; }
+
+    /// <summary>
+    /// The jurisdiction of the ruleset applied to this driver: the ISO 3166-2
+    /// postal code of a supported US state, or the empty string for the US
+    /// Federal ruleset. Valid values: the empty string, <c>AK</c>, <c>CA</c>,
+    /// <c>FL</c>, <c>NE</c>, <c>NC</c>, <c>OK</c>, <c>OR</c>, <c>SC</c>,
+    /// <c>TX</c>, <c>WI</c>. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("usStateToOverride")]
+    public required string UsStateToOverride { get; init; }
 }
 
 /// <summary>
@@ -558,11 +622,11 @@ public sealed record CreateDriverRequest
     public string? ProfileImageUrl { get; init; }
 
     /// <summary>
-    /// US Driver Ruleset override for the driver. Mirrors the spec's
-    /// <c>UsDriverRulesetOverride</c> schema.
+    /// US Driver Ruleset override for the driver. Mirrors the request half of
+    /// the spec's <c>UsDriverRulesetOverride</c> schema.
     /// </summary>
     [JsonPropertyName("usDriverRulesetOverride")]
-    public UsDriverRulesetOverride? UsDriverRulesetOverride { get; init; }
+    public UsDriverRulesetOverrideInput? UsDriverRulesetOverride { get; init; }
 }
 
 /// <summary>
@@ -711,12 +775,12 @@ public sealed record UpdateDriverRequest
     public string? ProfileImageUrl { get; init; }
 
     /// <summary>
-    /// US Driver Ruleset override for the driver. Mirrors the spec's
-    /// <c>UsDriverRulesetOverride</c> schema. Explicitly serializing this as
-    /// <c>null</c> deletes the driver's existing override.
+    /// US Driver Ruleset override for the driver. Mirrors the request half of
+    /// the spec's <c>UsDriverRulesetOverride</c> schema. Explicitly serializing
+    /// this as <c>null</c> deletes the driver's existing override.
     /// </summary>
     [JsonPropertyName("usDriverRulesetOverride")]
-    public UsDriverRulesetOverride? UsDriverRulesetOverride { get; init; }
+    public UsDriverRulesetOverrideInput? UsDriverRulesetOverride { get; init; }
 }
 
 /// <summary>Request body for remotely signing out a driver.</summary>
