@@ -337,6 +337,19 @@ Two docs corrections fall out: `CarrierProposedAssignment` is **already un-flatt
 `MaintenanceDvir.trailerName` *look* flattened but are verified spec-accurate dual shapes — not
 defects, and they must not be "fixed".
 
+> **⚠️ Reversed 2026-08-17.** The paragraph above is superseded for the **DVIR/Defect** records.
+> The dual v1/v2 shapes of `MaintenanceDvir`, `DefectRecord`, `MaintenanceDvirAssetRef`,
+> `MaintenanceDvirSignature` and `MaintenanceSignatoryUser` are **no longer accepted** — they are
+> split into `V1`-prefixed v1 records and unprefixed v2 records, one record per spec shape, on the
+> approved rule that *where the spec defines two versions with different objects, the SDK should be
+> representative of that*. `MaintenanceDvir.trailerName` therefore moves to `V1MaintenanceDvir`
+> rather than staying on a record that also answers the v2 endpoints. The full design — record
+> inventory, schema resolution, naming scheme, and the list of public API breaks — is the
+> **2026-08-17b design note** in [`30-maintenance.md`](30-maintenance.md). The other three records
+> named above (`DriverCoachAssignment`, `DriverTrailerAssignment`, `CarrierProposedAssignment`) are
+> unaffected and their guidance stands. The original text is kept, not deleted, so the reasoning
+> trail survives.
+
 ### 2.4 Record-count totals
 
 | Bucket | Distinct spec schemas |
