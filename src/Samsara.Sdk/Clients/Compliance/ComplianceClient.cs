@@ -97,12 +97,12 @@ internal sealed class ComplianceClient : SamsaraServiceClientBase, IComplianceCl
             cancellationToken: cancellationToken);
 
     /// <summary>HOS authentication logs (v1 legacy, <c>GET /v1/fleet/hos_authentication_logs</c>).</summary>
-    public IAsyncEnumerable<object> V1ListHosAuthenticationLogsAsync(
+    public IAsyncEnumerable<V1HosAuthenticationLog> V1ListHosAuthenticationLogsAsync(
         long driverId,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
+        => PaginateAsync<V1HosAuthenticationLog>(
             QueryBuilder.WithParams(
                 "v1/fleet/hos_authentication_logs",
                 ("driverId", driverId.ToString(CultureInfo.InvariantCulture)),
@@ -112,19 +112,19 @@ internal sealed class ComplianceClient : SamsaraServiceClientBase, IComplianceCl
 
     /// <summary>Set a driver's current duty status (v1 legacy,
     /// <c>POST /v1/fleet/drivers/{driverId}/hos/duty_status</c>).</summary>
-    public Task V1SetCurrentDutyStatusAsync(string driverId, object request, CancellationToken cancellationToken = default)
+    public Task V1SetCurrentDutyStatusAsync(string driverId, V1SetDutyStatusRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostAsync($"v1/fleet/drivers/{Uri.EscapeDataString(driverId)}/hos/duty_status", request, cancellationToken);
 
     /// <summary>
     /// Update shipping-doc metadata on HOS daily logs (beta, <c>PATCH /hos/daily-logs/log-meta-data</c>).
     /// Both <paramref name="driverID"/> and <paramref name="hosDate"/> are required query parameters.
     /// </summary>
-    public Task<object> UpdateShippingDocsAsync(
+    public Task<HosDailyLogMetaData> UpdateShippingDocsAsync(
         string driverID,
         string hosDate,
-        object request,
+        UpdateShippingDocsRequest request,
         CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<object>(
+        => HttpClient.PatchDataAsync<HosDailyLogMetaData>(
             QueryBuilder.WithParams("hos/daily-logs/log-meta-data",
                 ("driverID", driverID),
                 ("hosDate", hosDate)),

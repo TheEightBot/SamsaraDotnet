@@ -61,19 +61,19 @@ internal sealed class DriversClient : SamsaraServiceClientBase, IDriversClient
     // ── Beta ─────────────────────────────────────────────────────────────────
 
     /// <summary>List driver workflows (beta, <c>GET /fleet/drivers/workflows</c>).</summary>
-    public IAsyncEnumerable<object> ListWorkflowsAsync(
+    public IAsyncEnumerable<DriverWorkflow> ListWorkflowsAsync(
         string? workflowType = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
+        => PaginateAsync<DriverWorkflow>(
             QueryBuilder.WithParams("fleet/drivers/workflows",
                 ("workflowType", workflowType)),
             cancellationToken: cancellationToken);
 
     /// <summary>Assign a workflow to a driver (beta, <c>POST /fleet/drivers/workflow-assignments</c>).</summary>
-    public Task<object> CreateWorkflowAssignmentAsync(object request, CancellationToken cancellationToken = default)
-        => HttpClient.PostAsync<object>("fleet/drivers/workflow-assignments", request, cancellationToken);
+    public Task<DriverWorkflowAssignment> CreateWorkflowAssignmentAsync(CreateDriverWorkflowAssignmentRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<DriverWorkflowAssignment>("fleet/drivers/workflow-assignments", request, cancellationToken);
 
     /// <summary>Resolve a voice sign-in assignment (beta).</summary>
-    public Task<object> ResolveVoiceSignInAssignmentAsync(object request, CancellationToken cancellationToken = default)
-        => HttpClient.PostAsync<object>("fleet/drivers/voice-sign-in/resolve-assignment", request, cancellationToken);
+    public Task<VoiceSignInAssignment> ResolveVoiceSignInAssignmentAsync(ResolveVoiceSignInAssignmentRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<VoiceSignInAssignment>("fleet/drivers/voice-sign-in/resolve-assignment", request, cancellationToken);
 }

@@ -82,8 +82,18 @@ public sealed class TachographContractTests
         var client = new PreviewApisClient(TestFactory.CreateHttpClient(handler));
 
 #pragma warning disable CS0618 // deliberately exercising the back-compat shim
-        await client.CreateTachographFileUploadAsync(new { fileType = "driverCard" });
+        var upload = await client.CreateTachographFileUploadAsync(new CreateTachographFileUploadRequest
+        {
+            ContentMd5 = "1B2M2Y8AsgTpgAmY7PhCfg==",
+            ContentType = "application/octet-stream",
+            FileSizeBytes = 4096,
+            FileType = "driverCard",
+        });
 #pragma warning restore CS0618
+
+        upload.UploadUrl.Should().Be(
+            "https://uploads.samsara.com/signed/abc123",
+            "the shim now unwraps the { data: ... } envelope like the graduated method");
 
         handler.LastRequest.RequestUri!.ToString()
             .Should().Contain("fleet/tachograph/file-uploads")

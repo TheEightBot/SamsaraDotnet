@@ -831,3 +831,103 @@ public sealed record CreateDriverQrCodeRequest
     /// <summary>Unique ID of the driver.</summary>
     [JsonPropertyName("driverId")] public required long DriverId { get; init; }
 }
+
+/// <summary>
+/// A driver workflow — the <c>data[]</c> item of
+/// <c>GET /fleet/drivers/workflows</c>. Mirrors the spec's
+/// <c>DriverWorkflowObjectResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Spec marks <c>id</c>, <c>name</c> and <c>workflowType</c> REQUIRED; they stay
+/// nullable because this is a response record.
+/// </remarks>
+public sealed record DriverWorkflow
+{
+    /// <summary>Samsara ID of the workflow. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Display name of the workflow. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>
+    /// Kind of workflow: <c>startOfDay</c>, <c>endOfDay</c>,
+    /// <c>assetSelection</c>, <c>leaveAsset</c>, <c>ridershipSafetyCheck</c> or
+    /// <c>stopArrival</c>. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("workflowType")]
+    public string? WorkflowType { get; init; }
+}
+
+/// <summary>
+/// Result of publishing or unpublishing a driver workflow assignment — the
+/// <c>data</c> payload of <c>POST /fleet/drivers/workflow-assignments</c>.
+/// Mirrors the spec's
+/// <c>PostDriverWorkflowAssignmentResponseDataObjectResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Spec marks <c>workflowId</c> REQUIRED; it stays nullable because this is a
+/// response record.
+/// </remarks>
+public sealed record DriverWorkflowAssignment
+{
+    /// <summary>Samsara ID of the workflow that was assigned. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("workflowId")]
+    public string? WorkflowId { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>POST /fleet/drivers/workflow-assignments</c>. Mirrors the
+/// spec's <c>DriverWorkflowAssignmentsPostDriverWorkflowAssignmentRequestBody</c>.
+/// </summary>
+public sealed record CreateDriverWorkflowAssignmentRequest
+{
+    /// <summary>Samsara ID of the workflow to assign. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("workflowId")]
+    public required string WorkflowId { get; init; }
+
+    /// <summary>IDs of the drivers the workflow should be published to.</summary>
+    [JsonPropertyName("driverIdsToPublish")]
+    public IReadOnlyList<string>? DriverIdsToPublish { get; init; }
+
+    /// <summary>IDs of the drivers the workflow should be unpublished from.</summary>
+    [JsonPropertyName("driverIdsToUnpublish")]
+    public IReadOnlyList<string>? DriverIdsToUnpublish { get; init; }
+}
+
+/// <summary>
+/// The driver resolved from a voice sign-in — the <c>data</c> payload of
+/// <c>POST /fleet/drivers/voice-sign-in/resolve-assignment</c>. Mirrors the
+/// spec's <c>ResolveAssignmentByDetailsResponseBodyResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Spec marks both properties REQUIRED; they stay nullable because this is a
+/// response record.
+/// </remarks>
+public sealed record VoiceSignInAssignment
+{
+    /// <summary>Samsara ID of the resolved driver. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("driverId")]
+    public string? DriverId { get; init; }
+
+    /// <summary>Name of the resolved driver. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("driverName")]
+    public string? DriverName { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>POST /fleet/drivers/voice-sign-in/resolve-assignment</c>.
+/// Mirrors the spec's
+/// <c>ResolveAssignmentByDetailsResolveAssignmentByDetailsRequestBody</c>.
+/// </summary>
+public sealed record ResolveVoiceSignInAssignmentRequest
+{
+    /// <summary>Spoken name of the driver to resolve. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("driverName")]
+    public required string DriverName { get; init; }
+
+    /// <summary>Samsara ID of the vehicle the driver is signing in to. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("vehicleId")]
+    public required string VehicleId { get; init; }
+}

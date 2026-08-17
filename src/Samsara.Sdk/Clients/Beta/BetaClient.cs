@@ -2,16 +2,22 @@ namespace Samsara.Sdk.Clients;
 
 using System.Globalization;
 using Samsara.Sdk.Http;
+using Samsara.Sdk.Models.Beta;
 
 /// <summary>
 /// Beta — miscellaneous endpoints that don't fit cleanly into a domain client
 /// (industrial jobs, devices, detections, AEMP, driver efficiency).
-/// All return loosely-typed objects; subject to change.
+/// Subject to change.
 /// </summary>
 public interface IBetaClient
 {
     // Industrial jobs
-    Task<object> ListIndustrialJobsAsync(
+
+    /// <summary>
+    /// List a page of industrial jobs (<c>GET /beta/industrial/jobs</c>). Pass the previous
+    /// page's end cursor as <paramref name="after"/> to page forward.
+    /// </summary>
+    Task<IReadOnlyList<IndustrialJob>> ListIndustrialJobsAsync(
         string? after = null,
         string? id = null,
         string? customerName = null,
@@ -21,12 +27,23 @@ public interface IBetaClient
         string? startDate = null,
         string? endDate = null,
         CancellationToken cancellationToken = default);
-    Task<object> CreateIndustrialJobAsync(object request, CancellationToken cancellationToken = default);
-    Task<object> UpdateIndustrialJobAsync(string id, object request, CancellationToken cancellationToken = default);
+
+    /// <summary>Create an industrial job (<c>POST /beta/industrial/jobs</c>).</summary>
+    Task<IndustrialJob> CreateIndustrialJobAsync(CreateIndustrialJobRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Update an industrial job (<c>PATCH /beta/industrial/jobs</c>).</summary>
+    Task<IndustrialJob> UpdateIndustrialJobAsync(string id, UpdateIndustrialJobRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Delete an industrial job (<c>DELETE /beta/industrial/jobs</c>).</summary>
     Task DeleteIndustrialJobAsync(string id, CancellationToken cancellationToken = default);
 
     // Other
-    Task<object> ListDevicesAsync(
+
+    /// <summary>
+    /// List a page of devices (<c>GET /devices</c>). Pass the previous page's end cursor as
+    /// <paramref name="after"/> to page forward.
+    /// </summary>
+    Task<IReadOnlyList<BetaDevice>> ListDevicesAsync(
         string? after = null,
         int? limit = null,
         IReadOnlyList<string>? models = null,
@@ -36,7 +53,9 @@ public interface IBetaClient
         string? tagIds = null,
         string? parentTagIds = null,
         CancellationToken cancellationToken = default);
-    IAsyncEnumerable<object> GetDetectionsStreamAsync(
+
+    /// <summary>Stream safety detections (<c>GET /detections/stream</c>).</summary>
+    IAsyncEnumerable<Detection> GetDetectionsStreamAsync(
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
         IReadOnlyList<string>? assetIds = null,
@@ -49,8 +68,18 @@ public interface IBetaClient
         bool? includeAsset = null,
         bool? includeDriver = null,
         CancellationToken cancellationToken = default);
-    Task<object> GetAempEquipmentListAsync(int pageNumber, CancellationToken cancellationToken = default);
-    Task<object> GetDriverEfficiencyAsync(
+
+    /// <summary>
+    /// Get one page of the AEMP (ISO/TS 15143-3) equipment feed
+    /// (<c>GET /beta/aemp/Fleet/{pageNumber}</c>). This endpoint has no <c>data</c> envelope.
+    /// </summary>
+    Task<AempEquipmentList> GetAempEquipmentListAsync(int pageNumber, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get driver efficiency summaries (<c>GET /beta/fleet/drivers/efficiency</c>). Pass the
+    /// previous page's end cursor as <paramref name="after"/> to page forward.
+    /// </summary>
+    Task<BetaDriverEfficiencySummary> GetDriverEfficiencyAsync(
         string? after = null,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
@@ -62,11 +91,21 @@ public interface IBetaClient
 
     // Agent Studio — voice agent sessions (beta)
 
-    /// <summary>Get voice agent session details (<c>GET /agent-studio/voice-sessions</c>) — beta.</summary>
-    Task<object> GetVoiceSessionsAsync(string? after = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Get voice agent session details (<c>GET /agent-studio/voice-sessions</c>) — beta.
+    /// <paramref name="ids"/> is spec-required.
+    /// </summary>
+    Task<IReadOnlyList<VoiceSession>> GetVoiceSessionsAsync(
+        IReadOnlyList<string> ids,
+        string? after = null,
+        CancellationToken cancellationToken = default);
 
-    /// <summary>Stream voice agent session summaries (<c>GET /agent-studio/voice-sessions/stream</c>) — beta.</summary>
-    IAsyncEnumerable<object> GetVoiceSessionsStreamAsync(
+    /// <summary>
+    /// Stream voice agent session summaries (<c>GET /agent-studio/voice-sessions/stream</c>)
+    /// — beta. <paramref name="agentIds"/> is spec-required.
+    /// </summary>
+    IAsyncEnumerable<VoiceSessionSummary> GetVoiceSessionsStreamAsync(
+        IReadOnlyList<string> agentIds,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
         CancellationToken cancellationToken = default);
@@ -76,7 +115,7 @@ internal sealed class BetaClient : SamsaraServiceClientBase, IBetaClient
 {
     public BetaClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public Task<object> ListIndustrialJobsAsync(
+    public Task<IReadOnlyList<IndustrialJob>> ListIndustrialJobsAsync(
         string? after = null,
         string? id = null,
         string? customerName = null,
@@ -86,7 +125,7 @@ internal sealed class BetaClient : SamsaraServiceClientBase, IBetaClient
         string? startDate = null,
         string? endDate = null,
         CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>(
+        => HttpClient.GetDataAsync<IReadOnlyList<IndustrialJob>>(
             QueryBuilder.WithParams("beta/industrial/jobs",
                 ("after", after),
                 ("id", id),
@@ -98,16 +137,16 @@ internal sealed class BetaClient : SamsaraServiceClientBase, IBetaClient
                 ("endDate", endDate)),
             cancellationToken);
 
-    public Task<object> CreateIndustrialJobAsync(object request, CancellationToken cancellationToken = default)
-        => HttpClient.PostAsync<object>("beta/industrial/jobs", request, cancellationToken);
+    public Task<IndustrialJob> CreateIndustrialJobAsync(CreateIndustrialJobRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<IndustrialJob>("beta/industrial/jobs", request, cancellationToken);
 
-    public Task<object> UpdateIndustrialJobAsync(string id, object request, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<object>(QueryBuilder.WithParams("beta/industrial/jobs", ("id", id)), request, cancellationToken);
+    public Task<IndustrialJob> UpdateIndustrialJobAsync(string id, UpdateIndustrialJobRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<IndustrialJob>(QueryBuilder.WithParams("beta/industrial/jobs", ("id", id)), request, cancellationToken);
 
     public Task DeleteIndustrialJobAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync(QueryBuilder.WithParams("beta/industrial/jobs", ("id", id)), cancellationToken);
 
-    public Task<object> ListDevicesAsync(
+    public Task<IReadOnlyList<BetaDevice>> ListDevicesAsync(
         string? after = null,
         int? limit = null,
         IReadOnlyList<string>? models = null,
@@ -117,7 +156,7 @@ internal sealed class BetaClient : SamsaraServiceClientBase, IBetaClient
         string? tagIds = null,
         string? parentTagIds = null,
         CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>(
+        => HttpClient.GetDataAsync<IReadOnlyList<BetaDevice>>(
             QueryBuilder.WithParams("devices",
                 ("after", after),
                 ("limit", limit?.ToString(CultureInfo.InvariantCulture)),
@@ -129,7 +168,7 @@ internal sealed class BetaClient : SamsaraServiceClientBase, IBetaClient
                 ("parentTagIds", parentTagIds)),
             cancellationToken);
 
-    public IAsyncEnumerable<object> GetDetectionsStreamAsync(
+    public IAsyncEnumerable<Detection> GetDetectionsStreamAsync(
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
         IReadOnlyList<string>? assetIds = null,
@@ -142,7 +181,7 @@ internal sealed class BetaClient : SamsaraServiceClientBase, IBetaClient
         bool? includeAsset = null,
         bool? includeDriver = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
+        => PaginateAsync<Detection>(
             QueryBuilder.WithParams(
                 QueryBuilder.WithTimeRange("detections/stream", startTime, endTime),
                 ("assetIds", assetIds is null ? null : string.Join(",", assetIds)),
@@ -156,10 +195,10 @@ internal sealed class BetaClient : SamsaraServiceClientBase, IBetaClient
                 ("includeDriver", includeDriver?.ToString().ToLowerInvariant())),
             cancellationToken: cancellationToken);
 
-    public Task<object> GetAempEquipmentListAsync(int pageNumber, CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>($"beta/aemp/Fleet/{pageNumber}", cancellationToken);
+    public Task<AempEquipmentList> GetAempEquipmentListAsync(int pageNumber, CancellationToken cancellationToken = default)
+        => HttpClient.GetAsync<AempEquipmentList>($"beta/aemp/Fleet/{pageNumber}", cancellationToken);
 
-    public Task<object> GetDriverEfficiencyAsync(
+    public Task<BetaDriverEfficiencySummary> GetDriverEfficiencyAsync(
         string? after = null,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
@@ -168,7 +207,7 @@ internal sealed class BetaClient : SamsaraServiceClientBase, IBetaClient
         IReadOnlyList<string>? driverParentTagIds = null,
         string? driverActivationStatus = null,
         CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>(
+        => HttpClient.GetDataAsync<BetaDriverEfficiencySummary>(
             QueryBuilder.WithParams(
                 QueryBuilder.WithTimeRange("beta/fleet/drivers/efficiency", startTime, endTime),
                 ("after", after),
@@ -178,16 +217,24 @@ internal sealed class BetaClient : SamsaraServiceClientBase, IBetaClient
                 ("driverActivationStatus", driverActivationStatus)),
             cancellationToken);
 
-    public Task<object> GetVoiceSessionsAsync(string? after = null, CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>(
-            QueryBuilder.WithParams("agent-studio/voice-sessions", ("after", after)),
+    public Task<IReadOnlyList<VoiceSession>> GetVoiceSessionsAsync(
+        IReadOnlyList<string> ids,
+        string? after = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.GetDataAsync<IReadOnlyList<VoiceSession>>(
+            QueryBuilder.WithParams("agent-studio/voice-sessions",
+                ("ids", string.Join(",", ids)),
+                ("after", after)),
             cancellationToken);
 
-    public IAsyncEnumerable<object> GetVoiceSessionsStreamAsync(
+    public IAsyncEnumerable<VoiceSessionSummary> GetVoiceSessionsStreamAsync(
+        IReadOnlyList<string> agentIds,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
-            QueryBuilder.WithTimeRange("agent-studio/voice-sessions/stream", startTime, endTime),
+        => PaginateAsync<VoiceSessionSummary>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange("agent-studio/voice-sessions/stream", startTime, endTime),
+                ("agentIds", string.Join(",", agentIds))),
             cancellationToken: cancellationToken);
 }

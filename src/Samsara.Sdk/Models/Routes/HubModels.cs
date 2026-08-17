@@ -1,6 +1,7 @@
 namespace Samsara.Sdk.Models.Routes;
 
 using System.Text.Json.Serialization;
+using Samsara.Sdk.Models.Common;
 
 /// <summary>
 /// A hub returned by <c>GET /hubs</c> (the only hub endpoint in the spec —
@@ -696,4 +697,370 @@ public sealed record HubOrderQuantityInput
     /// <summary>The quantity, in the capacity's unit of measurement. Spec marks REQUIRED.</summary>
     [JsonPropertyName("quantity")]
     public required double Quantity { get; init; }
+}
+
+// ---------------------------------------------------------------------------
+// Hub plan routes — GET /hub/plan/routes.
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// A planned route within a hub plan, as returned by
+/// <c>GET /hub/plan/routes</c>. Mirrors the spec's
+/// <c>RouteObjectResponseBody</c> schema.
+/// </summary>
+/// <remarks>
+/// Named <c>HubPlanRoute</c> rather than the stripped spec name <c>Route</c>:
+/// this is the hub-planning shape, unrelated to the dispatch
+/// <see cref="Samsara.Sdk.Models.Routes.Route"/> resource served by
+/// <c>/fleet/routes</c>.
+/// </remarks>
+public sealed record HubPlanRoute
+{
+    /// <summary>The Samsara-generated unique identifier (UUID) for the route. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>The name of the route. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>The type of route. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("type")]
+    public string? Type { get; init; }
+
+    /// <summary>The ID of the hub this route belongs to. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("hubId")]
+    public string? HubId { get; init; }
+
+    /// <summary>The ID of the plan this route belongs to. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("planId")]
+    public string? PlanId { get; init; }
+
+    /// <summary>The dispatch route identifier, once the route has been dispatched.</summary>
+    [JsonPropertyName("dispatchRouteId")]
+    public string? DispatchRouteId { get; init; }
+
+    /// <summary>The cost of the route. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("cost")]
+    public double? Cost { get; init; }
+
+    /// <summary>The total distance of the route in meters. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("distanceMeters")]
+    public long? DistanceMeters { get; init; }
+
+    /// <summary>The total duration of the route in seconds. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("durationSeconds")]
+    public long? DurationSeconds { get; init; }
+
+    /// <summary>Whether the route has been edited. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("isEdited")]
+    public bool? IsEdited { get; init; }
+
+    /// <summary>Whether the route is pinned. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("isPinned")]
+    public bool? IsPinned { get; init; }
+
+    /// <summary>The organization location timezone calculated from the hub. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("orgLocationTimezone")]
+    public string? OrgLocationTimezone { get; init; }
+
+    /// <summary>
+    /// The driver assigned to the route (spec schema
+    /// <c>RouteDriverObjectResponseBody</c>). Only returned when the route is
+    /// assigned.
+    /// </summary>
+    [JsonPropertyName("driver")]
+    public EntityReference? Driver { get; init; }
+
+    /// <summary>
+    /// The vehicle assigned to the route (spec schema
+    /// <c>RouteVehicleObjectResponseBody</c>). Only returned when the route is
+    /// assigned.
+    /// </summary>
+    [JsonPropertyName("vehicle")]
+    public EntityReference? Vehicle { get; init; }
+
+    /// <summary>
+    /// Per-capacity quantity information for the route (spec schema
+    /// <c>QuantityObjectResponseBody</c>).
+    /// </summary>
+    [JsonPropertyName("quantities")]
+    public IReadOnlyList<HubOrderQuantity>? Quantities { get; init; }
+
+    /// <summary>The stops on the route. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("stops")]
+    public IReadOnlyList<HubRouteStop>? Stops { get; init; }
+
+    /// <summary>The scheduled start time of the route, calculated from the first stop. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("scheduledRouteStartTime")]
+    public DateTimeOffset? ScheduledRouteStartTime { get; init; }
+
+    /// <summary>The scheduled end time of the route, calculated from the last stop. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("scheduledRouteEndTime")]
+    public DateTimeOffset? ScheduledRouteEndTime { get; init; }
+
+    /// <summary>The timestamp (UTC) when the route was created. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("createdAt")]
+    public DateTimeOffset? CreatedAt { get; init; }
+
+    /// <summary>The timestamp (UTC) when the route was last updated. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("updatedAt")]
+    public DateTimeOffset? UpdatedAt { get; init; }
+}
+
+/// <summary>
+/// A stop on a <see cref="HubPlanRoute"/>. Mirrors the spec's
+/// <c>RouteStopObjectResponseBody</c> schema.
+/// </summary>
+public sealed record HubRouteStop
+{
+    /// <summary>The Samsara-generated unique identifier (UUID) for the stop. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>The name of the stop. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>The hub location identifier from dispatch.</summary>
+    [JsonPropertyName("hubLocationId")]
+    public string? HubLocationId { get; init; }
+
+    /// <summary>Additional notes for the stop.</summary>
+    [JsonPropertyName("notes")]
+    public string? Notes { get; init; }
+
+    /// <summary>The order tasks associated with this stop.</summary>
+    [JsonPropertyName("orders")]
+    public IReadOnlyList<HubRouteOrderTask>? Orders { get; init; }
+
+    /// <summary>The scheduled arrival time at the stop. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("scheduledArrivalTime")]
+    public DateTimeOffset? ScheduledArrivalTime { get; init; }
+
+    /// <summary>The scheduled departure time from the stop. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("scheduledDepartureTime")]
+    public DateTimeOffset? ScheduledDepartureTime { get; init; }
+
+    /// <summary>A one-off location used for this stop, when it is not a saved hub location.</summary>
+    [JsonPropertyName("singleUseLocation")]
+    public HubRouteSingleUseLocation? SingleUseLocation { get; init; }
+}
+
+/// <summary>
+/// An order task associated with a <see cref="HubRouteStop"/>. Mirrors the spec's
+/// <c>OrderTaskObjectResponseBody</c> schema.
+/// </summary>
+/// <remarks>
+/// Distinct from <see cref="HubOrderTask"/>, the pickup/delivery task returned
+/// on <c>GET /hub/plan/orders</c>: that schema carries the task's address and
+/// appointment window, this one carries the order's quantities, skills and
+/// custom properties.
+/// </remarks>
+public sealed record HubRouteOrderTask
+{
+    /// <summary>The order identifier. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>The task type (pickup or delivery). Spec marks REQUIRED.</summary>
+    [JsonPropertyName("type")]
+    public string? Type { get; init; }
+
+    /// <summary>The external ID of the location associated with this order.</summary>
+    [JsonPropertyName("customerLocationId")]
+    public string? CustomerLocationId { get; init; }
+
+    /// <summary>The service window time range, as a formatted string.</summary>
+    [JsonPropertyName("serviceWindow")]
+    public string? ServiceWindow { get; init; }
+
+    /// <summary>
+    /// Per-capacity quantity information for the order (spec schema
+    /// <c>QuantityObjectResponseBody</c>).
+    /// </summary>
+    [JsonPropertyName("quantities")]
+    public IReadOnlyList<HubOrderQuantity>? Quantities { get; init; }
+
+    /// <summary>
+    /// Skills required to service the order (spec schema
+    /// <c>OrderTaskSkillObjectResponseBody</c>).
+    /// </summary>
+    [JsonPropertyName("requiredSkills")]
+    public IReadOnlyList<HubSkillReference>? RequiredSkills { get; init; }
+
+    /// <summary>Custom properties for the order.</summary>
+    [JsonPropertyName("customProperties")]
+    public IReadOnlyList<HubRouteOrderCustomProperty>? CustomProperties { get; init; }
+}
+
+/// <summary>
+/// A custom property on a <see cref="HubRouteOrderTask"/>. Mirrors the spec's
+/// <c>OrderTaskCustomPropertyObjectResponseBody</c> schema.
+/// </summary>
+/// <remarks>
+/// Distinct from <see cref="HubOrderCustomProperty"/>, which spells the
+/// identifier <c>customPropertyId</c>; this schema spells it <c>id</c>.
+/// </remarks>
+public sealed record HubRouteOrderCustomProperty
+{
+    /// <summary>The custom property identifier. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>The custom property name. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>The custom property value. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("value")]
+    public string? Value { get; init; }
+}
+
+/// <summary>
+/// A one-off location used for a route stop. Mirrors the spec's
+/// <c>SingleUseLocationObjectResponseBody</c> schema.
+/// </summary>
+public sealed record HubRouteSingleUseLocation
+{
+    /// <summary>The full address string. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("address")]
+    public string? Address { get; init; }
+
+    /// <summary>Latitude coordinate. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("latitude")]
+    public double? Latitude { get; init; }
+
+    /// <summary>Longitude coordinate. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("longitude")]
+    public double? Longitude { get; init; }
+}
+
+// ---------------------------------------------------------------------------
+// Hub route templates — GET /hub/route-templates.
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// A reusable route template for a hub, as returned by
+/// <c>GET /hub/route-templates</c>. Mirrors the spec's
+/// <c>HubRouteTemplateObjectResponseBody</c> schema.
+/// </summary>
+public sealed record HubRouteTemplate
+{
+    /// <summary>The unique identifier for the route template. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>The name of the route template. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>The hub identifier this route template belongs to. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("hubId")]
+    public string? HubId { get; init; }
+
+    /// <summary>The IANA timezone of the hub (e.g. <c>America/Los_Angeles</c>). Spec marks REQUIRED.</summary>
+    [JsonPropertyName("hubTimezone")]
+    public string? HubTimezone { get; init; }
+
+    /// <summary>
+    /// Default start time of day for the route template, in <c>HH:MM</c> format
+    /// in the hub's local timezone.
+    /// </summary>
+    [JsonPropertyName("defaultStartTimeOfDay")]
+    public string? DefaultStartTimeOfDay { get; init; }
+
+    /// <summary>The depot the template starts from.</summary>
+    [JsonPropertyName("defaultDepotStart")]
+    public HubRouteTemplateDepot? DefaultDepotStart { get; init; }
+
+    /// <summary>The depot the template ends at.</summary>
+    [JsonPropertyName("defaultDepotEnd")]
+    public HubRouteTemplateDepot? DefaultDepotEnd { get; init; }
+
+    /// <summary>Ordered list of stop locations in the route template. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("locations")]
+    public IReadOnlyList<HubRouteTemplateLocation>? Locations { get; init; }
+
+    /// <summary>Total distance of the route in meters. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("distanceMeters")]
+    public long? DistanceMeters { get; init; }
+
+    /// <summary>Total duration of the route in seconds. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("durationSeconds")]
+    public long? DurationSeconds { get; init; }
+
+    /// <summary>When the route template was created, in RFC 3339 format. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("createdAtTime")]
+    public DateTimeOffset? CreatedAtTime { get; init; }
+
+    /// <summary>When the route template was last updated, in RFC 3339 format. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("updatedAtTime")]
+    public DateTimeOffset? UpdatedAtTime { get; init; }
+}
+
+/// <summary>
+/// A depot location on a <see cref="HubRouteTemplate"/>. Mirrors the spec's
+/// <c>HubRouteTemplateDepotObjectResponseBody</c> schema.
+/// </summary>
+public sealed record HubRouteTemplateDepot
+{
+    /// <summary>The unique identifier for the depot location. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>The name of the depot location. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>The formatted address of the depot location. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("formattedAddress")]
+    public string? FormattedAddress { get; init; }
+
+    /// <summary>The customer-provided external identifier for the depot location.</summary>
+    [JsonPropertyName("externalId")]
+    public string? ExternalId { get; init; }
+
+    /// <summary>Latitude coordinate of the depot location. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("latitude")]
+    public double? Latitude { get; init; }
+
+    /// <summary>Longitude coordinate of the depot location. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("longitude")]
+    public double? Longitude { get; init; }
+}
+
+/// <summary>
+/// A stop location within a <see cref="HubRouteTemplate"/>. Mirrors the spec's
+/// <c>HubRouteTemplateLocationObjectResponseBody</c> schema.
+/// </summary>
+/// <remarks>
+/// Structurally close to <see cref="HubRouteTemplateDepot"/> but a distinct spec
+/// schema: a template location has a <c>position</c> and no <c>id</c>.
+/// </remarks>
+public sealed record HubRouteTemplateLocation
+{
+    /// <summary>The name of the location. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>The formatted address of the location. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("formattedAddress")]
+    public string? FormattedAddress { get; init; }
+
+    /// <summary>The customer-provided identifier for the location.</summary>
+    [JsonPropertyName("externalId")]
+    public string? ExternalId { get; init; }
+
+    /// <summary>Latitude coordinate of the location. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("latitude")]
+    public double? Latitude { get; init; }
+
+    /// <summary>Longitude coordinate of the location. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("longitude")]
+    public double? Longitude { get; init; }
+
+    /// <summary>The 1-based position of this stop in the route template. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("position")]
+    public long? Position { get; init; }
 }

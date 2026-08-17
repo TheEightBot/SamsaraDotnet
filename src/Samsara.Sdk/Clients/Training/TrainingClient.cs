@@ -49,8 +49,8 @@ internal sealed class TrainingClient : SamsaraServiceClientBase, ITrainingClient
             cancellationToken);
 
     /// <summary>Update training assignments' due-by time (<c>PATCH /training-assignments</c>).</summary>
-    public Task UpdateAssignmentsAsync(IReadOnlyList<string> ids, DateTimeOffset dueAtTime, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<object>(
+    public Task<IReadOnlyList<TrainingAssignment>> UpdateAssignmentsAsync(IReadOnlyList<string> ids, DateTimeOffset dueAtTime, CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<IReadOnlyList<TrainingAssignment>>(
             QueryBuilder.WithParams("training-assignments",
                 ("ids", string.Join(",", ids)),
                 ("dueAtTime", dueAtTime.ToString("O"))),

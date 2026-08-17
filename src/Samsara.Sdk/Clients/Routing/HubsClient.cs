@@ -25,13 +25,13 @@ internal sealed class HubsClient : SamsaraServiceClientBase, IHubsClient
             cancellationToken: cancellationToken);
 
     /// <summary>List hub plan routes (<c>GET /hub/plan/routes</c>) — <paramref name="planId"/> is required by the spec.</summary>
-    public IAsyncEnumerable<object> ListPlanRoutesAsync(
+    public IAsyncEnumerable<HubPlanRoute> ListPlanRoutesAsync(
         string planId,
         string? routeIds = null,
         string? startTime = null,
         string? endTime = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
+        => PaginateAsync<HubPlanRoute>(
             QueryBuilder.WithParams("hub/plan/routes",
                 ("planId", planId),
                 ("routeIds", routeIds),
@@ -70,12 +70,12 @@ internal sealed class HubsClient : SamsaraServiceClientBase, IHubsClient
     /// <summary>
     /// List hub route templates (<c>GET /hub/route-templates</c>) — <paramref name="hubId"/> required.
     /// </summary>
-    public IAsyncEnumerable<object> ListRouteTemplatesAsync(
+    public IAsyncEnumerable<HubRouteTemplate> ListRouteTemplatesAsync(
         string hubId,
         string? id = null,
         string? name = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
+        => PaginateAsync<HubRouteTemplate>(
             QueryBuilder.WithParams("hub/route-templates",
                 ("hubId", hubId),
                 ("id", id),

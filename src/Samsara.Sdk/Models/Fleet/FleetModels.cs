@@ -1676,3 +1676,190 @@ public sealed record EquipmentStatAddress
     /// <summary>Name of the address.</summary>
     [JsonPropertyName("name")] public string? Name { get; init; }
 }
+
+// ---------------------------------------------------------------------------
+// Engine immobilizer (beta) — GET /fleet/vehicles/immobilizer/stream and
+// PATCH /beta/fleet/vehicles/{id}/immobilizer.
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// An engine immobilizer state reported for a vehicle. Mirrors the spec's
+/// <c>EngineImmobilizerStateResponseBody</c> schema, the item type of
+/// <c>GET /fleet/vehicles/immobilizer/stream</c>.
+/// </summary>
+/// <remarks>
+/// Distinct from <see cref="VehicleStatEngineImmobilizer"/>, which is the
+/// immobilizer sample embedded in the vehicle-stats payload.
+/// </remarks>
+public sealed record EngineImmobilizerState
+{
+    /// <summary>The ID of the vehicle the engine immobilizer is connected to. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("vehicleId")] public string? VehicleId { get; init; }
+
+    /// <summary>
+    /// UTC time in RFC 3339 format at which the state was reported. Spec marks
+    /// REQUIRED.
+    /// </summary>
+    [JsonPropertyName("happenedAtTime")] public string? HappenedAtTime { get; init; }
+
+    /// <summary>Whether the engine immobilizer is connected to the vehicle. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("isConnectedToVehicle")] public bool? IsConnectedToVehicle { get; init; }
+
+    /// <summary>The state of each relay. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("relayStates")] public IReadOnlyList<EngineImmobilizerRelayState>? RelayStates { get; init; }
+}
+
+/// <summary>
+/// The state of a single engine-immobilizer relay. Mirrors the spec's
+/// <c>EngineImmobilizerRelayStateResponseBody</c> schema.
+/// </summary>
+/// <remarks>
+/// The request half is <see cref="EngineImmobilizerRelayStateInput"/>: the two
+/// spec schemas carry the same members, but they stay split so
+/// <c>required</c> appears only on the request DTO.
+/// </remarks>
+public sealed record EngineImmobilizerRelayState
+{
+    /// <summary>
+    /// The ID of the relay. Valid values: <c>relay1</c>, <c>relay2</c>. Spec
+    /// marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>Whether the relay is open. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("isOpen")] public bool? IsOpen { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>PATCH /beta/fleet/vehicles/{id}/immobilizer</c>. Mirrors
+/// the spec's <c>EngineImmobilizerUpdateEngineImmobilizerStateRequestBody</c>
+/// schema.
+/// </summary>
+public sealed record UpdateEngineImmobilizerStateRequest
+{
+    /// <summary>
+    /// The relay states to apply. A relay omitted from the list is left
+    /// unchanged; an empty list is rejected with a 400. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("relayStates")] public required IReadOnlyList<EngineImmobilizerRelayStateInput> RelayStates { get; init; }
+}
+
+/// <summary>
+/// A relay state to apply. Mirrors the spec's
+/// <c>UpdateEngineImmobilizerRelayStateRequestBodyRequestBody</c> schema.
+/// </summary>
+public sealed record EngineImmobilizerRelayStateInput
+{
+    /// <summary>
+    /// The ID of the relay. Valid values: <c>relay1</c>, <c>relay2</c>. Spec
+    /// marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("id")] public required string Id { get; init; }
+
+    /// <summary>
+    /// The desired state of the relay: <c>true</c> to open it, <c>false</c> to
+    /// close it. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("isOpen")] public required bool IsOpen { get; init; }
+}
+
+// ---------------------------------------------------------------------------
+// Gateway pairing (beta) — POST /gateways/pair.
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// Request body for <c>POST /gateways/pair</c>. Mirrors the spec's
+/// <c>GatewaysPairGatewaysRequestBody</c> schema.
+/// </summary>
+public sealed record PairGatewaysRequest
+{
+    /// <summary>The gateway-to-device pairings to apply. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("pairs")] public required IReadOnlyList<GatewayPairInput> Pairs { get; init; }
+
+    /// <summary>
+    /// When <c>true</c>, devices the reassigned gateways were previously linked
+    /// to are moved to the unassigned pool.
+    /// </summary>
+    [JsonPropertyName("removeOrphanDevices")] public bool? RemoveOrphanDevices { get; init; }
+}
+
+/// <summary>
+/// A single gateway-to-device pairing instruction. Mirrors the spec's
+/// <c>PairGatewayPairObjectRequestBody</c> schema.
+/// </summary>
+public sealed record GatewayPairInput
+{
+    /// <summary>
+    /// The serial of the gateway to reassign. The gateway must already be
+    /// activated in the organization. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("gatewaySerial")] public required string GatewaySerial { get; init; }
+
+    /// <summary>
+    /// The serial of the target device to pair the gateway with, in the
+    /// standard Samsara serial format. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("deviceSerial")] public required string DeviceSerial { get; init; }
+}
+
+/// <summary>
+/// The outcome of a single gateway-to-device pairing. Mirrors the spec's
+/// <c>PairGatewayResultObjectResponseBody</c> schema.
+/// </summary>
+public sealed record GatewayPairResult
+{
+    /// <summary>The gateway that was paired. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("gateway")] public GatewayPairGateway? Gateway { get; init; }
+
+    /// <summary>The device the gateway is now paired with. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("device")] public GatewayPairDevice? Device { get; init; }
+
+    /// <summary>The device the gateway was previously linked to, when it was displaced.</summary>
+    [JsonPropertyName("previousDevice")] public GatewayPairDevice? PreviousDevice { get; init; }
+
+    /// <summary>The gateway that was displaced from the target device, when there was one.</summary>
+    [JsonPropertyName("displacedGateway")] public GatewayPairGateway? DisplacedGateway { get; init; }
+}
+
+/// <summary>
+/// Identifying information for a device involved in a pairing operation.
+/// Mirrors the spec's <c>PairResultDeviceObjectResponseBody</c> schema.
+/// </summary>
+public sealed record GatewayPairDevice
+{
+    /// <summary>The unique Samsara ID of the device. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>The name of the device.</summary>
+    [JsonPropertyName("name")] public string? Name { get; init; }
+
+    /// <summary>The serial number of the device. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("serial")] public string? Serial { get; init; }
+
+    /// <summary>
+    /// The type of the device. Valid values: <c>vehicle</c>, <c>asset</c>,
+    /// <c>equipment</c>, <c>trailer</c>, <c>industrial</c>, <c>assetTag</c>.
+    /// Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("type")] public string? Type { get; init; }
+}
+
+/// <summary>
+/// Identifying information for a gateway involved in a pairing operation.
+/// Mirrors the spec's <c>PairResultGatewayObjectResponseBody</c> schema.
+/// </summary>
+public sealed record GatewayPairGateway
+{
+    /// <summary>The unique Samsara ID of the gateway. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>
+    /// The model of the gateway (e.g. <c>VG34</c>, <c>AG46</c>). Spec marks
+    /// REQUIRED and enumerates 47 values; modelled as a string so a newly
+    /// released model does not break deserialization.
+    /// </summary>
+    [JsonPropertyName("model")] public string? Model { get; init; }
+
+    /// <summary>The serial number of the gateway. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("serial")] public string? Serial { get; init; }
+}

@@ -72,29 +72,29 @@ internal sealed class MaintenanceClient : SamsaraServiceClientBase, IMaintenance
             cancellationToken: cancellationToken);
 
     /// <summary>Legacy v1 fleet maintenance list (<c>GET /v1/fleet/maintenance/list</c>).</summary>
-    public IAsyncEnumerable<object> V1ListMaintenanceAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<object>("v1/fleet/maintenance/list", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<V1VehicleMaintenance> V1ListMaintenanceAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<V1VehicleMaintenance>("v1/fleet/maintenance/list", cancellationToken: cancellationToken);
 
     /// <summary>List maintenance vendors (beta).</summary>
-    public IAsyncEnumerable<object> ListVendorsAsync(
+    public IAsyncEnumerable<MaintenanceVendor> ListVendorsAsync(
         IReadOnlyList<string>? ids = null,
         bool? includeExternalIds = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
+        => PaginateAsync<MaintenanceVendor>(
             QueryBuilder.WithParams("fleet/maintenance/vendors",
                 ("ids", ids is null ? null : string.Join(",", ids)),
                 ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
             cancellationToken: cancellationToken);
 
     /// <summary>List maintenance vendor categories (beta).</summary>
-    public IAsyncEnumerable<object> ListVendorCategoriesAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<object>("fleet/maintenance/vendor-categories", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<MaintenanceVendorCategory> ListVendorCategoriesAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<MaintenanceVendorCategory>("fleet/maintenance/vendor-categories", cancellationToken: cancellationToken);
 
     /// <summary>List preventive maintenance schedules (<c>GET /maintenance/preventive/schedules</c>) — beta.</summary>
-    public IAsyncEnumerable<object> ListPreventiveMaintenanceSchedulesAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<object>("maintenance/preventive/schedules", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<PreventiveMaintenanceSchedule> ListPreventiveMaintenanceSchedulesAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<PreventiveMaintenanceSchedule>("maintenance/preventive/schedules", cancellationToken: cancellationToken);
 
     /// <summary>List upcoming preventive maintenance (<c>GET /maintenance/preventive/upcoming</c>) — beta.</summary>
-    public IAsyncEnumerable<object> ListUpcomingPreventiveMaintenanceAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<object>("maintenance/preventive/upcoming", cancellationToken: cancellationToken);
+    public IAsyncEnumerable<UpcomingPreventiveMaintenance> ListUpcomingPreventiveMaintenanceAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<UpcomingPreventiveMaintenance>("maintenance/preventive/upcoming", cancellationToken: cancellationToken);
 }

@@ -691,3 +691,101 @@ public sealed record HosEldEventRemark
     [JsonPropertyName("time")]
     public string? Time { get; init; }
 }
+
+
+/// <summary>
+/// Request body for <c>PATCH /hos/daily-logs/log-meta-data</c>. Mirrors the
+/// spec's <c>HosDailyLogsUpdateShippingDocsRequestBody</c>.
+/// </summary>
+public sealed record UpdateShippingDocsRequest
+{
+    /// <summary>
+    /// The shipping-document reference to record on the driver's daily log. Spec
+    /// marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("shippingDocs")]
+    public required string ShippingDocs { get; init; }
+}
+
+/// <summary>
+/// A driver HOS authentication-log entry, returned by the legacy
+/// <c>GET /v1/fleet/hos_authentication_logs</c>. Mirrors the item schema of
+/// <c>V1HosAuthenticationLogsResponse.authenticationLogs</c>.
+/// </summary>
+/// <remarks>
+/// The v1 payload is an <c>{ authenticationLogs: [...] }</c> object rather than
+/// the standard <c>{ data, pagination }</c> envelope. The spec marks nothing
+/// required on this schema.
+/// </remarks>
+public sealed record V1HosAuthenticationLog
+{
+    /// <summary>The authentication action recorded (e.g. sign-in, sign-out).</summary>
+    [JsonPropertyName("actionType")]
+    public string? ActionType { get; init; }
+
+    /// <summary>Street address at which the action happened.</summary>
+    [JsonPropertyName("address")]
+    public string? Address { get; init; }
+
+    /// <summary>Name of the address at which the action happened.</summary>
+    [JsonPropertyName("addressName")]
+    public string? AddressName { get; init; }
+
+    /// <summary>City in which the action happened.</summary>
+    [JsonPropertyName("city")]
+    public string? City { get; init; }
+
+    /// <summary>State in which the action happened.</summary>
+    [JsonPropertyName("state")]
+    public string? State { get; init; }
+
+    /// <summary>Time of the action, in Unix milliseconds since epoch.</summary>
+    [JsonPropertyName("happenedAtMs")]
+    public long? HappenedAtMs { get; init; }
+}
+
+/// <summary>
+/// Request body for the legacy
+/// <c>POST /v1/fleet/drivers/{driverId}/hos/duty_status</c>. Mirrors the
+/// operation's inline request schema.
+/// </summary>
+/// <remarks>
+/// The v1 API uses <c>snake_case</c> wire names; the
+/// <c>JsonPropertyName</c> attributes carry the spec spellings verbatim and must
+/// not be camel-cased.
+/// </remarks>
+public sealed record V1SetDutyStatusRequest
+{
+    /// <summary>
+    /// The duty status to set (e.g. <c>offDuty</c>, <c>sleeperBed</c>,
+    /// <c>driving</c>, <c>onDuty</c>). Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("duty_status")]
+    public required string DutyStatus { get; init; }
+
+    /// <summary>Free-form location to record with the status change.</summary>
+    [JsonPropertyName("location")]
+    public string? Location { get; init; }
+
+    /// <summary>Free-form remark to record with the status change.</summary>
+    [JsonPropertyName("remark")]
+    public string? Remark { get; init; }
+
+    /// <summary>
+    /// Time of the status change, in Unix milliseconds since epoch. Modelled as
+    /// <c>double</c> rather than <c>long</c> because the spec declares this
+    /// property <c>type: number</c> (with an <c>int64</c> format hint) instead of
+    /// <c>type: integer</c> — the same upstream quirk recorded on
+    /// <c>Samsara.Sdk.Models.Routes.V1TripAddress.Id</c>.
+    /// </summary>
+    [JsonPropertyName("status_change_at_ms")]
+    public double? StatusChangeAtMs { get; init; }
+
+    /// <summary>
+    /// Samsara ID of the vehicle the driver is operating. Modelled as
+    /// <c>double</c> for the same <c>type: number</c> reason as
+    /// <see cref="StatusChangeAtMs"/>.
+    /// </summary>
+    [JsonPropertyName("vehicle_id")]
+    public double? VehicleId { get; init; }
+}

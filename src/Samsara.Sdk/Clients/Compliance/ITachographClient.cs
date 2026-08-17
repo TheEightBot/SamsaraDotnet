@@ -13,7 +13,7 @@ public interface ITachographClient
     /// <summary>Vehicle tachograph files history (<c>GET /fleet/vehicles/tachograph-files/history</c>).</summary>
     IAsyncEnumerable<TachographFile> ListVehicleFilesAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? vehicleIds = null, IReadOnlyList<string>? tagIds = null, IReadOnlyList<string>? parentTagIds = null, CancellationToken cancellationToken = default);
     /// <summary>Latest tachograph live-data (beta).</summary>
-    IAsyncEnumerable<object> ListLiveDataAsync(
+    IAsyncEnumerable<TachographLiveData> ListLiveDataAsync(
         string? driverIds = null,
         string? vehicleIds = null,
         DateTimeOffset? startTime = null,

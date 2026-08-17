@@ -826,3 +826,353 @@ public sealed record UpdateDvirRequest
     [JsonPropertyName("mechanicNotes")] public string? MechanicNotes { get; init; }
     [JsonPropertyName("signedAtTime")] public DateTimeOffset? SignedAtTime { get; init; }
 }
+
+/// <summary>
+/// A preventive-maintenance schedule — the <c>data[]</c> item of
+/// <c>GET /maintenance/preventive/schedules</c>. Mirrors the spec's
+/// <c>EntityListPreventiveMaintenanceSchedulesTypeResponseBody</c>.
+/// </summary>
+/// <remarks>The spec marks nothing required on this schema.</remarks>
+public sealed record PreventiveMaintenanceSchedule
+{
+    /// <summary>Samsara ID of the schedule.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Title of the schedule.</summary>
+    [JsonPropertyName("title")]
+    public string? Title { get; init; }
+
+    /// <summary>Description of the schedule.</summary>
+    [JsonPropertyName("description")]
+    public string? Description { get; init; }
+
+    /// <summary>Interval between services, in milliseconds.</summary>
+    [JsonPropertyName("dateIntervalMs")]
+    public long? DateIntervalMs { get; init; }
+
+    /// <summary>Interval between services, in meters driven.</summary>
+    [JsonPropertyName("distanceInterval")]
+    public long? DistanceInterval { get; init; }
+
+    /// <summary>Interval between services, in engine hours.</summary>
+    [JsonPropertyName("engineHourInterval")]
+    public long? EngineHourInterval { get; init; }
+
+    /// <summary>Other schedules linked to this one.</summary>
+    [JsonPropertyName("linkedSchedules")]
+    public IReadOnlyList<PreventiveMaintenanceRef>? LinkedSchedules { get; init; }
+
+    /// <summary>ID of the work-order template applied when the schedule comes due.</summary>
+    [JsonPropertyName("workOrderTemplateId")]
+    public string? WorkOrderTemplateId { get; init; }
+}
+
+/// <summary>
+/// An upcoming preventive-maintenance occurrence — the <c>data[]</c> item of
+/// <c>GET /maintenance/preventive/upcoming</c>. Mirrors the spec's
+/// <c>EntityListUpcomingPreventiveMaintenanceTypeResponseBody</c>.
+/// </summary>
+/// <remarks>The spec marks nothing required on this schema.</remarks>
+public sealed record UpcomingPreventiveMaintenance
+{
+    /// <summary>The asset the maintenance is due on.</summary>
+    [JsonPropertyName("asset")]
+    public PreventiveMaintenanceRef? Asset { get; init; }
+
+    /// <summary>The schedule that produced this occurrence.</summary>
+    [JsonPropertyName("schedule")]
+    public PreventiveMaintenanceRef? Schedule { get; init; }
+
+    /// <summary>The work order opened for this occurrence, if any.</summary>
+    [JsonPropertyName("workOrder")]
+    public PreventiveMaintenanceRef? WorkOrder { get; init; }
+
+    /// <summary>Status of the upcoming maintenance.</summary>
+    [JsonPropertyName("status")]
+    public string? Status { get; init; }
+
+    /// <summary>Current engine hours on the asset.</summary>
+    [JsonPropertyName("currentEngineHours")]
+    public long? CurrentEngineHours { get; init; }
+
+    /// <summary>Current odometer reading on the asset.</summary>
+    [JsonPropertyName("currentOdometer")]
+    public long? CurrentOdometer { get; init; }
+
+    /// <summary>Days remaining until the maintenance is due.</summary>
+    [JsonPropertyName("dueInDays")]
+    public long? DueInDays { get; init; }
+
+    /// <summary>Engine hours remaining until the maintenance is due.</summary>
+    [JsonPropertyName("dueInEngineHours")]
+    public long? DueInEngineHours { get; init; }
+
+    /// <summary>Odometer distance remaining until the maintenance is due.</summary>
+    [JsonPropertyName("dueInOdometer")]
+    public long? DueInOdometer { get; init; }
+
+    /// <summary>Time the schedule was last resolved (RFC 3339).</summary>
+    [JsonPropertyName("lastResolvedAt")]
+    public string? LastResolvedAt { get; init; }
+
+    /// <summary>Engine hours on the asset when the schedule was last resolved.</summary>
+    [JsonPropertyName("lastResolvedAtEngineHours")]
+    public long? LastResolvedAtEngineHours { get; init; }
+
+    /// <summary>Odometer reading on the asset when the schedule was last resolved.</summary>
+    [JsonPropertyName("lastResolvedAtOdometer")]
+    public long? LastResolvedAtOdometer { get; init; }
+
+    /// <summary>Engine hours at which the maintenance next comes due.</summary>
+    [JsonPropertyName("nextEngineHours")]
+    public long? NextEngineHours { get; init; }
+
+    /// <summary>Odometer reading at which the maintenance next comes due.</summary>
+    [JsonPropertyName("nextOdometer")]
+    public long? NextOdometer { get; init; }
+
+    /// <summary>Time at which the maintenance next comes due (RFC 3339).</summary>
+    [JsonPropertyName("nextTime")]
+    public string? NextTime { get; init; }
+}
+
+/// <summary>
+/// A bare <c>{ id }</c> reference on a preventive-maintenance payload. Mirrors
+/// the spec's <c>EntityListPreventiveMaintenanceSchedulesPreventativeMaintenanceScheduleRefTypeResponseBody</c>
+/// and its three property-identical twins
+/// <c>EntityListUpcomingPreventiveMaintenanceAssetRefTypeResponseBody</c>,
+/// <c>EntityListUpcomingPreventiveMaintenancePreventativeMaintenanceScheduleRefTypeResponseBody</c>
+/// and <c>EntityListUpcomingPreventiveMaintenanceWorkOrderRefTypeResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// One record serves all four because each declares the identical single-property
+/// set. There is deliberately no <c>name</c> property — none of the four schemas
+/// defines one, which is why
+/// <c>Samsara.Sdk.Models.Common.EntityReference</c> is not used here. Spec marks
+/// <c>id</c> REQUIRED; it stays nullable because this is a response record.
+/// </remarks>
+public sealed record PreventiveMaintenanceRef
+{
+    /// <summary>Samsara ID of the referenced entity. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+}
+
+/// <summary>
+/// A maintenance vendor — the <c>data[]</c> item of
+/// <c>GET /fleet/maintenance/vendors</c>. Mirrors the spec's
+/// <c>VendorObjectResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Spec marks <c>categoryIds</c> and <c>id</c> REQUIRED; they stay nullable
+/// because this is a response record.
+/// </remarks>
+public sealed record MaintenanceVendor
+{
+    /// <summary>Samsara ID of the vendor. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>
+    /// IDs of the vendor categories this vendor belongs to, as returned by
+    /// <c>GET /fleet/maintenance/vendor-categories</c>. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("categoryIds")]
+    public IReadOnlyList<string>? CategoryIds { get; init; }
+
+    /// <summary>ID of the vendor's address.</summary>
+    [JsonPropertyName("addressId")]
+    public string? AddressId { get; init; }
+
+    /// <summary>ID of the payee associated with the vendor.</summary>
+    [JsonPropertyName("payeeId")]
+    public string? PayeeId { get; init; }
+
+    /// <summary>Free-text description of the services the vendor provides.</summary>
+    [JsonPropertyName("servicesProvided")]
+    public string? ServicesProvided { get; init; }
+
+    /// <summary>The vendor's own identifier, as recorded on the vendor record.</summary>
+    [JsonPropertyName("vendorId")]
+    public string? VendorId { get; init; }
+
+    /// <summary>A map of external IDs for the vendor.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// A maintenance vendor category — the <c>data[]</c> item of
+/// <c>GET /fleet/maintenance/vendor-categories</c>. Mirrors the spec's
+/// <c>VendorCategoryObjectResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Spec marks both properties REQUIRED; they stay nullable because this is a
+/// response record.
+/// </remarks>
+public sealed record MaintenanceVendorCategory
+{
+    /// <summary>Samsara ID of the category. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Display name of the category. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+}
+
+/// <summary>
+/// A vehicle with engine faults or check-engine lights, as returned by the legacy
+/// <c>GET /v1/fleet/maintenance/list</c>. Mirrors the spec's
+/// <c>V1VehicleMaintenance</c>.
+/// </summary>
+/// <remarks>
+/// Spec marks <c>id</c> REQUIRED; it stays nullable because this is a response
+/// record. The v1 payload is a <c>{ vehicles: [...] }</c> object rather than the
+/// standard <c>{ data, pagination }</c> envelope.
+/// </remarks>
+public sealed record V1VehicleMaintenance
+{
+    /// <summary>Samsara ID of the vehicle. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public long? Id { get; init; }
+
+    /// <summary>Fault data reported over the J1939 (heavy-duty) bus.</summary>
+    [JsonPropertyName("j1939")]
+    public V1VehicleMaintenanceJ1939? J1939 { get; init; }
+
+    /// <summary>Fault data reported over the passenger-vehicle (OBD-II) bus.</summary>
+    [JsonPropertyName("passenger")]
+    public V1VehicleMaintenancePassenger? Passenger { get; init; }
+}
+
+/// <summary>
+/// J1939 fault data on a legacy maintenance-list vehicle. Mirrors the spec's
+/// <c>V1VehicleMaintenance_j1939</c>.
+/// </summary>
+public sealed record V1VehicleMaintenanceJ1939
+{
+    /// <summary>State of the J1939 check-engine lamps.</summary>
+    [JsonPropertyName("checkEngineLight")]
+    public V1J1939CheckEngineLight? CheckEngineLight { get; init; }
+
+    /// <summary>Active J1939 diagnostic trouble codes.</summary>
+    [JsonPropertyName("diagnosticTroubleCodes")]
+    public IReadOnlyList<V1J1939DiagnosticTroubleCode>? DiagnosticTroubleCodes { get; init; }
+}
+
+/// <summary>
+/// Passenger-vehicle fault data on a legacy maintenance-list vehicle. Mirrors the
+/// spec's <c>V1VehicleMaintenance_passenger</c>.
+/// </summary>
+public sealed record V1VehicleMaintenancePassenger
+{
+    /// <summary>State of the passenger-vehicle check-engine lamp.</summary>
+    [JsonPropertyName("checkEngineLight")]
+    public V1PassengerCheckEngineLight? CheckEngineLight { get; init; }
+
+    /// <summary>Active passenger-vehicle diagnostic trouble codes.</summary>
+    [JsonPropertyName("diagnosticTroubleCodes")]
+    public IReadOnlyList<V1PassengerDiagnosticTroubleCode>? DiagnosticTroubleCodes { get; init; }
+}
+
+/// <summary>
+/// State of the four J1939 check-engine lamps. Mirrors the spec's
+/// <c>V1VehicleMaintenance_j1939_checkEngineLight</c>.
+/// </summary>
+/// <remarks>
+/// Distinct from <see cref="CheckEngineLight"/>, which mirrors the v2 vehicle-stats
+/// shape: this schema has no <c>isOn</c> or <c>diagnosticIsOn</c> and adds
+/// <c>stopIsOn</c> and <c>warningIsOn</c>.
+/// </remarks>
+public sealed record V1J1939CheckEngineLight
+{
+    /// <summary>Whether the emissions lamp is lit.</summary>
+    [JsonPropertyName("emissionsIsOn")]
+    public bool? EmissionsIsOn { get; init; }
+
+    /// <summary>Whether the protect lamp is lit.</summary>
+    [JsonPropertyName("protectIsOn")]
+    public bool? ProtectIsOn { get; init; }
+
+    /// <summary>Whether the stop lamp is lit.</summary>
+    [JsonPropertyName("stopIsOn")]
+    public bool? StopIsOn { get; init; }
+
+    /// <summary>Whether the warning lamp is lit.</summary>
+    [JsonPropertyName("warningIsOn")]
+    public bool? WarningIsOn { get; init; }
+}
+
+/// <summary>
+/// State of the passenger-vehicle check-engine lamp. Mirrors the spec's
+/// <c>V1VehicleMaintenance_passenger_checkEngineLight</c>.
+/// </summary>
+public sealed record V1PassengerCheckEngineLight
+{
+    /// <summary>Whether the check-engine lamp is lit.</summary>
+    [JsonPropertyName("isOn")]
+    public bool? IsOn { get; init; }
+}
+
+/// <summary>
+/// A J1939 diagnostic trouble code. Mirrors the spec's
+/// <c>V1VehicleMaintenance_j1939_diagnosticTroubleCodes</c>.
+/// </summary>
+/// <remarks>
+/// Spec marks every property REQUIRED; they stay nullable because this is a
+/// response record.
+/// </remarks>
+public sealed record V1J1939DiagnosticTroubleCode
+{
+    /// <summary>Failure Mode Identifier. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("fmiId")]
+    public int? FmiId { get; init; }
+
+    /// <summary>Human-readable description of the failure mode. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("fmiText")]
+    public string? FmiText { get; init; }
+
+    /// <summary>Number of times the fault has occurred. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("occurrenceCount")]
+    public int? OccurrenceCount { get; init; }
+
+    /// <summary>Suspect Parameter Number. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("spnId")]
+    public int? SpnId { get; init; }
+
+    /// <summary>Human-readable description of the suspect parameter. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("spnDescription")]
+    public string? SpnDescription { get; init; }
+
+    /// <summary>Transmitter address that reported the fault. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("txId")]
+    public int? TxId { get; init; }
+}
+
+/// <summary>
+/// A passenger-vehicle diagnostic trouble code. Mirrors the spec's
+/// <c>V1VehicleMaintenance_passenger_diagnosticTroubleCodes</c>.
+/// </summary>
+/// <remarks>
+/// Distinct from <see cref="DiagnosticTroubleCode"/>, which mirrors the v2
+/// vehicle-stats shape: this schema types <c>dtcId</c> as an integer and carries
+/// none of the vehicle, check-engine-light, diagnostic-type or timestamp fields.
+/// Spec marks all three properties REQUIRED; they stay nullable because this is a
+/// response record.
+/// </remarks>
+public sealed record V1PassengerDiagnosticTroubleCode
+{
+    /// <summary>Numeric identifier of the trouble code. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("dtcId")]
+    public int? DtcId { get; init; }
+
+    /// <summary>Human-readable description of the trouble code. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("dtcDescription")]
+    public string? DtcDescription { get; init; }
+
+    /// <summary>Short code for the trouble code (e.g. <c>P0303</c>). Spec marks REQUIRED.</summary>
+    [JsonPropertyName("dtcShortCode")]
+    public string? DtcShortCode { get; init; }
+}

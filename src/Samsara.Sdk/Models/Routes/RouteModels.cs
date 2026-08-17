@@ -879,3 +879,160 @@ public sealed record RouteAuditStop
     /// <summary>The time the stop was skipped, in RFC 3339 format.</summary>
     [JsonPropertyName("skippedTime")] public DateTimeOffset? SkippedTime { get; init; }
 }
+
+/// <summary>
+/// A single route event.
+/// One item of the <c>data</c> array returned by <c>GET /route-events/stream</c> (operationId
+/// <c>getRouteEventsStream</c>).
+/// Mirrors the spec schema <c>RouteEventResponseResponseBody</c>.
+/// </summary>
+public sealed record RouteEvent
+{
+    /// <summary>Contains additional information specific to the event type.</summary>
+    [JsonPropertyName("eventDetails")]
+    public RouteEventDetails? EventDetails { get; init; }
+
+    /// <summary>
+    /// Time the event was processed in RFC 3339 format. Spec marks this required on the
+    /// response.
+    /// </summary>
+    [JsonPropertyName("eventTime")]
+    public DateTimeOffset? EventTime { get; init; }
+
+    /// <summary>
+    /// Type of the event that occurred. One of: <c>stopArrived</c>, <c>stopCompleted</c>,
+    /// <c>stopEnRoute</c>, <c>stopSkipped</c>, <c>stopTaskCompleted</c>,
+    /// <c>stopTaskSkipped</c>, <c>stopEtaUpdated</c>, <c>unspecified</c>. Spec marks this
+    /// required on the response.
+    /// </summary>
+    [JsonPropertyName("eventType")]
+    public string? EventType { get; init; }
+
+    /// <summary>
+    /// Time the event happened in RFC 3339 format. Spec marks this required on the
+    /// response.
+    /// </summary>
+    [JsonPropertyName("happenedAtTime")]
+    public DateTimeOffset? HappenedAtTime { get; init; }
+
+    /// <summary>Unique ID of the route event. Spec marks this required on the response.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>
+    /// Normalized route object this event belongs to. Spec marks this required on the
+    /// response.
+    /// </summary>
+    [JsonPropertyName("route")]
+    public RouteEventRouteReference? Route { get; init; }
+
+    /// <summary>Normalized stop object this event belongs to.</summary>
+    [JsonPropertyName("stop")]
+    public RouteEventStopReference? Stop { get; init; }
+}
+
+/// <summary>
+/// Contains additional information specific to the event type.
+/// Mirrors the spec schema <c>RouteEventDetailsResponseBody</c>.
+/// </summary>
+public sealed record RouteEventDetails
+{
+    /// <summary>Details for stop ETA updated events.</summary>
+    [JsonPropertyName("stopEtaUpdated")]
+    public RouteEventStopEtaUpdated? StopEtaUpdated { get; init; }
+
+    /// <summary>Details for stop task completed events.</summary>
+    [JsonPropertyName("stopTaskCompleted")]
+    public RouteEventStopTaskCompleted? StopTaskCompleted { get; init; }
+
+    /// <summary>Details for stop task skipped events.</summary>
+    [JsonPropertyName("stopTaskSkipped")]
+    public RouteEventStopTaskSkipped? StopTaskSkipped { get; init; }
+}
+
+/// <summary>
+/// Details for stop ETA updated events.
+/// Mirrors the spec schema <c>StopEtaUpdatedEventDetailsResponseBody</c>.
+/// </summary>
+public sealed record RouteEventStopEtaUpdated
+{
+    /// <summary>
+    /// Estimated arrival time in milliseconds since epoch. Spec marks this required on the
+    /// response.
+    /// </summary>
+    [JsonPropertyName("etaMs")]
+    public string? EtaMs { get; init; }
+
+    /// <summary>
+    /// Time when the ETA was updated in milliseconds since epoch. Spec marks this required
+    /// on the response.
+    /// </summary>
+    [JsonPropertyName("etaUpdatedAtMs")]
+    public string? EtaUpdatedAtMs { get; init; }
+}
+
+/// <summary>
+/// Details for stop task completed events.
+/// Mirrors the spec schema <c>StopTaskCompletedEventDetailsResponseBody</c>.
+/// </summary>
+public sealed record RouteEventStopTaskCompleted
+{
+    /// <summary>ID of the completed stop task. Spec marks this required on the response.</summary>
+    [JsonPropertyName("taskId")]
+    public string? TaskId { get; init; }
+
+    /// <summary>
+    /// Type of the completed stop task. One of: <c>form</c>, <c>document</c>. Spec marks
+    /// this required on the response.
+    /// </summary>
+    [JsonPropertyName("taskType")]
+    public string? TaskType { get; init; }
+}
+
+/// <summary>
+/// Details for stop task skipped events.
+/// Mirrors the spec schema <c>StopTaskSkippedEventDetailsResponseBody</c>.
+/// </summary>
+public sealed record RouteEventStopTaskSkipped
+{
+    /// <summary>ID of the skipped stop task. Spec marks this required on the response.</summary>
+    [JsonPropertyName("taskId")]
+    public string? TaskId { get; init; }
+
+    /// <summary>
+    /// Type of the skipped stop task. One of: <c>form</c>, <c>document</c>. Spec marks this
+    /// required on the response.
+    /// </summary>
+    [JsonPropertyName("taskType")]
+    public string? TaskType { get; init; }
+}
+
+/// <summary>
+/// Normalized route object this event belongs to.
+/// Mirrors the spec schema <c>RouteEventRouteResponseResponseBody</c>.
+/// </summary>
+public sealed record RouteEventRouteReference
+{
+    /// <summary>A map of external ids.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
+    /// <summary>ID of the route this event belongs to. Spec marks this required on the response.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+}
+
+/// <summary>
+/// Normalized stop object this event belongs to.
+/// Mirrors the spec schema <c>RouteEventStopResponseResponseBody</c>.
+/// </summary>
+public sealed record RouteEventStopReference
+{
+    /// <summary>A map of external ids.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
+    /// <summary>ID of the stop this event belongs to. Spec marks this required on the response.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+}

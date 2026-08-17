@@ -72,11 +72,16 @@ public interface IVehiclesClient
         bool? includeDriverId = null,
         CancellationToken cancellationToken = default);
     /// <summary>Engine immobilizer states stream (beta).</summary>
-    IAsyncEnumerable<object> GetImmobilizerStreamAsync(
+    IAsyncEnumerable<EngineImmobilizerState> GetImmobilizerStreamAsync(
         string vehicleIds,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
         CancellationToken cancellationToken = default);
-    /// <summary>Update an engine immobilizer state (beta).</summary>
-    Task<object> UpdateImmobilizerStateAsync(string id, object request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Update an engine immobilizer state (beta). The spec declares a
+    /// <c>202 Accepted</c> with no response body, so no response record is
+    /// mirrored and the returned value carries no schema.
+    /// </summary>
+    Task<object> UpdateImmobilizerStateAsync(string id, UpdateEngineImmobilizerStateRequest request, CancellationToken cancellationToken = default);
 }

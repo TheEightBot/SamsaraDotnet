@@ -18,7 +18,7 @@ public interface IHubsClient
         CancellationToken cancellationToken = default);
 
     /// <summary>List hub plan routes (<c>GET /hub/plan/routes</c>). <paramref name="planId"/> is required by the spec.</summary>
-    IAsyncEnumerable<object> ListPlanRoutesAsync(
+    IAsyncEnumerable<HubPlanRoute> ListPlanRoutesAsync(
         string planId,
         string? routeIds = null,
         string? startTime = null,
@@ -36,7 +36,8 @@ public interface IHubsClient
         bool? deleteAll = null,
         CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<object> ListRouteTemplatesAsync(
+    /// <summary>List hub route templates (<c>GET /hub/route-templates</c>). <paramref name="hubId"/> is required by the spec.</summary>
+    IAsyncEnumerable<HubRouteTemplate> ListRouteTemplatesAsync(
         string hubId,
         string? id = null,
         string? name = null,

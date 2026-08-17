@@ -82,8 +82,8 @@ internal sealed class SafetyClient : SamsaraServiceClientBase, ISafetyClient
             cancellationToken: cancellationToken);
 
     /// <summary>Driver safety score (v1 legacy, <c>GET /v1/fleet/drivers/{driverId}/safety/score</c>).</summary>
-    public Task<object> V1GetDriverSafetyScoreAsync(string driverId, long startMs, long endMs, CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>(
+    public Task<V1DriverSafetyScore> V1GetDriverSafetyScoreAsync(string driverId, long startMs, long endMs, CancellationToken cancellationToken = default)
+        => HttpClient.GetAsync<V1DriverSafetyScore>(
             QueryBuilder.WithParams(
                 $"v1/fleet/drivers/{Uri.EscapeDataString(driverId)}/safety/score",
                 ("startMs", startMs.ToString()),
@@ -91,8 +91,8 @@ internal sealed class SafetyClient : SamsaraServiceClientBase, ISafetyClient
             cancellationToken);
 
     /// <summary>Vehicle safety score (v1 legacy, <c>GET /v1/fleet/vehicles/{vehicleId}/safety/score</c>).</summary>
-    public Task<object> V1GetVehicleSafetyScoreAsync(string vehicleId, long startMs, long endMs, CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>(
+    public Task<V1VehicleSafetyScore> V1GetVehicleSafetyScoreAsync(string vehicleId, long startMs, long endMs, CancellationToken cancellationToken = default)
+        => HttpClient.GetAsync<V1VehicleSafetyScore>(
             QueryBuilder.WithParams(
                 $"v1/fleet/vehicles/{Uri.EscapeDataString(vehicleId)}/safety/score",
                 ("startMs", startMs.ToString()),
@@ -100,6 +100,6 @@ internal sealed class SafetyClient : SamsaraServiceClientBase, ISafetyClient
             cancellationToken);
 
     /// <summary>Batch update safety events (beta, <c>PATCH /safety-events/batch</c>).</summary>
-    public Task<object> PatchEventsBatchAsync(object request, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<object>("safety-events/batch", request, cancellationToken);
+    public Task<SafetyEventsBatchResult> PatchEventsBatchAsync(PatchSafetyEventsBatchRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<SafetyEventsBatchResult>("safety-events/batch", request, cancellationToken);
 }

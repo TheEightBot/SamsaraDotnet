@@ -13,6 +13,6 @@ public interface IWorkOrdersClient
     Task DeleteWorkOrdersAsync(string id, CancellationToken cancellationToken = default);
     IAsyncEnumerable<WorkOrder> GetWorkOrdersStreamAsync(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, IReadOnlyList<string>? assetIds = null, IReadOnlyList<string>? assignedUserIds = null, IReadOnlyList<string>? workOrderStatuses = null, bool? includeExternalIds = null, CancellationToken cancellationToken = default);
 
-    /// <summary>Get work order templates (<c>GET /maintenance/work-order-templates</c>) — beta. Loosely typed.</summary>
-    IAsyncEnumerable<object> GetWorkOrderTemplatesAsync(CancellationToken cancellationToken = default);
+    /// <summary>Get work order templates (<c>GET /maintenance/work-order-templates</c>) — beta.</summary>
+    IAsyncEnumerable<WorkOrderTemplate> GetWorkOrderTemplatesAsync(CancellationToken cancellationToken = default);
 }

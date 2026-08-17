@@ -120,18 +120,22 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
     /// Engine immobilizer states stream (beta, <c>GET /fleet/vehicles/immobilizer/stream</c>).
     /// <paramref name="vehicleIds"/> is required by the spec (comma-separated vehicle ids).
     /// </summary>
-    public IAsyncEnumerable<object> GetImmobilizerStreamAsync(
+    public IAsyncEnumerable<EngineImmobilizerState> GetImmobilizerStreamAsync(
         string vehicleIds,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
+        => PaginateAsync<EngineImmobilizerState>(
             QueryBuilder.WithParams(
                 QueryBuilder.WithTimeRange("fleet/vehicles/immobilizer/stream", startTime, endTime),
                 ("vehicleIds", vehicleIds)),
             cancellationToken: cancellationToken);
 
-    /// <summary>Update an engine immobilizer state (beta, <c>PATCH /beta/fleet/vehicles/{id}/immobilizer</c>).</summary>
-    public Task<object> UpdateImmobilizerStateAsync(string id, object request, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Update an engine immobilizer state (beta, <c>PATCH /beta/fleet/vehicles/{id}/immobilizer</c>).
+    /// The spec declares a <c>202 Accepted</c> with no response body, so there is
+    /// no schema to mirror on the return type.
+    /// </summary>
+    public Task<object> UpdateImmobilizerStateAsync(string id, UpdateEngineImmobilizerStateRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<object>($"beta/fleet/vehicles/{Uri.EscapeDataString(id)}/immobilizer", request, cancellationToken);
 }

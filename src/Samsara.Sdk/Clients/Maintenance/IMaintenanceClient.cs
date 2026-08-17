@@ -61,20 +61,20 @@ public interface IMaintenanceClient
         CancellationToken cancellationToken = default);
 
     /// <summary>Legacy v1 fleet maintenance list.</summary>
-    IAsyncEnumerable<object> V1ListMaintenanceAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<V1VehicleMaintenance> V1ListMaintenanceAsync(CancellationToken cancellationToken = default);
 
     /// <summary>List maintenance vendors (beta).</summary>
-    IAsyncEnumerable<object> ListVendorsAsync(
+    IAsyncEnumerable<MaintenanceVendor> ListVendorsAsync(
         IReadOnlyList<string>? ids = null,
         bool? includeExternalIds = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>List maintenance vendor categories (beta).</summary>
-    IAsyncEnumerable<object> ListVendorCategoriesAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<MaintenanceVendorCategory> ListVendorCategoriesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>List preventive maintenance schedules (<c>GET /maintenance/preventive/schedules</c>) — beta.</summary>
-    IAsyncEnumerable<object> ListPreventiveMaintenanceSchedulesAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<PreventiveMaintenanceSchedule> ListPreventiveMaintenanceSchedulesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>List upcoming preventive maintenance (<c>GET /maintenance/preventive/upcoming</c>) — beta.</summary>
-    IAsyncEnumerable<object> ListUpcomingPreventiveMaintenanceAsync(CancellationToken cancellationToken = default);
+    IAsyncEnumerable<UpcomingPreventiveMaintenance> ListUpcomingPreventiveMaintenanceAsync(CancellationToken cancellationToken = default);
 }

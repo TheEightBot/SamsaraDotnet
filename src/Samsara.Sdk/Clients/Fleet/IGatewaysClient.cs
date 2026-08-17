@@ -24,9 +24,10 @@ public interface IGatewaysClient
     Task DeleteAsync(string id, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Pair gateways to devices (<c>POST /gateways/pair</c>) — beta. Loosely typed; the
-    /// request/response shape is subject to change. (Replaces the removed
-    /// <c>POST /preview/gateways/pair</c>.)
+    /// Pair gateways to devices (<c>POST /gateways/pair</c>) — beta. Replaces the
+    /// removed <c>POST /preview/gateways/pair</c>. The response wraps one result
+    /// per requested pairing in a <c>{ data: [...] }</c> envelope, which the SDK
+    /// unwraps.
     /// </summary>
-    Task<object> PairGatewaysAsync(object request, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<GatewayPairResult>> PairGatewaysAsync(PairGatewaysRequest request, CancellationToken cancellationToken = default);
 }

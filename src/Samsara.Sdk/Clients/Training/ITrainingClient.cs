@@ -26,6 +26,10 @@ public interface ITrainingClient
         IReadOnlyList<string>? status = null,
         CancellationToken cancellationToken = default);
     Task CreateAssignmentsAsync(string courseId, DateTimeOffset dueAtTime, IReadOnlyList<string> learnerIds, CancellationToken cancellationToken = default);
-    Task UpdateAssignmentsAsync(IReadOnlyList<string> ids, DateTimeOffset dueAtTime, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Update training assignments' due-by time (<c>PATCH /training-assignments</c>),
+    /// returning the updated assignments.
+    /// </summary>
+    Task<IReadOnlyList<TrainingAssignment>> UpdateAssignmentsAsync(IReadOnlyList<string> ids, DateTimeOffset dueAtTime, CancellationToken cancellationToken = default);
     Task DeleteAssignmentsAsync(IReadOnlyList<string> ids, CancellationToken cancellationToken = default);
 }

@@ -58,9 +58,9 @@ public interface ISafetyClient
         bool? includeVgOnlyEvents = null,
         CancellationToken cancellationToken = default);
     /// <summary>Driver safety score (v1 legacy). <paramref name="startMs"/>/<paramref name="endMs"/> are spec-required.</summary>
-    Task<object> V1GetDriverSafetyScoreAsync(string driverId, long startMs, long endMs, CancellationToken cancellationToken = default);
+    Task<V1DriverSafetyScore> V1GetDriverSafetyScoreAsync(string driverId, long startMs, long endMs, CancellationToken cancellationToken = default);
     /// <summary>Vehicle safety score (v1 legacy). <paramref name="startMs"/>/<paramref name="endMs"/> are spec-required.</summary>
-    Task<object> V1GetVehicleSafetyScoreAsync(string vehicleId, long startMs, long endMs, CancellationToken cancellationToken = default);
+    Task<V1VehicleSafetyScore> V1GetVehicleSafetyScoreAsync(string vehicleId, long startMs, long endMs, CancellationToken cancellationToken = default);
     /// <summary>Batch update safety events (beta).</summary>
-    Task<object> PatchEventsBatchAsync(object request, CancellationToken cancellationToken = default);
+    Task<SafetyEventsBatchResult> PatchEventsBatchAsync(PatchSafetyEventsBatchRequest request, CancellationToken cancellationToken = default);
 }

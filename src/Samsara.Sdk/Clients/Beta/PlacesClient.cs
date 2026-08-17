@@ -8,7 +8,7 @@ using Samsara.Sdk.Models.Beta;
 public interface IPlacesClient
 {
     /// <summary>List places (<c>GET /places</c>).</summary>
-    IAsyncEnumerable<object> ListAsync(
+    IAsyncEnumerable<Place> ListAsync(
         string? name = null,
         string? placeIds = null,
         string? externalIds = null,
@@ -20,15 +20,15 @@ public interface IPlacesClient
         CancellationToken cancellationToken = default);
 
     /// <summary>Create a place (<c>POST /places</c>).</summary>
-    Task<object> CreateAsync(object request, CancellationToken cancellationToken = default);
+    Task<Place> CreateAsync(PlaceCreateRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Update a place (<c>PATCH /places</c>). Identify the place by either
     /// <paramref name="placeId"/> (Samsara id) or <paramref name="externalId"/>
     /// (mutually exclusive per spec; provide exactly one).
     /// </summary>
-    Task<object> UpdateAsync(
-        object request,
+    Task<Place> UpdateAsync(
+        PlaceUpdateRequest request,
         int? placeId = null,
         string? externalId = null,
         CancellationToken cancellationToken = default);
@@ -50,7 +50,7 @@ internal sealed class PlacesClient : SamsaraServiceClientBase, IPlacesClient
 
     public PlacesClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<object> ListAsync(
+    public IAsyncEnumerable<Place> ListAsync(
         string? name = null,
         string? placeIds = null,
         string? externalIds = null,
@@ -60,7 +60,7 @@ internal sealed class PlacesClient : SamsaraServiceClientBase, IPlacesClient
         bool? includeExternalIds = null,
         bool? includeTags = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
+        => PaginateAsync<Place>(
             QueryBuilder.WithParams(BasePath,
                 ("name", name),
                 ("placeIds", placeIds),
@@ -72,15 +72,15 @@ internal sealed class PlacesClient : SamsaraServiceClientBase, IPlacesClient
                 ("includeTags", includeTags?.ToString().ToLowerInvariant())),
             cancellationToken: cancellationToken);
 
-    public Task<object> CreateAsync(object request, CancellationToken cancellationToken = default)
-        => HttpClient.PostDataAsync<object>(BasePath, request, cancellationToken);
+    public Task<Place> CreateAsync(PlaceCreateRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<Place>(BasePath, request, cancellationToken);
 
-    public Task<object> UpdateAsync(
-        object request,
+    public Task<Place> UpdateAsync(
+        PlaceUpdateRequest request,
         int? placeId = null,
         string? externalId = null,
         CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<object>(
+        => HttpClient.PatchDataAsync<Place>(
             QueryBuilder.WithParams(BasePath,
                 ("placeId", placeId?.ToString(CultureInfo.InvariantCulture)),
                 ("externalId", externalId)),

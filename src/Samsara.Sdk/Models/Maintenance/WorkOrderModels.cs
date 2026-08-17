@@ -401,3 +401,18 @@ public sealed record PartInstanceInput
     /// Spec-required.</summary>
     [JsonPropertyName("quantity")] public required double Quantity { get; init; }
 }
+
+/// <summary>
+/// A work order template, as returned by
+/// <c>GET /maintenance/work-order-templates</c> (beta). Mirrors the spec's
+/// <c>WorkOrderTemplateObjectResponseBody</c> schema, which defines only an id
+/// and a name.
+/// </summary>
+public sealed record WorkOrderTemplate
+{
+    /// <summary>The unique id of the work order template. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>The name of the work order template. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")] public string? Name { get; init; }
+}

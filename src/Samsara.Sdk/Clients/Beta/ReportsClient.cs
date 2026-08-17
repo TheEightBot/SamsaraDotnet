@@ -2,37 +2,44 @@ namespace Samsara.Sdk.Clients;
 
 using System.Globalization;
 using Samsara.Sdk.Http;
+using Samsara.Sdk.Models.Beta;
 
 /// <summary>Beta — Custom reports (configs, datasets, runs). Subject to change.</summary>
 public interface IReportsClient
 {
-    /// <summary>Available report configurations (<c>GET /reports/configs</c>).</summary>
-    Task<object> ListConfigsAsync(
+    /// <summary>
+    /// Available report configurations (<c>GET /reports/configs</c>), one page at a time.
+    /// Pass the previous page's cursor as <paramref name="after"/> to advance.
+    /// </summary>
+    Task<IReadOnlyList<ReportConfig>> ListConfigsAsync(
         IReadOnlyList<string>? ids = null,
         string? after = null,
         int? limit = null,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Available report datasets (<c>GET /reports/datasets</c>).</summary>
-    Task<object> ListDatasetsAsync(
+    /// <summary>
+    /// Available report datasets (<c>GET /reports/datasets</c>), one page at a time.
+    /// Pass the previous page's cursor as <paramref name="after"/> to advance.
+    /// </summary>
+    Task<IReadOnlyList<ReportDataset>> ListDatasetsAsync(
         IReadOnlyList<string>? ids = null,
         string? after = null,
         int? limit = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>List report runs (<c>GET /reports/runs</c>).</summary>
-    IAsyncEnumerable<object> ListRunsAsync(
+    IAsyncEnumerable<ReportRun> ListRunsAsync(
         IReadOnlyList<string>? ids = null,
         IReadOnlyList<string>? reportConfigIds = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>Trigger a new report run (<c>POST /reports/runs</c>).</summary>
-    Task<object> CreateRunAsync(object request, CancellationToken cancellationToken = default);
+    Task<ReportRun> CreateRunAsync(CreateReportRunRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Data for a completed report run (<c>GET /reports/runs/data</c>) — required <paramref name="id"/>.
     /// </summary>
-    Task<object> GetRunDataAsync(
+    Task<ReportRunData> GetRunDataAsync(
         string id,
         string? after = null,
         int? limit = null,
@@ -43,49 +50,49 @@ internal sealed class ReportsClient : SamsaraServiceClientBase, IReportsClient
 {
     public ReportsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public Task<object> ListConfigsAsync(
+    public Task<IReadOnlyList<ReportConfig>> ListConfigsAsync(
         IReadOnlyList<string>? ids = null,
         string? after = null,
         int? limit = null,
         CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>(
+        => HttpClient.GetDataAsync<IReadOnlyList<ReportConfig>>(
             QueryBuilder.WithParams("reports/configs",
                 ("ids", ids is null ? null : string.Join(",", ids)),
                 ("after", after),
                 ("limit", limit?.ToString(CultureInfo.InvariantCulture))),
             cancellationToken);
 
-    public Task<object> ListDatasetsAsync(
+    public Task<IReadOnlyList<ReportDataset>> ListDatasetsAsync(
         IReadOnlyList<string>? ids = null,
         string? after = null,
         int? limit = null,
         CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>(
+        => HttpClient.GetDataAsync<IReadOnlyList<ReportDataset>>(
             QueryBuilder.WithParams("reports/datasets",
                 ("ids", ids is null ? null : string.Join(",", ids)),
                 ("after", after),
                 ("limit", limit?.ToString(CultureInfo.InvariantCulture))),
             cancellationToken);
 
-    public IAsyncEnumerable<object> ListRunsAsync(
+    public IAsyncEnumerable<ReportRun> ListRunsAsync(
         IReadOnlyList<string>? ids = null,
         IReadOnlyList<string>? reportConfigIds = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
+        => PaginateAsync<ReportRun>(
             QueryBuilder.WithParams("reports/runs",
                 ("ids", ids is null ? null : string.Join(",", ids)),
                 ("reportConfigIds", reportConfigIds is null ? null : string.Join(",", reportConfigIds))),
             cancellationToken: cancellationToken);
 
-    public Task<object> CreateRunAsync(object request, CancellationToken cancellationToken = default)
-        => HttpClient.PostAsync<object>("reports/runs", request, cancellationToken);
+    public Task<ReportRun> CreateRunAsync(CreateReportRunRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<ReportRun>("reports/runs", request, cancellationToken);
 
-    public Task<object> GetRunDataAsync(
+    public Task<ReportRunData> GetRunDataAsync(
         string id,
         string? after = null,
         int? limit = null,
         CancellationToken cancellationToken = default)
-        => HttpClient.GetAsync<object>(
+        => HttpClient.GetDataAsync<ReportRunData>(
             QueryBuilder.WithParams("reports/runs/data",
                 ("id", id),
                 ("after", after),
