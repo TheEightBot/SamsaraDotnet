@@ -24,7 +24,6 @@ import contextlib
 import importlib.util
 import io
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -43,33 +42,6 @@ def _load(name: str, filename: str):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
-
-
-def _git_short_sha() -> str:
-    try:
-        return subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=REPO_ROOT,
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
-    except Exception:  # noqa: BLE001
-        return "unknown"
-
-
-def _baseline_date() -> str:
-    """Last commit date of the baseline file — when the SDK last reconciled."""
-    try:
-        return subprocess.run(
-            ["git", "log", "-1", "--format=%ad", "--date=short", "--", str(BASELINE)],
-            cwd=REPO_ROOT,
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip() or "unknown"
-    except Exception:  # noqa: BLE001
-        return "unknown"
 
 
 def render() -> str:
@@ -106,11 +78,16 @@ def render() -> str:
     covered = len(ops) - len(missing)
     pct = (covered / len(ops) * 100) if ops else 0.0
 
+    # NOTHING in this block may derive from mutable git state (HEAD sha, commit
+    # dates). The block is committed, so any such value is stale the moment the
+    # commit lands and `--check` could never pass again — and CI checks out with
+    # fetch-depth 1, where `git log` on a single file yields nothing anyway.
+    # Every line below is a pure function of the baseline spec and the SDK source.
     lines = [
         START,
         f"> **Baseline spec**: `{spec.get('info', {}).get('version', '?')}`, content hash "
         f"`{fp['hash']}`, {fp['ops']} operations, {fp['schemas']} schemas "
-        f"(`.github/cache/samsara-api-baseline.json`, last reconciled {_baseline_date()})",
+        f"(`.github/cache/samsara-api-baseline.json`)",
         f"> **Endpoint coverage**: {covered} / {len(ops)} spec operations implemented "
         f"({pct:.1f}%) · {len(mismatched)} mismatched · {len(unresolved)} unresolved · "
         f"{len(eps)} SDK endpoints parsed",
@@ -119,8 +96,8 @@ def render() -> str:
         f"{sev['MEDIUM']} MEDIUM · {sev['LOW']} LOW active · {len(allowlisted)} allowlisted "
         f"(each with a spec pointer)",
         f"> **Weak-typed endpoint bodies**: {len(weak_bodies)} (whole-body `object` request/response)",
-        f"> **Last regenerated**: {_git_short_sha()} — run "
-        f"`python3 tools/render-sync-status.py --write` to refresh",
+        "> _Generated — run `python3 tools/render-sync-status.py --write` after any change "
+        "that moves these numbers._",
         END,
     ]
     return "\n".join(lines)

@@ -560,7 +560,33 @@ def main() -> None:
     if old_spec is None:
         print(f"No baseline found at {args.baseline}. Saving current spec as baseline.")
         save_spec(new_spec, args.baseline)
-        print(f"Baseline saved. Re-run to compare against it.")
+        print("Baseline saved. Re-run to compare against it.")
+        # Still emit the summary. Callers (the daily workflow) read this file
+        # unconditionally in their next step; exiting without writing it turns a
+        # recoverable "no baseline yet" into a FileNotFoundError crash.
+        if args.summary_json:
+            fp = content_fingerprint(new_spec)
+            empty_diff = {
+                k: {}
+                for k in (
+                    "added", "removed", "changed",
+                    "deprecated_added", "deprecated_removed", "summary_only",
+                )
+            }
+            summary = build_summary(
+                spec_source,
+                new_version,
+                new_version,
+                empty_diff,
+                {"added": [], "removed": [], "changed": {}},
+                fp,
+                fp,
+            )
+            summary["baseline_created"] = True
+            args.summary_json.parent.mkdir(parents=True, exist_ok=True)
+            with open(args.summary_json, "w") as f:
+                json.dump(summary, f, indent=2)
+            print(f"Summary written to {args.summary_json}")
         sys.exit(0)
 
     old_version = old_spec.get("info", {}).get("version", "unknown")
