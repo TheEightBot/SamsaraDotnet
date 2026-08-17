@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Diagnostics.CodeAnalysis;
 using Samsara.Sdk.Http;
 using Samsara.Sdk.Models.Compliance;
 
@@ -47,4 +48,12 @@ internal sealed class TachographClient : SamsaraServiceClientBase, ITachographCl
                 ("vehicleIds", vehicleIds),
                 ("startTime", startTime?.ToString("O"))),
             cancellationToken: cancellationToken);
+
+    /// <summary>Create a tachograph file upload (<c>POST /fleet/tachograph/file-uploads</c>).</summary>
+    [Experimental("SAMSARA001")]
+    public Task<TachographFileUpload> CreateFileUploadAsync(
+        CreateTachographFileUploadRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<TachographFileUpload>(
+            "fleet/tachograph/file-uploads", request, cancellationToken);
 }

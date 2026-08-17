@@ -122,3 +122,63 @@ public sealed record TachographVehicle
     [JsonPropertyName("externalIds")]
     public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
+
+/// <summary>
+/// Request to create a tachograph file upload
+/// (<c>POST /fleet/tachograph/file-uploads</c>). Mirrors the spec's
+/// <c>TachographFileUploadsPostTachographFileUploadRequestBody</c>.
+/// </summary>
+public sealed record CreateTachographFileUploadRequest
+{
+    /// <summary>Base64-encoded MD5 digest of the file being uploaded.</summary>
+    [JsonPropertyName("contentMd5")]
+    public required string ContentMd5 { get; init; }
+
+    /// <summary>MIME type of the upload. The spec permits only <c>application/octet-stream</c>.</summary>
+    [JsonPropertyName("contentType")]
+    public required string ContentType { get; init; }
+
+    /// <summary>Size of the file in bytes.</summary>
+    [JsonPropertyName("fileSizeBytes")]
+    public required long FileSizeBytes { get; init; }
+
+    /// <summary>Kind of tachograph file: <c>driverCard</c> or <c>vehicleUnit</c>.</summary>
+    [JsonPropertyName("fileType")]
+    public required string FileType { get; init; }
+}
+
+/// <summary>
+/// Pre-signed upload target returned by <c>POST /fleet/tachograph/file-uploads</c>.
+/// Mirrors the spec's <c>TachographFileUploadResponseBody</c>. Send the file to
+/// <see cref="UploadUrl"/> with every header in <see cref="RequiredHeaders"/>
+/// before <see cref="ExpiresAtTime"/>.
+/// </summary>
+public sealed record TachographFileUpload
+{
+    /// <summary>UTC instant after which <see cref="UploadUrl"/> stops working.</summary>
+    [JsonPropertyName("expiresAtTime")]
+    public DateTimeOffset? ExpiresAtTime { get; init; }
+
+    /// <summary>Headers that must accompany the upload request.</summary>
+    [JsonPropertyName("requiredHeaders")]
+    public IReadOnlyList<TachographUploadRequiredHeader>? RequiredHeaders { get; init; }
+
+    /// <summary>Pre-signed URL to upload the file to.</summary>
+    [JsonPropertyName("uploadUrl")]
+    public string? UploadUrl { get; init; }
+}
+
+/// <summary>
+/// A single header required on a tachograph file upload. Mirrors the spec's
+/// <c>TachographUploadRequiredHeaderResponseBody</c>.
+/// </summary>
+public sealed record TachographUploadRequiredHeader
+{
+    /// <summary>Header name.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>Header value.</summary>
+    [JsonPropertyName("value")]
+    public string? Value { get; init; }
+}
