@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Spec-parity tooling overhaul, and a daily drift watcher that writes its own work order.**
+  The four checkers reported "green" while the SDK had **57 unimplemented operations**, a
+  mis-homed path, and **96 weakly-typed model properties**. Root cause: a single blanket
+  allowlist entry in `check-model-sync.py` — `("object", "*", "weak-typing")` — collapsed all
+  94 weakly-typed endpoint bodies into one accepted line, and `is_weak_type()` never
+  recognised `System.Text.Json.JsonElement?` or `IReadOnlyList<JsonElement>`. Both are fixed:
+  - `check-model-sync.py`: weak-type detection now peels nullability, one collection wrapper,
+    and namespace qualification; a new concreteness test emits `weak-typing` at **MEDIUM**
+    when the spec defines a real schema and **LOW** when the spec is genuinely free-form;
+    whole-body findings are keyed per `File::Method` so they can no longer collapse into one
+    suppressible group; `flattened-nested` → `flattened` at MEDIUM. The blanket entry is gone
+    and every remaining `weak-typing` allowlist entry cites a spec pointer.
+  - `check-sdk-sync.py`: new `--fail-on-unimplemented`; unique (no longer per-tag
+    double-counted) missing-operation list in JSON; `spec_source` exposes a silent fallback
+    to the cached baseline.
+  - `check-api-sync.py`: new `--spec-file`, `--no-report`, `--summary-json`,
+    `--fail-on-structural`, and a `classify()` that separates `cosmetic` churn (Samsara
+    rewords descriptions constantly) from `structural` contract change.
+  - New `tools/render-drift-report.py` and `tools/render-sync-status.py`.
+- **`ITachographClient.CreateFileUploadAsync` — typed tachograph file uploads.** New
+  `CreateTachographFileUploadRequest`, `TachographFileUpload`, and
+  `TachographUploadRequiredHeader` records replace the untyped `object` round-trip.
+- **`docs/api-sync/spec-parity-plan-2026-08-17.md`** — the reviewed plan for the v0.5.0
+  full-parity sweep.
 - **`SamsaraDeserializationException` — failed response parsing now carries the raw payloads.**
   When a successful (2xx) response can't be deserialized into its model type, the SDK no longer
   surfaces a bare `System.Text.Json.JsonException`. Instead it throws a
@@ -32,6 +56,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **CI is now hermetic.** The `sdk-sync` job checks the SDK against the committed baseline
+  (`--spec-file .github/cache/samsara-api-baseline.json`) instead of fetching the live spec.
+  Fetching live meant an upstream edit could turn an unrelated PR red — and it was *masking*
+  a stale baseline, since live-vs-SDK passed while baseline-vs-SDK reported 7 mismatches.
+  Watching the live spec is now solely the daily `api-sync-check` workflow's job. The job was
+  also renamed to `sdk-sync` (stable ASCII, so it can be a required check) and its
+  `paths-ignore` filter dropped from `pull_request`, because a required check skipped by a
+  path filter leaves docs-only PRs stuck at "Expected".
+- **Baseline refreshed to the current live spec** (`ed27c33d1e1f` → `ddbd93d89c05`): 224 → 263
+  paths, 318 → 382 operations, 3,934 → 5,345 schemas — all under an *unchanged*
+  `info.version` of `2025-10-23`.
+- **`api-sync-check.yml` is now daily and produces an actionable work order.** It classifies
+  drift and branches: `cosmetic` refreshes the baseline via a bot commit (no issue);
+  `structural` opens or updates a single `api-sync` issue whose body is a complete
+  implementation spec — endpoint diff, unimplemented operations, mismatches, model findings,
+  and the exact commands to close it — ready to assign to the Copilot coding agent or hand to
+  a local agent. A content-hash marker stops it re-posting unchanged drift, and the
+  instructions are never dropped when the body is truncated to fit GitHub's size limit.
+- **`docs/api-sync/README.md` status block is generated**, not hand-maintained
+  (`tools/render-sync-status.py`, verified in CI by `--check`). The hand-written block had
+  claimed "317 / 317 spec operations covered (100%)".
+- **Tachograph file upload moved out of preview: `POST /preview/fleet/tachograph/file-uploads`
+  → `POST /fleet/tachograph/file-uploads`.** The typed method now lives on
+  `ITachographClient.CreateFileUploadAsync` and is marked `[Experimental("SAMSARA001")]`
+  because Samsara still tags the operation beta — suppress that diagnostic (e.g.
+  `<NoWarn>SAMSARA001</NoWarn>`) to acknowledge the risk.
+  `IPreviewApisClient.CreateTachographFileUploadAsync` remains as an `[Obsolete]` shim that
+  forwards to the new path (the old path 404s) and will be removed in the next major release.
 - **Gateway pairing moved with the spec: `POST /preview/gateways/pair` → `POST /gateways/pair`.**
   Samsara removed the preview path and re-homed pairing under the (beta) `Gateways` tag. The SDK
   method moved accordingly — **breaking**: `IPreviewApisClient.PairGatewaysAsync` was removed and
