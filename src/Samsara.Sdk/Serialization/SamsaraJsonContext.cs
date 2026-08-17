@@ -504,6 +504,32 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(HosCycleClock))]
 [JsonSerializable(typeof(HosDriveClock))]
 [JsonSerializable(typeof(HosShiftClock))]
+// Drivers — records added by the v0.5.0 spec-parity sweep
+[JsonSerializable(typeof(DriverAttribute))]
+[JsonSerializable(typeof(CreateDriverAttribute))]
+[JsonSerializable(typeof(DriverEldSettings))]
+[JsonSerializable(typeof(DriverEldRuleset))]
+[JsonSerializable(typeof(DriverHosSetting))]
+[JsonSerializable(typeof(UsDriverRulesetOverride))]
+// WorkOrders — records added by the v0.5.0 spec-parity sweep
+[JsonSerializable(typeof(WorkOrderDiscount))]
+[JsonSerializable(typeof(WorkOrderTax))]
+[JsonSerializable(typeof(WorkOrderItem))]
+[JsonSerializable(typeof(WorkOrderUnallocatedLabor))]
+[JsonSerializable(typeof(WorkOrderAttachment))]
+[JsonSerializable(typeof(ServiceTaskInstance))]
+[JsonSerializable(typeof(PartInstance))]
+[JsonSerializable(typeof(ServiceTaskSubtask))]
+[JsonSerializable(typeof(ServiceTaskFormSubtask))]
+[JsonSerializable(typeof(ServiceTaskProcedureSubtask))]
+[JsonSerializable(typeof(WorkOrderTimeEntry))]
+[JsonSerializable(typeof(ServiceTaskInstanceInput))]
+[JsonSerializable(typeof(PartInstanceInput))]
+// Settings — records added by the v0.5.0 spec-parity sweep
+[JsonSerializable(typeof(InattentiveDrivingDetectionAlertSettings))]
+[JsonSerializable(typeof(MobileUsageDetectionAlertSettings))]
+[JsonSerializable(typeof(HarshSensitivityByVehicleType))]
+[JsonSerializable(typeof(SpeedingSeverityLevel))]
 internal sealed partial class SamsaraJsonContext : JsonSerializerContext
 {
 }
