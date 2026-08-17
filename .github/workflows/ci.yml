@@ -7,12 +7,11 @@ on:
       - '**/*.md'
       - 'LICENSE'
       - 'CHANGELOG.md'
+  # No paths-ignore on pull_request: `sdk-sync` is a required status check, and a
+  # required check that is skipped by a path filter leaves docs-only PRs stuck
+  # forever at "Expected — waiting for status".
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**/*.md'
-      - 'LICENSE'
-      - 'CHANGELOG.md'
 
 permissions:
   contents: read
@@ -76,8 +75,17 @@ jobs:
           fail_ci_if_error: false
 
   sdk-sync:
-    name: SDK ↔ Spec endpoint check
+    # Job name is kept short and ASCII because it is the required status-check
+    # name on `main`; renaming it later would silently un-require the check.
+    name: sdk-sync
     runs-on: ubuntu-latest
+    env:
+      # CI is hermetic: it checks the SDK against the spec the SDK has actually
+      # been reconciled against. Fetching the live spec here would let an
+      # upstream edit turn an unrelated PR red — and it previously MASKED a stale
+      # baseline, because live-vs-SDK passed while baseline-vs-SDK did not.
+      # Live-spec drift is the daily api-sync-check workflow's job.
+      SPEC: .github/cache/samsara-api-baseline.json
 
     steps:
       - name: Checkout
@@ -90,14 +98,17 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify every SDK endpoint exists in the live spec
-        run: python3 tools/check-sdk-sync.py --fail-on-mismatch
+      - name: Verify every SDK endpoint exists in the spec
+        run: python3 tools/check-sdk-sync.py --spec-file "$SPEC" --fail-on-mismatch
 
       - name: Verify no fabricated / mis-homed SDK methods
-        run: python3 tools/check-sdk-fabrication.py --fail-on-issues
+        run: python3 tools/check-sdk-fabrication.py --spec-file "$SPEC" --fail-on-issues
 
       - name: Verify SDK model shapes match the spec (CRITICAL/HIGH gate)
-        run: python3 tools/check-model-sync.py --fail-on-severity HIGH
+        run: python3 tools/check-model-sync.py --spec-file "$SPEC" --fail-on-severity HIGH
+
+      - name: Verify the api-sync status block is current
+        run: python3 tools/render-sync-status.py --check
 
   pack-check:
     name: NuGet Pack (dry-run)

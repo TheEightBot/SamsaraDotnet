@@ -1,35 +1,56 @@
 name: Samsara API Sync Check
 
+# Watches https://developers.samsara.com/openapi/samsara-api.json for drift.
+#
+# Samsara mutates the spec IN PLACE under a frozen `info.version` (2025-10-23),
+# so version-keyed detection under-triggers. Drift is therefore classified by
+# content:
+#
+#   none       identical content -> do nothing
+#   cosmetic   content hash moved, but zero endpoint/schema-property deltas
+#              (summary & description churn) -> refresh the baseline automatically
+#   structural any operation or schema-property change -> open/update ONE issue
+#              containing a complete implementation spec, ready to be assigned to
+#              the Copilot coding agent or handed to a local agent
+#
+# Structural drift is NEVER auto-absorbed: the baseline only advances alongside
+# reconciled SDK code, inside the implementation PR.
+
 on:
   schedule:
-    # Every Monday at 08:00 UTC
-    - cron: '0 8 * * 1'
+    - cron: '0 6 * * *'          # daily 06:00 UTC
   workflow_dispatch:
     inputs:
-      update_baseline:
-        description: 'Update baseline after checking (use after implementing changes)'
-        required: false
-        default: 'false'
-        type: choice
-        options:
-          - 'false'
-          - 'true'
+      dry_run:
+        description: 'Run all checks but do not open/update issues or commit the baseline'
+        type: boolean
+        default: false
+      force_issue:
+        description: 'Open/update the issue even if drift is only cosmetic (or none)'
+        type: boolean
+        default: false
 
 permissions:
-  contents: write   # needed to update baseline cache on main
-  issues: write     # needed to open drift issues
+  contents: write     # cosmetic-drift baseline commit to main
+  issues: write       # create/update the api-sync issue
+
+concurrency:
+  group: api-sync-check
+  cancel-in-progress: false
+
+env:
+  SPEC_URL: https://developers.samsara.com/openapi/samsara-api.json
+  BASELINE: .github/cache/samsara-api-baseline.json
 
 jobs:
-  api-sync-check:
-    name: Check Samsara API for Changes
+  drift:
+    name: Detect Samsara spec drift
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Use a PAT or the default GITHUB_TOKEN
-          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 1
 
       - name: Set up Python
@@ -37,176 +58,160 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run API sync check
-        id: sync_check
+      - name: Fetch live spec (once)
+        run: |
+          mkdir -p "$RUNNER_TEMP/sync"
+          curl -fsSL --retry 3 --retry-delay 10 \
+            -A "SamsaraApiSyncChecker/2.0 (github.com/${{ github.repository }})" \
+            -o "$RUNNER_TEMP/sync/live-spec.json" "$SPEC_URL"
+          python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$RUNNER_TEMP/sync/live-spec.json"
+          echo "LIVE_SPEC=$RUNNER_TEMP/sync/live-spec.json" >> "$GITHUB_ENV"
+          echo "SYNC_DIR=$RUNNER_TEMP/sync" >> "$GITHUB_ENV"
+
+      - name: Diff live spec against baseline
         run: |
           python3 tools/check-api-sync.py \
-            --baseline .github/cache/samsara-api-baseline.json \
-            --output docs/api-sync/diff-report.md \
-            --fail-on-diff
-        continue-on-error: true
+            --spec-file "$LIVE_SPEC" \
+            --baseline "$BASELINE" \
+            --no-report \
+            --summary-json "$SYNC_DIR/api-sync-summary.json"
 
-      - name: Capture diff status
-        id: diff_status
+      - name: Classify drift
+        id: classify
         run: |
-          EXIT_CODE=${{ steps.sync_check.outputs.exit_code || steps.sync_check.outcome == 'failure' && '1' || '0' }}
-          if [ "${{ steps.sync_check.outcome }}" = "failure" ]; then
-            echo "has_diff=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_diff=false" >> $GITHUB_OUTPUT
-          fi
-          # Extract versions from report
-          OLD_VER=$(grep -oP '(?<=Old version\*\*: `)[^`]+' docs/api-sync/diff-report.md || echo "unknown")
-          NEW_VER=$(grep -oP '(?<=New version\*\*: `)[^`]+' docs/api-sync/diff-report.md || echo "unknown")
-          echo "old_version=${OLD_VER}" >> $GITHUB_OUTPUT
-          echo "new_version=${NEW_VER}" >> $GITHUB_OUTPUT
+          python3 - "$SYNC_DIR/api-sync-summary.json" >> "$GITHUB_OUTPUT" <<'PY'
+          import json, sys
+          s = json.load(open(sys.argv[1]))
+          print(f"classification={s['classification']}")
+          print(f"old_hash={s['old_fingerprint']['hash']}")
+          print(f"new_hash={s['new_fingerprint']['hash']}")
+          print(f"old_version={s['old_version']}")
+          print(f"new_version={s['new_version']}")
+          PY
 
-      - name: Upload diff report artifact
+      - name: Report classification
+        run: echo "::notice::Samsara spec drift = ${{ steps.classify.outputs.classification }}"
+
+      # ---------- STRUCTURAL: build the implementation spec ----------
+      - name: Run SDK checkers against the live spec
+        if: steps.classify.outputs.classification == 'structural' || inputs.force_issue
+        run: |
+          # Non-gating: a red checker here is the POINT — its findings become the
+          # issue body. `|| true` keeps the workflow going so the report is built.
+          python3 tools/check-sdk-sync.py --spec-file "$LIVE_SPEC" --show-missing \
+            --json-file "$SYNC_DIR/sdk-sync.json" > "$SYNC_DIR/sdk-sync.txt" 2>&1 || true
+          python3 tools/check-sdk-fabrication.py --spec-file "$LIVE_SPEC" \
+            --json-file "$SYNC_DIR/fabrication.json" > "$SYNC_DIR/fabrication.txt" 2>&1 || true
+          python3 tools/check-model-sync.py --spec-file "$LIVE_SPEC" \
+            --json-file "$SYNC_DIR/model-sync.json" > "$SYNC_DIR/model-sync.txt" 2>&1 || true
+
+      - name: Build drift report and issue body
+        if: steps.classify.outputs.classification == 'structural' || inputs.force_issue
+        run: |
+          python3 tools/render-drift-report.py \
+            --summary "$SYNC_DIR/api-sync-summary.json" \
+            --sdk-sync "$SYNC_DIR/sdk-sync.json" \
+            --fabrication "$SYNC_DIR/fabrication.json" \
+            --model-sync "$SYNC_DIR/model-sync.json" \
+            --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --full-out "$SYNC_DIR/drift-report.md" \
+            --issue-out "$SYNC_DIR/issue-body.md" \
+            --issue-max-bytes 60000
+
+      - name: Upload drift report artifact
+        if: steps.classify.outputs.classification != 'none' || inputs.force_issue
         uses: actions/upload-artifact@v4
         with:
-          name: api-sync-diff-report
-          path: docs/api-sync/diff-report.md
+          name: api-sync-drift-${{ github.run_id }}
+          path: |
+            ${{ env.SYNC_DIR }}/*.json
+            ${{ env.SYNC_DIR }}/*.md
+            ${{ env.SYNC_DIR }}/*.txt
           retention-days: 90
 
-      - name: SDK ↔ Spec endpoint coverage report
-        run: |
-          python3 tools/check-sdk-sync.py --show-missing > sdk-sync-report.txt 2>&1 || true
-          head -n 12 sdk-sync-report.txt
-          echo "" >> sdk-sync-report.txt
-          python3 tools/check-sdk-fabrication.py >> sdk-sync-report.txt 2>&1 || true
-          tail -n 8 sdk-sync-report.txt
-          echo "" >> sdk-sync-report.txt
-          python3 tools/check-model-sync.py >> sdk-sync-report.txt 2>&1 || true
-          tail -n 20 sdk-sync-report.txt
-
-      - name: Upload SDK sync report artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sdk-sync-report
-          path: sdk-sync-report.txt
-          retention-days: 90
-
-      - name: Read diff report for issue body
-        if: steps.diff_status.outputs.has_diff == 'true'
-        id: read_report
-        run: |
-          # Truncate to 60k chars (GitHub issue limit is 65536)
-          REPORT=$(head -c 60000 docs/api-sync/diff-report.md)
-          echo "report<<REPORT_DELIMITER" >> $GITHUB_OUTPUT
-          echo "${REPORT}" >> $GITHUB_OUTPUT
-          echo "REPORT_DELIMITER" >> $GITHUB_OUTPUT
-
-      - name: Check for existing open api-sync issue
-        if: steps.diff_status.outputs.has_diff == 'true'
-        id: existing_issue
+      - name: Create or update the api-sync issue
+        if: (steps.classify.outputs.classification == 'structural' || inputs.force_issue) && !inputs.dry_run
+        id: issue
         uses: actions/github-script@v7
+        env:
+          ISSUE_BODY_PATH: ${{ env.SYNC_DIR }}/issue-body.md
+          NEW_HASH: ${{ steps.classify.outputs.new_hash }}
+          OLD_HASH: ${{ steps.classify.outputs.old_hash }}
+          NEW_VERSION: ${{ steps.classify.outputs.new_version }}
+          OLD_VERSION: ${{ steps.classify.outputs.old_version }}
         with:
           script: |
-            const issues = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: 'api-sync',
-              state: 'open',
+            const fs = require('fs');
+            const body = fs.readFileSync(process.env.ISSUE_BODY_PATH, 'utf8');
+            // Hidden fingerprint marker: if the open issue already reflects the
+            // current live content hash, the daily run is a no-op instead of
+            // re-posting the same drift every morning.
+            const marker = `<!-- api-sync-fp:${process.env.NEW_HASH} -->`;
+            const title = process.env.OLD_VERSION !== process.env.NEW_VERSION
+              ? `[api-sync] Samsara API ${process.env.OLD_VERSION} → ${process.env.NEW_VERSION}: implement spec drift`
+              : `[api-sync] Samsara spec drift (${process.env.NEW_VERSION}, content ${process.env.OLD_HASH} → ${process.env.NEW_HASH})`;
+            const { owner, repo } = context.repo;
+
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, labels: 'api-sync', state: 'open', per_page: 100,
             });
-            if (issues.data.length > 0) {
-              core.setOutput('issue_number', issues.data[0].number);
-              core.setOutput('exists', 'true');
+            const existing = open.find(i => !i.pull_request);
+
+            let issue;
+            if (!existing) {
+              const res = await github.rest.issues.create({
+                owner, repo, title, body: `${marker}\n${body}`, labels: ['api-sync'],
+              });
+              issue = res.data;
+              core.info(`Created #${issue.number}`);
+            } else if ((existing.body || '').includes(marker)) {
+              core.info(`#${existing.number} already reflects live hash ${process.env.NEW_HASH}; nothing to do`);
+              core.setOutput('number', String(existing.number));
+              core.setOutput('changed', 'false');
+              return;
             } else {
-              core.setOutput('exists', 'false');
+              const res = await github.rest.issues.update({
+                owner, repo, issue_number: existing.number, title, body: `${marker}\n${body}`,
+              });
+              issue = res.data;
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issue.number,
+                body: `Spec drift refreshed on ${new Date().toISOString().slice(0, 10)} — live content hash is now \`${process.env.NEW_HASH}\`. The body above has been updated in place.`,
+              });
+              core.info(`Updated #${issue.number}`);
             }
+            core.setOutput('number', String(issue.number));
+            core.setOutput('changed', 'true');
+            core.summary.addLink(`api-sync issue #${issue.number}`, issue.html_url);
+            await core.summary.write();
 
-      - name: Create GitHub Issue for API drift
-        if: steps.diff_status.outputs.has_diff == 'true' && steps.existing_issue.outputs.exists == 'false'
-        uses: actions/github-script@v7
-        # Pass the (multi-line, backtick-laden) report and versions through env vars rather
-        # than interpolating them into the script source — inlining `${{ ... }}` markdown
-        # into the JS body breaks parsing (SyntaxError: Invalid or unexpected token).
-        env:
-          OLD_VER: ${{ steps.diff_status.outputs.old_version }}
-          NEW_VER: ${{ steps.diff_status.outputs.new_version }}
-          REPORT: ${{ steps.read_report.outputs.report }}
-        with:
-          script: |
-            const oldVer = process.env.OLD_VER;
-            const newVer = process.env.NEW_VER;
-            const report = process.env.REPORT;
-            const versionNote = oldVer !== newVer
-              ? `**API version changed**: \`${oldVer}\` → \`${newVer}\``
-              : `**API version**: \`${newVer}\` (no version bump, but content changed)`;
-
-            const body = [
-              '## Samsara API Drift Detected',
-              '',
-              versionNote,
-              '',
-              'The weekly API sync check found differences between the cached baseline and the live Samsara API spec.',
-              'Review the diff report below and implement any necessary changes to the SDK.',
-              '',
-              '### Diff Report',
-              '',
-              report,
-              '',
-              '---',
-              '',
-              '### Action Required',
-              '',
-              '1. Review the changes above',
-              '2. Create a branch `feature/api-sync-<new-version>` for the implementation',
-              '3. Update the relevant `docs/api-sync/*.md` checklist files',
-              '4. Implement new/changed endpoints, models, and serialization',
-              '5. Update `CHANGELOG.md`',
-              '6. After merging, update the baseline: `python3 tools/check-api-sync.py --update-baseline`',
-              '',
-              '*This issue was automatically created by the [api-sync-check workflow](.github/workflows/api-sync-check.yml)*',
-            ].join('\n');
-
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `[api-sync] Samsara API updated: ${oldVer} → ${newVer}`,
-              body,
-              labels: ['api-sync'],
-            });
-            console.log('Created api-sync issue');
-
-      - name: Update existing issue with new diff
-        if: steps.diff_status.outputs.has_diff == 'true' && steps.existing_issue.outputs.exists == 'true'
-        uses: actions/github-script@v7
-        # See note above: pass report/issue number via env, not script interpolation.
-        env:
-          ISSUE_NUMBER: ${{ steps.existing_issue.outputs.issue_number }}
-          REPORT: ${{ steps.read_report.outputs.report }}
-        with:
-          script: |
-            const issueNumber = parseInt(process.env.ISSUE_NUMBER, 10);
-            const report = process.env.REPORT;
-            const runDate = new Date().toISOString().split('T')[0];
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber,
-              body: [
-                `## Updated Diff — ${runDate}`,
-                '',
-                report,
-              ].join('\n'),
-            });
-            console.log(`Updated existing issue #${issueNumber}`);
-
-      - name: Update baseline if requested
-        if: github.event.inputs.update_baseline == 'true' || (steps.diff_status.outputs.has_diff == 'false')
+      # ---------- COSMETIC: absorb description churn automatically ----------
+      - name: Refresh baseline (cosmetic drift only)
+        if: steps.classify.outputs.classification == 'cosmetic' && !inputs.dry_run && github.ref == 'refs/heads/main'
         run: |
           python3 tools/check-api-sync.py \
-            --baseline .github/cache/samsara-api-baseline.json \
-            --output docs/api-sync/diff-report.md \
-            --update-baseline
+            --spec-file "$LIVE_SPEC" --baseline "$BASELINE" --no-report --update-baseline
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$BASELINE"
+          if git diff --cached --quiet; then
+            echo "baseline unchanged"; exit 0
+          fi
+          git commit \
+            -m "chore(api-sync): refresh baseline (cosmetic drift ${{ steps.classify.outputs.old_hash }} → ${{ steps.classify.outputs.new_hash }})" \
+            -m "No structural change: 0 endpoint deltas, 0 schema property/required deltas. Description/example churn only. Auto-committed by api-sync-check."
+          git push origin HEAD:main
 
-      - name: Commit updated baseline
-        if: github.event.inputs.update_baseline == 'true'
+      - name: Summary
+        if: always()
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .github/cache/samsara-api-baseline.json
-          git diff --cached --quiet || git commit -m "chore: update Samsara API baseline to ${{ steps.diff_status.outputs.new_version }}"
-          git push
+          {
+            echo "## Samsara API sync — ${{ steps.classify.outputs.classification || 'error' }}"
+            echo ""
+            echo "| | version | content hash |"
+            echo "|---|---|---|"
+            echo "| baseline | ${{ steps.classify.outputs.old_version }} | \`${{ steps.classify.outputs.old_hash }}\` |"
+            echo "| live | ${{ steps.classify.outputs.new_version }} | \`${{ steps.classify.outputs.new_hash }}\` |"
+            echo ""
+            echo "Issue: ${{ steps.issue.outputs.number && format('#{0}', steps.issue.outputs.number) || 'n/a' }}"
+          } >> "$GITHUB_STEP_SUMMARY"
