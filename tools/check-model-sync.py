@@ -116,11 +116,6 @@ ALLOWLIST: dict[tuple[str, str, str], str] = {
         "back-compat: legacy v1 field, not in current spec (documented on record)",
     # The list-shape `pagination` is a nested v1 envelope cursor the SDK models
     # as object? (the surrounding pagination is handled by the HTTP layer for
-    # the v2 shapes; on this v1 endpoint it rides inside the data object). Left
-    # weak deliberately — typing it would not change call-site ergonomics.
-    ("TrailerAssignment", "pagination", "weak-typing"):
-        "intentional v1 nested-envelope weak-typing (cursor handled by HTTP layer)",
-
     # --- Tags: deliberate over-tightening ---
     # The shared Tag record marks id/name `required`: every tag the API returns
     # has both, so requiring them gives consumers non-null guarantees. The spec

@@ -135,11 +135,16 @@ public sealed record HubLocation
 
     /// <summary>Service windows during which work can be performed at this location (spec REQUIRED).</summary>
     [JsonPropertyName("serviceWindows")]
-    public required IReadOnlyList<object> ServiceWindows { get; init; }
+    public required IReadOnlyList<HubServiceWindow> ServiceWindows { get; init; }
 
-    /// <summary>Skills required for service at this location (spec REQUIRED).</summary>
+    /// <summary>
+    /// Skills required for service at this location (spec REQUIRED). On the
+    /// response this is an array of skill <em>objects</em>
+    /// (<c>SkillObjectResponseBody</c>), unlike the request shapes where it is a
+    /// bare array of skill ID strings.
+    /// </summary>
     [JsonPropertyName("skillsRequired")]
-    public required IReadOnlyList<object> SkillsRequired { get; init; }
+    public required IReadOnlyList<HubSkillReference> SkillsRequired { get; init; }
 
     /// <summary>Creation timestamp (spec REQUIRED).</summary>
     [JsonPropertyName("createdAt")]
@@ -201,11 +206,15 @@ public sealed record CreateHubLocationInput
 
     /// <summary>Recurring service windows for the location.</summary>
     [JsonPropertyName("serviceWindows")]
-    public IReadOnlyList<object>? ServiceWindows { get; init; }
+    public IReadOnlyList<HubServiceWindowInput>? ServiceWindows { get; init; }
 
-    /// <summary>Skill IDs required for service at this location.</summary>
+    /// <summary>
+    /// Skill IDs required for service at this location. The request shape is a
+    /// bare array of ID strings, unlike the response, which returns skill
+    /// objects (see <see cref="HubSkillReference"/>).
+    /// </summary>
     [JsonPropertyName("skillsRequired")]
-    public IReadOnlyList<object>? SkillsRequired { get; init; }
+    public IReadOnlyList<string>? SkillsRequired { get; init; }
 }
 
 /// <summary>
@@ -251,11 +260,16 @@ public sealed record UpdateHubLocationRequest
     [JsonPropertyName("serviceTimeSeconds")]
     public int? ServiceTimeSeconds { get; init; }
 
+    /// <summary>Recurring service windows for the location.</summary>
     [JsonPropertyName("serviceWindows")]
-    public IReadOnlyList<object>? ServiceWindows { get; init; }
+    public IReadOnlyList<HubServiceWindowInput>? ServiceWindows { get; init; }
 
+    /// <summary>
+    /// Skill IDs required for service at this location — a bare array of ID
+    /// strings on the request side.
+    /// </summary>
     [JsonPropertyName("skillsRequired")]
-    public IReadOnlyList<object>? SkillsRequired { get; init; }
+    public IReadOnlyList<string>? SkillsRequired { get; init; }
 }
 
 /// <summary>
@@ -350,9 +364,11 @@ public sealed record HubPlanOrder
     [JsonPropertyName("priority")] public required long Priority { get; init; }
     [JsonPropertyName("createdAtTime")] public required DateTimeOffset CreatedAtTime { get; init; }
     [JsonPropertyName("updatedAtTime")] public required DateTimeOffset UpdatedAtTime { get; init; }
-    [JsonPropertyName("customProperties")] public required IReadOnlyList<object> CustomProperties { get; init; }
-    [JsonPropertyName("quantities")] public required IReadOnlyList<object> Quantities { get; init; }
-    [JsonPropertyName("skillsRequired")] public required IReadOnlyList<object> SkillsRequired { get; init; }
+    [JsonPropertyName("customProperties")] public required IReadOnlyList<HubOrderCustomProperty> CustomProperties { get; init; }
+    [JsonPropertyName("quantities")] public required IReadOnlyList<HubOrderQuantity> Quantities { get; init; }
+
+    /// <summary>Skill IDs required to fulfill the order — a bare array of ID strings.</summary>
+    [JsonPropertyName("skillsRequired")] public required IReadOnlyList<string> SkillsRequired { get; init; }
     [JsonPropertyName("routeId")] public string? RouteId { get; init; }
     [JsonPropertyName("pickup")] public HubOrderTask? Pickup { get; init; }
     [JsonPropertyName("delivery")] public HubOrderTask? Delivery { get; init; }
@@ -381,7 +397,7 @@ public sealed record CreateHubPlanOrderInput
 
     /// <summary>An array of custom property values for the order.</summary>
     [JsonPropertyName("customProperties")]
-    public IReadOnlyList<object>? CustomProperties { get; init; }
+    public IReadOnlyList<HubOrderCustomPropertyInput>? CustomProperties { get; init; }
 
     /// <summary>Delivery task details (spec ref <c>OrderTaskRequestBody</c>).</summary>
     [JsonPropertyName("delivery")]
@@ -397,11 +413,11 @@ public sealed record CreateHubPlanOrderInput
 
     /// <summary>An array of quantities for the order.</summary>
     [JsonPropertyName("quantities")]
-    public IReadOnlyList<object>? Quantities { get; init; }
+    public IReadOnlyList<HubOrderQuantityInput>? Quantities { get; init; }
 
     /// <summary>An array of skill IDs required to fulfill the order.</summary>
     [JsonPropertyName("skillsRequired")]
-    public IReadOnlyList<object>? SkillsRequired { get; init; }
+    public IReadOnlyList<string>? SkillsRequired { get; init; }
 }
 
 /// <summary>
@@ -536,4 +552,148 @@ public sealed record HubOrderAppointmentWindowInput
     /// <summary>End of the appointment window in RFC 3339 format. Spec marks REQUIRED.</summary>
     [JsonPropertyName("endTime")]
     public required DateTimeOffset EndTime { get; init; }
+}
+
+/// <summary>
+/// A recurring service window returned on a <see cref="HubLocation"/>. Mirrors
+/// the spec <c>ServiceWindowObjectResponseBody</c> schema.
+/// </summary>
+/// <remarks>
+/// The request half is <see cref="HubServiceWindowInput"/>. The two spec schemas
+/// are structurally identical and mark all three members REQUIRED, but they stay
+/// split for the same reason as <c>HubOrderAppointmentWindow</c>: <c>required</c>
+/// is only ever correct on a request DTO — on the response side it turns a
+/// sparse payload into a deserialization crash.
+/// </remarks>
+public sealed record HubServiceWindow
+{
+    /// <summary>Days of the week when the service window applies (e.g. <c>monday</c>). Spec marks REQUIRED.</summary>
+    [JsonPropertyName("daysOfWeek")]
+    public IReadOnlyList<string>? DaysOfWeek { get; init; }
+
+    /// <summary>Start time of the service window, in <c>HH:MM:SS</c> format. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("startTime")]
+    public string? StartTime { get; init; }
+
+    /// <summary>End time of the service window, in <c>HH:MM:SS</c> format. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("endTime")]
+    public string? EndTime { get; init; }
+}
+
+/// <summary>
+/// A recurring service window posted on a hub location. Mirrors the spec
+/// <c>HubLocationServiceWindowInputRequestBody</c> schema, which marks all three
+/// members REQUIRED.
+/// </summary>
+public sealed record HubServiceWindowInput
+{
+    /// <summary>Days of the week when the service window applies (e.g. <c>monday</c>). Spec marks REQUIRED.</summary>
+    [JsonPropertyName("daysOfWeek")]
+    public required IReadOnlyList<string> DaysOfWeek { get; init; }
+
+    /// <summary>Start time of the service window, in <c>HH:MM:SS</c> format. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("startTime")]
+    public required string StartTime { get; init; }
+
+    /// <summary>End time of the service window, in <c>HH:MM:SS</c> format. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("endTime")]
+    public required string EndTime { get; init; }
+}
+
+/// <summary>
+/// A skill reference returned in <c>HubLocation.skillsRequired</c>. Mirrors the
+/// spec <c>SkillObjectResponseBody</c> schema.
+/// </summary>
+/// <remarks>
+/// Distinct from <see cref="HubSkill"/>, which mirrors the fuller
+/// <c>GET /hub/skills</c> resource (it additionally carries <c>hubId</c>,
+/// <c>createdAt</c> and <c>updatedAt</c>).
+/// </remarks>
+public sealed record HubSkillReference
+{
+    /// <summary>The unique identifier for the skill. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>The name of the skill. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+}
+
+/// <summary>
+/// A custom property value returned on a <see cref="HubPlanOrder"/>. Mirrors the
+/// spec <c>OrderCustomPropertyResponseBody</c> schema.
+/// </summary>
+/// <remarks>
+/// Distinct from <see cref="HubCustomProperty"/>, which is the custom property
+/// <em>definition</em> returned by <c>GET /hub/customProperties</c>. The request
+/// half is <see cref="HubOrderCustomPropertyInput"/>, which is a genuinely
+/// different shape — it has no <c>name</c>, since the name comes from the
+/// definition the <c>customPropertyId</c> points at.
+/// </remarks>
+public sealed record HubOrderCustomProperty
+{
+    /// <summary>The ID of the custom property definition. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("customPropertyId")]
+    public string? CustomPropertyId { get; init; }
+
+    /// <summary>The name of the custom property. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>The value of the custom property for this order. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("value")]
+    public string? Value { get; init; }
+}
+
+/// <summary>
+/// A custom property value posted on a <see cref="CreateHubPlanOrderInput"/>.
+/// Mirrors the spec <c>OrderCustomPropertyInputRequestBody</c> schema.
+/// </summary>
+public sealed record HubOrderCustomPropertyInput
+{
+    /// <summary>The ID of the custom property definition. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("customPropertyId")]
+    public required string CustomPropertyId { get; init; }
+
+    /// <summary>The value of the custom property for this order. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("value")]
+    public required string Value { get; init; }
+}
+
+/// <summary>
+/// A per-capacity quantity returned on a <see cref="HubPlanOrder"/>. Mirrors the
+/// spec <c>OrderQuantityResponseBody</c> schema.
+/// </summary>
+/// <remarks>
+/// The request half is <see cref="HubOrderQuantityInput"/>. The two spec schemas
+/// are structurally identical and mark both members REQUIRED, but they stay
+/// split so <c>required</c> appears only on the request DTO — on the response
+/// side it would turn a sparse payload into a deserialization crash.
+/// </remarks>
+public sealed record HubOrderQuantity
+{
+    /// <summary>The ID of the hub capacity this quantity is measured against. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("capacityId")]
+    public string? CapacityId { get; init; }
+
+    /// <summary>The quantity, in the capacity's unit of measurement. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("quantity")]
+    public double? Quantity { get; init; }
+}
+
+/// <summary>
+/// A per-capacity quantity posted on a <see cref="CreateHubPlanOrderInput"/>.
+/// Mirrors the spec <c>OrderQuantityInputRequestBody</c> schema, which marks both
+/// members REQUIRED.
+/// </summary>
+public sealed record HubOrderQuantityInput
+{
+    /// <summary>The ID of the hub capacity this quantity is measured against. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("capacityId")]
+    public required string CapacityId { get; init; }
+
+    /// <summary>The quantity, in the capacity's unit of measurement. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("quantity")]
+    public required double Quantity { get; init; }
 }

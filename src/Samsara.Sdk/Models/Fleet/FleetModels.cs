@@ -1,6 +1,5 @@
 namespace Samsara.Sdk.Models.Fleet;
 
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Samsara.Sdk.Models.Common;
 
@@ -99,8 +98,14 @@ public sealed record Vehicle
     [JsonPropertyName("auxInputType13")]
     public string? AuxInputType13 { get; init; }
 
+    /// <summary>
+    /// Custom attributes on the vehicle. The spec's <c>attributeTiny</c> /
+    /// <c>GoaAttributeTinyResponseBody</c> shape — id, name, and the typed value
+    /// lists — not the full <c>Attribute</c> definition returned by
+    /// <c>GET /attributes</c>.
+    /// </summary>
     [JsonPropertyName("attributes")]
-    public IReadOnlyList<Samsara.Sdk.Models.Tags.AttributeDefinition>? Attributes { get; init; }
+    public IReadOnlyList<AttributeTiny>? Attributes { get; init; }
 
     [JsonPropertyName("vehicleType")]
     public string? VehicleType { get; init; }
@@ -134,11 +139,12 @@ public sealed record Vehicle
 
 /// <summary>
 /// Gross vehicle weight on a <see cref="Vehicle"/>. Mirrors the spec's
-/// <c>grossVehicleWeight</c> object.
+/// <c>GrossVehicleWeight</c> schema, shared by the vehicle response bodies and
+/// the <c>PATCH /fleet/vehicles/{id}</c> request body.
 /// </summary>
 public sealed record VehicleGrossWeight
 {
-    /// <summary>Unit of the weight value (e.g. <c>pounds</c>, <c>kilograms</c>).</summary>
+    /// <summary>Unit of the weight value (<c>lb</c> or <c>kg</c>).</summary>
     [JsonPropertyName("unit")]
     public string? Unit { get; init; }
 
@@ -308,8 +314,9 @@ public sealed record UpdateVehicleRequest
     [JsonPropertyName("engineHours")]
     public long? EngineHours { get; init; }
 
+    /// <summary>Gross vehicle weight. Mirrors the spec's <c>GrossVehicleWeight</c> schema.</summary>
     [JsonPropertyName("grossVehicleWeight")]
-    public System.Text.Json.JsonElement? GrossVehicleWeight { get; init; }
+    public VehicleGrossWeight? GrossVehicleWeight { get; init; }
 
     [JsonPropertyName("gatewaySerial")]
     public string? GatewaySerial { get; init; }
@@ -317,8 +324,9 @@ public sealed record UpdateVehicleRequest
     [JsonPropertyName("vehicleType")]
     public string? VehicleType { get; init; }
 
+    /// <summary>Custom attributes to set on the vehicle (spec schema <c>attributeTiny</c>).</summary>
     [JsonPropertyName("attributes")]
-    public IReadOnlyList<object>? Attributes { get; init; }
+    public IReadOnlyList<AttributeTiny>? Attributes { get; init; }
 
     [JsonPropertyName("odometerMeters")]
     public long? OdometerMeters { get; init; }
@@ -1175,11 +1183,39 @@ public sealed record VehicleStatObdiiDtc
     [JsonPropertyName("dtcDescription")] public string? DtcDescription { get; init; }
 }
 
-/// <summary>OEM-specific fault-code detail on a <see cref="VehicleStatFaultCodes"/> reading.</summary>
+/// <summary>
+/// OEM-specific fault-code detail on a <see cref="VehicleStatFaultCodes"/>
+/// reading. Mirrors the spec's <c>VehicleStatsFaultCodesOem</c> schema.
+/// </summary>
 public sealed record VehicleStatFaultCodesOem
 {
-    /// <summary>OEM-specific diagnostic trouble codes (shape varies by manufacturer).</summary>
-    [JsonPropertyName("diagnosticTroubleCodes")] public IReadOnlyList<JsonElement>? DiagnosticTroubleCodes { get; init; }
+    /// <summary>OEM-specific diagnostic trouble codes.</summary>
+    [JsonPropertyName("diagnosticTroubleCodes")] public IReadOnlyList<VehicleStatOemDtc>? DiagnosticTroubleCodes { get; init; }
+}
+
+/// <summary>
+/// A single OEM-specific diagnostic trouble code. Mirrors the spec's
+/// <c>VehicleStatsFaultCodesOemTroubleCode</c> schema.
+/// </summary>
+/// <remarks>
+/// Named with the <c>VehicleStat</c> prefix (rather than the stripped spec name)
+/// to sit alongside the sibling <c>VehicleStatObdiiDtc</c> and
+/// <c>VehicleStatJ1939Dtc</c> records, and to avoid colliding with the
+/// maintenance domain's unrelated <c>DiagnosticTroubleCode</c> record.
+/// </remarks>
+public sealed record VehicleStatOemDtc
+{
+    /// <summary>The OEM code identifier.</summary>
+    [JsonPropertyName("codeIdentifier")] public string? CodeIdentifier { get; init; }
+
+    /// <summary>The OEM code description.</summary>
+    [JsonPropertyName("codeDescription")] public string? CodeDescription { get; init; }
+
+    /// <summary>The OEM code severity.</summary>
+    [JsonPropertyName("codeSeverity")] public string? CodeSeverity { get; init; }
+
+    /// <summary>The OEM code source.</summary>
+    [JsonPropertyName("codeSource")] public string? CodeSource { get; init; }
 }
 
 /// <summary>
@@ -1262,8 +1298,9 @@ public sealed record UpdateEquipmentRequest
     [JsonPropertyName("tagIds")]
     public IReadOnlyList<string>? TagIds { get; init; }
 
+    /// <summary>Custom attributes to set on the equipment (spec schema <c>GoaAttributeTiny</c>).</summary>
     [JsonPropertyName("attributes")]
-    public IReadOnlyList<object>? Attributes { get; init; }
+    public IReadOnlyList<AttributeTiny>? Attributes { get; init; }
 }
 
 /// <summary>
@@ -1303,10 +1340,11 @@ public sealed record Equipment
     [JsonPropertyName("equipmentSerialNumber")]
     public string? EquipmentSerialNumber { get; init; }
 
-    /// <summary>Custom attributes on the equipment. Returned by the beta
+    /// <summary>Custom attributes on the equipment (spec schema
+    /// <c>GoaAttributeTinyResponseBody</c>). Returned by the beta
     /// <c>PATCH /beta/fleet/equipment/{id}</c> response.</summary>
     [JsonPropertyName("attributes")]
-    public IReadOnlyList<object>? Attributes { get; init; }
+    public IReadOnlyList<AttributeTiny>? Attributes { get; init; }
 }
 
 /// <summary>
@@ -1377,7 +1415,7 @@ public sealed record SpeedingInterval
     [JsonPropertyName("createdAtTime")] public required DateTimeOffset CreatedAtTime { get; init; }
 
     /// <summary>The individual speeding intervals within the trip. Spec marks REQUIRED.</summary>
-    [JsonPropertyName("intervals")] public required IReadOnlyList<object> Intervals { get; init; }
+    [JsonPropertyName("intervals")] public required IReadOnlyList<SpeedingIntervalDetail> Intervals { get; init; }
 
     /// <summary>Start time of the trip, in RFC 3339 format. Spec marks REQUIRED.</summary>
     [JsonPropertyName("tripStartTime")] public required DateTimeOffset TripStartTime { get; init; }
@@ -1406,6 +1444,76 @@ public sealed record SpeedingIntervalAsset
 
     /// <summary>Vehicle identification number (VIN) of the asset.</summary>
     [JsonPropertyName("vin")] public string? Vin { get; init; }
+}
+
+/// <summary>
+/// A single speeding interval within a trip. Mirrors the spec's
+/// <c>SpeedingIntervalResponseBody</c> schema — the item type of
+/// <see cref="SpeedingInterval.Intervals"/>.
+/// </summary>
+/// <remarks>
+/// Named <c>SpeedingIntervalDetail</c> rather than the stripped spec name
+/// <c>SpeedingInterval</c>, which is already taken by the per-trip wrapper
+/// record this type is nested inside.
+/// </remarks>
+public sealed record SpeedingIntervalDetail
+{
+    /// <summary>UTC time the interval started, in RFC 3339 format. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("startTime")] public DateTimeOffset? StartTime { get; init; }
+
+    /// <summary>UTC time the interval ended, in RFC 3339 format. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("endTime")] public DateTimeOffset? EndTime { get; init; }
+
+    /// <summary>Whether the interval has been dismissed. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("isDismissed")] public bool? IsDismissed { get; init; }
+
+    /// <summary>Location of the closest location point to the interval. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("location")] public SpeedingIntervalLocation? Location { get; init; }
+
+    /// <summary>The max speed exceeded during the interval, in km/h. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("maxSpeedKilometersPerHour")] public double? MaxSpeedKilometersPerHour { get; init; }
+
+    /// <summary>The posted speed limit for the interval, in km/h. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("postedSpeedLimitKilometersPerHour")] public double? PostedSpeedLimitKilometersPerHour { get; init; }
+
+    /// <summary>
+    /// Severity level of the interval (<c>light</c>, <c>moderate</c>, <c>heavy</c>
+    /// or <c>severe</c>). Exposed as a string to stay forward-compatible with new
+    /// enum members. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("severityLevel")] public string? SeverityLevel { get; init; }
+}
+
+/// <summary>
+/// Location of the closest location point to a <see cref="SpeedingIntervalDetail"/>.
+/// Mirrors the spec's <c>SpeedingIntervalLocationResponseResponseBody</c> schema.
+/// </summary>
+/// <remarks>
+/// The nested address reuses <see cref="AssetLocationAddress"/>: both properties
+/// resolve to the same spec schema, <c>AddressResponseResponseBody</c>.
+/// </remarks>
+public sealed record SpeedingIntervalLocation
+{
+    /// <summary>Latitude of the closest location point to the interval. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("latitude")] public double? Latitude { get; init; }
+
+    /// <summary>Longitude of the closest location point to the interval. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("longitude")] public double? Longitude { get; init; }
+
+    /// <summary>
+    /// Heading of the asset in degrees; may be 0 when the asset is not moving.
+    /// Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("headingDegrees")] public long? HeadingDegrees { get; init; }
+
+    /// <summary>
+    /// Radial accuracy of the GPS location in meters. Only returned when strong
+    /// GPS is not available.
+    /// </summary>
+    [JsonPropertyName("accuracyMeters")] public double? AccuracyMeters { get; init; }
+
+    /// <summary>Closest address to the interval location. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("address")] public AssetLocationAddress? Address { get; init; }
 }
 
 /// <summary>

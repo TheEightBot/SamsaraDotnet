@@ -1,6 +1,5 @@
 namespace Samsara.Sdk.Models.Routes;
 
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Samsara.Sdk.Models.Common;
 
@@ -52,7 +51,7 @@ public sealed record Route
     public string? OrgLocalTimezone { get; init; }
 
     [JsonPropertyName("recurringRouteLiveSharingLinks")]
-    public IReadOnlyList<JsonElement>? RecurringRouteLiveSharingLinks { get; init; }
+    public IReadOnlyList<RouteLiveSharingLink>? RecurringRouteLiveSharingLinks { get; init; }
 }
 
 /// <summary>
@@ -142,13 +141,73 @@ public sealed record RouteStop
     public string? LiveSharingUrl { get; init; }
 
     [JsonPropertyName("address")]
-    public JsonElement? Address { get; init; }
-
-    [JsonPropertyName("hubLocationId")]
-    public string? HubLocationId { get; init; }
+    public RouteStopAddress? Address { get; init; }
 
     [JsonPropertyName("orders")]
-    public IReadOnlyList<JsonElement>? Orders { get; init; }
+    public IReadOnlyList<RouteStopOrderTaskReference>? Orders { get; init; }
+}
+
+/// <summary>
+/// The saved address a <see cref="RouteStop"/> points at. Mirrors the spec's
+/// <c>GoaAddressTinyResponseResponseBody</c> (a minified Address object).
+/// </summary>
+/// <remarks>
+/// Not <c>EntityReference</c>: that record is a bare <c>{ id, name }</c> pair and
+/// would drop <c>externalIds</c>, which this schema carries.
+/// </remarks>
+public sealed record RouteStopAddress
+{
+    /// <summary>Id of the address. Spec-required.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Name of the address. Spec-required.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>A map of external ids for the address.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// A canonical order task attached to a <see cref="RouteStop"/>. Mirrors the
+/// spec's <c>RouteStopOrderTaskReferenceObjectResponseBody</c>.
+/// </summary>
+public sealed record RouteStopOrderTaskReference
+{
+    /// <summary>Samsara-generated canonical order UUID. Spec-required.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Order task ID attached to this stop. Spec-required.</summary>
+    [JsonPropertyName("taskId")]
+    public string? TaskId { get; init; }
+}
+
+/// <summary>
+/// A live-sharing link on a <see cref="Route"/>. Mirrors the spec's
+/// <c>LiveSharingLinkResponseObjectResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Named <c>RouteLiveSharingLink</c> because <c>Samsara.Sdk.Models.Fleet.LiveSharingLink</c>
+/// already exists and mirrors a different schema
+/// (<c>LiveSharingLinkFullResponseObjectResponseBody</c>, which additionally
+/// carries <c>id</c>, <c>type</c> and <c>description</c>).
+/// </remarks>
+public sealed record RouteLiveSharingLink
+{
+    /// <summary>Name of the Live Sharing Link. Spec-required.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>The shareable URL of the vehicle's location. Spec-required.</summary>
+    [JsonPropertyName("liveSharingUrl")]
+    public string? LiveSharingUrl { get; init; }
+
+    /// <summary>Date that this link expires, in RFC 3339 format.</summary>
+    [JsonPropertyName("expiresAtTime")]
+    public string? ExpiresAtTime { get; init; }
 }
 
 /// <summary>

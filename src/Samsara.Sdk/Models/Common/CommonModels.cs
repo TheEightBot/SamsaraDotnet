@@ -31,6 +31,52 @@ public sealed record EntityReference
 }
 
 /// <summary>
+/// A minified custom attribute attached to a Samsara entity. Mirrors the spec's
+/// <c>attributeTiny</c> schema and its structurally identical siblings
+/// <c>GoaAttributeTiny</c>, <c>GoaAttributeTinyRequestBody</c> and
+/// <c>GoaAttributeTinyResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// <para>
+/// The request and response variants of this schema are byte-identical (same
+/// five properties, none required), so a single record serves both directions.
+/// </para>
+/// <para>
+/// This record lives in the Common namespace because the identical schema is
+/// reached from four separate domains — vehicles (<c>GET /fleet/vehicles</c>,
+/// <c>GET|PATCH /fleet/vehicles/{id}</c>), assets (<c>GET|POST|PATCH /assets</c>),
+/// trailers (<c>GET|POST|PATCH /fleet/trailers</c>) and equipment
+/// (<c>PATCH /beta/fleet/equipment/{id}</c>) — so no single domain namespace can
+/// own it without becoming a de-facto shared type.
+/// </para>
+/// </remarks>
+public sealed record AttributeTiny
+{
+    /// <summary>The Samsara ID of the attribute object.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Name of the attribute.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>String values associated with this attribute.</summary>
+    [JsonPropertyName("stringValues")]
+    public IReadOnlyList<string>? StringValues { get; init; }
+
+    /// <summary>Number values associated with this attribute.</summary>
+    [JsonPropertyName("numberValues")]
+    public IReadOnlyList<double>? NumberValues { get; init; }
+
+    /// <summary>
+    /// Date values associated with this attribute (RFC 3339 full-date format:
+    /// <c>YYYY-MM-DD</c>).
+    /// </summary>
+    [JsonPropertyName("dateValues")]
+    public IReadOnlyList<string>? DateValues { get; init; }
+}
+
+/// <summary>
 /// An external ID associated with a Samsara object.
 /// </summary>
 public sealed record ExternalId

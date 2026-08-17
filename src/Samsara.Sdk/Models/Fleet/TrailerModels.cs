@@ -10,10 +10,11 @@ public sealed record Trailer
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
-    /// <summary>Custom attributes associated with the trailer. Returned by the by-id,
-    /// create, and update endpoints (the <c>GET /fleet/trailers</c> list response omits it).</summary>
+    /// <summary>Custom attributes associated with the trailer (spec schema
+    /// <c>GoaAttributeTinyResponseBody</c>). Returned by the by-id, create, and
+    /// update endpoints (the <c>GET /fleet/trailers</c> list response omits it).</summary>
     [JsonPropertyName("attributes")]
-    public IReadOnlyList<object>? Attributes { get; init; }
+    public IReadOnlyList<Common.AttributeTiny>? Attributes { get; init; }
 
     [JsonPropertyName("enabledForMobile")]
     public bool? EnabledForMobile { get; init; }
@@ -42,8 +43,10 @@ public sealed record CreateTrailerRequest
     [JsonPropertyName("name")]
     public required string Name { get; init; }
 
+    /// <summary>Custom attributes to set on the trailer (spec schema
+    /// <c>GoaAttributeTinyRequestBody</c>).</summary>
     [JsonPropertyName("attributes")]
-    public IReadOnlyList<object>? Attributes { get; init; }
+    public IReadOnlyList<Common.AttributeTiny>? Attributes { get; init; }
 
     [JsonPropertyName("enabledForMobile")]
     public bool? EnabledForMobile { get; init; }
@@ -69,8 +72,10 @@ public sealed record UpdateTrailerRequest
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
+    /// <summary>Custom attributes to set on the trailer (spec schema
+    /// <c>GoaAttributeTinyRequestBody</c>).</summary>
     [JsonPropertyName("attributes")]
-    public IReadOnlyList<object>? Attributes { get; init; }
+    public IReadOnlyList<Common.AttributeTiny>? Attributes { get; init; }
 
     [JsonPropertyName("enabledForMobile")]
     public bool? EnabledForMobile { get; init; }

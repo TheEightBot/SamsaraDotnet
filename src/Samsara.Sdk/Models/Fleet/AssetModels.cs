@@ -1,6 +1,5 @@
 namespace Samsara.Sdk.Models.Fleet;
 
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Samsara.Sdk.Models.Common;
 
@@ -18,9 +17,9 @@ public sealed record Asset
     [JsonPropertyName("vin")] public string? Vin { get; init; }
     [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
     [JsonPropertyName("tags")] public IReadOnlyList<TagReference>? Tags { get; init; }
-    /// <summary>List of attributes associated with the asset (raw JSON; shape per spec
-    /// <c>GoaAttributeTinyResponseBody</c>).</summary>
-    [JsonPropertyName("attributes")] public IReadOnlyList<JsonElement>? Attributes { get; init; }
+    /// <summary>Custom attributes associated with the asset. Mirrors the spec's
+    /// <c>GoaAttributeTinyResponseBody</c> schema.</summary>
+    [JsonPropertyName("attributes")] public IReadOnlyList<AttributeTiny>? Attributes { get; init; }
     [JsonPropertyName("notes")] public string? Notes { get; init; }
     [JsonPropertyName("readingsIngestionEnabled")] public bool? ReadingsIngestionEnabled { get; init; }
     [JsonPropertyName("regulationMode")] public string? RegulationMode { get; init; }
@@ -48,7 +47,9 @@ public sealed record CreateAssetRequest
     [JsonPropertyName("notes")] public string? Notes { get; init; }
     [JsonPropertyName("readingsIngestionEnabled")] public bool? ReadingsIngestionEnabled { get; init; }
     [JsonPropertyName("regulationMode")] public string? RegulationMode { get; init; }
-    [JsonPropertyName("attributes")] public IReadOnlyList<System.Text.Json.JsonElement>? Attributes { get; init; }
+    /// <summary>Custom attributes to set on the asset. Mirrors the spec's
+    /// <c>GoaAttributeTinyRequestBody</c> schema.</summary>
+    [JsonPropertyName("attributes")] public IReadOnlyList<AttributeTiny>? Attributes { get; init; }
 }
 
 /// <summary>Request body for updating an asset.</summary>
@@ -66,6 +67,13 @@ public sealed record UpdateAssetRequest
     [JsonPropertyName("notes")] public string? Notes { get; init; }
     [JsonPropertyName("readingsIngestionEnabled")] public bool? ReadingsIngestionEnabled { get; init; }
     [JsonPropertyName("regulationMode")] public string? RegulationMode { get; init; }
+
+    /// <summary>Tag IDs to associate with the asset.</summary>
+    [JsonPropertyName("tagIds")] public IReadOnlyList<string>? TagIds { get; init; }
+
+    /// <summary>Custom attributes to set on the asset. Mirrors the spec's
+    /// <c>GoaAttributeTinyRequestBody</c> schema.</summary>
+    [JsonPropertyName("attributes")] public IReadOnlyList<AttributeTiny>? Attributes { get; init; }
 }
 
 /// <summary>Request body for deleting assets.</summary>

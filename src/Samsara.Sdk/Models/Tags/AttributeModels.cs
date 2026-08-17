@@ -30,7 +30,7 @@ public sealed record AttributeDefinition
     /// (<c>attributeValueTiny</c> in the spec). <c>null</c> for <c>text</c> and
     /// <c>freeform-multi-select</c> attribute types.</summary>
     [JsonPropertyName("values")]
-    public IReadOnlyList<object>? Values { get; init; }
+    public IReadOnlyList<AttributeValueTiny>? Values { get; init; }
 
     /// <summary>Entities that this attribute is applied onto. Present (non-null)
     /// on expanded responses (<c>GET /attributes/{id}</c>, <c>POST /attributes</c>,
@@ -60,10 +60,69 @@ public sealed record AttributeEntity
     [JsonPropertyName("stringValues")]
     public IReadOnlyList<string>? StringValues { get; init; }
 
+    /// <summary>Date values associated with this attribute on this entity
+    /// (RFC 3339 full-date format: <c>YYYY-MM-DD</c>).</summary>
+    [JsonPropertyName("dateValues")]
+    public IReadOnlyList<string>? DateValues { get; init; }
+
     /// <summary>Spec also returns a generic <c>values</c> array alongside the typed
-    /// <c>numberValues</c>/<c>stringValues</c> lists.</summary>
+    /// <c>numberValues</c>/<c>stringValues</c> lists
+    /// (<c>attributeValueTiny</c> in the spec).</summary>
     [JsonPropertyName("values")]
-    public IReadOnlyList<object>? Values { get; init; }
+    public IReadOnlyList<AttributeValueTiny>? Values { get; init; }
+}
+
+/// <summary>
+/// A minified attribute value carrying its Samsara value id alongside the
+/// human-readable string. Mirrors the spec's <c>attributeValueTiny</c> schema.
+/// </summary>
+public sealed record AttributeValueTiny
+{
+    /// <summary>The Samsara ID of this value object.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>The human-readable string for this value.</summary>
+    [JsonPropertyName("stringValue")]
+    public string? StringValue { get; init; }
+}
+
+/// <summary>
+/// An entity that an attribute is applied to, as supplied on the create and
+/// update attribute requests. Mirrors the spec's
+/// <c>CreateAttributeRequest_entities</c> schema (shared by
+/// <c>POST /attributes</c> and <c>PATCH /attributes/{id}</c>).
+/// </summary>
+/// <remarks>
+/// Kept distinct from the response-side <see cref="AttributeEntity"/>: the
+/// request schema types <c>entityId</c> as a string and carries neither
+/// <c>name</c> nor <c>values</c>, so the two shapes cannot be merged. The
+/// <c>Input</c> suffix follows the existing <c>ServiceTaskInstanceInput</c> /
+/// <c>UsDriverRulesetOverrideInput</c> precedent, since the stripped spec name
+/// would not be a usable identifier.
+/// </remarks>
+public sealed record AttributeEntityInput
+{
+    /// <summary>Entity id, interpreted according to the attribute's entity type.</summary>
+    [JsonPropertyName("entityId")]
+    public string? EntityId { get; init; }
+
+    /// <summary>The external IDs for the given object.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
+    /// <summary>Number values to associate with this attribute on this entity.</summary>
+    [JsonPropertyName("numberValues")]
+    public IReadOnlyList<double>? NumberValues { get; init; }
+
+    /// <summary>String values to associate with this attribute on this entity.</summary>
+    [JsonPropertyName("stringValues")]
+    public IReadOnlyList<string>? StringValues { get; init; }
+
+    /// <summary>Date values to associate with this attribute on this entity
+    /// (RFC 3339 full-date format: <c>YYYY-MM-DD</c>).</summary>
+    [JsonPropertyName("dateValues")]
+    public IReadOnlyList<string>? DateValues { get; init; }
 }
 
 public sealed record CreateAttributeRequest
@@ -86,7 +145,7 @@ public sealed record CreateAttributeRequest
     /// <summary>Entities that will be applied to this attribute
     /// (spec inner schema: <c>CreateAttributeRequest_entities</c>).</summary>
     [JsonPropertyName("entities")]
-    public IReadOnlyList<object>? Entities { get; init; }
+    public IReadOnlyList<AttributeEntityInput>? Entities { get; init; }
 
     /// <summary>Unit of the attribute (only for <c>number</c> attribute types).
     /// Defaults to <c>NO_UNIT</c> server-side when omitted.</summary>
@@ -114,5 +173,5 @@ public sealed record UpdateAttributeRequest
     /// <summary>Entities that will be applied to this attribute
     /// (spec inner schema: <c>CreateAttributeRequest_entities</c>).</summary>
     [JsonPropertyName("entities")]
-    public IReadOnlyList<object>? Entities { get; init; }
+    public IReadOnlyList<AttributeEntityInput>? Entities { get; init; }
 }
