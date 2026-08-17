@@ -31,6 +31,11 @@ from pathlib import Path
 
 BASELINE_REL = ".github/cache/samsara-api-baseline.json"
 
+# Model findings rendered inline in the issue body. The rest go to the artifact.
+# Keeps the issue readable and stops the byte-level truncation from eating the
+# closing instructions' budget.
+MAX_MODEL_FINDINGS = 60
+
 
 def load(path: str | None) -> dict:
     if not path:
@@ -95,9 +100,15 @@ def _section(title: str, lines: list[str], empty: str = "_none_") -> list[str]:
 
 
 def build_report(
-    summary: dict, sdk: dict, fab: dict, model: dict, run_url: str
+    summary: dict, sdk: dict, fab: dict, model: dict, run_url: str,
+    max_model_findings: int | None = None,
 ) -> tuple[list[str], list[str], list[str]]:
-    """Return (header, body, footer). Only the body may be truncated."""
+    """Return (header, body, footer). Only the body may be truncated.
+
+    ``max_model_findings`` caps the inline finding list for the ISSUE body. The
+    full artifact report passes None so it always carries every finding — it is
+    the thing the issue points at when it says "not exhaustive".
+    """
     counts = summary.get("counts", {})
     old_fp = summary.get("old_fingerprint", {})
     new_fp = summary.get("new_fingerprint", {})
@@ -260,9 +271,29 @@ def build_report(
     order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
     gating = [f for f in findings if _sev(f) in ("CRITICAL", "HIGH", "MEDIUM")]
     gating.sort(key=lambda f: (order.get(_sev(f), 9), str(f.get("sdk_type", ""))))
+
+    # Cap this list explicitly rather than letting the byte-level truncation eat
+    # it from the end. Model findings are by far the longest section, and a
+    # positional cut would silently drop the most-severe-last ordering with no
+    # marker at the cut point. An explicit cap keeps the highest severities and
+    # states plainly how many were withheld.
+    if max_model_findings is None:
+        shown, withheld = gating, []
+    else:
+        shown, withheld = gating[:max_model_findings], gating[max_model_findings:]
+    lines = [_fmt_finding(f) for f in shown]
+    if withheld:
+        by_sev: dict[str, int] = defaultdict(int)
+        for f in withheld:
+            by_sev[_sev(f)] += 1
+        breakdown = ", ".join(f"{n} {s}" for s, n in sorted(by_sev.items()))
+        lines.append(
+            f"\n_+{len(withheld)} more not shown here ({breakdown}) — the complete list is "
+            f"in the `api-sync-drift-*` run artifact. Do not treat this section as exhaustive._"
+        )
     sections += _section(
         f"Model parity findings ({len(gating)} CRITICAL/HIGH/MEDIUM)",
-        [_fmt_finding(f) for f in gating],
+        lines,
         "_none_",
     )
 
@@ -355,27 +386,30 @@ def main() -> None:
     ap.add_argument("--full-out", required=True)
     ap.add_argument("--issue-out")
     ap.add_argument("--issue-max-bytes", type=int, default=60000)
+    ap.add_argument("--max-model-findings", type=int, default=MAX_MODEL_FINDINGS,
+                    help="cap on model findings listed inline in the issue body")
     args = ap.parse_args()
 
     summary = load(args.summary)
     if not summary:
         raise SystemExit(f"ERROR: could not read drift summary: {args.summary}")
 
-    header, sections, footer = build_report(
-        summary,
-        load(args.sdk_sync),
-        load(args.fabrication),
-        load(args.model_sync),
-        args.run_url,
-    )
+    sdk, fab, model = load(args.sdk_sync), load(args.fabrication), load(args.model_sync)
 
+    # Full report: every finding, no cap — it is the artifact the issue defers to.
+    header, sections, footer = build_report(summary, sdk, fab, model, args.run_url)
     full = "\n".join(header + sections + footer)
     Path(args.full_out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.full_out).write_text(full)
     print(f"Full report written to {args.full_out} ({len(full.encode('utf-8'))} bytes)")
 
     if args.issue_out:
-        body = truncate(header, sections, footer, args.issue_max_bytes)
+        # Issue body: capped finding list, then a byte-level backstop.
+        i_header, i_sections, i_footer = build_report(
+            summary, sdk, fab, model, args.run_url,
+            max_model_findings=args.max_model_findings,
+        )
+        body = truncate(i_header, i_sections, i_footer, args.issue_max_bytes)
         Path(args.issue_out).parent.mkdir(parents=True, exist_ok=True)
         Path(args.issue_out).write_text(body)
         print(
