@@ -1,10 +1,13 @@
 namespace Samsara.Sdk.Tests;
 
+using System.Globalization;
 using System.Net;
+using System.Text.Json;
 using FluentAssertions;
 using Samsara.Sdk.Clients;
 using Samsara.Sdk.Models.Compliance;
 using Samsara.Sdk.Models.Fleet;
+using Samsara.Sdk.Models.Industrial;
 using Samsara.Sdk.Models.Maintenance;
 using Samsara.Sdk.Models.Safety;
 using Samsara.Sdk.Tests.Helpers;
@@ -193,5 +196,192 @@ public sealed class TransportShapeContractTests
             .GetMethod(nameof(IVehiclesClient.UpdateImmobilizerStateAsync))!
             .ReturnType
             .Should().Be(typeof(Task));
+    }
+
+    // ── GET /v1/fleet/trailers/assignments ──────────────────────────────────
+    // Spec: inline_response_200_7 == { pagination, trailers: [...] }. Same class of
+    // bug as V1ListMaintenanceAsync above — a top-level NAMED array with no `data`
+    // member, so PaginateAsync<T> bound SamsaraListResponse.Data to null and the
+    // pagination loop dereferenced it. This body previously threw on every call.
+    [Fact]
+    public async Task TrailerAssignments_ListAsync_ReadsTheTrailersWrapper_NotADataEnvelope()
+    {
+        var handler = MockHttpMessageHandler.WithJsonResponse(new
+        {
+            pagination = new
+            {
+                startCursor = "c0",
+                endCursor = "c1",
+                hasNextPage = false,
+                hasPrevPage = false,
+            },
+            // object[] because the two elements are different anonymous types.
+            trailers = new object[]
+            {
+                new
+                {
+                    id = 2041L,
+                    name = "myTrailer",
+                    trailerAssignments = new[]
+                    {
+                        new { driverId = 2047L, startMs = 1462878398034L, endMs = (long?)1462881998034L },
+                        // A current assignment: the spec omits endMs entirely.
+                        new { driverId = 3000L, startMs = 1462891998034L, endMs = (long?)null },
+                    },
+                },
+                new { id = 2042L, name = "otherTrailer", trailerAssignments = Array.Empty<object>() },
+            },
+        });
+        var client = new TrailerAssignmentsClient(TestFactory.CreateHttpClient(handler));
+
+        var trailers = await CollectAsync(client.ListAsync());
+
+        trailers.Should().HaveCount(2);
+        trailers[0].Id.Should().Be(2041L);
+        trailers[0].Name.Should().Be("myTrailer");
+
+        var assignments = trailers[0].TrailerAssignments;
+        assignments.Should().HaveCount(2);
+        assignments![0].DriverId.Should().Be(2047L);
+        assignments[0].StartMs.Should().Be(1462878398034L);
+        assignments[1].EndMs.Should().BeNull();
+        trailers[1].Id.Should().Be(2042L);
+
+        handler.LastRequest.Method.Should().Be(HttpMethod.Get);
+        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("v1/fleet/trailers/assignments");
+        handler.Requests.Should().HaveCount(1, "hasNextPage was false");
+    }
+
+    [Fact]
+    public async Task TrailerAssignments_ListAsync_ReturnsEmpty_WhenTheWrapperOmitsTrailers()
+    {
+        // The exact payload that used to NRE: no `trailers`, no `data`.
+        var handler = MockHttpMessageHandler.WithJsonResponse(new { pagination = new { hasNextPage = false } });
+        var client = new TrailerAssignmentsClient(TestFactory.CreateHttpClient(handler));
+
+        var trailers = await CollectAsync(client.ListAsync());
+
+        trailers.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task TrailerAssignments_ListAsync_FollowsTheCursorOn_startingAfter_NotAfter()
+    {
+        // V1getAllTrailerAssignments declares `startingAfter`, not the v2 `after`.
+        // Sending the wrong name is worse than an NRE: the server ignores it and
+        // re-serves page 1 with hasNextPage:true, so the enumeration never ends.
+        var page1 = new
+        {
+            pagination = new { endCursor = "cursor-1", hasNextPage = true },
+            trailers = new[] { new { id = 1L, name = "t1" } },
+        };
+        var page2 = new
+        {
+            pagination = new { endCursor = "cursor-2", hasNextPage = false },
+            trailers = new[] { new { id = 2L, name = "t2" } },
+        };
+        // Serve page 2 for ANY cursor spelling, so a regression to `after=` fails the
+        // assertions below rather than looping forever on page 1.
+        var handler = new MockHttpMessageHandler((req, _) =>
+        {
+            var body = req.RequestUri!.Query.Contains("ursor-1") ? (object)page2 : page1;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(body),
+                    System.Text.Encoding.UTF8,
+                    "application/json"),
+            });
+        });
+        var client = new TrailerAssignmentsClient(TestFactory.CreateHttpClient(handler));
+
+        var trailers = await CollectAsync(client.ListAsync());
+
+        trailers.Select(t => t.Id).Should().ContainInOrder(1L, 2L);
+        handler.Requests.Should().HaveCount(2);
+        handler.Requests[1].RequestUri!.Query.Should().Contain("startingAfter=cursor-1");
+        handler.Requests[1].RequestUri!.Query.Should().NotContain("after=cursor-1");
+    }
+
+    // ── GET /v1/fleet/trailers/{trailerId}/assignments ──────────────────────
+    // Spec returns a single V1TrailerAssignmentsResponse — no pagination block and
+    // no cursor parameters — so this must be a plain GET, not a paginated stream.
+    [Fact]
+    public async Task TrailerAssignments_GetByTrailerAsync_ReadsASingleObject_NotAPage()
+    {
+        var handler = MockHttpMessageHandler.WithJsonResponse(new
+        {
+            id = 2041L,
+            name = "myTrailer",
+            trailerAssignments = new[] { new { driverId = 2047L, startMs = 1462878398034L } },
+        });
+        var client = new TrailerAssignmentsClient(TestFactory.CreateHttpClient(handler));
+
+        var trailer = await client.GetByTrailerAsync("2041");
+
+        trailer.Id.Should().Be(2041L);
+        trailer.TrailerAssignments.Should().ContainSingle();
+        handler.Requests.Should().HaveCount(1);
+        handler.LastRequest.RequestUri!.PathAndQuery
+            .Should().Contain("v1/fleet/trailers/2041/assignments");
+    }
+
+    // ── POST /readings ──────────────────────────────────────────────────────
+    // Spec: requestBody is { data: [ReadingDatapointRequestBody] } and the success
+    // response is 201 with `content: {}` — literally empty. The old signature was
+    // Task<object> CreateAsync(object), i.e. PostAsync<object>, which deserialized
+    // the empty payload and threw.
+    [Fact]
+    public async Task Readings_CreateAsync_PostsTheTypedEnvelope_AndAcceptsAnEmpty201()
+    {
+        var handler = new MockHttpMessageHandler(
+            new HttpResponseMessage(HttpStatusCode.Created) { Content = new StringContent(string.Empty) });
+        var client = new ReadingsClient(TestFactory.CreateHttpClient(handler));
+
+        var request = new CreateReadingsRequest
+        {
+            Data =
+            [
+                new ReadingDatapoint
+                {
+                    EntityId = "123451234512345",
+                    EntityType = "asset",
+                    HappenedAtTime = DateTimeOffset.Parse("2023-10-27T10:00:00Z", CultureInfo.InvariantCulture),
+                    ReadingId = "engineState",
+                    Value = JsonDocument.Parse("\"off\"").RootElement,
+                },
+            ],
+        };
+
+        Func<Task> act = () => client.CreateAsync(request);
+
+        await act.Should().NotThrowAsync("the spec declares 201 with an empty content block");
+
+        handler.LastRequest.Method.Should().Be(HttpMethod.Post);
+        handler.LastRequest.RequestUri!.PathAndQuery.Should().Contain("/readings");
+        // The body must carry the spec's { data: [...] } envelope, not a bare datapoint.
+        handler.LastRequestBody.Should().Contain("\"data\"");
+        handler.LastRequestBody.Should().Contain("\"readingId\":\"engineState\"");
+        handler.LastRequestBody.Should().Contain("\"entityType\":\"asset\"");
+    }
+
+    [Fact]
+    public void Readings_CreateAsync_ReturnsANonGenericTask_AndTakesATypedRequest()
+    {
+        // Task<object>/object here means the untyped body crept back in.
+        var method = typeof(IReadingsClient).GetMethod(nameof(IReadingsClient.CreateAsync))!;
+        method.ReturnType.Should().Be(typeof(Task));
+        method.GetParameters()[0].ParameterType.Should().Be(typeof(CreateReadingsRequest));
+    }
+
+    private static async Task<IReadOnlyList<T>> CollectAsync<T>(IAsyncEnumerable<T> source)
+    {
+        var items = new List<T>();
+        await foreach (var item in source)
+        {
+            items.Add(item);
+        }
+
+        return items;
     }
 }

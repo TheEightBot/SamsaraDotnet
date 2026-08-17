@@ -113,3 +113,50 @@ public sealed record ReadingSnapshot
     /// <summary>The value of the reading.</summary>
     [JsonPropertyName("value")] public JsonElement? Value { get; init; }
 }
+
+/// <summary>Request body for <c>POST /readings</c>. Mirrors the spec's
+/// <c>ReadingsPostReadingsRequestBody</c>: a <c>data</c> array of up to 1000
+/// data points.</summary>
+public sealed record CreateReadingsRequest
+{
+    /// <summary>The readings data points to create. Spec marks REQUIRED, with
+    /// <c>maxItems: 1000</c>.</summary>
+    [JsonPropertyName("data")] public required IReadOnlyList<ReadingDatapoint> Data { get; init; }
+}
+
+/// <summary>A single reading data point submitted to <c>POST /readings</c>.
+/// Mirrors the spec's <c>ReadingDatapointRequestBody</c>.</summary>
+/// <remarks>
+/// Exactly one of <see cref="EntityId"/> and <see cref="ExternalId"/> must be
+/// supplied; the spec marks neither required because either satisfies the other.
+/// Ingestion is only accepted for assets created through <c>POST /assets</c> with
+/// <c>readingsIngestionEnabled</c> set.
+/// </remarks>
+public sealed record ReadingDatapoint
+{
+    /// <summary>Samsara entity ID (for an asset, its assetId). Required if
+    /// <see cref="ExternalId"/> is not provided.</summary>
+    [JsonPropertyName("entityId")] public string? EntityId { get; init; }
+
+    /// <summary>The type of the entity. Valid value: <c>asset</c>. Spec marks
+    /// REQUIRED.</summary>
+    [JsonPropertyName("entityType")] public required string EntityType { get; init; }
+
+    /// <summary>An external ID in <c>key:value</c> format. Required if
+    /// <see cref="EntityId"/> is not provided.</summary>
+    [JsonPropertyName("externalId")] public string? ExternalId { get; init; }
+
+    /// <summary>When the reading happened, in RFC 3339 format. Must not be older
+    /// than the last known reading for the same series. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("happenedAtTime")] public required DateTimeOffset HappenedAtTime { get; init; }
+
+    /// <summary>The ID of the reading, from <c>GET /readings/definitions</c>.
+    /// Spec marks REQUIRED.</summary>
+    [JsonPropertyName("readingId")] public required string ReadingId { get; init; }
+
+    /// <summary>The value of the reading. The spec declares this a free-form
+    /// <c>{type: object}</c> because the shape depends on the reading — a scalar for
+    /// <c>engineRpm</c>, an enum string for <c>engineState</c>, or
+    /// <c>{latitude, longitude, speed}</c> for <c>gps</c>. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("value")] public required JsonElement Value { get; init; }
+}

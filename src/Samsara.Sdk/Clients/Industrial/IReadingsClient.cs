@@ -57,6 +57,16 @@ public interface IReadingsClient
         string? assetTypes = null,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Submit one or more readings (beta).</summary>
-    Task<object> CreateAsync(object request, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Ingest a batch of readings (<c>POST /readings</c>, up to 1000 data points).
+    /// </summary>
+    /// <remarks>
+    /// Returns no value: the spec's success response is a <c>201</c> with an empty
+    /// content block. Ingestion only works for assets created via <c>POST /assets</c>
+    /// with <c>readingsIngestionEnabled</c> set; see <see cref="ListDefinitionsAsync"/>
+    /// for which readings accept ingestion.
+    /// </remarks>
+    /// <param name="request">The batch of data points to ingest.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task CreateAsync(CreateReadingsRequest request, CancellationToken cancellationToken = default);
 }

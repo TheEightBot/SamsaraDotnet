@@ -54,16 +54,22 @@ public abstract class SamsaraServiceClientBase
     /// The two-argument overload above expects the v2 <c>{ "data": { ... }, "pagination": {...} }</c>
     /// envelope and would find no <c>data</c> member on these v1 bodies, so this overload takes an
     /// explicit projection for both the items and the cursor.
+    /// <para>
+    /// <paramref name="cursorParam"/> must match the forward-cursor query parameter the
+    /// operation declares in the spec — v1 bodies use both <c>after</c> and
+    /// <c>startingAfter</c>, and a wrong name makes the server re-serve page 1 forever.
+    /// </para>
     /// </remarks>
     protected IAsyncEnumerable<TItem> PaginateAsync<TResponse, TItem>(
         string path,
         Func<TResponse, IReadOnlyList<TItem>?> selectItems,
         Func<TResponse, PaginationInfo?> selectPagination,
         int? limit = null,
+        string cursorParam = SamsaraHttpClient.DefaultCursorParam,
         CancellationToken cancellationToken = default)
     {
         return PaginationExtensions.PaginateAsync<TItem>(
-            (cursor, ct) => HttpClient.GetPageFromAsync(path, selectItems, selectPagination, cursor, limit, ct),
+            (cursor, ct) => HttpClient.GetPageFromAsync(path, selectItems, selectPagination, cursor, limit, cursorParam, ct),
             cancellationToken);
     }
 }

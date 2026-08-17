@@ -60,7 +60,13 @@ internal sealed class ReadingsClient : SamsaraServiceClientBase, IReadingsClient
                 ("assetTypes", assetTypes)),
             cancellationToken: cancellationToken);
 
-    /// <summary>Submit one or more readings (<c>POST /readings</c>, beta).</summary>
-    public Task<object> CreateAsync(object request, CancellationToken cancellationToken = default)
-        => HttpClient.PostAsync<object>("readings", request, cancellationToken);
+    /// <summary>Submit one or more readings (<c>POST /readings</c>).</summary>
+    /// <remarks>
+    /// The spec's success response is <c>201</c> with <c>content: {}</c> — no body at all —
+    /// so this uses the bodyless <c>PostAsync</c> overload and returns <see cref="Task"/>.
+    /// (It previously returned <c>Task&lt;object&gt;</c> via <c>PostAsync&lt;object&gt;</c>,
+    /// which threw on the empty payload.)
+    /// </remarks>
+    public Task CreateAsync(CreateReadingsRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostAsync("readings", request, cancellationToken);
 }

@@ -231,7 +231,7 @@ builder.Services.AddSamsaraClient(options =>
 | `IAttributesClient` | `samsara.Attributes` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync` |
 | `IDriverVehicleAssignmentsClient` | `samsara.DriverVehicleAssignments` | `ListAsync`, `CreateAsync`, `DeleteAsync` |
 | `IDriverTrailerAssignmentsClient` | `samsara.DriverTrailerAssignments` | `ListAsync`, `CreateAsync`, `DeleteAsync` |
-| `ITrailerAssignmentsClient` | `samsara.TrailerAssignments` | `ListAsync`, `CreateAsync`, `DeleteAsync` |
+| `ITrailerAssignmentsClient` | `samsara.TrailerAssignments` | `ListAsync`, `GetByTrailerAsync` |
 | `ICarrierProposedAssignmentsClient` | `samsara.CarrierProposedAssignments` | `ListAsync`, `CreateAsync` |
 
 ### Industrial & Sensors
@@ -239,7 +239,7 @@ builder.Services.AddSamsaraClient(options =>
 | Client | Property | Key Operations |
 |---|---|---|
 | `IIndustrialClient` | `samsara.Industrial` | `ListAssetsAsync`, `GetAssetAsync`, `ListDataInputsAsync`, `GetDataInputSnapshotAsync`, `GetDataInputFeedAsync`, `GetDataInputHistoryAsync` |
-| `IReadingsClient` | `samsara.Readings` | `ListDefinitionsAsync`, `GetHistoryAsync`, `GetLatestAsync` |
+| `IReadingsClient` | `samsara.Readings` | `ListDefinitionsAsync`, `GetHistoryAsync`, `GetSnapshotAsync`, `CreateAsync` |
 | `ISensorsClient` | `samsara.Sensors` | `ListAsync`, `GetHumidityAsync`, `GetTemperatureAsync`, `GetCargoAsync` |
 
 ### Training

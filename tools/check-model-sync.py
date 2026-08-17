@@ -93,29 +93,15 @@ SEV_RANK = {s: i for i, s in enumerate(SEVERITIES)}  # lower index == more sever
 # unbounded backlog — that exact entry hid 94 weakly-typed endpoint bodies and
 # 93 weakly-typed properties, and was deleted for that reason.
 ALLOWLIST: dict[tuple[str, str, str], str] = {
-    # --- TrailerAssignment: v1 dual-envelope record, deliberately weak/back-compat ---
-    # This single record deserializes BOTH v1 wrapper shapes (list endpoint
-    # { pagination, trailers } and per-trailer endpoint { id, name,
-    # trailerAssignments }). The 7 fields below are NOT in the current spec for
-    # either shape; they are retained on the record for backward compatibility
-    # with older Samsara v1 payloads and existing consumers. See
-    # Models/Assignments/AssignmentModels.cs (TrailerAssignment).
-    ("TrailerAssignment", "trailerId", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    ("TrailerAssignment", "trailerName", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    ("TrailerAssignment", "vehicleId", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    ("TrailerAssignment", "vehicleName", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    ("TrailerAssignment", "driverId", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    ("TrailerAssignment", "startTime", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    ("TrailerAssignment", "endTime", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    # The list-shape `pagination` is a nested v1 envelope cursor the SDK models
-    # as object? (the surrounding pagination is handled by the HTTP layer for
+    # NOTE: the seven ("TrailerAssignment", …, "extra-property") entries that used
+    # to head this table are gone. They existed because a single `TrailerAssignment`
+    # record modelled the v1 page ENVELOPE plus seven invented flat scalars, which
+    # is also what let the record satisfy this checker while the client NRE'd on
+    # every call. The client now paginates the real item schema
+    # (V1TrailerWithAssignments), the envelope has its own record, and the seven
+    # fields no longer exist — so the entries produced no findings and were deleted
+    # rather than left as dead suppression.
+
     # --- Tags: deliberate over-tightening ---
     # The shared Tag record marks id/name `required`: every tag the API returns
     # has both, so requiring them gives consumers non-null guarantees. The spec
@@ -1450,7 +1436,24 @@ def analyze(spec: dict):
                 if resolver.wrapper_is_data_enveloped(req_schema_top):
                     sdk_req_props = models.get(_record_key(req_type or ""))
                     has_data = bool(sdk_req_props and "data" in sdk_req_props)
-                    if req_type and not is_weak_type(req_type) and not has_data:
+                    if req_type is not None and is_weak_type(req_type):
+                        # A weakly-typed body behind a { data: ... } envelope used to
+                        # escape BOTH checks on this side: the wrapper-shape check is
+                        # guarded by `not is_weak_type`, and the weak-typing check
+                        # below only runs in the non-enveloped branch. That is exactly
+                        # how `POST /readings` (Task<object> CreateAsync(object)) sat
+                        # in the SDK reporting clean. Same finding shape, severity and
+                        # per-endpoint dedup key as the non-enveloped branch.
+                        examined += 1
+                        if isinstance(inner, dict) and inner.get("properties"):
+                            findings.append(Finding(
+                                _cap("MEDIUM", beta_capped), "weak-typing",
+                                f"{e['file']}::{e['method']}", "<request>",
+                                f"request body weakly typed ('{req_type}') behind a "
+                                f"{{ data: ... }} envelope; spec's inner schema "
+                                f"defines {len(inner['properties'])} properties",
+                                endpoint, tag))
+                    elif req_type and not has_data:
                         findings.append(Finding(
                             "CRITICAL", "wrapper-shape", req_type or "?", "data",
                             f"spec request expects {{ data: T{'[]' if resolver.data_is_array(req_schema_top) else ''} }} "

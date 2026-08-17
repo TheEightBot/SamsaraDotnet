@@ -98,14 +98,18 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify every SDK endpoint exists in the spec
-        run: python3 tools/check-sdk-sync.py --spec-file "$SPEC" --fail-on-mismatch
+      - name: Verify every SDK endpoint exists in the spec, and every spec op is implemented
+        run: python3 tools/check-sdk-sync.py --spec-file "$SPEC" --fail-on-mismatch --fail-on-unimplemented
 
       - name: Verify no fabricated / mis-homed SDK methods
         run: python3 tools/check-sdk-fabrication.py --spec-file "$SPEC" --fail-on-issues
 
-      - name: Verify SDK model shapes match the spec (CRITICAL/HIGH gate)
-        run: python3 tools/check-model-sync.py --spec-file "$SPEC" --fail-on-severity HIGH
+      - name: Verify SDK model shapes match the spec (MEDIUM gate)
+        # MEDIUM since the v0.5.0 sweep: weak-typing, flattened records, type and
+        # required-ness drift all gate here. The three remaining LOW findings
+        # (FunctionRunContext.requestPayload/responsePayload, ReportRunData.rows) are
+        # genuinely free-form in the spec and stay visible rather than allowlisted.
+        run: python3 tools/check-model-sync.py --spec-file "$SPEC" --fail-on-severity MEDIUM
 
       - name: Verify the api-sync status block is current
         run: python3 tools/render-sync-status.py --check

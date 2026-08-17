@@ -109,6 +109,15 @@ internal sealed class SamsaraHttpClient
     /// <c>{ "data": { "media": [...] }, "pagination": {...} }</c> shape. Using either
     /// envelope helper on the other shape yields a null <c>data</c> member and an empty
     /// enumeration, so the choice must follow the spec's response schema.
+    /// <para>
+    /// <paramref name="cursorParam"/> names the query parameter that carries the forward
+    /// cursor. It defaults to the v2 <c>after</c>, but the legacy v1 bodies are not
+    /// consistent: <c>GET /v1/fleet/locations</c> declares <c>after</c> while
+    /// <c>GET /v1/fleet/trailers/assignments</c> declares <c>startingAfter</c>. Sending the
+    /// wrong name is worse than sending none — the server ignores it and returns page 1
+    /// again with <c>hasNextPage: true</c>, so the caller loops forever. Always take the
+    /// name from the operation's own spec parameters.
+    /// </para>
     /// </remarks>
     public async Task<PagedResponse<TItem>> GetPageFromAsync<TResponse, TItem>(
         string path,
@@ -116,9 +125,10 @@ internal sealed class SamsaraHttpClient
         Func<TResponse, PaginationInfo?> selectPagination,
         string? cursor = null,
         int? limit = null,
+        string cursorParam = DefaultCursorParam,
         CancellationToken cancellationToken = default)
     {
-        var url = AppendPaginationParams(path, cursor, limit);
+        var url = AppendPaginationParams(path, cursor, limit, cursorParam);
 
         var envelope = await GetAsync<TResponse>(url, cancellationToken).ConfigureAwait(false);
 
@@ -453,13 +463,20 @@ internal sealed class SamsaraHttpClient
         }
     }
 
-    private static string AppendPaginationParams(string path, string? cursor, int? limit)
+    /// <summary>The v2 forward-cursor query parameter, used by every non-legacy endpoint.</summary>
+    internal const string DefaultCursorParam = "after";
+
+    private static string AppendPaginationParams(
+        string path,
+        string? cursor,
+        int? limit,
+        string cursorParam = DefaultCursorParam)
     {
         var separator = path.Contains("?") ? '&' : '?';
 
         if (cursor is not null)
         {
-            path = $"{path}{separator}after={Uri.EscapeDataString(cursor)}";
+            path = $"{path}{separator}{cursorParam}={Uri.EscapeDataString(cursor)}";
             separator = '&';
         }
 

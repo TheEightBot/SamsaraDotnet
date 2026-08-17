@@ -204,65 +204,34 @@ public sealed record DeleteDriverVehicleAssignmentsRequest
 }
 
 /// <summary>
-/// Represents a trailer assignment. This single record deserializes BOTH v1 wrapper
-/// shapes: the list endpoint (<c>GET /v1/fleet/trailers/assignments</c>) returns
-/// <c>{ pagination, trailers }</c>, while the per-trailer endpoint
-/// (<c>GET /v1/fleet/trailers/{trailerId}/assignments</c>) returns
-/// <c>{ id, name, trailerAssignments }</c>. Fields present in only one shape are
-/// therefore nullable.
+/// Response body of <c>GET /v1/fleet/trailers/assignments</c>: a top-level
+/// <c>trailers</c> array beside a top-level <c>pagination</c> block, with no
+/// <c>data</c> envelope. Mirrors the spec's <c>inline_response_200_7</c> schema.
 /// </summary>
-public sealed record TrailerAssignment
+/// <remarks>
+/// This is the page envelope, not the page item. The item is
+/// <see cref="V1TrailerWithAssignments"/> (spec <c>V1TrailerAssignmentsResponse</c>),
+/// which is also the entire body of the per-trailer endpoint
+/// <c>GET /v1/fleet/trailers/{trailerId}/assignments</c>.
+/// </remarks>
+public sealed record V1TrailerAssignmentsListResponse
 {
-    /// <summary>Trailer id (per-trailer endpoint shape). Spec type int64; absent on the list-wrapper shape.</summary>
-    [JsonPropertyName("id")]
-    public long? Id { get; init; }
-
-    /// <summary>Trailer name (per-trailer endpoint shape); absent on the list-wrapper shape.</summary>
-    [JsonPropertyName("name")]
-    public string? Name { get; init; }
-
-    /// <summary>Per-trailer endpoint: the trailer's assignment rows
-    /// (spec schema <c>V1TrailerAssignmentResponse</c>).</summary>
-    [JsonPropertyName("trailerAssignments")]
-    public IReadOnlyList<V1TrailerAssignmentEntry>? TrailerAssignments { get; init; }
-
-    /// <summary>List endpoint: pagination cursor object
-    /// (spec schema <c>V1Pagination</c>).</summary>
-    [JsonPropertyName("pagination")]
-    public V1PaginationInfo? Pagination { get; init; }
-
-    /// <summary>List endpoint: the trailers array
-    /// (spec schema <c>V1TrailerAssignmentsResponse</c>).</summary>
+    /// <summary>The trailers on this page, each with its driver assignment rows.</summary>
     [JsonPropertyName("trailers")]
     public IReadOnlyList<V1TrailerWithAssignments>? Trailers { get; init; }
 
-    // Not in current spec; retained for back-compat.
-    [JsonPropertyName("trailerId")]
-    public string? TrailerId { get; init; }
-
-    [JsonPropertyName("trailerName")]
-    public string? TrailerName { get; init; }
-
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    [JsonPropertyName("vehicleName")]
-    public string? VehicleName { get; init; }
-
-    [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
-
-    [JsonPropertyName("startTime")]
-    public DateTimeOffset? StartTime { get; init; }
-
-    [JsonPropertyName("endTime")]
-    public DateTimeOffset? EndTime { get; init; }
+    /// <summary>Bidirectional cursor pagination metadata (spec schema <c>V1Pagination</c>).
+    /// This endpoint's forward cursor is spent on the <c>startingAfter</c> query
+    /// parameter, not the v2 <c>after</c>.</summary>
+    [JsonPropertyName("pagination")]
+    public V1PaginationInfo? Pagination { get; init; }
 }
 
 /// <summary>
-/// A trailer and its driver assignment rows, as returned in the <c>trailers</c>
-/// array of <c>GET /v1/fleet/trailers/assignments</c>. Mirrors the spec's
-/// <c>V1TrailerAssignmentsResponse</c> schema (the composition of
+/// A trailer and its driver assignment rows. This is both the item type of the
+/// <c>trailers</c> array on <c>GET /v1/fleet/trailers/assignments</c> and the whole
+/// (non-paginated) body of <c>GET /v1/fleet/trailers/{trailerId}/assignments</c>.
+/// Mirrors the spec's <c>V1TrailerAssignmentsResponse</c> schema (the composition of
 /// <c>V1TrailerBase</c> and <c>V1TrailerAssignmentsResponse_allOf</c>).
 /// </summary>
 /// <remarks>
@@ -293,8 +262,8 @@ public sealed record V1TrailerWithAssignments
 /// </summary>
 /// <remarks>
 /// Named <c>V1TrailerAssignmentEntry</c> rather than the stripped spec name
-/// <c>V1TrailerAssignment</c>, which would read as a v1 sibling of the
-/// <see cref="TrailerAssignment"/> envelope record this type is nested inside.
+/// <c>V1TrailerAssignment</c>, which would read as a sibling of the enclosing
+/// <see cref="V1TrailerWithAssignments"/> rather than as one of its rows.
 /// </remarks>
 public sealed record V1TrailerAssignmentEntry
 {
