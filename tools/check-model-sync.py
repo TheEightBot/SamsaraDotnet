@@ -26,11 +26,14 @@ How it works
    spec query parameters against SDK method parameters.
 
 Severity: CRITICAL / HIGH / MEDIUM / LOW (see classify()). Beta-tagged
-endpoints and the `Clients/Beta/*` weak-typed clients cap at MEDIUM.
+endpoints and the `Clients/Beta/*` weak-typed clients cap at MEDIUM: the cap
+only prevents a CRITICAL/HIGH *label*, it does not exempt anything from the
+gate. With the CI gate at `--fail-on-severity MEDIUM`, a beta-capped finding
+still fails the build exactly like any other MEDIUM finding.
 
 Usage:
     python3 tools/check-model-sync.py [--spec-url URL | --spec-file PATH]
-                                      [--json] [--by-domain]
+                                      [--json] [--json-file PATH] [--by-domain]
                                       [--fail-on-severity {CRITICAL,HIGH,MEDIUM,LOW}]
 
 Exit codes:
@@ -63,9 +66,21 @@ SEV_RANK = {s: i for i, s in enumerate(SEVERITIES)}  # lower index == more sever
 # and reviewable. Anything NOT in this map is a real finding.
 #
 # RULE FOR ADDITIONS: only put something here once you've confirmed it is an
-# intentional modelling decision (back-compat, deliberate over-tightening, or
-# intentional Beta weak-typing) — never to paper over a genuine drift. Each
-# entry carries the rationale inline.
+# intentional modelling decision (back-compat or deliberate over-tightening) —
+# never to paper over a genuine drift. Each entry carries the rationale inline.
+#
+# RULE FOR `weak-typing` ENTRIES SPECIFICALLY: an entry is admissible ONLY if its
+# reason cites the exact spec pointer (components.schemas.<Schema>.properties.<p>)
+# proving the schema is genuinely FREE-FORM — i.e. a bare `{type: object}` with no
+# `properties`, no `enum`, no `oneOf`/`anyOf`/`allOf`, and no meaningful
+# `additionalProperties`. "Beta", "preview", "volatile", "not worth typing" are
+# NOT admissible reasons: if the spec describes a shape, the SDK must model it.
+#
+# BLANKET / WILDCARD ENTRIES ARE FORBIDDEN. Every key must name a concrete
+# (record, property) pair. A wildcard key such as ("object", "*", "weak-typing")
+# collapses unrelated findings into one dedup group and silently suppresses an
+# unbounded backlog — that exact entry hid 94 weakly-typed endpoint bodies and
+# 93 weakly-typed properties, and was deleted for that reason.
 ALLOWLIST: dict[tuple[str, str, str], str] = {
     # --- TrailerAssignment: v1 dual-envelope record, deliberately weak/back-compat ---
     # This single record deserializes BOTH v1 wrapper shapes (list endpoint
@@ -117,17 +132,16 @@ ALLOWLIST: dict[tuple[str, str, str], str] = {
     ("DataInputDataPoint", "id", "over-tightened"):
         "intentional: every returned data point has an id; SDK guarantees non-null",
 
-    # --- Beta / preview / v1-legacy: intentional weak-typing ---
-    # A large family of Beta, preview, and low-priority/volatile v1-legacy
-    # endpoints (BetaClient, FunctionsClient, PlacesClient, PreferredStations,
-    # QualificationRecords, Reports, Ridership, LegacyApis, PreviewApis, etc.)
-    # return `object` by design rather than committing to a hand-maintained
-    # model for surfaces that are unstable or out of the SDK's typed scope.
-    # Already capped at MEDIUM by the beta/weak logic; allowlisted so the
-    # gate reaches a true zero. Revisit if/when these endpoints are promoted to
-    # typed models.
-    ("object", "*", "weak-typing"):
-        "intentional: Beta/preview/volatile-v1 endpoints weakly typed (object) by design",
+    # --- Readings: the spec itself leaves these free-form ---
+    # These are the ONLY weakly-typed properties the spec justifies: each is a
+    # bare `{type: object}` with no properties/enum/composition, so JsonElement is
+    # the honest C# type. Pointers verified against components.schemas.
+    ("ReadingDefinition", "type", "weak-typing"):
+        "spec components.schemas.ReadingDefinitionResponseBody.properties.type is a free-form {type: object} (no properties) — JsonElement is the honest type",
+    ("ReadingHistory", "value", "weak-typing"):
+        "spec components.schemas.ReadingHistoryResponseBody.properties.value is free-form {type: object} — value shape depends on the reading's dataType",
+    ("ReadingSnapshot", "value", "weak-typing"):
+        "spec components.schemas.ReadingSnapshotResponseBody.properties.value is free-form {type: object} — value shape depends on the reading's dataType",
 }
 
 
@@ -721,6 +735,12 @@ def type_mismatch(spec_prop: dict, sdk_prop: dict, resolver: SpecResolver) -> st
     property type, else None. Conservative: only flags clear scalar/shape
     contradictions to avoid false positives on nested records."""
     ctype = sdk_prop["ctype"]
+    # Weak types (object / JsonElement / IReadOnlyList<JsonElement> / ...) are
+    # reported once, as `weak-typing`. Returning early keeps them from ALSO
+    # surfacing as `type-mismatch` now that is_weak_type() recognises the
+    # namespace-qualified and collection-wrapped spellings.
+    if is_weak_type(ctype):
+        return None
     base = _csharp_base(ctype)
     leaf = base.split(".")[-1].split("<")[0]
 
@@ -788,11 +808,124 @@ class Finding:
         return (self.sdk_type, self.prop, self.ftype)
 
 
+# Type tokens that carry NO schema information: the C# compiler cannot tell a
+# caller anything about the payload's shape.
+WEAK_LEAVES = {"object", "JsonElement", "JsonNode", "JsonObject", "JsonDocument"}
+# Collection wrappers we peel exactly ONE level of: IReadOnlyList<JsonElement> is
+# every bit as weakly typed as JsonElement.
+_COLLECTION_WRAPPERS = {
+    "IReadOnlyList", "IList", "List", "IEnumerable", "IReadOnlyCollection",
+    "ICollection", "Collection",
+}
+_DICT_WRAPPERS = {"Dictionary", "IDictionary", "IReadOnlyDictionary"}
+_GENERIC_RE = re.compile(r'^([A-Za-z0-9_\.]+)\s*<\s*(.+)\s*>$', re.S)
+
+
+def _leaf_token(t: str) -> str:
+    """Leaf of a possibly namespace-qualified type name (System.Text.Json.X -> X)."""
+    return t.strip().split(".")[-1].strip()
+
+
+def _strip_nullable(t: str) -> str:
+    t = t.strip()
+    while t.endswith("?"):
+        t = t[:-1].strip()
+    return t
+
+
 def is_weak_type(ctype: str | None) -> bool:
+    """True when the C# type conveys no shape at all.
+
+    Recognises, beyond the bare tokens: nullable (`JsonElement?`),
+    namespace-qualified (`System.Text.Json.JsonElement?`) and ONE level of
+    collection wrapping (`IReadOnlyList<JsonElement>`, `object[]`). Dictionaries
+    are deliberately NOT handled here — a `Dictionary<string, object>` is a
+    legitimate model for a genuine free-form map, so it is only weak in context
+    (see ``is_weak_dictionary``).
+    """
     if not ctype:
         return False
-    t = ctype.strip().rstrip("?").strip()
-    return t in ("object", "JsonElement", "JsonNode", "JsonObject")
+    t = _strip_nullable(ctype)
+    m = _GENERIC_RE.match(t)
+    if m and _leaf_token(m.group(1)) in _COLLECTION_WRAPPERS:
+        t = _strip_nullable(m.group(2))
+    elif t.endswith("[]"):
+        t = _strip_nullable(t[:-2])
+    return _leaf_token(t) in WEAK_LEAVES
+
+
+def is_weak_dictionary(ctype: str | None) -> bool:
+    """True for `Dictionary<string, object>` / `IReadOnlyDictionary<string, JsonElement>`
+    and friends — a map whose VALUE type is weak.
+
+    A weak-valued map is the right model for a genuine free-form map, so callers
+    must additionally confirm the spec property is a *structured* object (one
+    with `properties`) before treating this as a finding.
+    """
+    if not ctype:
+        return False
+    t = _strip_nullable(ctype)
+    m = _GENERIC_RE.match(t)
+    if not m or _leaf_token(m.group(1)) not in _DICT_WRAPPERS:
+        return False
+    args = m.group(2)
+    # Split on the top-level comma (value type may itself be generic).
+    depth, split_at = 0, -1
+    for i, ch in enumerate(args):
+        if ch == "<":
+            depth += 1
+        elif ch == ">":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            split_at = i
+            break
+    if split_at < 0:
+        return False
+    return is_weak_type(args[split_at + 1:])
+
+
+def _spec_is_concrete(schema: dict | None, resolver: SpecResolver, depth: int = 0) -> bool:
+    """True when the spec schema describes a shape the SDK could model.
+
+    CONCRETE: has `properties`, or an `enum`, or `oneOf`/`anyOf`/`allOf`
+    composition, or a scalar `type` (string/integer/number/boolean), or
+    `type: object` with a non-trivial `additionalProperties` schema. Arrays are
+    judged by their element schema.
+
+    FREE-FORM: a bare `{type: object}` with nothing else, or a schema with no
+    `type` and no structure at all. For those, `JsonElement` is the honest C#
+    type and the finding is only worth LOW (kept visible, not gate-worthy).
+    """
+    if depth > 8:
+        return False
+    sd = resolver.deref(schema) or schema
+    if not isinstance(sd, dict):
+        return False
+    st = sd.get("type")
+    if isinstance(st, list):
+        st = next((x for x in st if x != "null"), None)
+    if st == "array" or ("items" in sd and st is None):
+        return _spec_is_concrete(sd.get("items"), resolver, depth + 1)
+    if isinstance(sd.get("properties"), dict) and sd["properties"]:
+        return True
+    if sd.get("enum"):
+        return True
+    for key in ("oneOf", "anyOf", "allOf"):
+        branch = sd.get(key)
+        if isinstance(branch, list) and branch:
+            return True
+    if st in ("string", "integer", "number", "boolean"):
+        return True
+    if st == "object":
+        ap = sd.get("additionalProperties")
+        if isinstance(ap, dict) and ap:
+            apd = resolver.deref(ap) or ap
+            if isinstance(apd, dict) and (
+                apd.get("properties") or apd.get("type") or apd.get("enum")
+                or apd.get("oneOf") or apd.get("anyOf") or apd.get("allOf")
+            ):
+                return True
+    return False
 
 
 # Known intentional SDK->spec flattening (driverId vs driver.id, etc.) keeps
@@ -851,18 +984,34 @@ def compare_record(
             # Flattened-object heuristic: spec nested object whose scalar parts
             # the SDK promoted to <name><Field>.
             stype = sschema_d.get("type")
-            flattened = False
+            child_props = sschema_d.get("properties") or {}
+            matched: list[str] = []
             if stype == "object" or "properties" in sschema_d:
-                for child in (sschema_d.get("properties") or {}):
-                    if (sname + child[:1].upper() + child[1:]) in sdk_json_names \
-                       or any(n.lower() == (sname + child).lower() for n in sdk_json_names):
-                        flattened = True
-                        break
-            if flattened:
+                sdk_by_lower = {n.lower(): n for n in sdk_json_names}
+                for child in child_props:
+                    # Promotion spellings, in order of confidence:
+                    #   <name><Child>  e.g. driver.id  -> driverId
+                    #   <name>_<child> e.g. driver.id  -> driver_id
+                    #   <child>        e.g. driver.id  -> id   (ONLY when `child`
+                    #                  is not itself a top-level spec property,
+                    #                  which would make it a real sibling)
+                    cands = [
+                        (sname + child[:1].upper() + child[1:]).lower(),
+                        f"{sname}_{child}".lower(),
+                    ]
+                    if child not in spec_names:
+                        cands.append(child.lower())
+                    for cand in cands:
+                        hit = sdk_by_lower.get(cand)
+                        if hit is not None:
+                            matched.append(hit)
+                            break
+            if matched:
                 findings.append(Finding(
-                    cap("LOW"), "flattened-nested", sdk_record_name, sname,
-                    f"spec nested object '{sname}' flattened into scalar(s) on SDK "
-                    f"(known/expected)", endpoint, tag))
+                    cap("MEDIUM"), "flattened", sdk_record_name, sname,
+                    f"spec nested object '{sname}' ({len(child_props)} props) has been "
+                    f"flattened onto '{sdk_record_name}' as "
+                    f"{', '.join(sorted(set(matched)))}", endpoint, tag))
                 continue
             if side == "request" and is_req:
                 findings.append(Finding(
@@ -888,21 +1037,28 @@ def compare_record(
             findings.append(Finding(
                 cap("MEDIUM"), "type-mismatch", sdk_record_name, sname,
                 reason, endpoint, tag))
-        # Weak object where spec concrete.
-        elif is_weak_type(sdk_prop["ctype"]):
-            sd_type = sschema_d.get("type")
-            if sd_type == "object" or "properties" in sschema_d or (
-                sd_type == "array"
-            ):
-                # Only note when the spec actually has structure to model.
-                inner_obj = sschema_d
-                if sd_type == "array":
-                    inner_obj = resolver.deref(sschema_d.get("items")) or {}
-                if isinstance(inner_obj, dict) and inner_obj.get("properties"):
-                    findings.append(Finding(
-                        cap("MEDIUM"), "weak-typing", sdk_record_name, sname,
-                        f"SDK uses weak '{sdk_prop['ctype']}' but spec '{sname}' has a "
-                        f"concrete schema", endpoint, tag))
+        # Weak SDK type. Reported either way, but the severity depends on whether
+        # the spec actually describes a shape: MEDIUM when it does (real work to
+        # do), LOW when the spec is genuinely free-form (JsonElement is honest,
+        # but the decision stays visible/allowlistable). Same ftype on both
+        # branches so ALLOWLIST keys keep matching.
+        elif is_weak_type(sdk_prop["ctype"]) or (
+            is_weak_dictionary(sdk_prop["ctype"])
+            and isinstance(sschema_d.get("properties"), dict)
+            and sschema_d["properties"]
+        ):
+            if _spec_is_concrete(sschema_d, resolver):
+                findings.append(Finding(
+                    cap("MEDIUM"), "weak-typing", sdk_record_name, sname,
+                    f"SDK uses weak '{sdk_prop['ctype']}' but spec '{sname}' has a "
+                    f"concrete schema", endpoint, tag))
+            else:
+                findings.append(Finding(
+                    cap("LOW"), "weak-typing", sdk_record_name, sname,
+                    f"SDK uses weak '{sdk_prop['ctype']}' and spec '{sname}' is "
+                    f"free-form (no properties/enum/composition) — weak type is "
+                    f"defensible; allowlist it with a spec pointer to accept",
+                    endpoint, tag))
 
         # Required-ness drift.
         if side == "request":
@@ -1104,8 +1260,17 @@ def analyze(spec: dict):
                     if req_type is None:
                         pass  # no typed body param (e.g. builds inline) — skip
                     elif is_weak_type(req_type):
-                        _queue(req_type, None, inner, req_required,
-                               "request", endpoint, tag, beta_capped)
+                        # Whole-body weak typing. The dedup key MUST be per
+                        # endpoint-method (see the response site below), otherwise
+                        # every weakly-typed body in the SDK collapses into one
+                        # finding that a single allowlist entry can hide.
+                        if isinstance(inner, dict) and inner.get("properties"):
+                            findings.append(Finding(
+                                _cap("MEDIUM", beta_capped), "weak-typing",
+                                f"{e['file']}::{e['method']}", "<request>",
+                                f"request body weakly typed ('{req_type}') but spec "
+                                f"defines {len(inner['properties'])} properties",
+                                endpoint, tag))
                     else:
                         rec = _record_key(req_type)
                         sdk_props = models.get(rec)
@@ -1123,12 +1288,16 @@ def analyze(spec: dict):
             inner, is_list, resp_required = resolver.unwrap_envelope(resp_schema_top)
             examined += 1
             if is_weak_type(resp_type):
-                # Beta clients intentionally weak — cap at MEDIUM (done via beta_capped
-                # only if beta; otherwise still note as weak-typing MEDIUM).
+                # Keyed per endpoint-method, NOT by the literal ("object", "*"):
+                # Finding.key() is (sdk_type, prop, ftype), so the old literal
+                # deduped ~94 distinct weakly-typed responses into a single group
+                # — which is precisely how one blanket allowlist entry hid them
+                # all. Severity is unchanged (beta cap keeps it at MEDIUM).
                 if isinstance(inner, dict) and inner.get("properties"):
                     findings.append(Finding(
-                        _cap("MEDIUM", beta_capped), "weak-typing", "object", "*",
-                        f"response weakly typed (object) but spec defines "
+                        _cap("MEDIUM", beta_capped), "weak-typing",
+                        f"{e['file']}::{e['method']}", "<response>",
+                        f"response weakly typed ('{resp_type}') but spec defines "
                         f"{len(inner.get('properties'))} properties", endpoint, tag))
             else:
                 rec = _record_key(resp_type)
@@ -1303,9 +1472,35 @@ def report_human(groups, examined, n_eps, by_domain: bool, allowlisted=None):
             print(f"      reason: {g['reason']}")
 
 
-def report_json(groups, examined, n_eps, allowlisted=None):
+# Endpoint lists are capped in JSON output: a weakly-typed shared record can be
+# reachable from dozens of endpoints, and the full cross-product bloats the file
+# the drift-report builder consumes. The untruncated count is kept alongside.
+MAX_JSON_ENDPOINTS = 5
+
+
+def _endpoint_block(g: dict) -> dict:
+    eps = g["endpoints"]
+    out = {"endpoints": eps[:MAX_JSON_ENDPOINTS], "endpoint_count": len(eps)}
+    if len(eps) > MAX_JSON_ENDPOINTS:
+        out["endpoints_truncated"] = len(eps) - MAX_JSON_ENDPOINTS
+    return out
+
+
+def build_json_payload(groups, examined, n_eps, allowlisted=None,
+                       fail_on_severity: str | None = None) -> dict:
+    """Machine-readable summary. Shared by --json (stdout) and --json-file."""
     allowlisted = allowlisted or []
-    print(json.dumps({
+    worst_rank = min((SEV_RANK[g["severity"]] for g in groups), default=None)
+    worst = SEVERITIES[worst_rank] if worst_rank is not None else "NONE"
+    failed = bool(
+        fail_on_severity and worst_rank is not None
+        and worst_rank <= SEV_RANK[fail_on_severity]
+    )
+    by_type: dict[str, int] = defaultdict(int)
+    for g in groups:
+        by_type[g["ftype"]] += 1
+    return {
+        "spec_source": getattr(cs, "LAST_SPEC_SOURCE", "unknown"),
         "sdk_endpoints_scanned": n_eps,
         "bodies_compared": examined,
         "finding_count": len(groups),
@@ -1313,15 +1508,23 @@ def report_json(groups, examined, n_eps, allowlisted=None):
         "by_severity": {
             s: sum(1 for g in groups if g["severity"] == s) for s in SEVERITIES
         },
+        "by_type": dict(sorted(by_type.items(), key=lambda kv: (-kv[1], kv[0]))),
+        "gate": {
+            "threshold": fail_on_severity,
+            "worst": worst,
+            "failed": failed,
+        },
         "findings": [
             {
                 "severity": g["severity"],
                 "type": g["ftype"],
+                "ftype": g["ftype"],
                 "sdk_type": g["sdk_type"],
                 "property": g["prop"],
+                "prop": g["prop"],
                 "detail": g["detail"],
                 "domain": g["tag"],
-                "endpoints": g["endpoints"],
+                **_endpoint_block(g),
             }
             for g in sorted(groups, key=lambda x: (SEV_RANK[x["severity"]], x["sdk_type"], x["prop"]))
         ],
@@ -1329,15 +1532,23 @@ def report_json(groups, examined, n_eps, allowlisted=None):
             {
                 "severity": g["severity"],
                 "type": g["ftype"],
+                "ftype": g["ftype"],
                 "sdk_type": g["sdk_type"],
                 "property": g["prop"],
+                "prop": g["prop"],
                 "domain": g["tag"],
                 "reason": g["reason"],
-                "endpoints": g["endpoints"],
+                **_endpoint_block(g),
             }
             for g in sorted(allowlisted, key=lambda x: (x["sdk_type"], x["prop"], x["ftype"]))
         ],
-    }, indent=2))
+    }
+
+
+def report_json(groups, examined, n_eps, allowlisted=None, fail_on_severity=None):
+    print(json.dumps(
+        build_json_payload(groups, examined, n_eps, allowlisted, fail_on_severity),
+        indent=2))
 
 
 def main() -> None:
@@ -1345,6 +1556,9 @@ def main() -> None:
     ap.add_argument("--spec-url", default=cs.SPEC_URL)
     ap.add_argument("--spec-file")
     ap.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    ap.add_argument("--json-file", metavar="PATH",
+                    help="also write the machine-readable JSON payload to PATH "
+                         "(so one run serves both the human log and the report builder)")
     ap.add_argument("--by-domain", action="store_true", help="also list findings grouped by spec tag")
     ap.add_argument("--fail-on-severity", choices=SEVERITIES,
                     help="exit 1 if any finding at this severity OR higher exists")
@@ -1358,9 +1572,16 @@ def main() -> None:
     active, allowlisted = split_allowlisted(groups)
 
     if args.json:
-        report_json(active, examined, n_eps, allowlisted)
+        report_json(active, examined, n_eps, allowlisted, args.fail_on_severity)
     else:
         report_human(active, examined, n_eps, args.by_domain, allowlisted)
+
+    if args.json_file:
+        payload = build_json_payload(active, examined, n_eps, allowlisted,
+                                     args.fail_on_severity)
+        out = Path(args.json_file)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(payload, indent=2) + "\n")
 
     if args.fail_on_severity:
         threshold = SEV_RANK[args.fail_on_severity]

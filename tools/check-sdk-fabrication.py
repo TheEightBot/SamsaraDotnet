@@ -52,7 +52,27 @@ TAGS_BASELINE = REPO_ROOT / "tools" / "sdk-client-tags.json"
 # Spec operations that are intentionally reached from more than one client file.
 # Key: "VERB /normalized/path"  ->  reason. Keep this list empty unless a duplicate is
 # a deliberate, documented convenience (it usually is not).
-ALLOW_DUPLICATE: dict[str, str] = {}
+#
+# Every entry must name the [Obsolete] shim that creates the duplicate and the
+# release that removes it — a permanent entry here is a mis-homed method hiding
+# behind an allowlist.
+ALLOW_DUPLICATE: dict[str, str] = {
+    "POST /fleet/tachograph/file-uploads": (
+        "back-compat shim: the op graduated out of /preview, so the typed method lives on "
+        "TachographClient.CreateFileUploadAsync and the [Obsolete] "
+        "PreviewApisClient.CreateTachographFileUploadAsync forwards to it. "
+        "Remove this entry when that shim is deleted in the next major release."
+    ),
+}
+
+# Methods allowed to reach a tag outside their client's baseline tag set.
+# Same rule as ALLOW_DUPLICATE: only for documented, temporary forwarding shims.
+ALLOW_TAG_DRIFT: dict[str, str] = {
+    "PreviewApisClient.cs::CreateTachographFileUploadAsync": (
+        "back-compat shim forwarding to the graduated /fleet/tachograph/file-uploads op, "
+        "which Samsara still tags 'Beta APIs'. Remove with the shim."
+    ),
+}
 
 
 def _load_checker():
@@ -114,6 +134,9 @@ def analyze(mod, spec: dict):
             meta = ops.get((e["verb"], e["path"]))
             if not meta:
                 continue
+            method_key = f"{e['file']}::{e['method']}"
+            if method_key in ALLOW_TAG_DRIFT:
+                continue
             allowed = set(baseline.get(e["file"], []))
             stray = [t for t in meta["tags"] if t not in allowed]
             if stray:
@@ -131,6 +154,7 @@ def main() -> None:
     ap.add_argument("--spec-url")
     ap.add_argument("--spec-file")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--json-file", help="also write the JSON payload to this path")
     ap.add_argument("--fail-on-issues", action="store_true")
     ap.add_argument("--update-tags", action="store_true",
                     help="regenerate tools/sdk-client-tags.json from the current SDK (review the diff!)")
@@ -151,12 +175,21 @@ def main() -> None:
     ops, eps, duplicates, tag_drift, baseline = analyze(mod, spec)
     issues = len(duplicates) + len(tag_drift)
 
+    payload = {
+        "spec_source": getattr(mod, "LAST_SPEC_SOURCE", "unknown"),
+        "sdk_endpoints": len([e for e in eps if e["path"]]),
+        "duplicate_coverage": duplicates,
+        "tag_drift": tag_drift,
+        "baseline_present": baseline is not None,
+        "issues": issues,
+    }
+
+    if args.json_file:
+        Path(args.json_file).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.json_file).write_text(json.dumps(payload, indent=2))
+
     if args.json:
-        print(json.dumps({
-            "duplicate_coverage": duplicates,
-            "tag_drift": tag_drift,
-            "baseline_present": baseline is not None,
-        }, indent=2))
+        print(json.dumps(payload, indent=2))
     else:
         print("=" * 64)
         print("Samsara SDK fabrication / mis-homing check")

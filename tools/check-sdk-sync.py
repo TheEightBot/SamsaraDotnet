@@ -59,8 +59,16 @@ CONST_STRING_RE = re.compile(
 
 
 # ---------------------------------------------------------------- spec loading
+# Records where the last load_spec() call actually got its spec. A silent fall
+# back to the cached baseline makes a live check quietly become a baseline check,
+# so callers surface this in their JSON output.
+LAST_SPEC_SOURCE = "unknown"
+
+
 def load_spec(spec_url: str | None, spec_file: str | None) -> dict:
+    global LAST_SPEC_SOURCE
     if spec_file:
+        LAST_SPEC_SOURCE = "file"
         return json.loads(Path(spec_file).read_text())
     try:
         req = urllib.request.Request(
@@ -68,10 +76,13 @@ def load_spec(spec_url: str | None, spec_file: str | None) -> dict:
             headers={"User-Agent": "SamsaraSdkSyncChecker/1.0"},
         )
         with urllib.request.urlopen(req, timeout=60) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+            data = json.loads(resp.read().decode("utf-8"))
+        LAST_SPEC_SOURCE = "live"
+        return data
     except Exception as exc:  # noqa: BLE001
         if BASELINE.exists():
             print(f"WARNING: live fetch failed ({exc}); using cached baseline", file=sys.stderr)
+            LAST_SPEC_SOURCE = "baseline-fallback"
             return json.loads(BASELINE.read_text())
         print(f"ERROR: could not load spec: {exc}", file=sys.stderr)
         sys.exit(2)
@@ -227,14 +238,28 @@ def analyze(spec: dict):
         else:
             mismatched.append(e)
 
-    # missing = spec ops not implemented
+    # missing = spec ops not implemented.
+    # by_tag_missing is indexed per tag, so an op carrying N tags appears N times
+    # in it — summing its lengths OVER-counts. missing_unique is the honest count
+    # and the list the drift report renders.
     by_tag_missing = defaultdict(list)
-    for (verb, np), meta in ops.items():
+    missing_unique = []
+    for (verb, np), meta in sorted(ops.items()):
         if (verb, np) not in sdk_keys:
+            missing_unique.append(
+                {
+                    "verb": verb,
+                    "path": meta["rawpath"],
+                    "operationId": meta["operationId"],
+                    "tags": list(meta["tags"]),
+                    "deprecated": meta["deprecated"],
+                }
+            )
             for t in meta["tags"]:
                 by_tag_missing[t].append((verb, meta["rawpath"], meta["operationId"], meta["deprecated"]))
 
-    return ops, eps, matched, mismatched, unresolved, by_tag_missing
+    missing_unique.sort(key=lambda m: (m["tags"][0] if m["tags"] else "", m["path"], m["verb"]))
+    return ops, eps, matched, mismatched, unresolved, by_tag_missing, missing_unique
 
 
 def main() -> None:
@@ -242,23 +267,39 @@ def main() -> None:
     ap.add_argument("--spec-url", default=SPEC_URL)
     ap.add_argument("--spec-file")
     ap.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    ap.add_argument("--json-file", help="also write the JSON payload to this path")
     ap.add_argument("--show-missing", action="store_true", help="list unimplemented spec ops")
     ap.add_argument("--fail-on-mismatch", action="store_true")
+    ap.add_argument(
+        "--fail-on-unimplemented",
+        action="store_true",
+        help="exit 1 if any spec operation has no SDK endpoint",
+    )
     args = ap.parse_args()
 
     spec = load_spec(args.spec_url, args.spec_file)
-    ops, eps, matched, mismatched, unresolved, by_tag_missing = analyze(spec)
-    total_missing = sum(len(v) for v in by_tag_missing.values())
+    ops, eps, matched, mismatched, unresolved, by_tag_missing, missing_unique = analyze(spec)
+    total_missing = len(missing_unique)
+
+    payload = {
+        "spec_source": LAST_SPEC_SOURCE,
+        "spec_operations": len(ops),
+        "sdk_endpoints": len(eps),
+        "matched": len(matched),
+        "mismatched": [{"verb": e["verb"], "path": e["path"], "method": e["method"], "file": e["file"]} for e in mismatched],
+        "unresolved": [{"method": e["method"], "file": e["file"], "rawarg": e["rawarg"]} for e in unresolved],
+        "missing_count": total_missing,
+        "missing": missing_unique,
+        "mismatch_failed": bool(args.fail_on_mismatch and mismatched),
+        "unimplemented_failed": bool(args.fail_on_unimplemented and missing_unique),
+    }
+
+    if args.json_file:
+        Path(args.json_file).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.json_file).write_text(json.dumps(payload, indent=2))
 
     if args.json:
-        print(json.dumps({
-            "spec_operations": len(ops),
-            "sdk_endpoints": len(eps),
-            "matched": len(matched),
-            "mismatched": [{"verb": e["verb"], "path": e["path"], "method": e["method"], "file": e["file"]} for e in mismatched],
-            "unresolved": [{"method": e["method"], "file": e["file"], "rawarg": e["rawarg"]} for e in unresolved],
-            "missing_count": total_missing,
-        }, indent=2))
+        print(json.dumps(payload, indent=2))
     else:
         print("=" * 64)
         print("Samsara SDK <-> Spec endpoint check")
@@ -285,6 +326,12 @@ def main() -> None:
                     print(f"  {verb:7} {rawpath:52} {oid}{' [DEP]' if dep else ''}")
 
     if args.fail_on_mismatch and mismatched:
+        sys.exit(1)
+    if args.fail_on_unimplemented and missing_unique:
+        print(
+            f"\nFAIL: {len(missing_unique)} spec operation(s) have no SDK endpoint.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
 
