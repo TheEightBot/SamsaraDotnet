@@ -52,6 +52,52 @@ public sealed class CoachingClientTests
         url.Should().Contain("sessionStatuses=needsCoaching");
     }
 
+    // ── GET /coaching/sessions/stream — coachableEvents (was IReadOnlyList<object>) ──
+    [Fact]
+    public async Task GetSessionsStreamAsync_BindsTypedCoachableEvents()
+    {
+        var resp = new
+        {
+            data = new[]
+            {
+                new
+                {
+                    id = "ses-1",
+                    behaviors = new[]
+                    {
+                        new
+                        {
+                            id = "beh-1",
+                            coachableBehaviorType = "harshTurn",
+                            lastCoachedTime = "2024-01-01T08:00:00Z",
+                            updatedAtTime = "2024-01-01T09:00:00Z",
+                            coachableEvents = new[]
+                            {
+                                new
+                                {
+                                    id = "evt-1",
+                                    linkage = new { sourceId = "src-1", sourceType = "triageEvent" },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            pagination = new { hasNextPage = false },
+        };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new CoachingClient(TestFactory.CreateHttpClient(handler));
+
+        var session = (await CollectAsync(client.GetSessionsStreamAsync(includeCoachableEvents: true)))[0];
+
+        var behavior = session.Behaviors.Should().ContainSingle().Subject;
+        var coachable = behavior.CoachableEvents.Should().ContainSingle().Subject;
+        coachable.Id.Should().Be("evt-1");
+        coachable.Linkage.Should().NotBeNull();
+        coachable.Linkage!.SourceId.Should().Be("src-1");
+        coachable.Linkage.SourceType.Should().Be("triageEvent");
+    }
+
     private static async Task<IReadOnlyList<T>> CollectAsync<T>(IAsyncEnumerable<T> source)
     {
         var list = new List<T>();

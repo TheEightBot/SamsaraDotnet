@@ -1,7 +1,7 @@
 namespace Samsara.Sdk.Models.Maintenance;
 
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using Samsara.Sdk.Models.Common;
 
 /// <summary>
 /// Represents a vehicle maintenance DVIR (Driver Vehicle Inspection Report).
@@ -104,9 +104,12 @@ public sealed record MaintenanceDvir
     [JsonPropertyName("trailer")]
     public MaintenanceDvirAssetRef? Trailer { get; init; }
 
-    /// <summary>Trailer defects reported on the DVIR.</summary>
+    /// <summary>
+    /// Defects registered for the trailer which was part of the DVIR. Each item
+    /// mirrors the spec's <c>dvirTrailerDefectsItems</c>.
+    /// </summary>
     [JsonPropertyName("trailerDefects")]
-    public IReadOnlyList<JsonElement>? TrailerDefects { get; init; }
+    public IReadOnlyList<DvirDefect>? TrailerDefects { get; init; }
 
     /// <summary>Display name of the trailer (POST/PATCH responses).</summary>
     [JsonPropertyName("trailerName")]
@@ -117,13 +120,169 @@ public sealed record MaintenanceDvir
     [JsonPropertyName("vehicle")]
     public MaintenanceDvirAssetRef? Vehicle { get; init; }
 
-    /// <summary>Vehicle defects reported on the DVIR.</summary>
+    /// <summary>
+    /// Defects registered for the vehicle which was part of the DVIR. The spec
+    /// points both defect arrays at the same <c>dvirTrailerDefectsItems</c>
+    /// schema, so one record serves both.
+    /// </summary>
     [JsonPropertyName("vehicleDefects")]
-    public IReadOnlyList<JsonElement>? VehicleDefects { get; init; }
+    public IReadOnlyList<DvirDefect>? VehicleDefects { get; init; }
 
-    /// <summary>Walkaround photo objects attached to the DVIR.</summary>
+    /// <summary>
+    /// Walkaround photos attached to the DVIR. Each item mirrors the spec's
+    /// <c>WalkaroundPhotoObjectResponseBody</c>. Returned by
+    /// <c>GET /dvirs/stream</c> and <c>GET /dvirs/{id}</c> only.
+    /// </summary>
     [JsonPropertyName("walkaroundPhotos")]
-    public IReadOnlyList<JsonElement>? WalkaroundPhotos { get; init; }
+    public IReadOnlyList<WalkaroundPhoto>? WalkaroundPhotos { get; init; }
+}
+
+/// <summary>
+/// A defect registered against the vehicle or trailer inspected by a DVIR.
+/// Mirrors the spec's <c>dvirTrailerDefectsItems</c>, the item schema shared by
+/// both <c>Dvir.trailerDefects</c> and <c>Dvir.vehicleDefects</c>
+/// (<c>POST /fleet/dvirs</c>, <c>PATCH /fleet/dvirs/{id}</c>).
+/// </summary>
+/// <remarks>
+/// Distinct from <see cref="DefectRecord"/>, which mirrors the standalone
+/// defects API (<c>GET /defects/stream</c>); this shape carries a
+/// <c>defectType</c> name rather than a <c>defectTypeId</c> and has no
+/// <c>dvirId</c>. Spec marks <c>id</c> and <c>isResolved</c> REQUIRED; both stay
+/// nullable because this is a response record.
+/// </remarks>
+public sealed record DvirDefect
+{
+    /// <summary>ID of the defect. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Signifies if this defect is resolved. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("isResolved")]
+    public bool? IsResolved { get; init; }
+
+    /// <summary>Comment on the defect.</summary>
+    [JsonPropertyName("comment")]
+    public string? Comment { get; init; }
+
+    /// <summary>Time when the defect was created (RFC 3339).</summary>
+    [JsonPropertyName("createdAtTime")]
+    public string? CreatedAtTime { get; init; }
+
+    /// <summary>The type of DVIR defect (display name, e.g. <c>Air Compressor</c>).</summary>
+    [JsonPropertyName("defectType")]
+    public string? DefectType { get; init; }
+
+    /// <summary>The mechanic's notes on the defect.</summary>
+    [JsonPropertyName("mechanicNotes")]
+    public string? MechanicNotes { get; init; }
+
+    /// <summary>Time when mechanic notes were last updated (RFC 3339).</summary>
+    [JsonPropertyName("mechanicNotesUpdatedAtTime")]
+    public string? MechanicNotesUpdatedAtTime { get; init; }
+
+    /// <summary>
+    /// Time when this defect was resolved (RFC 3339). Not returned while the
+    /// defect is unresolved.
+    /// </summary>
+    [JsonPropertyName("resolvedAtTime")]
+    public string? ResolvedAtTime { get; init; }
+
+    /// <summary>
+    /// The person who resolved this defect. Mirrors the spec's
+    /// <c>Defect_resolvedBy</c>, which is byte-identical to the
+    /// <c>DvirResolvedByObjectResponseBody</c> already modeled by
+    /// <see cref="DefectResolvedBy"/>.
+    /// </summary>
+    [JsonPropertyName("resolvedBy")]
+    public DefectResolvedBy? ResolvedBy { get; init; }
+
+    /// <summary>
+    /// The trailer this defect was submitted for. The spec's inline
+    /// <c>{ id, name }</c> shape, served by the shared
+    /// <see cref="EntityReference"/>.
+    /// </summary>
+    [JsonPropertyName("trailer")]
+    public EntityReference? Trailer { get; init; }
+
+    /// <summary>The vehicle this defect was submitted for.</summary>
+    [JsonPropertyName("vehicle")]
+    public DvirDefectVehicle? Vehicle { get; init; }
+}
+
+/// <summary>
+/// The vehicle a DVIR defect was submitted for. Mirrors the minified vehicle
+/// object inlined in the spec's <c>dvirTrailerDefectsItems.vehicle</c>
+/// <c>allOf</c>.
+/// </summary>
+/// <remarks>
+/// This is NOT <c>vehicleTinyResponse</c>: the inlined schema spells the
+/// external-id map <c>ExternalIds</c> with a capital E, unlike every other
+/// vehicle tiny in the spec. The <c>JsonPropertyName</c> mirrors the spec
+/// verbatim; the SDK's serializer options set
+/// <c>PropertyNameCaseInsensitive</c>, so the property binds whichever casing
+/// the live API actually sends.
+/// </remarks>
+public sealed record DvirDefectVehicle
+{
+    /// <summary>ID of the vehicle.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Name of the vehicle.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>A map of external IDs for the vehicle.</summary>
+    [JsonPropertyName("ExternalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+}
+
+/// <summary>
+/// A walkaround photo attached to a DVIR. Mirrors the spec's
+/// <c>WalkaroundPhotoObjectResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Spec marks all three properties REQUIRED; they stay nullable because this is
+/// a response record.
+/// </remarks>
+public sealed record WalkaroundPhoto
+{
+    /// <summary>Time when the walkaround photo was created (RFC 3339). Spec marks REQUIRED.</summary>
+    [JsonPropertyName("createdAtTime")]
+    public string? CreatedAtTime { get; init; }
+
+    /// <summary>The name of the walkaround photo. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>
+    /// The URL to the walkaround photo. Spec marks REQUIRED; the link is
+    /// time-limited.
+    /// </summary>
+    [JsonPropertyName("url")]
+    public string? Url { get; init; }
+}
+
+/// <summary>
+/// A photo attached to a defect. Mirrors the spec's
+/// <c>DefectPhotoResponseResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Spec marks both properties REQUIRED; they stay nullable because this is a
+/// response record.
+/// </remarks>
+public sealed record DefectPhoto
+{
+    /// <summary>Time when the defect photo was created (RFC 3339). Spec marks REQUIRED.</summary>
+    [JsonPropertyName("createdAtTime")]
+    public string? CreatedAtTime { get; init; }
+
+    /// <summary>
+    /// The URL to the defect photo. Spec marks REQUIRED; the link is
+    /// time-limited.
+    /// </summary>
+    [JsonPropertyName("url")]
+    public string? Url { get; init; }
 }
 
 /// <summary>
@@ -137,6 +296,15 @@ public sealed record MaintenanceDvirAssetRef
     /// <summary>Samsara ID of the asset.</summary>
     [JsonPropertyName("id")]
     public string? Id { get; init; }
+
+    /// <summary>
+    /// Name of the asset. Returned by the v1 DVIR endpoints
+    /// (<c>POST /fleet/dvirs</c>, <c>PATCH /fleet/dvirs/{id}</c>), whose
+    /// <c>trailer</c>/<c>vehicle</c> resolve to <c>trailerTinyResponse</c> /
+    /// <c>vehicleTinyResponse</c>; the v2 stream shape omits it.
+    /// </summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
 
     /// <summary>A map of external IDs for the asset.</summary>
     [JsonPropertyName("externalIds")]
@@ -171,6 +339,14 @@ public sealed record MaintenanceSignatoryUser
     /// <summary>Samsara ID of the signatory user. Spec-required.</summary>
     [JsonPropertyName("id")]
     public string? Id { get; init; }
+
+    /// <summary>
+    /// Name of the signatory user. Returned by the v1 DVIR endpoints, whose
+    /// <c>DvirSignature.signatoryUser</c> resolves to <c>userTinyResponse</c>;
+    /// the v2 <c>SignatoryUserObjectResponseBody</c> omits it.
+    /// </summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
 
     /// <summary>A map of external IDs for the user.</summary>
     [JsonPropertyName("externalIds")]
@@ -256,9 +432,19 @@ public sealed record DefectRecord
     [JsonPropertyName("createdAtTime")]
     public string? CreatedAtTime { get; init; }
 
-    /// <summary>Defect photo objects attached to the defect.</summary>
+    /// <summary>
+    /// Photos attached to the defect. Each item mirrors the spec's
+    /// <c>DefectPhotoResponseResponseBody</c>.
+    /// </summary>
     [JsonPropertyName("defectPhotos")]
-    public IReadOnlyList<JsonElement>? DefectPhotos { get; init; }
+    public IReadOnlyList<DefectPhoto>? DefectPhotos { get; init; }
+
+    /// <summary>
+    /// Safety status of the defect (<c>safe</c> or <c>unsafe</c>). Returned by
+    /// <c>GET /defects/stream</c> and <c>GET /defects/{id}</c>.
+    /// </summary>
+    [JsonPropertyName("defectSafetyStatus")]
+    public string? DefectSafetyStatus { get; init; }
 
     /// <summary>ID of the defect type associated with this defect.</summary>
     [JsonPropertyName("defectTypeId")]
