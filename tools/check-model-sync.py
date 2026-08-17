@@ -24,6 +24,17 @@ How it works
 4. Compare spec inner schema properties against the SDK record: MISSING / EXTRA
    / type-mismatch / required-ness drift / wrapper-shape mismatch. Also compare
    spec query parameters against SDK method parameters.
+5. RECURSE. After comparing a record against its schema, descend into every
+   property where BOTH sides have somewhere to go — the SDK type resolves to
+   another declared SDK record, and the spec property resolves (deref'd,
+   descending `items` for arrays) to another object schema — and compare that
+   pair too, to arbitrary depth. Without this the checker was one level deep:
+   a record reached only as a property of a property was never compared at
+   all, so weak typing and property drift below the endpoint's top-level
+   record were completely invisible. Cycles are stopped by a visited set keyed
+   on (record, schema identity, side) plus a MAX_NEST_DEPTH cap; findings
+   discovered N levels down still report the endpoint that reached them and
+   carry the dotted property path in their detail.
 
 Severity: CRITICAL / HIGH / MEDIUM / LOW (see classify()). Beta-tagged
 endpoints and the `Clients/Beta/*` weak-typed clients cap at MEDIUM: the cap
@@ -147,6 +158,14 @@ ALLOWLIST: dict[tuple[str, str, str], str] = {
 
 def allowlist_reason(sdk_type: str, prop: str, ftype: str) -> str | None:
     return ALLOWLIST.get((sdk_type, prop, ftype))
+
+# Maximum nesting depth for the recursive record<->schema descent (see
+# analyze()._descend). Records reference one another and the spec has
+# self-referential schemas, so the descent needs a hard stop in addition to the
+# visited set. 12 is far deeper than any real Samsara payload (the deepest
+# observed is ~4: SafetySettings -> harshEventSensitivityV2 -> harshAccel ->
+# heavyDuty) while still being cheap.
+MAX_NEST_DEPTH = 12
 
 # Pagination query params handled by PaginateAsync; never flag as missing.
 PAGINATION_PARAMS = {"limit", "after", "endcursor", "startcursor"}
@@ -944,8 +963,16 @@ def compare_record(
     beta_capped: bool,
     findings: list[Finding],
     union_spec_names: set[str] | None = None,
+    path: str | None = None,
 ):
     """Compare one SDK record against one endpoint's inner spec schema.
+
+    ``path`` is the dotted property path from the endpoint's TOP-LEVEL record
+    down to this record (e.g. ``SafetySettings.harshEventSensitivityV2``). It is
+    set only for records reached by the nested descent; when present, every
+    finding's detail is suffixed with ``[at <path>.<prop>]`` so a defect found
+    three levels down is still traceable back through the endpoint that reached
+    it. Top-level comparisons pass ``None`` and their details are unchanged.
 
     ``union_spec_names`` is the UNION of every spec property name that appears on
     ANY endpoint (request or response) mapped to this same SDK record. A shared
@@ -964,6 +991,9 @@ def compare_record(
         return
 
     cap = (lambda s: _cap(s, beta_capped))
+    # Property-path annotation, empty for top-level records so their existing
+    # detail strings (and the drift report built from them) are untouched.
+    at = (lambda p: f" [at {path}.{p}]" if path else "")
 
     # Weakly typed SDK side (object?) where spec has a concrete schema.
     if sdk_props is None:
@@ -1011,23 +1041,23 @@ def compare_record(
                     cap("MEDIUM"), "flattened", sdk_record_name, sname,
                     f"spec nested object '{sname}' ({len(child_props)} props) has been "
                     f"flattened onto '{sdk_record_name}' as "
-                    f"{', '.join(sorted(set(matched)))}", endpoint, tag))
+                    f"{', '.join(sorted(set(matched)))}{at(sname)}", endpoint, tag))
                 continue
             if side == "request" and is_req:
                 findings.append(Finding(
                     cap("HIGH"), "missing-required-request", sdk_record_name, sname,
-                    f"spec REQUIRED request field '{sname}' absent from SDK record",
-                    endpoint, tag))
+                    f"spec REQUIRED request field '{sname}' absent from SDK record"
+                    f"{at(sname)}", endpoint, tag))
             elif side == "response" and is_req:
                 findings.append(Finding(
                     cap("HIGH"), "missing-required-response", sdk_record_name, sname,
-                    f"SDK response record drops spec REQUIRED field '{sname}'",
-                    endpoint, tag))
+                    f"SDK response record drops spec REQUIRED field '{sname}'"
+                    f"{at(sname)}", endpoint, tag))
             else:
                 findings.append(Finding(
                     cap("MEDIUM"), "missing-optional", sdk_record_name, sname,
-                    f"spec optional field '{sname}' absent from SDK ({side})",
-                    endpoint, tag))
+                    f"spec optional field '{sname}' absent from SDK ({side})"
+                    f"{at(sname)}", endpoint, tag))
             continue
 
         sdk_prop = sdk_props[sname]
@@ -1036,7 +1066,7 @@ def compare_record(
         if reason:
             findings.append(Finding(
                 cap("MEDIUM"), "type-mismatch", sdk_record_name, sname,
-                reason, endpoint, tag))
+                reason + at(sname), endpoint, tag))
         # Weak SDK type. Reported either way, but the severity depends on whether
         # the spec actually describes a shape: MEDIUM when it does (real work to
         # do), LOW when the spec is genuinely free-form (JsonElement is honest,
@@ -1051,33 +1081,33 @@ def compare_record(
                 findings.append(Finding(
                     cap("MEDIUM"), "weak-typing", sdk_record_name, sname,
                     f"SDK uses weak '{sdk_prop['ctype']}' but spec '{sname}' has a "
-                    f"concrete schema", endpoint, tag))
+                    f"concrete schema{at(sname)}", endpoint, tag))
             else:
                 findings.append(Finding(
                     cap("LOW"), "weak-typing", sdk_record_name, sname,
                     f"SDK uses weak '{sdk_prop['ctype']}' and spec '{sname}' is "
                     f"free-form (no properties/enum/composition) — weak type is "
-                    f"defensible; allowlist it with a spec pointer to accept",
-                    endpoint, tag))
+                    f"defensible; allowlist it with a spec pointer to accept"
+                    f"{at(sname)}", endpoint, tag))
 
         # Required-ness drift.
         if side == "request":
             if is_req and not sdk_prop["required"]:
                 findings.append(Finding(
                     cap("HIGH"), "required-drift-request", sdk_record_name, sname,
-                    f"spec REQUIRES request '{sname}' but SDK property is not 'required'",
-                    endpoint, tag))
+                    f"spec REQUIRES request '{sname}' but SDK property is not 'required'"
+                    f"{at(sname)}", endpoint, tag))
             elif not is_req and sdk_prop["required"]:
                 findings.append(Finding(
                     cap("LOW"), "over-tightened", sdk_record_name, sname,
-                    f"SDK marks '{sname}' 'required' but spec lists it optional ({side})",
-                    endpoint, tag))
+                    f"SDK marks '{sname}' 'required' but spec lists it optional ({side})"
+                    f"{at(sname)}", endpoint, tag))
         else:  # response
             if not is_req and sdk_prop["required"]:
                 findings.append(Finding(
                     cap("LOW"), "over-tightened", sdk_record_name, sname,
-                    f"SDK marks response '{sname}' 'required' but spec lists it optional",
-                    endpoint, tag))
+                    f"SDK marks response '{sname}' 'required' but spec lists it optional"
+                    f"{at(sname)}", endpoint, tag))
 
     # SDK -> spec: EXTRA. A property is only truly extra when it is absent from
     # the UNION of every endpoint mapped to this record (dual-shape records share
@@ -1088,7 +1118,7 @@ def compare_record(
         findings.append(Finding(
             cap("LOW"), "extra-property", sdk_record_name, sdk_name,
             f"SDK property '{sdk_name}' not present in spec schema of any endpoint "
-            f"mapped to '{sdk_record_name}'",
+            f"mapped to '{sdk_record_name}'{at(sdk_name)}",
             endpoint, tag))
 
 
@@ -1194,7 +1224,84 @@ def analyze(spec: dict):
             if isinstance(child, dict) and isinstance(child.get("properties"), dict):
                 record_union[elem] |= set(child["properties"].keys())
 
-    def _queue(rec_label, sdk_props, inner, required, side, endpoint, tag, beta_capped):
+    # Visited guard for the nested descent, keyed on
+    # (record_name, schema_identity, side). Two endpoints that reach the same
+    # record through the same schema would produce byte-identical findings and
+    # an identical union contribution, so the second descent is pure duplicate
+    # work; the FIRST endpoint to reach it keeps the attribution (dedup() then
+    # merges endpoint lists across the whole run anyway). `side` is part of the
+    # key because required-ness drift is asymmetric between request and
+    # response. This set is also what makes a self-referential schema
+    # terminate — MAX_NEST_DEPTH is the belt-and-braces second stop.
+    visited_nested: set[tuple[str, str, str]] = set()
+
+    def _child_object_schema(raw):
+        """Resolve a spec PROPERTY schema to the object schema an SDK record models.
+
+        Follows ``$ref`` chains and descends ``items`` for (nested) arrays, so
+        both ``{"$ref": Foo}`` and ``{"type":"array","items":{"$ref":Foo}}``
+        resolve to Foo. Returns ``(schema, ref_name | None)``; ``(None, None)``
+        when the target is not an object schema with properties (scalars, enums
+        and free-form ``{type: object}`` have nothing to recurse into — those are
+        handled by the per-property checks in compare_record)."""
+        ref = raw.get("$ref", "").split("/")[-1] if isinstance(raw, dict) else None
+        s = resolver.deref(raw)
+        hops = 0
+        while isinstance(s, dict) and (s.get("type") == "array" or "items" in s) and hops < 4:
+            item = s.get("items")
+            if isinstance(item, dict) and "$ref" in item:
+                ref = item["$ref"].split("/")[-1]
+            s = resolver.deref(item)
+            hops += 1
+        if isinstance(s, dict) and isinstance(s.get("properties"), dict) and s["properties"]:
+            return s, ref
+        return None, None
+
+    def _descend(rec_label, sdk_props, inner, side, endpoint, tag, beta_capped,
+                 path, depth):
+        """Queue a comparison for every nested (SDK record, spec object) pair.
+
+        This is the fix for the checker's original one-level-deep blind spot: a
+        record reached only as a property of a property (e.g.
+        ``SafetySettings.distractedDrivingDetectionAlerts
+        .inattentiveDrivingDetectionAlerts``) was never compared against its
+        spec schema at all, so weak typing and property drift down there were
+        invisible. We recurse whenever BOTH sides have somewhere to go: the SDK
+        property's type resolves to a declared SDK record, and the spec property
+        resolves to an object schema with properties."""
+        if depth >= MAX_NEST_DEPTH:
+            return
+        if not (isinstance(sdk_props, dict) and isinstance(inner, dict)):
+            return
+        spec_props = inner.get("properties")
+        if not isinstance(spec_props, dict):
+            return
+        for pname, pmeta in sdk_props.items():
+            raw = spec_props.get(pname)
+            if raw is None:
+                continue  # SDK-only property — extra-property check covers it
+            child_rec = _record_key(_collection_element(pmeta["ctype"]))
+            child_props = models.get(child_rec)
+            if child_props is None:
+                continue  # scalar, weak type, or an unknown type — nothing to recurse into
+            child_schema, ref = _child_object_schema(raw)
+            if child_schema is None:
+                continue
+            # Identity: the schema's $ref name when it has one, else the shape's
+            # property-name signature. Same identity => same property set =>
+            # same union contribution, which is what makes skipping safe.
+            sig = ref or ",".join(sorted(child_schema["properties"]))
+            vkey = (child_rec, sig, side)
+            if vkey in visited_nested:
+                continue
+            visited_nested.add(vkey)
+            _queue(child_rec, child_props, child_schema,
+                   set(child_schema.get("required", []) or []),
+                   side, endpoint, tag, beta_capped,
+                   path=f"{path}.{pname}", depth=depth + 1)
+
+    def _queue(rec_label, sdk_props, inner, required, side, endpoint, tag, beta_capped,
+               path=None, depth=0):
         if isinstance(inner, dict):
             sp = inner.get("properties")
             if isinstance(sp, dict):
@@ -1206,7 +1313,14 @@ def analyze(spec: dict):
             "rec_label": rec_label, "sdk_props": sdk_props, "inner": inner,
             "required": required, "side": side, "endpoint": endpoint,
             "tag": tag, "beta_capped": beta_capped,
+            # None for top-level records so their finding details stay unchanged.
+            "path": path,
         })
+        # Recurse. Queueing happens in pass 1 (this pass) precisely so that
+        # record_union is COMPLETE — including nested records — before pass 2
+        # emits any extra-property finding.
+        _descend(rec_label, sdk_props, inner, side, endpoint, tag, beta_capped,
+                 path or rec_label, depth)
 
     for e in eps:
         verb, np = e["verb"], e["path"]
@@ -1323,7 +1437,8 @@ def analyze(spec: dict):
         compare_record(
             j["rec_label"], j["sdk_props"], j["inner"], j["required"],
             resolver, j["side"], j["endpoint"], j["tag"], j["beta_capped"],
-            findings, union_spec_names=record_union.get(j["rec_label"]))
+            findings, union_spec_names=record_union.get(j["rec_label"]),
+            path=j["path"])
 
     return findings, examined, len(eps)
 
