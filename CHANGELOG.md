@@ -56,6 +56,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING — the DVIR and defect response records are split into v1/v2 pairs.** The Samsara
+  spec defines two versions of these endpoints returning genuinely different objects, and the
+  SDK served all eight schemas from four union records. No record could be faithful to either
+  version — `MaintenanceDvir` carried seven properties the v2 schema does not define,
+  `DefectRecord` carried two, and `MaintenanceDvirAssetRef` had to pick one spelling of an
+  external-ID map for two schemas that spell it differently. The union was also invisible to
+  `check-model-sync`, which compared each record against both endpoints and found every
+  property accounted for by one of them. The v1 shape now takes a `V1` prefix and the
+  unprefixed name stays with the v2 shape, so callers of the modern stream/get endpoints do
+  not have to change types. Design note: `docs/api-sync/30-maintenance.md` (2026-08-17b).
+  - `IMaintenanceClient.CreateDvirAsync` and `UpdateDvirAsync` return `Task<V1MaintenanceDvir>`
+    (was `Task<MaintenanceDvir>`); `UpdateDefectAsync` returns `Task<V1DefectRecord>` (was
+    `Task<DefectRecord>`). `GetDvirsStreamAsync`, `GetDvirByIdAsync`, `GetDefectsStreamAsync`
+    and `GetDefectAsync` are unchanged.
+  - New records: `V1MaintenanceDvir` (`Dvir`), `V1DefectRecord` (`Defect`, which is
+    property-identical to `dvirTrailerDefectsItems`), `V1MaintenanceDvirSignature`
+    (`DvirAuthorSignature`), `V1MaintenanceSignatoryUser` (`userTinyResponse`),
+    `V1MaintenanceTrailerRef` (`trailerTinyResponse`), `V1MaintenanceVehicleRef`
+    (`vehicleTinyResponse`).
+  - Removed records: `DvirDefect` (superseded by `V1DefectRecord`) and `DvirDefectVehicle`
+    (superseded by `V1MaintenanceVehicleRef`).
+  - `MaintenanceDvir` loses `EndTime`, `StartTime`, `LicensePlate`, `Location`, `TrailerName`,
+    `TrailerDefects` and `VehicleDefects`; `DefectRecord` loses `DefectType` and
+    `MechanicNotesUpdatedAtTime`; `MaintenanceDvirAssetRef` and `MaintenanceSignatoryUser`
+    lose `Name`. All of those are v1-only and now live on the `V1` records.
+  - `required` is removed from `MaintenanceDvir.Id`, `DefectRecord.Id` and
+    `DefectRecord.IsResolved`, so they become `string?`/`bool?`. Response records stay fully
+    nullable: the live API omits fields its own spec marks required, and `required` on a
+    response property has crashed deserialization before.
+  - `V1MaintenanceVehicleRef.ExternalIds` serializes as `ExternalIds` with a capital E,
+    copied verbatim from `vehicleTinyResponse` — the only one of the spec's 123
+    external-ID-bearing schemas spelled that way, and believed to be an upstream Samsara
+    typo. It is documented and test-pinned as deliberate. `V1MaintenanceTrailerRef` has no
+    external-IDs property at all, because `trailerTinyResponse` defines none.
+  - This resolves the standing `check-model-sync` `missing-optional` finding on
+    `MaintenanceDvirAssetRef.ExternalIds` (184 → 183 active findings) without any allowlist
+    entry, and reverses §2.3 of `spec-parity-plan-2026-08-17.md`, which had recorded these
+    dual shapes as accepted.
 - **CI is now hermetic.** The `sdk-sync` job checks the SDK against the committed baseline
   (`--spec-file .github/cache/samsara-api-baseline.json`) instead of fetching the live spec.
   Fetching live meant an upstream edit could turn an unrelated PR red — and it was *masking*

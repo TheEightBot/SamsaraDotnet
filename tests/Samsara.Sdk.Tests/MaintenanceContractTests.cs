@@ -1,15 +1,20 @@
 namespace Samsara.Sdk.Tests;
 
+using System.Reflection;
+using System.Text.Json.Serialization;
 using FluentAssertions;
 using Samsara.Sdk.Clients;
 using Samsara.Sdk.Models.Maintenance;
 using Samsara.Sdk.Tests.Helpers;
 
 /// <summary>
-/// Contract tests for the Maintenance domain (Phase 3). <see cref="MaintenanceDvir"/>
-/// binds typed nested signature/asset-reference records, and <see cref="DefectRecord"/>
-/// binds the typed <c>resolvedBy</c>/asset references against the
-/// <c>GET /dvirs/stream</c> and <c>GET /defects/stream</c> wire shapes.
+/// Contract tests for the Maintenance domain. The DVIR and defect endpoints come
+/// in two versions returning genuinely different objects, so each version has its
+/// own record: <see cref="MaintenanceDvir"/>/<see cref="DefectRecord"/> for the v2
+/// stream/get endpoints and <see cref="V1MaintenanceDvir"/>/<see cref="V1DefectRecord"/>
+/// for the v1 create/update endpoints. These tests pin each record to its own
+/// schema's wire shape so the split cannot silently regress into a union again.
+/// See the 2026-08-17b design note in <c>docs/api-sync/30-maintenance.md</c>.
 /// </summary>
 public sealed class MaintenanceContractTests
 {
@@ -252,26 +257,21 @@ public sealed class MaintenanceContractTests
         photo.CreatedAtTime.Should().Be("2024-01-01T08:00:00Z");
     }
 
-    // ── MaintenanceDvirAssetRef: the v1 and v2 asset shapes bind independently ──
+    // ── The four asset-reference shapes, one record each ────────────────────
     //
-    // MaintenanceDvir and DefectRecord each answer both a v1 and a v2 endpoint, so
-    // their trailer/vehicle properties must bind four different spec schemas:
+    // trailerTinyResponse            {id, name}               v1  V1MaintenanceTrailerRef
+    // vehicleTinyResponse            {ExternalIds, id, name}  v1  V1MaintenanceVehicleRef  (capital E)
+    // TrailerDvirObjectResponseBody  {externalIds, id}        v2  MaintenanceDvirAssetRef
+    // VehicleDvirObjectResponseBody  {externalIds, id}        v2  MaintenanceDvirAssetRef
     //
-    //   trailerTinyResponse            {id, name}              v1  no external IDs
-    //   vehicleTinyResponse            {ExternalIds, id, name} v1  capital E (spec typo)
-    //   TrailerDvirObjectResponseBody  {externalIds, id}       v2  no name
-    //   VehicleDvirObjectResponseBody  {externalIds, id}       v2  no name
-    //
-    // These tests pin all four so a future per-schema split cannot silently drop a
-    // field, and so the capital-E casing is not "corrected" without noticing that
-    // the v1 payload stops binding.
+    // These tests pin all four so the records cannot drift back into a union and
+    // so the capital-E casing is not "corrected" unnoticed.
 
     /// <summary>
     /// <c>POST /fleet/dvirs</c> returns the v1 <c>Dvir</c> shape, whose
     /// <c>vehicle</c> is <c>vehicleTinyResponse</c> — <c>{ExternalIds, id, name}</c>,
-    /// with the external-ID map spelled with a capital E. The SDK declares the
-    /// property as <c>externalIds</c>; it still populates because deserialization is
-    /// case-insensitive.
+    /// with the external-ID map spelled with a capital E, which the SDK mirrors
+    /// verbatim on <see cref="V1MaintenanceVehicleRef"/>.
     /// </summary>
     [Fact]
     public async Task CreateDvirAsync_V1VehicleWithCapitalExternalIds_PopulatesTheMap()
@@ -308,7 +308,6 @@ public sealed class MaintenanceContractTests
         dvir.Vehicle!.Id.Should().Be("veh-1");
         // Present only on the v1 schema.
         dvir.Vehicle.Name.Should().Be("Midwest Truck #4");
-        // Capital-E payload binds the lowercase-declared property.
         dvir.Vehicle.ExternalIds.Should().NotBeNull();
         dvir.Vehicle.ExternalIds!["maintenanceId"].Should().Be("250020");
         dvir.Vehicle.ExternalIds["payrollId"].Should().Be("ABFS18600");
@@ -343,9 +342,10 @@ public sealed class MaintenanceContractTests
         dvir.Trailer.Should().NotBeNull();
         dvir.Trailer!.Id.Should().Be("trl-1");
         dvir.Trailer.Name.Should().Be("Midwest Trailer #5");
-        // trailerTinyResponse carries no external IDs — the property exists on the
-        // shared record only to serve the v2 shape.
-        dvir.Trailer.ExternalIds.Should().BeNull();
+        // trailerTinyResponse carries no external IDs, so the record declares none.
+        typeof(V1MaintenanceTrailerRef).GetProperties()
+            .Select(p => p.Name)
+            .Should().BeEquivalentTo(["Id", "Name"], "trailerTinyResponse is {id, name}");
 
         handler.LastRequestBody.Should().Contain("\"authorId\":\"usr-1\"");
     }
@@ -384,11 +384,14 @@ public sealed class MaintenanceContractTests
 
         dvir.Vehicle!.Id.Should().Be("494123");
         dvir.Vehicle.ExternalIds!["maintenanceId"].Should().Be("250020");
-        dvir.Vehicle.Name.Should().BeNull("VehicleDvirObjectResponseBody has no name");
 
         dvir.Trailer!.Id.Should().Be("494124");
         dvir.Trailer.ExternalIds!["payrollId"].Should().Be("ABFS18600");
-        dvir.Trailer.Name.Should().BeNull("TrailerDvirObjectResponseBody has no name");
+
+        // Neither v2 schema defines a name, so the record declares none.
+        typeof(MaintenanceDvirAssetRef).GetProperties()
+            .Select(p => p.Name)
+            .Should().BeEquivalentTo(["Id", "ExternalIds"], "the v2 asset refs are {externalIds, id}");
     }
 
     /// <summary>
@@ -427,10 +430,12 @@ public sealed class MaintenanceContractTests
         });
 
         defect.Trailer!.Name.Should().Be("Midwest Trailer #5");
-        defect.Trailer.ExternalIds.Should().BeNull();
 
         defect.Vehicle!.Name.Should().Be("Midwest Truck #4");
         defect.Vehicle.ExternalIds!["maintenanceId"].Should().Be("250020");
+
+        // v1-only fields that the v2 DefectRecord does not carry.
+        defect.DefectType.Should().Be("Air Compressor");
     }
 
     /// <summary>
@@ -467,8 +472,245 @@ public sealed class MaintenanceContractTests
 
         defect.Trailer!.Id.Should().Be("494123");
         defect.Trailer.ExternalIds!["maintenanceId"].Should().Be("250020");
-        defect.Trailer.Name.Should().BeNull("DefectTrailerResponseResponseBody has no name");
     }
+
+    // ── Per-version endpoint binding ────────────────────────────────────────
+
+    /// <summary>
+    /// The capital-E spelling on <see cref="V1MaintenanceVehicleRef"/> is copied
+    /// from <c>vehicleTinyResponse</c> verbatim and is the only such spelling in
+    /// the spec. Because deserialization is case-insensitive, "correcting" it
+    /// would not break any wire test — this attribute assertion is the guard that
+    /// would. See the remarks on the record.
+    /// </summary>
+    [Fact]
+    public void V1MaintenanceVehicleRef_ExternalIds_MirrorsTheSpecCapitalESpelling()
+    {
+        JsonNameOf<V1MaintenanceVehicleRef>(nameof(V1MaintenanceVehicleRef.ExternalIds))
+            .Should().Be(
+                "ExternalIds",
+                "vehicleTinyResponse spells it with a capital E; the SDK mirrors the spec verbatim");
+
+        JsonNameOf<MaintenanceDvirAssetRef>(nameof(MaintenanceDvirAssetRef.ExternalIds))
+            .Should().Be("externalIds", "the v2 asset schemas spell it lowercase");
+    }
+
+    /// <summary>
+    /// <c>PATCH /fleet/defects/{id}</c> returns the v1 <c>Defect</c> shape, which
+    /// carries <c>defectType</c> and <c>mechanicNotesUpdatedAtTime</c> — neither
+    /// of which exists on the v2 <see cref="DefectRecord"/>.
+    /// </summary>
+    [Fact]
+    public async Task UpdateDefectAsync_BindsTheV1OnlyFields()
+    {
+        var resp = new
+        {
+            data = new
+            {
+                id = "def-1",
+                isResolved = true,
+                comment = "Air Compressor not working",
+                defectType = "Air Compressor",
+                createdAtTime = "2024-01-01T08:00:00Z",
+                mechanicNotes = "Replaced compressor",
+                mechanicNotesUpdatedAtTime = "2024-01-02T09:00:00Z",
+                resolvedAtTime = "2024-01-02T10:00:00Z",
+                resolvedBy = new { id = "mech-1", name = "Bob Mechanic", type = "mechanic" },
+            },
+        };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new MaintenanceClient(TestFactory.CreateHttpClient(handler));
+
+        var defect = await client.UpdateDefectAsync("def-1", new UpdateDefectRequest
+        {
+            IsResolved = true,
+            ResolvedBy = new UpdateDefectResolvedBy { Id = "mech-1", Type = "mechanic" },
+        });
+
+        defect.Should().BeOfType<V1DefectRecord>();
+        defect.DefectType.Should().Be("Air Compressor");
+        defect.MechanicNotesUpdatedAtTime.Should().Be("2024-01-02T09:00:00Z");
+        defect.ResolvedBy!.Name.Should().Be("Bob Mechanic");
+    }
+
+    /// <summary>
+    /// <c>GET /defects/{id}</c> returns the v2
+    /// <c>DvirDefectGetDefectResponseBody</c> shape, which carries
+    /// <c>dvirId</c>, <c>defectTypeId</c>, <c>defectSafetyStatus</c> and
+    /// <c>updatedAtTime</c> — none of which exist on the v1 record.
+    /// </summary>
+    [Fact]
+    public async Task GetDefectAsync_BindsTheV2OnlyFields()
+    {
+        var resp = new
+        {
+            data = new
+            {
+                id = "def-1",
+                dvirId = "dvir-9",
+                comment = "Cracked windshield",
+                isResolved = false,
+                defectTypeId = "dt-3",
+                defectSafetyStatus = "unsafe",
+                updatedAtTime = "2024-01-02T09:00:00Z",
+                vehicle = new
+                {
+                    id = "veh-1",
+                    externalIds = new Dictionary<string, string> { ["maintenanceId"] = "250020" },
+                },
+            },
+        };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new MaintenanceClient(TestFactory.CreateHttpClient(handler));
+
+        var defect = await client.GetDefectAsync("def-1");
+
+        defect.Should().BeOfType<DefectRecord>();
+        defect.DvirId.Should().Be("dvir-9");
+        defect.DefectTypeId.Should().Be("dt-3");
+        defect.DefectSafetyStatus.Should().Be("unsafe");
+        defect.UpdatedAtTime.Should().Be("2024-01-02T09:00:00Z");
+        defect.Vehicle!.ExternalIds!["maintenanceId"].Should().Be("250020");
+    }
+
+    /// <summary>
+    /// <c>PATCH /fleet/dvirs/{id}</c> returns the v1 <c>Dvir</c> shape, which
+    /// carries <c>startTime</c>, <c>endTime</c>, <c>licensePlate</c>,
+    /// <c>location</c> and <c>trailerName</c> — none of which exist on the v2
+    /// <see cref="MaintenanceDvir"/>.
+    /// </summary>
+    [Fact]
+    public async Task UpdateDvirAsync_BindsTheV1OnlyFields()
+    {
+        var resp = new
+        {
+            data = new
+            {
+                id = "dvir-1",
+                type = "mechanic",
+                safetyStatus = "resolved",
+                startTime = "2024-01-01T08:00:00Z",
+                endTime = "2024-01-01T08:30:00Z",
+                licensePlate = "8VZR291",
+                location = "Bay 4, Chicago Yard",
+                trailerName = "Midwest Trailer #5",
+                odometerMeters = 123456,
+            },
+        };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new MaintenanceClient(TestFactory.CreateHttpClient(handler));
+
+        var dvir = await client.UpdateDvirAsync("dvir-1", new UpdateDvirRequest
+        {
+            AuthorId = "usr-1",
+            IsResolved = true,
+        });
+
+        dvir.Should().BeOfType<V1MaintenanceDvir>();
+        dvir.StartTime.Should().Be("2024-01-01T08:00:00Z");
+        dvir.EndTime.Should().Be("2024-01-01T08:30:00Z");
+        dvir.LicensePlate.Should().Be("8VZR291");
+        dvir.Location.Should().Be("Bay 4, Chicago Yard");
+        dvir.TrailerName.Should().Be("Midwest Trailer #5");
+        dvir.OdometerMeters.Should().Be(123456);
+    }
+
+    /// <summary>
+    /// <c>GET /dvirs/{id}</c> returns the v2 shape, which carries
+    /// <c>dvirSubmissionBeginTime</c>, <c>dvirSubmissionTime</c>,
+    /// <c>updatedAtTime</c>, <c>formattedAddress</c>, <c>defectIds</c> and
+    /// <c>walkaroundPhotos</c> — none of which exist on the v1 record.
+    /// </summary>
+    [Fact]
+    public async Task GetDvirByIdAsync_BindsTheV2OnlyFields()
+    {
+        var resp = new
+        {
+            data = new
+            {
+                id = "dvir-1",
+                type = "mechanic",
+                dvirSubmissionBeginTime = "2024-01-01T08:00:00Z",
+                dvirSubmissionTime = "2024-01-01T08:10:00Z",
+                updatedAtTime = "2024-01-01T08:15:00Z",
+                formattedAddress = "350 Rhode Island St, San Francisco, CA",
+                defectIds = new[] { "def-1", "def-2" },
+            },
+        };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new MaintenanceClient(TestFactory.CreateHttpClient(handler));
+
+        var dvir = await client.GetDvirByIdAsync("dvir-1");
+
+        dvir.Should().BeOfType<MaintenanceDvir>();
+        dvir.DvirSubmissionBeginTime.Should().Be("2024-01-01T08:00:00Z");
+        dvir.DvirSubmissionTime.Should().Be("2024-01-01T08:10:00Z");
+        dvir.UpdatedAtTime.Should().Be("2024-01-01T08:15:00Z");
+        dvir.FormattedAddress.Should().Be("350 Rhode Island St, San Francisco, CA");
+        dvir.DefectIds.Should().ContainInOrder("def-1", "def-2");
+    }
+
+    /// <summary>
+    /// The v1 and v2 signature objects nest different signatory users:
+    /// <c>userTinyResponse</c> (<c>{id, name}</c>) on v1 versus
+    /// <c>SignatoryUserObjectResponseBody</c> (<c>{externalIds, id}</c>) on v2.
+    /// That single difference is what forced the signature records apart.
+    /// </summary>
+    [Fact]
+    public async Task DvirSignatories_BindPerVersionShapes()
+    {
+        var v1Handler = MockHttpMessageHandler.WithJsonResponse(new
+        {
+            data = new
+            {
+                id = "dvir-1",
+                authorSignature = new
+                {
+                    signatoryUser = new { id = "usr-1", name = "Alice Driver" },
+                    signedAtTime = "2024-01-01T08:00:00Z",
+                    type = "driver",
+                },
+            },
+        });
+        var v1Dvir = await new MaintenanceClient(TestFactory.CreateHttpClient(v1Handler))
+            .CreateDvirAsync(new CreateDvirRequest { AuthorId = "usr-1", SafetyStatus = "safe", Type = "mechanic" });
+
+        v1Dvir.AuthorSignature!.SignatoryUser!.Id.Should().Be("usr-1");
+        v1Dvir.AuthorSignature.SignatoryUser.Name.Should().Be("Alice Driver");
+        typeof(V1MaintenanceSignatoryUser).GetProperties()
+            .Select(p => p.Name)
+            .Should().BeEquivalentTo(["Id", "Name"], "userTinyResponse is {id, name}");
+
+        var v2Handler = MockHttpMessageHandler.WithJsonResponse(new
+        {
+            data = new
+            {
+                id = "dvir-1",
+                authorSignature = new
+                {
+                    signatoryUser = new
+                    {
+                        id = "usr-1",
+                        externalIds = new Dictionary<string, string> { ["payrollId"] = "ABFS18600" },
+                    },
+                    signedAtTime = "2024-01-01T08:00:00Z",
+                    type = "driver",
+                },
+            },
+        });
+        var v2Dvir = await new MaintenanceClient(TestFactory.CreateHttpClient(v2Handler))
+            .GetDvirByIdAsync("dvir-1");
+
+        v2Dvir.AuthorSignature!.SignatoryUser!.Id.Should().Be("usr-1");
+        v2Dvir.AuthorSignature.SignatoryUser.ExternalIds!["payrollId"].Should().Be("ABFS18600");
+        typeof(MaintenanceSignatoryUser).GetProperties()
+            .Select(p => p.Name)
+            .Should().BeEquivalentTo(["Id", "ExternalIds"], "SignatoryUserObjectResponseBody is {externalIds, id}");
+    }
+
+    private static string? JsonNameOf<T>(string propertyName)
+        => typeof(T).GetProperty(propertyName)!
+            .GetCustomAttribute<JsonPropertyNameAttribute>()!.Name;
 
     private static async Task<IReadOnlyList<T>> CollectAsync<T>(IAsyncEnumerable<T> source)
     {

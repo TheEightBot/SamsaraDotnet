@@ -21,11 +21,18 @@ public interface IMaintenanceClient
         bool? includeExternalIds = null,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Create a mechanic DVIR (<c>POST /fleet/dvirs</c>).</summary>
-    Task<MaintenanceDvir> CreateDvirAsync(CreateDvirRequest request, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Create a mechanic DVIR (<c>POST /fleet/dvirs</c>). Returns the v1
+    /// <c>Dvir</c> shape — <see cref="V1MaintenanceDvir"/>, not the
+    /// <see cref="MaintenanceDvir"/> returned by the v2 stream/get endpoints.
+    /// </summary>
+    Task<V1MaintenanceDvir> CreateDvirAsync(CreateDvirRequest request, CancellationToken cancellationToken = default);
 
-    /// <summary>Resolve a DVIR (<c>PATCH /fleet/dvirs/{id}</c>).</summary>
-    Task<MaintenanceDvir> UpdateDvirAsync(string id, UpdateDvirRequest request, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Resolve a DVIR (<c>PATCH /fleet/dvirs/{id}</c>). Returns the v1
+    /// <c>Dvir</c> shape — <see cref="V1MaintenanceDvir"/>.
+    /// </summary>
+    Task<V1MaintenanceDvir> UpdateDvirAsync(string id, UpdateDvirRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>Stream DVIR defects (<c>GET /defects/stream</c>).</summary>
     IAsyncEnumerable<DefectRecord> GetDefectsStreamAsync(
@@ -41,8 +48,12 @@ public interface IMaintenanceClient
         bool? includeExternalIds = null,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Update a defect (<c>PATCH /fleet/defects/{id}</c>).</summary>
-    Task<DefectRecord> UpdateDefectAsync(string id, UpdateDefectRequest request, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Update a defect (<c>PATCH /fleet/defects/{id}</c>). Returns the v1
+    /// <c>Defect</c> shape — <see cref="V1DefectRecord"/>, not the
+    /// <see cref="DefectRecord"/> returned by the v2 stream/get endpoints.
+    /// </summary>
+    Task<V1DefectRecord> UpdateDefectAsync(string id, UpdateDefectRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>List DVIR defect types (<c>GET /defect-types</c>).</summary>
     IAsyncEnumerable<DefectType> ListDefectTypesAsync(

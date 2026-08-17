@@ -206,15 +206,20 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(IftaReportTroubleshooting))]
 [JsonSerializable(typeof(IftaDetailJobArgs))]
 [JsonSerializable(typeof(IftaDetailJobOutput))]
-// Maintenance
+// Maintenance — v2 DVIR shapes (GET /dvirs/stream, GET /dvirs/{id})
 [JsonSerializable(typeof(MaintenanceDvir))]
 [JsonSerializable(typeof(MaintenanceDvirAssetRef))]
 [JsonSerializable(typeof(MaintenanceDvirSignature))]
 [JsonSerializable(typeof(MaintenanceSignatoryUser))]
-[JsonSerializable(typeof(DvirDefect))]
-[JsonSerializable(typeof(DvirDefectVehicle))]
 [JsonSerializable(typeof(WalkaroundPhoto))]
 [JsonSerializable(typeof(DefectPhoto))]
+// Maintenance — v1 DVIR/defect shapes (POST /fleet/dvirs, PATCH /fleet/dvirs/{id},
+// PATCH /fleet/defects/{id}); see docs/api-sync/30-maintenance.md, 2026-08-17b.
+[JsonSerializable(typeof(V1MaintenanceDvir))]
+[JsonSerializable(typeof(V1MaintenanceDvirSignature))]
+[JsonSerializable(typeof(V1MaintenanceSignatoryUser))]
+[JsonSerializable(typeof(V1MaintenanceTrailerRef))]
+[JsonSerializable(typeof(V1MaintenanceVehicleRef))]
 [JsonSerializable(typeof(DiagnosticTroubleCode))]
 [JsonSerializable(typeof(CheckEngineLight))]
 // Documents
@@ -476,6 +481,7 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(UpdateDriverTrailerAssignmentRequest))]
 // Maintenance - DVIRs & Defects
 [JsonSerializable(typeof(DefectRecord))]
+[JsonSerializable(typeof(V1DefectRecord))]
 [JsonSerializable(typeof(DefectResolvedBy))]
 [JsonSerializable(typeof(UpdateDefectRequest))]
 [JsonSerializable(typeof(UpdateDefectResolvedBy))]

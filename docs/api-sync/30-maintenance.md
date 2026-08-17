@@ -62,7 +62,7 @@
 - [x] Request model(s) defined (if applicable)
 - [x] Response model(s) defined
 - [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
-- [ ] Unit/integration test coverage
+- [x] Unit/integration test coverage
 
 ### ✅ `GET /dvirs/{id}`
 **Operation ID**: `getDvir`  
@@ -75,7 +75,7 @@
 - [x] Request model(s) defined (if applicable)
 - [x] Response model(s) defined
 - [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
-- [ ] Unit/integration test coverage
+- [x] Unit/integration test coverage
 
 ### ❌ `PATCH /fleet/defects/{id}`
 **Operation ID**: `updateDvirDefect`  

@@ -30,11 +30,11 @@ internal sealed class MaintenanceClient : SamsaraServiceClientBase, IMaintenance
                 ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
             cancellationToken);
 
-    public Task<MaintenanceDvir> CreateDvirAsync(CreateDvirRequest request, CancellationToken cancellationToken = default)
-        => HttpClient.PostDataAsync<MaintenanceDvir>("fleet/dvirs", request, cancellationToken);
+    public Task<V1MaintenanceDvir> CreateDvirAsync(CreateDvirRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<V1MaintenanceDvir>("fleet/dvirs", request, cancellationToken);
 
-    public Task<MaintenanceDvir> UpdateDvirAsync(string id, UpdateDvirRequest request, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<MaintenanceDvir>($"fleet/dvirs/{Uri.EscapeDataString(id)}", request, cancellationToken);
+    public Task<V1MaintenanceDvir> UpdateDvirAsync(string id, UpdateDvirRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<V1MaintenanceDvir>($"fleet/dvirs/{Uri.EscapeDataString(id)}", request, cancellationToken);
 
     public IAsyncEnumerable<DefectRecord> GetDefectsStreamAsync(
         DateTimeOffset? startTime = null,
@@ -59,8 +59,8 @@ internal sealed class MaintenanceClient : SamsaraServiceClientBase, IMaintenance
                 ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
             cancellationToken);
 
-    public Task<DefectRecord> UpdateDefectAsync(string id, UpdateDefectRequest request, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<DefectRecord>($"fleet/defects/{Uri.EscapeDataString(id)}", request, cancellationToken);
+    public Task<V1DefectRecord> UpdateDefectAsync(string id, UpdateDefectRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<V1DefectRecord>($"fleet/defects/{Uri.EscapeDataString(id)}", request, cancellationToken);
 
     public IAsyncEnumerable<DefectType> ListDefectTypesAsync(
         IReadOnlyList<string>? ids = null,
