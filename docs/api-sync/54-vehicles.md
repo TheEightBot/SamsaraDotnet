@@ -50,6 +50,27 @@
 - [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
 - [ ] Unit/integration test coverage
 
+### ✅ `GET /v1/fleet/locations`
+**Operation ID**: `getFleetLocations` — the spec's only `Fleet`-tagged operation, homed here
+because it is a vehicle query (`tools/sdk-client-tags.json` already allows the tag).  
+**Summary**: Get the current location of vehicles (legacy v1).  
+**Parameters**: `after`, `limit`, `vehicleIds`, `tagIds`  
+**Request Body**: No  
+
+- [x] Method defined in `IVehiclesClient` (`V1GetFleetLocationsAsync`)
+- [x] Method implemented in `VehiclesClient.cs`
+- [x] Request model(s) defined (if applicable) — n/a
+- [x] Response model(s) defined (`V1VehicleLocation` items, `V1FleetLocationsResponse` page envelope)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`VehiclesClientTests`, incl. a two-page cursor test)
+
+> **Envelope note.** This v1 body puts its items in a **top-level `vehicles` array** beside a
+> top-level `pagination` block — there is no `data` member. It therefore uses the new
+> `PaginateAsync<TResponse, TItem>(path, selectItems, selectPagination, …)` overload rather
+> than the `{ data: [...] }` helper, which would have deserialized an absent `data` and
+> silently yielded nothing. `check-model-sync.py`'s `resolve_named_wrapper` was taught the
+> same shape so the item record is compared against the array's item schema.
+
 ---
 
 ## Models

@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Diagnostics.CodeAnalysis;
 using Samsara.Sdk.Models.Fleet;
 
 /// <summary>Client for managing Samsara assets.</summary>
@@ -75,13 +76,20 @@ public interface IAssetsClient
         bool? includeExternalIds = null,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Legacy v1 list of all assets.</summary>
-    Task<object> V1GetAllAssetsAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Legacy v1 list of all assets (<c>GET /v1/fleet/assets</c>). The v1
+    /// response is not <c>{ data }</c>-enveloped; the returned record mirrors
+    /// the whole body, whose only member is <c>assets</c>.
+    /// </summary>
+    Task<V1AssetListResponse> V1GetAllAssetsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// All assets' current locations (v1, <c>GET /v1/fleet/assets/locations</c>).
+    /// The returned record mirrors the whole v1 body, so the bidirectional
+    /// cursor block is available on
+    /// <c>V1AssetCurrentLocationsResponse.Pagination</c>.
     /// </summary>
-    Task<object> V1GetAllAssetCurrentLocationsAsync(
+    Task<V1AssetCurrentLocationsResponse> V1GetAllAssetCurrentLocationsAsync(
         string? startingAfter = null,
         string? endingBefore = null,
         double? limit = null,
@@ -92,13 +100,19 @@ public interface IAssetsClient
     /// time window is required by the spec and expressed in milliseconds since
     /// epoch.
     /// </summary>
+    /// <remarks>
+    /// Unlike its sibling v1 endpoints this one <em>does</em> use the
+    /// <c>{ data, pagination }</c> envelope, so the SDK unwraps it and returns
+    /// the item list directly. Page forward with
+    /// <paramref name="startingAfter"/> using the last returned asset.
+    /// </remarks>
     /// <param name="startMs">Required lower bound (Unix epoch ms).</param>
     /// <param name="endMs">Required upper bound (Unix epoch ms).</param>
     /// <param name="startingAfter">Optional cursor for pagination.</param>
     /// <param name="endingBefore">Optional reverse cursor for pagination.</param>
     /// <param name="limit">Optional page-size hint.</param>
     /// <param name="cancellationToken">Token to cancel the request.</param>
-    Task<object> V1GetAssetsReefersAsync(
+    Task<IReadOnlyList<V1AssetsReefer>> V1GetAssetsReefersAsync(
         long startMs,
         long endMs,
         string? startingAfter = null,
@@ -108,12 +122,13 @@ public interface IAssetsClient
 
     /// <summary>
     /// Per-asset location history (v1, <c>GET /v1/fleet/assets/{asset_id}/locations</c>).
+    /// The v1 body is a bare JSON array, so the readings are returned directly.
     /// </summary>
     /// <param name="assetId">Asset id (path segment).</param>
     /// <param name="startMs">Required lower bound (Unix epoch ms).</param>
     /// <param name="endMs">Required upper bound (Unix epoch ms).</param>
     /// <param name="cancellationToken">Token to cancel the request.</param>
-    Task<object> V1GetAssetLocationAsync(
+    Task<IReadOnlyList<V1AssetLocation>> V1GetAssetLocationAsync(
         string assetId,
         long startMs,
         long endMs,
@@ -126,18 +141,21 @@ public interface IAssetsClient
     /// <param name="startMs">Required lower bound (Unix epoch ms).</param>
     /// <param name="endMs">Required upper bound (Unix epoch ms).</param>
     /// <param name="cancellationToken">Token to cancel the request.</param>
-    Task<object> V1GetAssetReeferAsync(
+    Task<V1AssetReefer> V1GetAssetReeferAsync(
         string assetId,
         long startMs,
         long endMs,
         CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<object> GetDepreciationTransactionsAsync(
+    /// <summary>Asset depreciation transactions (beta, <c>GET /assets/depreciation</c>).</summary>
+    IAsyncEnumerable<AssetDepreciationTransaction> GetDepreciationTransactionsAsync(
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
         IReadOnlyList<string>? assetIds = null,
         CancellationToken cancellationToken = default);
-    IAsyncEnumerable<object> GetInputsStreamAsync(
+
+    /// <summary>Asset auxiliary-input stream (beta, <c>GET /assets/inputs/stream</c>).</summary>
+    IAsyncEnumerable<AssetInputReading> GetInputsStreamAsync(
         IReadOnlyList<string> ids,
         string type,
         DateTimeOffset? startTime = null,
@@ -146,7 +164,63 @@ public interface IAssetsClient
         bool? includeTags = null,
         bool? includeAttributes = null,
         CancellationToken cancellationToken = default);
-    IAsyncEnumerable<object> ListDeviceRecoveryMissingAsync(CancellationToken cancellationToken = default);
-    Task<object> MarkAssetMissingAsync(string id, object request, CancellationToken cancellationToken = default);
-    Task<object> RecoverAssetAsync(string id, object request, CancellationToken cancellationToken = default);
+
+    /// <summary>Assets currently marked missing in device recovery (beta).</summary>
+    IAsyncEnumerable<DeviceRecoveryMissingState> ListDeviceRecoveryMissingAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Mark an asset as missing in device-recovery (beta).</summary>
+    Task<DeviceRecoveryMissingState> MarkAssetMissingAsync(string id, MarkAssetMissingRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Mark an asset as recovered (beta).</summary>
+    Task<DeviceRecoveryRecoveredState> RecoverAssetAsync(string id, RecoverAssetRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// List active asset assignments (<c>GET /fleet/assets/assignments</c>,
+    /// <c>listAssetAssignments</c>, beta). Pagination is handled transparently.
+    /// </summary>
+    /// <param name="includeExternalIds">Whether to return external IDs for the referenced asset and assignee objects.</param>
+    /// <param name="assetIds">Optional asset IDs to filter on. Samsara IDs or external ID tokens.</param>
+    /// <param name="assigneeIds">Optional assignee IDs to filter on. Samsara IDs or external ID tokens.</param>
+    /// <param name="cancellationToken">Token to cancel enumeration.</param>
+    [Experimental("SAMSARA001")]
+    IAsyncEnumerable<AssetAssignment> ListAssignmentsAsync(
+        bool? includeExternalIds = null,
+        IReadOnlyList<string>? assetIds = null,
+        IReadOnlyList<string>? assigneeIds = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Create an asset assignment (<c>POST /fleet/assets/assignments</c>,
+    /// <c>createAssetAssignment</c>, beta).
+    /// </summary>
+    [Experimental("SAMSARA001")]
+    Task<AssetAssignment> CreateAssignmentAsync(
+        CreateAssetAssignmentRequest request,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// End an asset's active assignment
+    /// (<c>POST /fleet/assets/assignments/unassign</c>,
+    /// <c>unassignAssetAssignment</c>, beta). Returns <c>204 No Content</c>.
+    /// </summary>
+    [Experimental("SAMSARA001")]
+    Task UnassignAsync(
+        UnassignAssetAssignmentRequest request,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// List asset associations between peripheral and central devices
+    /// (<c>GET /fleet/assets/associations</c>, <c>listAssociations</c>, beta).
+    /// Pagination is handled transparently.
+    /// </summary>
+    /// <param name="peripheralIds">Peripheral asset IDs to filter associations by. Required by the spec.</param>
+    /// <param name="startTime">RFC 3339 start of the window. Required by the spec.</param>
+    /// <param name="endTime">Optional RFC 3339 end of the window.</param>
+    /// <param name="cancellationToken">Token to cancel enumeration.</param>
+    [Experimental("SAMSARA001")]
+    IAsyncEnumerable<AssetAssociation> ListAssociationsAsync(
+        IReadOnlyList<string> peripheralIds,
+        DateTimeOffset startTime,
+        DateTimeOffset? endTime = null,
+        CancellationToken cancellationToken = default);
 }

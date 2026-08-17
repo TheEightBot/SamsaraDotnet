@@ -161,6 +161,13 @@ public sealed record MediaRetrieval
     public string? VehicleId { get; init; }
 
     /// <summary>
+    /// Serial number of the auxiliary camera (e.g. AI multicam) that captured
+    /// this media. Only present for analog inputs.
+    /// </summary>
+    [JsonPropertyName("auxcamSerial")]
+    public string? AuxcamSerial { get; init; }
+
+    /// <summary>
     /// Start time of the media (RFC 3339). Spec-required on
     /// <c>GET /cameras/media/retrieval</c>. Not returned by
     /// <c>POST /cameras/media/retrieval</c>.
@@ -249,12 +256,28 @@ public sealed record CreateMediaRetrievalRequest
     /// <summary>
     /// Desired camera inputs for which to capture media. Only media with
     /// valid inputs (the device has that input stream and was recording at
-    /// the time) will be uploaded. An empty list is invalid. Spec-required.
+    /// the time) will be uploaded. An empty list is invalid.
     /// Valid values: <c>dashcamRoadFacing</c>, <c>dashcamDriverFacing</c>,
     /// <c>analog1</c>, <c>analog2</c>, <c>analog3</c>, <c>analog4</c>.
     /// </summary>
+    /// <remarks>
+    /// Spec-OPTIONAL: <c>inputs</c> can be supplied alone, combined with
+    /// <see cref="CameraRoles"/>, or omitted in favour of it, so this is not
+    /// marked <c>required</c>. At least one of the two must be supplied.
+    /// </remarks>
     [JsonPropertyName("inputs")]
-    public required IReadOnlyList<string> Inputs { get; init; }
+    public IReadOnlyList<string>? Inputs { get; init; }
+
+    /// <summary>
+    /// Optional list of camera roles to resolve to analog inputs at request
+    /// time. Requires an AHD4 auxcam device. Can be used alone or combined with
+    /// <see cref="Inputs"/>. Valid values: <c>leftMirrorMount</c>,
+    /// <c>leftSide</c>, <c>rightMirrorMount</c>, <c>rightSide</c>,
+    /// <c>rearHigh</c>, <c>rearBumper</c>, <c>inCab</c>, <c>front</c>,
+    /// <c>hopper</c>, <c>other1</c>, and the remaining spec values.
+    /// </summary>
+    [JsonPropertyName("cameraRoles")]
+    public IReadOnlyList<string>? CameraRoles { get; init; }
 
     /// <summary>
     /// Desired media type. If a video is requested, <c>endTime</c> must be

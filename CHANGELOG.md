@@ -7,8 +7,183 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> ### ⚠️ Migration to v0.5.0 — breaking changes summary
+>
+> This release batches the **full spec-parity sweep**: every one of the spec's **380 operations
+> is now implemented** (was 324), every endpoint body that used to be a bare `object` is typed,
+> and the CI gates were tightened so this cannot silently rot again (`check-sdk-sync` now fails
+> on unimplemented operations; `check-model-sync` gates at **MEDIUM**, was HIGH). Roughly **740
+> new records** landed across the sweep. Everything below lands **once**, in this release.
+>
+> The detailed, per-item entries stay in the sections underneath — this is the at-a-glance list,
+> grouped so you can act on it. Each group tells you what breaks and what to do.
+>
+> **1. Client method signatures and return types**
+> - **Untyped signatures are gone.** Methods that took or returned `object` /
+>   `Task<object>` / `IAsyncEnumerable<object>` now use the record the spec defines — **128
+>   method signatures across 22 client files**. Call sites that passed anonymous objects or held
+>   results in `var`/`object` must switch to the named request/response records. There are now
+>   **no exceptions**: `IReadingsClient.CreateAsync` — the last one — is typed too (group 6).
+> - **Wrong response envelope fixed — these threw or silently returned nothing before.**
+>   `IMaintenanceClient.V1ListMaintenanceAsync` and
+>   `IComplianceClient.V1ListHosAuthenticationLogsAsync` return `Task<IReadOnlyList<T>>` instead
+>   of `IAsyncEnumerable<T>` (those v1 bodies have no `data` array and no `pagination` block);
+>   `IVehiclesClient.UpdateImmobilizerStateAsync` returns `Task` instead of `Task<object>` (its
+>   only success response is a `202` with empty content); `ISafetyClient.PatchEventsBatchAsync`
+>   reads the top-level payload instead of unwrapping a `{ data: … }` envelope that does not exist.
+> - **Operations that moved with the spec.** `IPreviewApisClient.PairGatewaysAsync` →
+>   `IGatewaysClient.PairGatewaysAsync` (removed and re-added; the preview path 404s).
+>   Tachograph file upload moved to `ITachographClient.CreateFileUploadAsync`;
+>   `IPreviewApisClient.CreateTachographFileUploadAsync` survives one release as an `[Obsolete]`
+>   forwarding shim.
+> - **Beta operations are opt-in.** Newly added beta-tagged methods carry
+>   `[Experimental("SAMSARA001")]`, which is an **error** by default. Acknowledge it per call
+>   site with `#pragma warning disable SAMSARA001`, or project-wide with
+>   `<NoWarn>SAMSARA001</NoWarn>`.
+>
+> **2. Records split into v1/v2 pairs**
+> - The spec ships two versions of several endpoints that return genuinely different objects,
+>   which the SDK had been serving from single union records — no record could be faithful to
+>   either version. The **v1 shape now takes a `V1` prefix and the unprefixed name stays with the
+>   v2 shape**, so callers of the modern endpoints do not change types; callers of the v1
+>   create/update endpoints do.
+> - DVIRs and defects: `CreateDvirAsync`/`UpdateDvirAsync` return `V1MaintenanceDvir`,
+>   `UpdateDefectAsync` returns `V1DefectRecord`; new `V1MaintenanceDvirSignature`,
+>   `V1MaintenanceSignatoryUser`, `V1MaintenanceTrailerRef`, `V1MaintenanceVehicleRef`.
+> - Same split elsewhere: `V1VehicleLocation` (legacy `GET /v1/fleet/locations`) alongside the v2
+>   `VehicleLocation`; `V1MaintenanceListResponse`, `V1HosAuthenticationLogsResponse` and the
+>   `V1VehicleMaintenance*` family for the v1 wrapper bodies.
+>
+> **3. Records retyped from `object` / `JsonElement`**
+> - Every weakly-typed **property** with a concrete spec schema is now a real record —
+>   per-property weak typing went from 96 to 0. Notable: `UpdateVehicleRequest.Attributes`,
+>   the alert `TriggerParams`/incident-details closure, route-stop orders (previously not
+>   modelled at all, so the data was unreachable), and the vehicle/trailer stats `decorations`
+>   block. Code doing `JsonElement`/`object` gymnastics on these can delete it; code assigning a
+>   raw `JsonElement` must now construct the record.
+> - **`JsonElement` survives in exactly five places**, each because the spec itself declares a
+>   bare `{ type: object }`: `ReadingDefinition.Type`, `ReadingHistory.Value`,
+>   `ReadingSnapshot.Value`, the new `ReadingDatapoint.Value` (the reading value's shape depends
+>   on the reading — a scalar for `engineRpm`, an enum string for `engineState`,
+>   `{ latitude, longitude, speed }` for `gps`), and the payload returned by
+>   `IMaintenanceClient.ResolvePreventiveMaintenanceAsync`.
+>
+> **4. Removed properties**
+> - Roughly **78 spec-absent properties** were removed across the model layer — fields the API
+>   never sends, denormalized duplicates, and v1-only fields that moved to a `V1` record.
+>   Named examples: `AttributeEntity.Id`; `MaintenanceDvir` loses `EndTime`, `StartTime`,
+>   `LicensePlate`, `Location`, `TrailerName`, `TrailerDefects`, `VehicleDefects`;
+>   `DefectRecord` loses `DefectType`, `MechanicNotesUpdatedAtTime`; `MaintenanceDvirAssetRef`
+>   and `MaintenanceSignatoryUser` lose `Name`.
+> - Removed records: `DvirEntry`, `DvirVehicle`, `DvirSignature`, `DvirDefect`,
+>   `DvirDefectVehicle`, `NumberValueTypeMetadata`, `FormFieldDefinition` — each superseded by a
+>   spec-shaped replacement named in the entry below.
+>
+> **5. `required` → nullable relaxations**
+> - **Response records are now fully nullable, as a rule.** The live API omits fields its own
+>   spec marks required, and lenient deserialization then left a `required` non-nullable property
+>   null — throwing at the *call site* instead of at parse time. **~25 `required` modifiers were
+>   dropped from response properties**; examples: `MaintenanceDvir.Id`, `DefectRecord.Id`,
+>   `DefectRecord.IsResolved`, `TagReference.Id`, `GeofenceCircle.Latitude`/`Longitude`,
+>   `VehicleStatAuxInput.Time`/`Value`. **Code that assumed non-null on these needs a null
+>   check.** `required` remains on **request** DTOs, where the spec marks a field required and
+>   the compiler can enforce it at construction.
+> - Type corrections in the same pass: `OrganizationCarrierSettings.DotNumber` is `long?` (spec
+>   `integer/int64`), and `CreateMediaRetrievalRequest.Inputs` is now optional.
+>
+> **6. Trailer assignments and readings — the last two transport defects**
+> - **`ITrailerAssignmentsClient.ListAsync` element type changed:**
+>   `IAsyncEnumerable<TrailerAssignment>` → `IAsyncEnumerable<V1TrailerWithAssignments>`. The
+>   method threw a `NullReferenceException` on *every* call: `GET /v1/fleet/trailers/assignments`
+>   returns `{ pagination, trailers: [...] }` (spec `inline_response_200_7`) — a top-level named
+>   array with no `data` member — so `PaginateAsync<T>` bound `Data` to null and the pagination
+>   loop dereferenced it. Same class as the v1 transport bugs in group 1. Each yielded item is now
+>   a trailer with its `TrailerAssignments` rows (`V1TrailerAssignmentEntry`: `DriverId`,
+>   `StartMs`, `EndMs`), instead of the old flat scalars.
+> - **`ITrailerAssignmentsClient.GetByTrailerAsync` is no longer a stream:**
+>   `IAsyncEnumerable<TrailerAssignment>` → `Task<V1TrailerWithAssignments>`. The spec returns a
+>   single `V1TrailerAssignmentsResponse` object for
+>   `GET /v1/fleet/trailers/{trailerId}/assignments` — no `pagination` block and no cursor
+>   parameters — so paginating it was wrong in the same way.
+> - **The `TrailerAssignment` record is removed.** It modelled *both* v1 envelope shapes at once
+>   plus seven invented flat scalars (`TrailerId`, `TrailerName`, `VehicleId`, `VehicleName`,
+>   `DriverId`, `StartTime`, `EndTime`) that no current spec schema defines. Replaced by the
+>   spec-shaped trio: `V1TrailerAssignmentsListResponse` (the page envelope),
+>   `V1TrailerWithAssignments` (the item), `V1TrailerAssignmentEntry` (an assignment row). The
+>   seven fields never carried data, so nothing readable is lost.
+> - **`IReadingsClient.CreateAsync(object) → Task<object>` becomes
+>   `CreateAsync(CreateReadingsRequest) → Task`.** `POST /readings` has a concrete request schema
+>   (`{ data: [ReadingDatapointRequestBody] }`, up to 1000 points) and its success response is a
+>   `201` with `content: {}` — literally empty — so deserializing to `object` threw. New
+>   `CreateReadingsRequest` and `ReadingDatapoint` records; the call now returns nothing.
+> - **Legacy pagination cursor names are honoured.** `GET /v1/fleet/trailers/assignments`
+>   declares `startingAfter`, not the v2 `after`. The pagination helpers gained an optional
+>   `cursorParam`, defaulting to `after`, so a v1 endpoint no longer receives a cursor the server
+>   ignores — which would re-serve page 1 with `hasNextPage: true` and loop forever.
+
 ### Added
 
+- **Endpoint parity reaches 380 / 380 — the last four operations are implemented.** They were
+  deferred only by file ownership during concurrent work, and are typed to the same standard as
+  the rest of the sweep (every request/response and child object gets a real record; schemas
+  resolved through `responses.200 → data/items → $ref`, never by name).
+  - `GET /maintenance/time-entries/stream` → `IMaintenanceClient.GetTimeEntriesStreamAsync`
+    (beta, paginated). New `MaintenanceTimeEntry` and `MaintenanceTimeEntryLocation` records;
+    `hourlyRate` reuses `MaintenanceMoney`, which is property-identical to its schema. `startTime`
+    is spec-required, so it is a non-optional parameter. The feed emits **deletion tombstones**
+    (id + `deletedAtTime` + `deletedByUserId` only), which the record and its tests cover.
+  - `PATCH /maintenance/preventive/upcoming` →
+    `IMaintenanceClient.UpdateUpcomingPreventiveMaintenanceAsync` (beta). New
+    `UpdateUpcomingPreventiveMaintenanceRequest` and `UpdatedUpcomingPreventiveMaintenance`. The
+    PATCH response is a strict **superset** of the `GET` list item — it adds
+    `currentOdometerMiles`, `dueInOdometerMiles`, `nextOdometerMiles` and `priority` — so it gets
+    its own record rather than being merged into `UpcomingPreventiveMaintenance`; records are
+    merged in this SDK only when the two spec schemas are property-identical.
+  - `POST /maintenance/preventive/resolve` →
+    `IMaintenanceClient.ResolvePreventiveMaintenanceAsync` (beta). New
+    `ResolvePreventiveMaintenanceRequest`; the response is returned as a `JsonElement` because
+    its schema (`ResolvePreventiveMaintenanceResponseObjectTypeResponseBody`) is a bare
+    `{ type: object }` with no properties — one of the few genuinely free-form payloads in the
+    spec.
+  - `GET /v1/fleet/locations` → `IVehiclesClient.V1GetFleetLocationsAsync` (paginated). New
+    `V1VehicleLocation` (the flat v1 shape: integer ids, top-level latitude/longitude, Unix-ms
+    timestamp — distinct from the v2 `VehicleLocation`) and the `V1FleetLocationsResponse` page
+    envelope.
+  - On both maintenance actions the asset and schedule identifiers travel in the **query
+    string**, not the body, and the contract tests pin that — sending them in the body would act
+    on whichever instance the API picked.
+- **New pagination helper for the legacy top-level-array envelope.**
+  `SamsaraServiceClientBase.PaginateAsync<TResponse, TItem>(path, selectItems, selectPagination, …)`
+  (backed by `SamsaraHttpClient.GetPageFromAsync`) walks page bodies that put their items in a
+  **top-level named array** beside a top-level `pagination` block —
+  `{ vehicles: [...], pagination: {...} }` — instead of under `data`. Reading that shape with the
+  `{ data: [...] }` helper binds `Data` to null and yields nothing, which is the bug class this
+  sweep kept finding. `check-model-sync.py`'s `resolve_named_wrapper` was taught the same shape,
+  so an item record is compared against the array's item schema rather than against the envelope.
+- **Spec-parity tooling overhaul, and a daily drift watcher that writes its own work order.**
+  The four checkers reported "green" while the SDK had **57 unimplemented operations**, a
+  mis-homed path, and **96 weakly-typed model properties**. Root cause: a single blanket
+  allowlist entry in `check-model-sync.py` — `("object", "*", "weak-typing")` — collapsed all
+  94 weakly-typed endpoint bodies into one accepted line, and `is_weak_type()` never
+  recognised `System.Text.Json.JsonElement?` or `IReadOnlyList<JsonElement>`. Both are fixed:
+  - `check-model-sync.py`: weak-type detection now peels nullability, one collection wrapper,
+    and namespace qualification; a new concreteness test emits `weak-typing` at **MEDIUM**
+    when the spec defines a real schema and **LOW** when the spec is genuinely free-form;
+    whole-body findings are keyed per `File::Method` so they can no longer collapse into one
+    suppressible group; `flattened-nested` → `flattened` at MEDIUM. The blanket entry is gone
+    and every remaining `weak-typing` allowlist entry cites a spec pointer.
+  - `check-sdk-sync.py`: new `--fail-on-unimplemented`; unique (no longer per-tag
+    double-counted) missing-operation list in JSON; `spec_source` exposes a silent fallback
+    to the cached baseline.
+  - `check-api-sync.py`: new `--spec-file`, `--no-report`, `--summary-json`,
+    `--fail-on-structural`, and a `classify()` that separates `cosmetic` churn (Samsara
+    rewords descriptions constantly) from `structural` contract change.
+  - New `tools/render-drift-report.py` and `tools/render-sync-status.py`.
+- **`ITachographClient.CreateFileUploadAsync` — typed tachograph file uploads.** New
+  `CreateTachographFileUploadRequest`, `TachographFileUpload`, and
+  `TachographUploadRequiredHeader` records replace the untyped `object` round-trip.
+- **`docs/api-sync/spec-parity-plan-2026-08-17.md`** — the reviewed plan for the v0.5.0
+  full-parity sweep.
 - **`SamsaraDeserializationException` — failed response parsing now carries the raw payloads.**
   When a successful (2xx) response can't be deserialized into its model type, the SDK no longer
   surfaces a bare `System.Text.Json.JsonException`. Instead it throws a
@@ -32,6 +207,146 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The CI sync gates are tightened, now that the backlog they measure is cleared.** In
+  `.github/workflows/ci.yml`'s `sdk-sync` job, `check-sdk-sync.py` gains
+  `--fail-on-unimplemented` (a spec operation with no SDK method now fails the build, not just a
+  wrong path) and `check-model-sync.py` moves from `--fail-on-severity HIGH` to **`MEDIUM`**, so
+  weak typing, flattened records, and type/required-ness drift all gate. Three `LOW` weak-typing
+  findings stay active and deliberately **un-allowlisted** — `FunctionRunContext.requestPayload`,
+  `FunctionRunContext.responsePayload` and `ReportRunData.rows`, all genuinely free-form in the
+  spec. `docs/api-sync/README.md` documents both gates as on.
+- **One allowlist entry added — the only one in the entire sweep.**
+  `AttributeEntity.entityId` stays `string?` against a spec that types it `integer/int64`,
+  because the spec contradicts itself: the response-side
+  `components.schemas.AttributeEntity.properties.entityId` is `{type: integer, format: int64}`
+  with no description and no example, while the request-side sibling
+  `components.schemas.CreateAttributeRequest_entities.properties.entityId` is `{type: string}`
+  ("Entity id, based on the entity type"). Every other `entityId` in the spec is a string,
+  response side included (`ReadingHistoryResponseBody`, `ReadingSnapshotResponseBody`,
+  `ReadingDatapointRequestBody`) — four string against this one integer. Retyping to `long` would
+  break symmetry with the SDK's own `AttributeEntityInput.EntityId`, which the request schema
+  requires to stay a string, and would risk a hard `JsonException` on every
+  `GET /attributes` response if the live API sends the string the rest of the spec documents.
+- **BREAKING — three list/response envelopes were being unwrapped with the wrong HTTP helper.**
+  All three threw (or silently returned nothing) against valid Samsara responses:
+  - `IMaintenanceClient.V1ListMaintenanceAsync` returns
+    `Task<IReadOnlyList<V1VehicleMaintenance>>` instead of
+    `IAsyncEnumerable<V1VehicleMaintenance>`. `GET /v1/fleet/maintenance/list` answers with
+    `{ vehicles: [...] }` (spec `inline_response_200_4`) — no `data` array and no `pagination`
+    block — so the previous `PaginateAsync<T>` bound `Data` to null and the pagination loop
+    dereferenced it. New `V1MaintenanceListResponse` wrapper record.
+  - `IComplianceClient.V1ListHosAuthenticationLogsAsync` returns
+    `Task<IReadOnlyList<V1HosAuthenticationLog>>` instead of
+    `IAsyncEnumerable<V1HosAuthenticationLog>`, for the same reason:
+    `GET /v1/fleet/hos_authentication_logs` answers with `{ authenticationLogs: [...] }`
+    (spec `V1HosAuthenticationLogsResponse`). New `V1HosAuthenticationLogsResponse` wrapper record.
+  - `IVehiclesClient.UpdateImmobilizerStateAsync` returns `Task` instead of `Task<object>`.
+    `PATCH /beta/fleet/vehicles/{id}/immobilizer` declares only `202` with `content: {}`, so
+    the previous `PatchDataAsync<object>` threw deserializing an empty body.
+- **`ISafetyClient.PatchEventsBatchAsync` now reads the top-level payload.**
+  `PATCH /safety-events/batch` returns `{ requestId, responses }` at the top level with no
+  `{ data: ... }` envelope, so the unwrapping `PatchDataAsync<T>` found nothing. Two new
+  helpers on the internal `SamsaraHttpClient` back this: `PatchAsync<T>(path, body, ct)`
+  (non-unwrapping) and `PatchAsync(path, body, ct)` (no response body).
+- **BREAKING — `TachographVehicle.ExternalIds` now serializes as `ExternalIds` (capital E).**
+  Its only spec schema, `vehicleTinyResponse`, is the one schema of 123 carrying an
+  external-ID map that spells it with a capital E — believed an upstream Samsara typo, but
+  the SDK mirrors the spec verbatim (matching `V1MaintenanceVehicleRef`). Deserialization is
+  case-insensitive so wire behaviour is unchanged; a reflection test now pins the attribute.
+- **BREAKING — response records that the spec lists as optional are no longer `required`.**
+  Lenient deserialization relaxes `required`, so a `required` non-nullable property the API
+  omits left null in a non-nullable type and threw at the call site. Relaxed:
+  `TagReference.Id`, `GeofenceCircle.Latitude`/`Longitude`, and
+  `VehicleStatAuxInput.Time`/`Value` (the spec's `VehicleStatsAuxInput` declares no
+  `required` list at all).
+- **BREAKING — `OrganizationCarrierSettings.DotNumber` is `long?`, not `string?`.** The spec
+  types it `integer/int64`, matching `OrganizationSettings.dotNumber` and
+  `DriverCarrierSettings.dotNumber`, which the SDK already modelled as `long?`.
+- **BREAKING — `CreateMediaRetrievalRequest.Inputs` is optional** (`IReadOnlyList<string>?`).
+  The spec lists it optional now that `CameraRoles` exists; either may be supplied alone.
+- **BREAKING — `AttributeEntity.Id` removed.** The property is not present in the spec's
+  `AttributeEntity` schema (nor any other schema the record is mapped to).
+- **Model parity — 51 missing spec properties added.** Notably the `decorations` block on the
+  vehicle- and trailer-stats samples (new `VehicleStatDecorations` / `TrailerStatDecorations`
+  and their leaf records), `externalIds` on `EntityReference`, `DriverReference`, `RouteDriver`,
+  `RouteVehicle`, `TrailerStats` and `TrailerStatsSample`, `firstName`/`lastName` on
+  `EntityReference`, `Geofence.Settings`, `MediaRetrieval.AuxcamSerial`,
+  `OrganizationCarrierSettings.CarrierName`, `ReadingDefinition.Grouping`,
+  `SingleUseLocation.RadiusMeters`, `VehicleStatJ1939Dtc.SourceAddressName`/`VendorSpecificFields`,
+  `VehicleStatObdiiDtcGroup.MonitorStatus`, and four `V1Sensor` fields.
+- **`tools/check-model-sync.py` — two checker corrections.** `is_weak_type()` now peels up to
+  four collection wrappers, so doubly-nested weak types such as
+  `IReadOnlyList<IReadOnlyList<JsonElement>>` (`ReportRunData.Rows`) are no longer invisible.
+  And `type: number` paired with OpenAPI's *integer* formats `int32`/`int64` now accepts
+  integral C# types: the Samsara spec uses that pairing for Unix-ms timestamps, IDs and J1939
+  SPN/FMI codes, so `int`/`long` is correct and the old mapping was pushing correct models
+  toward `double`.
+- **BREAKING — the DVIR and defect response records are split into v1/v2 pairs.** The Samsara
+  spec defines two versions of these endpoints returning genuinely different objects, and the
+  SDK served all eight schemas from four union records. No record could be faithful to either
+  version — `MaintenanceDvir` carried seven properties the v2 schema does not define,
+  `DefectRecord` carried two, and `MaintenanceDvirAssetRef` had to pick one spelling of an
+  external-ID map for two schemas that spell it differently. The union was also invisible to
+  `check-model-sync`, which compared each record against both endpoints and found every
+  property accounted for by one of them. The v1 shape now takes a `V1` prefix and the
+  unprefixed name stays with the v2 shape, so callers of the modern stream/get endpoints do
+  not have to change types. Design note: `docs/api-sync/30-maintenance.md` (2026-08-17b).
+  - `IMaintenanceClient.CreateDvirAsync` and `UpdateDvirAsync` return `Task<V1MaintenanceDvir>`
+    (was `Task<MaintenanceDvir>`); `UpdateDefectAsync` returns `Task<V1DefectRecord>` (was
+    `Task<DefectRecord>`). `GetDvirsStreamAsync`, `GetDvirByIdAsync`, `GetDefectsStreamAsync`
+    and `GetDefectAsync` are unchanged.
+  - New records: `V1MaintenanceDvir` (`Dvir`), `V1DefectRecord` (`Defect`, which is
+    property-identical to `dvirTrailerDefectsItems`), `V1MaintenanceDvirSignature`
+    (`DvirAuthorSignature`), `V1MaintenanceSignatoryUser` (`userTinyResponse`),
+    `V1MaintenanceTrailerRef` (`trailerTinyResponse`), `V1MaintenanceVehicleRef`
+    (`vehicleTinyResponse`).
+  - Removed records: `DvirDefect` (superseded by `V1DefectRecord`) and `DvirDefectVehicle`
+    (superseded by `V1MaintenanceVehicleRef`).
+  - `MaintenanceDvir` loses `EndTime`, `StartTime`, `LicensePlate`, `Location`, `TrailerName`,
+    `TrailerDefects` and `VehicleDefects`; `DefectRecord` loses `DefectType` and
+    `MechanicNotesUpdatedAtTime`; `MaintenanceDvirAssetRef` and `MaintenanceSignatoryUser`
+    lose `Name`. All of those are v1-only and now live on the `V1` records.
+  - `required` is removed from `MaintenanceDvir.Id`, `DefectRecord.Id` and
+    `DefectRecord.IsResolved`, so they become `string?`/`bool?`. Response records stay fully
+    nullable: the live API omits fields its own spec marks required, and `required` on a
+    response property has crashed deserialization before.
+  - `V1MaintenanceVehicleRef.ExternalIds` serializes as `ExternalIds` with a capital E,
+    copied verbatim from `vehicleTinyResponse` — the only one of the spec's 123
+    external-ID-bearing schemas spelled that way, and believed to be an upstream Samsara
+    typo. It is documented and test-pinned as deliberate. `V1MaintenanceTrailerRef` has no
+    external-IDs property at all, because `trailerTinyResponse` defines none.
+  - This resolves the standing `check-model-sync` `missing-optional` finding on
+    `MaintenanceDvirAssetRef.ExternalIds` (184 → 183 active findings) without any allowlist
+    entry, and reverses §2.3 of `spec-parity-plan-2026-08-17.md`, which had recorded these
+    dual shapes as accepted.
+- **CI is now hermetic.** The `sdk-sync` job checks the SDK against the committed baseline
+  (`--spec-file .github/cache/samsara-api-baseline.json`) instead of fetching the live spec.
+  Fetching live meant an upstream edit could turn an unrelated PR red — and it was *masking*
+  a stale baseline, since live-vs-SDK passed while baseline-vs-SDK reported 7 mismatches.
+  Watching the live spec is now solely the daily `api-sync-check` workflow's job. The job was
+  also renamed to `sdk-sync` (stable ASCII, so it can be a required check) and its
+  `paths-ignore` filter dropped from `pull_request`, because a required check skipped by a
+  path filter leaves docs-only PRs stuck at "Expected".
+- **Baseline refreshed to the current live spec** (`ed27c33d1e1f` → `ddbd93d89c05`): 224 → 263
+  paths, 318 → 382 operations, 3,934 → 5,345 schemas — all under an *unchanged*
+  `info.version` of `2025-10-23`.
+- **`api-sync-check.yml` is now daily and produces an actionable work order.** It classifies
+  drift and branches: `cosmetic` refreshes the baseline via a bot commit (no issue);
+  `structural` opens or updates a single `api-sync` issue whose body is a complete
+  implementation spec — endpoint diff, unimplemented operations, mismatches, model findings,
+  and the exact commands to close it — ready to assign to the Copilot coding agent or hand to
+  a local agent. A content-hash marker stops it re-posting unchanged drift, and the
+  instructions are never dropped when the body is truncated to fit GitHub's size limit.
+- **`docs/api-sync/README.md` status block is generated**, not hand-maintained
+  (`tools/render-sync-status.py`, verified in CI by `--check`). The hand-written block had
+  claimed "317 / 317 spec operations covered (100%)".
+- **Tachograph file upload moved out of preview: `POST /preview/fleet/tachograph/file-uploads`
+  → `POST /fleet/tachograph/file-uploads`.** The typed method now lives on
+  `ITachographClient.CreateFileUploadAsync` and is marked `[Experimental("SAMSARA001")]`
+  because Samsara still tags the operation beta — suppress that diagnostic (e.g.
+  `<NoWarn>SAMSARA001</NoWarn>`) to acknowledge the risk.
+  `IPreviewApisClient.CreateTachographFileUploadAsync` remains as an `[Obsolete]` shim that
+  forwards to the new path (the old path 404s) and will be removed in the next major release.
 - **Gateway pairing moved with the spec: `POST /preview/gateways/pair` → `POST /gateways/pair`.**
   Samsara removed the preview path and re-homed pairing under the (beta) `Gateways` tag. The SDK
   method moved accordingly — **breaking**: `IPreviewApisClient.PairGatewaysAsync` was removed and

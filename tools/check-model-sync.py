@@ -24,13 +24,27 @@ How it works
 4. Compare spec inner schema properties against the SDK record: MISSING / EXTRA
    / type-mismatch / required-ness drift / wrapper-shape mismatch. Also compare
    spec query parameters against SDK method parameters.
+5. RECURSE. After comparing a record against its schema, descend into every
+   property where BOTH sides have somewhere to go — the SDK type resolves to
+   another declared SDK record, and the spec property resolves (deref'd,
+   descending `items` for arrays) to another object schema — and compare that
+   pair too, to arbitrary depth. Without this the checker was one level deep:
+   a record reached only as a property of a property was never compared at
+   all, so weak typing and property drift below the endpoint's top-level
+   record were completely invisible. Cycles are stopped by a visited set keyed
+   on (record, schema identity, side) plus a MAX_NEST_DEPTH cap; findings
+   discovered N levels down still report the endpoint that reached them and
+   carry the dotted property path in their detail.
 
 Severity: CRITICAL / HIGH / MEDIUM / LOW (see classify()). Beta-tagged
-endpoints and the `Clients/Beta/*` weak-typed clients cap at MEDIUM.
+endpoints and the `Clients/Beta/*` weak-typed clients cap at MEDIUM: the cap
+only prevents a CRITICAL/HIGH *label*, it does not exempt anything from the
+gate. With the CI gate at `--fail-on-severity MEDIUM`, a beta-capped finding
+still fails the build exactly like any other MEDIUM finding.
 
 Usage:
     python3 tools/check-model-sync.py [--spec-url URL | --spec-file PATH]
-                                      [--json] [--by-domain]
+                                      [--json] [--json-file PATH] [--by-domain]
                                       [--fail-on-severity {CRITICAL,HIGH,MEDIUM,LOW}]
 
 Exit codes:
@@ -63,37 +77,30 @@ SEV_RANK = {s: i for i, s in enumerate(SEVERITIES)}  # lower index == more sever
 # and reviewable. Anything NOT in this map is a real finding.
 #
 # RULE FOR ADDITIONS: only put something here once you've confirmed it is an
-# intentional modelling decision (back-compat, deliberate over-tightening, or
-# intentional Beta weak-typing) — never to paper over a genuine drift. Each
-# entry carries the rationale inline.
+# intentional modelling decision (back-compat or deliberate over-tightening) —
+# never to paper over a genuine drift. Each entry carries the rationale inline.
+#
+# RULE FOR `weak-typing` ENTRIES SPECIFICALLY: an entry is admissible ONLY if its
+# reason cites the exact spec pointer (components.schemas.<Schema>.properties.<p>)
+# proving the schema is genuinely FREE-FORM — i.e. a bare `{type: object}` with no
+# `properties`, no `enum`, no `oneOf`/`anyOf`/`allOf`, and no meaningful
+# `additionalProperties`. "Beta", "preview", "volatile", "not worth typing" are
+# NOT admissible reasons: if the spec describes a shape, the SDK must model it.
+#
+# BLANKET / WILDCARD ENTRIES ARE FORBIDDEN. Every key must name a concrete
+# (record, property) pair. A wildcard key such as ("object", "*", "weak-typing")
+# collapses unrelated findings into one dedup group and silently suppresses an
+# unbounded backlog — that exact entry hid 94 weakly-typed endpoint bodies and
+# 93 weakly-typed properties, and was deleted for that reason.
 ALLOWLIST: dict[tuple[str, str, str], str] = {
-    # --- TrailerAssignment: v1 dual-envelope record, deliberately weak/back-compat ---
-    # This single record deserializes BOTH v1 wrapper shapes (list endpoint
-    # { pagination, trailers } and per-trailer endpoint { id, name,
-    # trailerAssignments }). The 7 fields below are NOT in the current spec for
-    # either shape; they are retained on the record for backward compatibility
-    # with older Samsara v1 payloads and existing consumers. See
-    # Models/Assignments/AssignmentModels.cs (TrailerAssignment).
-    ("TrailerAssignment", "trailerId", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    ("TrailerAssignment", "trailerName", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    ("TrailerAssignment", "vehicleId", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    ("TrailerAssignment", "vehicleName", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    ("TrailerAssignment", "driverId", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    ("TrailerAssignment", "startTime", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    ("TrailerAssignment", "endTime", "extra-property"):
-        "back-compat: legacy v1 field, not in current spec (documented on record)",
-    # The list-shape `pagination` is a nested v1 envelope cursor the SDK models
-    # as object? (the surrounding pagination is handled by the HTTP layer for
-    # the v2 shapes; on this v1 endpoint it rides inside the data object). Left
-    # weak deliberately — typing it would not change call-site ergonomics.
-    ("TrailerAssignment", "pagination", "weak-typing"):
-        "intentional v1 nested-envelope weak-typing (cursor handled by HTTP layer)",
+    # NOTE: the seven ("TrailerAssignment", …, "extra-property") entries that used
+    # to head this table are gone. They existed because a single `TrailerAssignment`
+    # record modelled the v1 page ENVELOPE plus seven invented flat scalars, which
+    # is also what let the record satisfy this checker while the client NRE'd on
+    # every call. The client now paginates the real item schema
+    # (V1TrailerWithAssignments), the envelope has its own record, and the seven
+    # fields no longer exist — so the entries produced no findings and were deleted
+    # rather than left as dead suppression.
 
     # --- Tags: deliberate over-tightening ---
     # The shared Tag record marks id/name `required`: every tag the API returns
@@ -117,22 +124,56 @@ ALLOWLIST: dict[tuple[str, str, str], str] = {
     ("DataInputDataPoint", "id", "over-tightened"):
         "intentional: every returned data point has an id; SDK guarantees non-null",
 
-    # --- Beta / preview / v1-legacy: intentional weak-typing ---
-    # A large family of Beta, preview, and low-priority/volatile v1-legacy
-    # endpoints (BetaClient, FunctionsClient, PlacesClient, PreferredStations,
-    # QualificationRecords, Reports, Ridership, LegacyApis, PreviewApis, etc.)
-    # return `object` by design rather than committing to a hand-maintained
-    # model for surfaces that are unstable or out of the SDK's typed scope.
-    # Already capped at MEDIUM by the beta/weak logic; allowlisted so the
-    # gate reaches a true zero. Revisit if/when these endpoints are promoted to
-    # typed models.
-    ("object", "*", "weak-typing"):
-        "intentional: Beta/preview/volatile-v1 endpoints weakly typed (object) by design",
+    # --- Readings: the spec itself leaves these free-form ---
+    # These are the ONLY weakly-typed properties the spec justifies: each is a
+    # bare `{type: object}` with no properties/enum/composition, so JsonElement is
+    # the honest C# type. Pointers verified against components.schemas.
+    ("ReadingDefinition", "type", "weak-typing"):
+        "spec components.schemas.ReadingDefinitionResponseBody.properties.type is a free-form {type: object} (no properties) — JsonElement is the honest type",
+    ("ReadingHistory", "value", "weak-typing"):
+        "spec components.schemas.ReadingHistoryResponseBody.properties.value is free-form {type: object} — value shape depends on the reading's dataType",
+    ("ReadingSnapshot", "value", "weak-typing"):
+        "spec components.schemas.ReadingSnapshotResponseBody.properties.value is free-form {type: object} — value shape depends on the reading's dataType",
+
+    # --- Attributes: the spec contradicts itself; the SDK follows the request side ---
+    # The ONLY deviation of its kind in the SDK, and it is one concrete property.
+    # Response side: components.schemas.AttributeEntity.properties.entityId is
+    # {type: integer, format: int64} with NO description and NO example.
+    # Request side, same resource: components.schemas.CreateAttributeRequest_entities
+    # .properties.entityId is {type: string} — "Entity id, based on the entity type."
+    # Those two describe the SAME field on the SAME object, in contradictory types.
+    # Every other entityId in the spec is a string, response side included:
+    # components.schemas.ReadingHistoryResponseBody.properties.entityId,
+    # components.schemas.ReadingSnapshotResponseBody.properties.entityId and
+    # components.schemas.ReadingDatapointRequestBody.properties.entityId are all
+    # {type: string} (4 string vs this 1 integer across the whole spec).
+    # Retyping AttributeEntity.entityId to long would (a) break symmetry with the
+    # SDK's own AttributeEntityInput.entityId, which POST/PATCH /attributes must
+    # keep as string to match the request schema, and (b) risk a hard JsonException
+    # on every GET /attributes response if the live API sends the documented-
+    # elsewhere string. The SDK keeps `string?`; see the remarks on
+    # Models/Tags/AttributeModels.cs (AttributeEntity.EntityId).
+    ("AttributeEntity", "entityId", "type-mismatch"):
+        "spec self-contradiction: response-side components.schemas.AttributeEntity.properties.entityId "
+        "is {type: integer, format: int64} with no description/example, while the request-side sibling "
+        "components.schemas.CreateAttributeRequest_entities.properties.entityId is {type: string} "
+        "('Entity id, based on the entity type'). Every other entityId in the spec is a string, "
+        "response side included (ReadingHistoryResponseBody / ReadingSnapshotResponseBody / "
+        "ReadingDatapointRequestBody .properties.entityId). SDK keeps string? so request and response "
+        "records agree and a string id cannot throw JsonException at runtime.",
 }
 
 
 def allowlist_reason(sdk_type: str, prop: str, ftype: str) -> str | None:
     return ALLOWLIST.get((sdk_type, prop, ftype))
+
+# Maximum nesting depth for the recursive record<->schema descent (see
+# analyze()._descend). Records reference one another and the spec has
+# self-referential schemas, so the descent needs a hard stop in addition to the
+# visited set. 12 is far deeper than any real Samsara payload (the deepest
+# observed is ~4: SafetySettings -> harshEventSensitivityV2 -> harshAccel ->
+# heavyDuty) while still being cheap.
+MAX_NEST_DEPTH = 12
 
 # Pagination query params handled by PaginateAsync; never flag as missing.
 PAGINATION_PARAMS = {"limit", "after", "endcursor", "startcursor"}
@@ -291,15 +332,37 @@ class SpecResolver:
         descend into the wrapper's single list/object and return its item schema
         so we compare against the shape the SDK actually models.
 
+        A sibling `pagination` key does not disqualify the pattern. The legacy v1
+        page bodies put their items in a TOP-LEVEL named array beside a top-level
+        cursor — { vehicles: [...], pagination: {...} }
+        (FleetLocationsGetFleetLocationsResponseBody),
+        { assets: [...], pagination: {...} }, { trailers: [...], pagination: {...} }
+        — with no `data` envelope for unwrap_envelope() to peel. The cursor is
+        consumed by the HTTP/pagination layer, exactly as it is for the `{ data: [...],
+        pagination: {...} }` shape, so the schema the SDK's item record must match is
+        the named array's ITEM. Counting `pagination` as a second key made those
+        bodies look like multi-key objects and compared the item record against the
+        whole envelope, which reported the envelope's own members as missing. The
+        `only_key in sdk_prop_names` guard below still wins for records that
+        deliberately model the envelope itself (e.g. TrailerAssignment), and a
+        record that models `pagination` is likewise left comparing against the
+        envelope.
+
         Returns (schema, required_set).
         """
         d = self.deref(inner)
         if not isinstance(d, dict):
             return inner, set()
         props = d.get("properties")
-        if not (isinstance(props, dict) and len(props) == 1 and "pagination" not in props):
+        if not isinstance(props, dict):
             return d, set(d.get("required", []) or [])
-        (only_key, only_val), = props.items()
+        named = {k: v for k, v in props.items() if k != "pagination"}
+        if len(named) != 1:
+            return d, set(d.get("required", []) or [])
+        if "pagination" in props and "pagination" in sdk_prop_names:
+            # SDK models the page envelope itself -> compare against the envelope.
+            return d, set(d.get("required", []) or [])
+        (only_key, only_val), = named.items()
         # SDK models the wrapper directly -> compare against the wrapper object.
         if only_key in sdk_prop_names:
             return d, set(d.get("required", []) or [])
@@ -468,20 +531,34 @@ def parse_models() -> dict[str, dict[str, dict]]:
 # ============================================================================
 # Extended SDK client parsing (response/request C# types)
 # ============================================================================
-# Generic helper call: HttpClient.<Verb>Async<TYPE>( ... )  -> capture TYPE
+# Generic helper call: HttpClient.<Verb>Async<TYPE>( ... )  -> capture TYPE.
+#
+# The alternation must spell out EVERY public generic helper on
+# src/Samsara.Sdk/Http/SamsaraHttpClient.cs, longest name first. A helper the
+# regex does not know about makes its endpoint invisible to this checker: the
+# response type is never resolved, so neither the response NOR the request body
+# is ever compared against the spec. `PostListDataAsync` was missing, which hid
+# POST /hub/locations (HubsClient.CreateLocationAsync) entirely.
 GENERIC_HELPER_RE = re.compile(
-    r'HttpClient\.(GetData|Get|PostData|Post|PatchData|Patch|PutData|Put)Async'
+    r'HttpClient\.(GetPage|GetData|Get|PostListData|PostData|Post'
+    r'|PatchData|Patch|PutData|Put)Async'
     r'<((?:[^<>]|<(?:[^<>]|<[^<>]*>)*>)*)>\('
 )
 PAGINATE_GENERIC_RE = re.compile(
     r'Paginate(?:Data)?Async<((?:[^<>]|<(?:[^<>]|<[^<>]*>)*>)*)>\('
 )
-# Body-bearing helper call capturing verb + full arg list start.
+# Body-bearing helper call capturing verb + full arg list start. Covers every
+# public helper that takes an `object body` argument, including the
+# DeleteAsync(path, body, ct) overload.
 BODY_HELPER_RE = re.compile(
-    r'HttpClient\.(PostData|Post|PatchData|Patch|PutData|Put)Async'
+    r'HttpClient\.(PostListData|PostData|Post|PatchData|Patch|PutData|Put'
+    r'|Delete)Async'
     r'(?:<(?:[^<>]|<(?:[^<>]|<[^<>]*>)*>)*>)?\(\s*(.*)$',
     re.S,
 )
+# Parameter types that are never a request body (the bodyless DeleteAsync /
+# PostAsync overloads put the cancellation token where a body would sit).
+NON_BODY_PARAM_TYPES = {"CancellationToken", "System.Threading.CancellationToken"}
 # Parameter list capture for a method header.
 PARAM_METHOD_RE = re.compile(
     r'public\s+(?:async\s+)?[\w<>,\.\?\[\]\s]+?\s+([A-Za-z0-9_]+)Async\s*\(', re.M
@@ -605,7 +682,11 @@ def parse_client_types() -> dict[tuple[str, str], dict]:
             response_type = None
             gm = GENERIC_HELPER_RE.search(body)
             if gm:
-                response_type = gm.group(2).strip()
+                # GetPageAsync<TData, TItem> mirrors PaginateAsync<TData, TItem>:
+                # the last generic arg is the element type that maps to the
+                # spec's paginated array item.
+                gen_args = _split_generic_args(gm.group(2))
+                response_type = gen_args[-1] if gen_args else gm.group(2).strip()
             else:
                 pm = PAGINATE_GENERIC_RE.search(body)
                 if pm:
@@ -627,6 +708,9 @@ def parse_client_types() -> dict[tuple[str, str], dict]:
                     ident = re.match(r'^([A-Za-z_][A-Za-z0-9_]*)\b', body_arg)
                     if ident and ident.group(1) in params:
                         request_type = params[ident.group(1)]
+                        if request_type in NON_BODY_PARAM_TYPES:
+                            # Bodyless overload, e.g. DeleteAsync(path, ct).
+                            request_type = None
                     elif ident:
                         # Could be a local var built in-method; try a local decl.
                         decl = re.search(
@@ -710,6 +794,17 @@ def _spec_scalar_types(prop_schema: dict) -> set[str] | None:
     if st == "integer":
         return {"int", "long", "Int32", "Int64"}
     if st == "number":
+        # `format: int32` / `int64` are OpenAPI's *integer* formats. Where the
+        # Samsara spec pairs them with `type: number` the format is the
+        # authoritative signal and an integral C# type is correct — see
+        # V1FleetVehicleLocation.timeMs (number/int64, a Unix-ms timestamp),
+        # inline_object_1.vehicle_id (number/int64, an ID) and the eight
+        # J1939D1StatusDataPoint_value fields (number/int32: SPN, FMI, lamp
+        # states, occurrence count). Accepting int/long here avoids pushing
+        # correct models to `double`; floating-point spellings stay accepted so
+        # a widened C# type is never flagged either.
+        if fmt in ("int32", "int64"):
+            return {"int", "long", "Int32", "Int64", "double", "float", "decimal"}
         return {"double", "float", "decimal"}
     if st == "boolean":
         return {"bool", "Boolean"}
@@ -721,6 +816,12 @@ def type_mismatch(spec_prop: dict, sdk_prop: dict, resolver: SpecResolver) -> st
     property type, else None. Conservative: only flags clear scalar/shape
     contradictions to avoid false positives on nested records."""
     ctype = sdk_prop["ctype"]
+    # Weak types (object / JsonElement / IReadOnlyList<JsonElement> / ...) are
+    # reported once, as `weak-typing`. Returning early keeps them from ALSO
+    # surfacing as `type-mismatch` now that is_weak_type() recognises the
+    # namespace-qualified and collection-wrapped spellings.
+    if is_weak_type(ctype):
+        return None
     base = _csharp_base(ctype)
     leaf = base.split(".")[-1].split("<")[0]
 
@@ -788,11 +889,138 @@ class Finding:
         return (self.sdk_type, self.prop, self.ftype)
 
 
+# Type tokens that carry NO schema information: the C# compiler cannot tell a
+# caller anything about the payload's shape.
+WEAK_LEAVES = {"object", "JsonElement", "JsonNode", "JsonObject", "JsonDocument"}
+# Collection wrappers we peel through: IReadOnlyList<JsonElement> is every bit as
+# weakly typed as JsonElement, and so is IReadOnlyList<IReadOnlyList<JsonElement>>.
+_COLLECTION_WRAPPERS = {
+    "IReadOnlyList", "IList", "List", "IEnumerable", "IReadOnlyCollection",
+    "ICollection", "Collection",
+}
+_DICT_WRAPPERS = {"Dictionary", "IDictionary", "IReadOnlyDictionary"}
+_GENERIC_RE = re.compile(r'^([A-Za-z0-9_\.]+)\s*<\s*(.+)\s*>$', re.S)
+
+
+def _leaf_token(t: str) -> str:
+    """Leaf of a possibly namespace-qualified type name (System.Text.Json.X -> X)."""
+    return t.strip().split(".")[-1].strip()
+
+
+def _strip_nullable(t: str) -> str:
+    t = t.strip()
+    while t.endswith("?"):
+        t = t[:-1].strip()
+    return t
+
+
+# How many collection wrappers is_weak_type() peels before giving up. One level
+# was not enough: `IReadOnlyList<IReadOnlyList<JsonElement>>` (ReportRunData.Rows,
+# a genuine free-form grid) peeled to `IReadOnlyList<JsonElement>`, whose leaf
+# token is `IReadOnlyList` — not in WEAK_LEAVES — so the property produced no
+# finding at all. Anything nested deeper than this is vanishingly rare in the SDK.
+_MAX_COLLECTION_PEEL = 4
+
+
 def is_weak_type(ctype: str | None) -> bool:
+    """True when the C# type conveys no shape at all.
+
+    Recognises, beyond the bare tokens: nullable (`JsonElement?`),
+    namespace-qualified (`System.Text.Json.JsonElement?`) and up to
+    ``_MAX_COLLECTION_PEEL`` levels of collection wrapping
+    (`IReadOnlyList<JsonElement>`, `object[]`,
+    `IReadOnlyList<IReadOnlyList<JsonElement>>`, `JsonElement[][]`). Dictionaries
+    are deliberately NOT handled here — a `Dictionary<string, object>` is a
+    legitimate model for a genuine free-form map, so it is only weak in context
+    (see ``is_weak_dictionary``).
+    """
     if not ctype:
         return False
-    t = ctype.strip().rstrip("?").strip()
-    return t in ("object", "JsonElement", "JsonNode", "JsonObject")
+    t = _strip_nullable(ctype)
+    for _ in range(_MAX_COLLECTION_PEEL):
+        m = _GENERIC_RE.match(t)
+        if m and _leaf_token(m.group(1)) in _COLLECTION_WRAPPERS:
+            t = _strip_nullable(m.group(2))
+            continue
+        if t.endswith("[]"):
+            t = _strip_nullable(t[:-2])
+            continue
+        break
+    return _leaf_token(t) in WEAK_LEAVES
+
+
+def is_weak_dictionary(ctype: str | None) -> bool:
+    """True for `Dictionary<string, object>` / `IReadOnlyDictionary<string, JsonElement>`
+    and friends — a map whose VALUE type is weak.
+
+    A weak-valued map is the right model for a genuine free-form map, so callers
+    must additionally confirm the spec property is a *structured* object (one
+    with `properties`) before treating this as a finding.
+    """
+    if not ctype:
+        return False
+    t = _strip_nullable(ctype)
+    m = _GENERIC_RE.match(t)
+    if not m or _leaf_token(m.group(1)) not in _DICT_WRAPPERS:
+        return False
+    args = m.group(2)
+    # Split on the top-level comma (value type may itself be generic).
+    depth, split_at = 0, -1
+    for i, ch in enumerate(args):
+        if ch == "<":
+            depth += 1
+        elif ch == ">":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            split_at = i
+            break
+    if split_at < 0:
+        return False
+    return is_weak_type(args[split_at + 1:])
+
+
+def _spec_is_concrete(schema: dict | None, resolver: SpecResolver, depth: int = 0) -> bool:
+    """True when the spec schema describes a shape the SDK could model.
+
+    CONCRETE: has `properties`, or an `enum`, or `oneOf`/`anyOf`/`allOf`
+    composition, or a scalar `type` (string/integer/number/boolean), or
+    `type: object` with a non-trivial `additionalProperties` schema. Arrays are
+    judged by their element schema.
+
+    FREE-FORM: a bare `{type: object}` with nothing else, or a schema with no
+    `type` and no structure at all. For those, `JsonElement` is the honest C#
+    type and the finding is only worth LOW (kept visible, not gate-worthy).
+    """
+    if depth > 8:
+        return False
+    sd = resolver.deref(schema) or schema
+    if not isinstance(sd, dict):
+        return False
+    st = sd.get("type")
+    if isinstance(st, list):
+        st = next((x for x in st if x != "null"), None)
+    if st == "array" or ("items" in sd and st is None):
+        return _spec_is_concrete(sd.get("items"), resolver, depth + 1)
+    if isinstance(sd.get("properties"), dict) and sd["properties"]:
+        return True
+    if sd.get("enum"):
+        return True
+    for key in ("oneOf", "anyOf", "allOf"):
+        branch = sd.get(key)
+        if isinstance(branch, list) and branch:
+            return True
+    if st in ("string", "integer", "number", "boolean"):
+        return True
+    if st == "object":
+        ap = sd.get("additionalProperties")
+        if isinstance(ap, dict) and ap:
+            apd = resolver.deref(ap) or ap
+            if isinstance(apd, dict) and (
+                apd.get("properties") or apd.get("type") or apd.get("enum")
+                or apd.get("oneOf") or apd.get("anyOf") or apd.get("allOf")
+            ):
+                return True
+    return False
 
 
 # Known intentional SDK->spec flattening (driverId vs driver.id, etc.) keeps
@@ -811,8 +1039,16 @@ def compare_record(
     beta_capped: bool,
     findings: list[Finding],
     union_spec_names: set[str] | None = None,
+    path: str | None = None,
 ):
     """Compare one SDK record against one endpoint's inner spec schema.
+
+    ``path`` is the dotted property path from the endpoint's TOP-LEVEL record
+    down to this record (e.g. ``SafetySettings.harshEventSensitivityV2``). It is
+    set only for records reached by the nested descent; when present, every
+    finding's detail is suffixed with ``[at <path>.<prop>]`` so a defect found
+    three levels down is still traceable back through the endpoint that reached
+    it. Top-level comparisons pass ``None`` and their details are unchanged.
 
     ``union_spec_names`` is the UNION of every spec property name that appears on
     ANY endpoint (request or response) mapped to this same SDK record. A shared
@@ -831,6 +1067,9 @@ def compare_record(
         return
 
     cap = (lambda s: _cap(s, beta_capped))
+    # Property-path annotation, empty for top-level records so their existing
+    # detail strings (and the drift report built from them) are untouched.
+    at = (lambda p: f" [at {path}.{p}]" if path else "")
 
     # Weakly typed SDK side (object?) where spec has a concrete schema.
     if sdk_props is None:
@@ -851,34 +1090,50 @@ def compare_record(
             # Flattened-object heuristic: spec nested object whose scalar parts
             # the SDK promoted to <name><Field>.
             stype = sschema_d.get("type")
-            flattened = False
+            child_props = sschema_d.get("properties") or {}
+            matched: list[str] = []
             if stype == "object" or "properties" in sschema_d:
-                for child in (sschema_d.get("properties") or {}):
-                    if (sname + child[:1].upper() + child[1:]) in sdk_json_names \
-                       or any(n.lower() == (sname + child).lower() for n in sdk_json_names):
-                        flattened = True
-                        break
-            if flattened:
+                sdk_by_lower = {n.lower(): n for n in sdk_json_names}
+                for child in child_props:
+                    # Promotion spellings, in order of confidence:
+                    #   <name><Child>  e.g. driver.id  -> driverId
+                    #   <name>_<child> e.g. driver.id  -> driver_id
+                    #   <child>        e.g. driver.id  -> id   (ONLY when `child`
+                    #                  is not itself a top-level spec property,
+                    #                  which would make it a real sibling)
+                    cands = [
+                        (sname + child[:1].upper() + child[1:]).lower(),
+                        f"{sname}_{child}".lower(),
+                    ]
+                    if child not in spec_names:
+                        cands.append(child.lower())
+                    for cand in cands:
+                        hit = sdk_by_lower.get(cand)
+                        if hit is not None:
+                            matched.append(hit)
+                            break
+            if matched:
                 findings.append(Finding(
-                    cap("LOW"), "flattened-nested", sdk_record_name, sname,
-                    f"spec nested object '{sname}' flattened into scalar(s) on SDK "
-                    f"(known/expected)", endpoint, tag))
+                    cap("MEDIUM"), "flattened", sdk_record_name, sname,
+                    f"spec nested object '{sname}' ({len(child_props)} props) has been "
+                    f"flattened onto '{sdk_record_name}' as "
+                    f"{', '.join(sorted(set(matched)))}{at(sname)}", endpoint, tag))
                 continue
             if side == "request" and is_req:
                 findings.append(Finding(
                     cap("HIGH"), "missing-required-request", sdk_record_name, sname,
-                    f"spec REQUIRED request field '{sname}' absent from SDK record",
-                    endpoint, tag))
+                    f"spec REQUIRED request field '{sname}' absent from SDK record"
+                    f"{at(sname)}", endpoint, tag))
             elif side == "response" and is_req:
                 findings.append(Finding(
                     cap("HIGH"), "missing-required-response", sdk_record_name, sname,
-                    f"SDK response record drops spec REQUIRED field '{sname}'",
-                    endpoint, tag))
+                    f"SDK response record drops spec REQUIRED field '{sname}'"
+                    f"{at(sname)}", endpoint, tag))
             else:
                 findings.append(Finding(
                     cap("MEDIUM"), "missing-optional", sdk_record_name, sname,
-                    f"spec optional field '{sname}' absent from SDK ({side})",
-                    endpoint, tag))
+                    f"spec optional field '{sname}' absent from SDK ({side})"
+                    f"{at(sname)}", endpoint, tag))
             continue
 
         sdk_prop = sdk_props[sname]
@@ -887,41 +1142,48 @@ def compare_record(
         if reason:
             findings.append(Finding(
                 cap("MEDIUM"), "type-mismatch", sdk_record_name, sname,
-                reason, endpoint, tag))
-        # Weak object where spec concrete.
-        elif is_weak_type(sdk_prop["ctype"]):
-            sd_type = sschema_d.get("type")
-            if sd_type == "object" or "properties" in sschema_d or (
-                sd_type == "array"
-            ):
-                # Only note when the spec actually has structure to model.
-                inner_obj = sschema_d
-                if sd_type == "array":
-                    inner_obj = resolver.deref(sschema_d.get("items")) or {}
-                if isinstance(inner_obj, dict) and inner_obj.get("properties"):
-                    findings.append(Finding(
-                        cap("MEDIUM"), "weak-typing", sdk_record_name, sname,
-                        f"SDK uses weak '{sdk_prop['ctype']}' but spec '{sname}' has a "
-                        f"concrete schema", endpoint, tag))
+                reason + at(sname), endpoint, tag))
+        # Weak SDK type. Reported either way, but the severity depends on whether
+        # the spec actually describes a shape: MEDIUM when it does (real work to
+        # do), LOW when the spec is genuinely free-form (JsonElement is honest,
+        # but the decision stays visible/allowlistable). Same ftype on both
+        # branches so ALLOWLIST keys keep matching.
+        elif is_weak_type(sdk_prop["ctype"]) or (
+            is_weak_dictionary(sdk_prop["ctype"])
+            and isinstance(sschema_d.get("properties"), dict)
+            and sschema_d["properties"]
+        ):
+            if _spec_is_concrete(sschema_d, resolver):
+                findings.append(Finding(
+                    cap("MEDIUM"), "weak-typing", sdk_record_name, sname,
+                    f"SDK uses weak '{sdk_prop['ctype']}' but spec '{sname}' has a "
+                    f"concrete schema{at(sname)}", endpoint, tag))
+            else:
+                findings.append(Finding(
+                    cap("LOW"), "weak-typing", sdk_record_name, sname,
+                    f"SDK uses weak '{sdk_prop['ctype']}' and spec '{sname}' is "
+                    f"free-form (no properties/enum/composition) — weak type is "
+                    f"defensible; allowlist it with a spec pointer to accept"
+                    f"{at(sname)}", endpoint, tag))
 
         # Required-ness drift.
         if side == "request":
             if is_req and not sdk_prop["required"]:
                 findings.append(Finding(
                     cap("HIGH"), "required-drift-request", sdk_record_name, sname,
-                    f"spec REQUIRES request '{sname}' but SDK property is not 'required'",
-                    endpoint, tag))
+                    f"spec REQUIRES request '{sname}' but SDK property is not 'required'"
+                    f"{at(sname)}", endpoint, tag))
             elif not is_req and sdk_prop["required"]:
                 findings.append(Finding(
                     cap("LOW"), "over-tightened", sdk_record_name, sname,
-                    f"SDK marks '{sname}' 'required' but spec lists it optional ({side})",
-                    endpoint, tag))
+                    f"SDK marks '{sname}' 'required' but spec lists it optional ({side})"
+                    f"{at(sname)}", endpoint, tag))
         else:  # response
             if not is_req and sdk_prop["required"]:
                 findings.append(Finding(
                     cap("LOW"), "over-tightened", sdk_record_name, sname,
-                    f"SDK marks response '{sname}' 'required' but spec lists it optional",
-                    endpoint, tag))
+                    f"SDK marks response '{sname}' 'required' but spec lists it optional"
+                    f"{at(sname)}", endpoint, tag))
 
     # SDK -> spec: EXTRA. A property is only truly extra when it is absent from
     # the UNION of every endpoint mapped to this record (dual-shape records share
@@ -932,7 +1194,7 @@ def compare_record(
         findings.append(Finding(
             cap("LOW"), "extra-property", sdk_record_name, sdk_name,
             f"SDK property '{sdk_name}' not present in spec schema of any endpoint "
-            f"mapped to '{sdk_record_name}'",
+            f"mapped to '{sdk_record_name}'{at(sdk_name)}",
             endpoint, tag))
 
 
@@ -1038,7 +1300,84 @@ def analyze(spec: dict):
             if isinstance(child, dict) and isinstance(child.get("properties"), dict):
                 record_union[elem] |= set(child["properties"].keys())
 
-    def _queue(rec_label, sdk_props, inner, required, side, endpoint, tag, beta_capped):
+    # Visited guard for the nested descent, keyed on
+    # (record_name, schema_identity, side). Two endpoints that reach the same
+    # record through the same schema would produce byte-identical findings and
+    # an identical union contribution, so the second descent is pure duplicate
+    # work; the FIRST endpoint to reach it keeps the attribution (dedup() then
+    # merges endpoint lists across the whole run anyway). `side` is part of the
+    # key because required-ness drift is asymmetric between request and
+    # response. This set is also what makes a self-referential schema
+    # terminate — MAX_NEST_DEPTH is the belt-and-braces second stop.
+    visited_nested: set[tuple[str, str, str]] = set()
+
+    def _child_object_schema(raw):
+        """Resolve a spec PROPERTY schema to the object schema an SDK record models.
+
+        Follows ``$ref`` chains and descends ``items`` for (nested) arrays, so
+        both ``{"$ref": Foo}`` and ``{"type":"array","items":{"$ref":Foo}}``
+        resolve to Foo. Returns ``(schema, ref_name | None)``; ``(None, None)``
+        when the target is not an object schema with properties (scalars, enums
+        and free-form ``{type: object}`` have nothing to recurse into — those are
+        handled by the per-property checks in compare_record)."""
+        ref = raw.get("$ref", "").split("/")[-1] if isinstance(raw, dict) else None
+        s = resolver.deref(raw)
+        hops = 0
+        while isinstance(s, dict) and (s.get("type") == "array" or "items" in s) and hops < 4:
+            item = s.get("items")
+            if isinstance(item, dict) and "$ref" in item:
+                ref = item["$ref"].split("/")[-1]
+            s = resolver.deref(item)
+            hops += 1
+        if isinstance(s, dict) and isinstance(s.get("properties"), dict) and s["properties"]:
+            return s, ref
+        return None, None
+
+    def _descend(rec_label, sdk_props, inner, side, endpoint, tag, beta_capped,
+                 path, depth):
+        """Queue a comparison for every nested (SDK record, spec object) pair.
+
+        This is the fix for the checker's original one-level-deep blind spot: a
+        record reached only as a property of a property (e.g.
+        ``SafetySettings.distractedDrivingDetectionAlerts
+        .inattentiveDrivingDetectionAlerts``) was never compared against its
+        spec schema at all, so weak typing and property drift down there were
+        invisible. We recurse whenever BOTH sides have somewhere to go: the SDK
+        property's type resolves to a declared SDK record, and the spec property
+        resolves to an object schema with properties."""
+        if depth >= MAX_NEST_DEPTH:
+            return
+        if not (isinstance(sdk_props, dict) and isinstance(inner, dict)):
+            return
+        spec_props = inner.get("properties")
+        if not isinstance(spec_props, dict):
+            return
+        for pname, pmeta in sdk_props.items():
+            raw = spec_props.get(pname)
+            if raw is None:
+                continue  # SDK-only property — extra-property check covers it
+            child_rec = _record_key(_collection_element(pmeta["ctype"]))
+            child_props = models.get(child_rec)
+            if child_props is None:
+                continue  # scalar, weak type, or an unknown type — nothing to recurse into
+            child_schema, ref = _child_object_schema(raw)
+            if child_schema is None:
+                continue
+            # Identity: the schema's $ref name when it has one, else the shape's
+            # property-name signature. Same identity => same property set =>
+            # same union contribution, which is what makes skipping safe.
+            sig = ref or ",".join(sorted(child_schema["properties"]))
+            vkey = (child_rec, sig, side)
+            if vkey in visited_nested:
+                continue
+            visited_nested.add(vkey)
+            _queue(child_rec, child_props, child_schema,
+                   set(child_schema.get("required", []) or []),
+                   side, endpoint, tag, beta_capped,
+                   path=f"{path}.{pname}", depth=depth + 1)
+
+    def _queue(rec_label, sdk_props, inner, required, side, endpoint, tag, beta_capped,
+               path=None, depth=0):
         if isinstance(inner, dict):
             sp = inner.get("properties")
             if isinstance(sp, dict):
@@ -1050,7 +1389,14 @@ def analyze(spec: dict):
             "rec_label": rec_label, "sdk_props": sdk_props, "inner": inner,
             "required": required, "side": side, "endpoint": endpoint,
             "tag": tag, "beta_capped": beta_capped,
+            # None for top-level records so their finding details stay unchanged.
+            "path": path,
         })
+        # Recurse. Queueing happens in pass 1 (this pass) precisely so that
+        # record_union is COMPLETE — including nested records — before pass 2
+        # emits any extra-property finding.
+        _descend(rec_label, sdk_props, inner, side, endpoint, tag, beta_capped,
+                 path or rec_label, depth)
 
     for e in eps:
         verb, np = e["verb"], e["path"]
@@ -1077,8 +1423,11 @@ def analyze(spec: dict):
             info.get("response_type") and verb == "GET" and _method_paginates(e["file"], e["method"])
         )
 
-        # ---- Request side (Post/Patch/Put) -------------------------------
-        if verb in ("POST", "PATCH", "PUT"):
+        # ---- Request side (Post/Patch/Put/Delete) ------------------------
+        # DELETE is included because SamsaraHttpClient exposes a
+        # DeleteAsync(path, body, ct) overload and the spec defines request
+        # bodies on four DELETE operations.
+        if verb in ("POST", "PATCH", "PUT", "DELETE"):
             req_schema_top = resolver.op_schema(op, "request")
             if req_schema_top is not None:
                 inner, is_list, req_required = resolver.unwrap_envelope(req_schema_top)
@@ -1087,7 +1436,24 @@ def analyze(spec: dict):
                 if resolver.wrapper_is_data_enveloped(req_schema_top):
                     sdk_req_props = models.get(_record_key(req_type or ""))
                     has_data = bool(sdk_req_props and "data" in sdk_req_props)
-                    if req_type and not is_weak_type(req_type) and not has_data:
+                    if req_type is not None and is_weak_type(req_type):
+                        # A weakly-typed body behind a { data: ... } envelope used to
+                        # escape BOTH checks on this side: the wrapper-shape check is
+                        # guarded by `not is_weak_type`, and the weak-typing check
+                        # below only runs in the non-enveloped branch. That is exactly
+                        # how `POST /readings` (Task<object> CreateAsync(object)) sat
+                        # in the SDK reporting clean. Same finding shape, severity and
+                        # per-endpoint dedup key as the non-enveloped branch.
+                        examined += 1
+                        if isinstance(inner, dict) and inner.get("properties"):
+                            findings.append(Finding(
+                                _cap("MEDIUM", beta_capped), "weak-typing",
+                                f"{e['file']}::{e['method']}", "<request>",
+                                f"request body weakly typed ('{req_type}') behind a "
+                                f"{{ data: ... }} envelope; spec's inner schema "
+                                f"defines {len(inner['properties'])} properties",
+                                endpoint, tag))
+                    elif req_type and not has_data:
                         findings.append(Finding(
                             "CRITICAL", "wrapper-shape", req_type or "?", "data",
                             f"spec request expects {{ data: T{'[]' if resolver.data_is_array(req_schema_top) else ''} }} "
@@ -1104,8 +1470,17 @@ def analyze(spec: dict):
                     if req_type is None:
                         pass  # no typed body param (e.g. builds inline) — skip
                     elif is_weak_type(req_type):
-                        _queue(req_type, None, inner, req_required,
-                               "request", endpoint, tag, beta_capped)
+                        # Whole-body weak typing. The dedup key MUST be per
+                        # endpoint-method (see the response site below), otherwise
+                        # every weakly-typed body in the SDK collapses into one
+                        # finding that a single allowlist entry can hide.
+                        if isinstance(inner, dict) and inner.get("properties"):
+                            findings.append(Finding(
+                                _cap("MEDIUM", beta_capped), "weak-typing",
+                                f"{e['file']}::{e['method']}", "<request>",
+                                f"request body weakly typed ('{req_type}') but spec "
+                                f"defines {len(inner['properties'])} properties",
+                                endpoint, tag))
                     else:
                         rec = _record_key(req_type)
                         sdk_props = models.get(rec)
@@ -1123,12 +1498,16 @@ def analyze(spec: dict):
             inner, is_list, resp_required = resolver.unwrap_envelope(resp_schema_top)
             examined += 1
             if is_weak_type(resp_type):
-                # Beta clients intentionally weak — cap at MEDIUM (done via beta_capped
-                # only if beta; otherwise still note as weak-typing MEDIUM).
+                # Keyed per endpoint-method, NOT by the literal ("object", "*"):
+                # Finding.key() is (sdk_type, prop, ftype), so the old literal
+                # deduped ~94 distinct weakly-typed responses into a single group
+                # — which is precisely how one blanket allowlist entry hid them
+                # all. Severity is unchanged (beta cap keeps it at MEDIUM).
                 if isinstance(inner, dict) and inner.get("properties"):
                     findings.append(Finding(
-                        _cap("MEDIUM", beta_capped), "weak-typing", "object", "*",
-                        f"response weakly typed (object) but spec defines "
+                        _cap("MEDIUM", beta_capped), "weak-typing",
+                        f"{e['file']}::{e['method']}", "<response>",
+                        f"response weakly typed ('{resp_type}') but spec defines "
                         f"{len(inner.get('properties'))} properties", endpoint, tag))
             else:
                 rec = _record_key(resp_type)
@@ -1154,7 +1533,8 @@ def analyze(spec: dict):
         compare_record(
             j["rec_label"], j["sdk_props"], j["inner"], j["required"],
             resolver, j["side"], j["endpoint"], j["tag"], j["beta_capped"],
-            findings, union_spec_names=record_union.get(j["rec_label"]))
+            findings, union_spec_names=record_union.get(j["rec_label"]),
+            path=j["path"])
 
     return findings, examined, len(eps)
 
@@ -1303,9 +1683,35 @@ def report_human(groups, examined, n_eps, by_domain: bool, allowlisted=None):
             print(f"      reason: {g['reason']}")
 
 
-def report_json(groups, examined, n_eps, allowlisted=None):
+# Endpoint lists are capped in JSON output: a weakly-typed shared record can be
+# reachable from dozens of endpoints, and the full cross-product bloats the file
+# the drift-report builder consumes. The untruncated count is kept alongside.
+MAX_JSON_ENDPOINTS = 5
+
+
+def _endpoint_block(g: dict) -> dict:
+    eps = g["endpoints"]
+    out = {"endpoints": eps[:MAX_JSON_ENDPOINTS], "endpoint_count": len(eps)}
+    if len(eps) > MAX_JSON_ENDPOINTS:
+        out["endpoints_truncated"] = len(eps) - MAX_JSON_ENDPOINTS
+    return out
+
+
+def build_json_payload(groups, examined, n_eps, allowlisted=None,
+                       fail_on_severity: str | None = None) -> dict:
+    """Machine-readable summary. Shared by --json (stdout) and --json-file."""
     allowlisted = allowlisted or []
-    print(json.dumps({
+    worst_rank = min((SEV_RANK[g["severity"]] for g in groups), default=None)
+    worst = SEVERITIES[worst_rank] if worst_rank is not None else "NONE"
+    failed = bool(
+        fail_on_severity and worst_rank is not None
+        and worst_rank <= SEV_RANK[fail_on_severity]
+    )
+    by_type: dict[str, int] = defaultdict(int)
+    for g in groups:
+        by_type[g["ftype"]] += 1
+    return {
+        "spec_source": getattr(cs, "LAST_SPEC_SOURCE", "unknown"),
         "sdk_endpoints_scanned": n_eps,
         "bodies_compared": examined,
         "finding_count": len(groups),
@@ -1313,15 +1719,23 @@ def report_json(groups, examined, n_eps, allowlisted=None):
         "by_severity": {
             s: sum(1 for g in groups if g["severity"] == s) for s in SEVERITIES
         },
+        "by_type": dict(sorted(by_type.items(), key=lambda kv: (-kv[1], kv[0]))),
+        "gate": {
+            "threshold": fail_on_severity,
+            "worst": worst,
+            "failed": failed,
+        },
         "findings": [
             {
                 "severity": g["severity"],
                 "type": g["ftype"],
+                "ftype": g["ftype"],
                 "sdk_type": g["sdk_type"],
                 "property": g["prop"],
+                "prop": g["prop"],
                 "detail": g["detail"],
                 "domain": g["tag"],
-                "endpoints": g["endpoints"],
+                **_endpoint_block(g),
             }
             for g in sorted(groups, key=lambda x: (SEV_RANK[x["severity"]], x["sdk_type"], x["prop"]))
         ],
@@ -1329,15 +1743,23 @@ def report_json(groups, examined, n_eps, allowlisted=None):
             {
                 "severity": g["severity"],
                 "type": g["ftype"],
+                "ftype": g["ftype"],
                 "sdk_type": g["sdk_type"],
                 "property": g["prop"],
+                "prop": g["prop"],
                 "domain": g["tag"],
                 "reason": g["reason"],
-                "endpoints": g["endpoints"],
+                **_endpoint_block(g),
             }
             for g in sorted(allowlisted, key=lambda x: (x["sdk_type"], x["prop"], x["ftype"]))
         ],
-    }, indent=2))
+    }
+
+
+def report_json(groups, examined, n_eps, allowlisted=None, fail_on_severity=None):
+    print(json.dumps(
+        build_json_payload(groups, examined, n_eps, allowlisted, fail_on_severity),
+        indent=2))
 
 
 def main() -> None:
@@ -1345,6 +1767,9 @@ def main() -> None:
     ap.add_argument("--spec-url", default=cs.SPEC_URL)
     ap.add_argument("--spec-file")
     ap.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    ap.add_argument("--json-file", metavar="PATH",
+                    help="also write the machine-readable JSON payload to PATH "
+                         "(so one run serves both the human log and the report builder)")
     ap.add_argument("--by-domain", action="store_true", help="also list findings grouped by spec tag")
     ap.add_argument("--fail-on-severity", choices=SEVERITIES,
                     help="exit 1 if any finding at this severity OR higher exists")
@@ -1358,9 +1783,16 @@ def main() -> None:
     active, allowlisted = split_allowlisted(groups)
 
     if args.json:
-        report_json(active, examined, n_eps, allowlisted)
+        report_json(active, examined, n_eps, allowlisted, args.fail_on_severity)
     else:
         report_human(active, examined, n_eps, args.by_domain, allowlisted)
+
+    if args.json_file:
+        payload = build_json_payload(active, examined, n_eps, allowlisted,
+                                     args.fail_on_severity)
+        out = Path(args.json_file)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(payload, indent=2) + "\n")
 
     if args.fail_on_severity:
         threshold = SEV_RANK[args.fail_on_severity]

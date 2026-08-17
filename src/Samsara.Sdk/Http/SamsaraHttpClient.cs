@@ -98,6 +98,48 @@ internal sealed class SamsaraHttpClient
     }
 
     /// <summary>
+    /// Sends a GET request for a paginated list endpoint whose page items sit in a
+    /// <b>top-level named array</b> beside a top-level <c>pagination</c> block — the legacy
+    /// v1 shape <c>{ "vehicles": [...], "pagination": {...} }</c> — rather than under
+    /// <c>data</c>. <paramref name="selectItems"/> extracts the page's items and
+    /// <paramref name="selectPagination"/> its cursor from the deserialized envelope.
+    /// </summary>
+    /// <remarks>
+    /// Distinct from <see cref="GetPageAsync{TData, TItem}"/>, which handles the v2
+    /// <c>{ "data": { "media": [...] }, "pagination": {...} }</c> shape. Using either
+    /// envelope helper on the other shape yields a null <c>data</c> member and an empty
+    /// enumeration, so the choice must follow the spec's response schema.
+    /// <para>
+    /// <paramref name="cursorParam"/> names the query parameter that carries the forward
+    /// cursor. It defaults to the v2 <c>after</c>, but the legacy v1 bodies are not
+    /// consistent: <c>GET /v1/fleet/locations</c> declares <c>after</c> while
+    /// <c>GET /v1/fleet/trailers/assignments</c> declares <c>startingAfter</c>. Sending the
+    /// wrong name is worse than sending none — the server ignores it and returns page 1
+    /// again with <c>hasNextPage: true</c>, so the caller loops forever. Always take the
+    /// name from the operation's own spec parameters.
+    /// </para>
+    /// </remarks>
+    public async Task<PagedResponse<TItem>> GetPageFromAsync<TResponse, TItem>(
+        string path,
+        Func<TResponse, IReadOnlyList<TItem>?> selectItems,
+        Func<TResponse, PaginationInfo?> selectPagination,
+        string? cursor = null,
+        int? limit = null,
+        string cursorParam = DefaultCursorParam,
+        CancellationToken cancellationToken = default)
+    {
+        var url = AppendPaginationParams(path, cursor, limit, cursorParam);
+
+        var envelope = await GetAsync<TResponse>(url, cancellationToken).ConfigureAwait(false);
+
+        return new PagedResponse<TItem>
+        {
+            Data = selectItems(envelope) ?? [],
+            Pagination = selectPagination(envelope),
+        };
+    }
+
+    /// <summary>
     /// Sends a POST request with a JSON body and deserializes the <c>{ "data": T }</c> response.
     /// </summary>
     public async Task<T> PostDataAsync<T>(string path, object body, CancellationToken cancellationToken = default)
@@ -164,6 +206,34 @@ internal sealed class SamsaraHttpClient
 
         var wrapper = await DeserializeAsync<SamsaraResponse<T>>(response, cancellationToken, body).ConfigureAwait(false);
         return wrapper.Data;
+    }
+
+    /// <summary>
+    /// Sends a PATCH request with a JSON body and ignores the response body. Used by
+    /// endpoints (e.g. <c>PATCH /beta/fleet/vehicles/{id}/immobilizer</c>) whose success
+    /// response declares no content at all — deserializing an empty body would throw.
+    /// </summary>
+    public async Task PatchAsync(string path, object body, CancellationToken cancellationToken = default)
+    {
+        var content = JsonContent.Create(body, options: _jsonOptions);
+
+        using var response = await SendAndValidateAsync(PatchMethod, path, content, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Sends a PATCH request with a JSON body and deserializes the response directly
+    /// (no <c>{ "data": ... }</c> envelope). Used by endpoints such as
+    /// <c>PATCH /safety-events/batch</c> whose payload sits at the top level.
+    /// </summary>
+    public async Task<T> PatchAsync<T>(string path, object body, CancellationToken cancellationToken = default)
+    {
+        var content = JsonContent.Create(body, options: _jsonOptions);
+
+        using var response = await SendAndValidateAsync(PatchMethod, path, content, cancellationToken)
+            .ConfigureAwait(false);
+
+        return await DeserializeAsync<T>(response, cancellationToken, body).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -393,13 +463,20 @@ internal sealed class SamsaraHttpClient
         }
     }
 
-    private static string AppendPaginationParams(string path, string? cursor, int? limit)
+    /// <summary>The v2 forward-cursor query parameter, used by every non-legacy endpoint.</summary>
+    internal const string DefaultCursorParam = "after";
+
+    private static string AppendPaginationParams(
+        string path,
+        string? cursor,
+        int? limit,
+        string cursorParam = DefaultCursorParam)
     {
         var separator = path.Contains("?") ? '&' : '?';
 
         if (cursor is not null)
         {
-            path = $"{path}{separator}after={Uri.EscapeDataString(cursor)}";
+            path = $"{path}{separator}{cursorParam}={Uri.EscapeDataString(cursor)}";
             separator = '&';
         }
 

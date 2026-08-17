@@ -23,6 +23,6 @@ internal sealed class GatewaysClient : SamsaraServiceClientBase, IGatewaysClient
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.DeleteAsync($"{BasePath}/{Uri.EscapeDataString(id)}", cancellationToken);
 
-    public Task<object> PairGatewaysAsync(object request, CancellationToken cancellationToken = default)
-        => HttpClient.PostAsync<object>($"{BasePath}/pair", request, cancellationToken);
+    public Task<IReadOnlyList<GatewayPairResult>> PairGatewaysAsync(PairGatewaysRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostListDataAsync<GatewayPairResult>($"{BasePath}/pair", request, cancellationToken);
 }

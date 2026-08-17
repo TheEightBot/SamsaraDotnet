@@ -68,4 +68,12 @@ public interface ISamsaraClient
     IReportsClient Reports { get; }
     /// <summary>Beta — miscellaneous endpoints (industrial jobs, devices, detections, AEMP, …).</summary>
     IBetaClient Beta { get; }
+    /// <summary>Beta — Data Sharing Agreements (asset sharing between organizations).</summary>
+    IAssetSharingClient AssetSharing { get; }
+    /// <summary>Beta — Ground Intelligence issues and watchpoints.</summary>
+    IGroundIntelligenceClient GroundIntelligence { get; }
+    /// <summary>Beta — maintenance parts inventory and purchase orders.</summary>
+    IPartsClient Parts { get; }
+    /// <summary>Beta — fleet installer photo uploads.</summary>
+    IInstallerClient Installer { get; }
 }

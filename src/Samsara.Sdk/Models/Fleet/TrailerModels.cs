@@ -10,10 +10,11 @@ public sealed record Trailer
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
-    /// <summary>Custom attributes associated with the trailer. Returned by the by-id,
-    /// create, and update endpoints (the <c>GET /fleet/trailers</c> list response omits it).</summary>
+    /// <summary>Custom attributes associated with the trailer (spec schema
+    /// <c>GoaAttributeTinyResponseBody</c>). Returned by the by-id, create, and
+    /// update endpoints (the <c>GET /fleet/trailers</c> list response omits it).</summary>
     [JsonPropertyName("attributes")]
-    public IReadOnlyList<object>? Attributes { get; init; }
+    public IReadOnlyList<Common.AttributeTiny>? Attributes { get; init; }
 
     [JsonPropertyName("enabledForMobile")]
     public bool? EnabledForMobile { get; init; }
@@ -42,8 +43,10 @@ public sealed record CreateTrailerRequest
     [JsonPropertyName("name")]
     public required string Name { get; init; }
 
+    /// <summary>Custom attributes to set on the trailer (spec schema
+    /// <c>GoaAttributeTinyRequestBody</c>).</summary>
     [JsonPropertyName("attributes")]
-    public IReadOnlyList<object>? Attributes { get; init; }
+    public IReadOnlyList<Common.AttributeTiny>? Attributes { get; init; }
 
     [JsonPropertyName("enabledForMobile")]
     public bool? EnabledForMobile { get; init; }
@@ -69,8 +72,10 @@ public sealed record UpdateTrailerRequest
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
+    /// <summary>Custom attributes to set on the trailer (spec schema
+    /// <c>GoaAttributeTinyRequestBody</c>).</summary>
     [JsonPropertyName("attributes")]
-    public IReadOnlyList<object>? Attributes { get; init; }
+    public IReadOnlyList<Common.AttributeTiny>? Attributes { get; init; }
 
     [JsonPropertyName("enabledForMobile")]
     public bool? EnabledForMobile { get; init; }
@@ -104,6 +109,9 @@ public sealed record TrailerStats
 {
     [JsonPropertyName("id")] public required string Id { get; init; }
     [JsonPropertyName("name")] public required string Name { get; init; }
+
+    /// <summary>External identifiers for the trailer.</summary>
+    [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 
     /// <summary>Overall carrier reefer state.</summary>
     [JsonPropertyName("carrierReeferState")] public TrailerStatReeferState? CarrierReeferState { get; init; }
@@ -187,6 +195,9 @@ public sealed record TrailerStatsSample
     [JsonPropertyName("id")] public required string Id { get; init; }
     [JsonPropertyName("name")] public required string Name { get; init; }
 
+    /// <summary>External identifiers for the trailer.</summary>
+    [JsonPropertyName("externalIds")] public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
     /// <summary>Carrier reefer state samples.</summary>
     [JsonPropertyName("carrierReeferState")] public IReadOnlyList<TrailerStatReeferState>? CarrierReeferState { get; init; }
 
@@ -268,6 +279,13 @@ public sealed record TrailerStatValue
 
     /// <summary>The measured value. Spec-required.</summary>
     [JsonPropertyName("value")] public required long Value { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>TrailerStatDecorationResponseBody</c>) — the other metrics as of the
+    /// same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public TrailerStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>
@@ -282,6 +300,13 @@ public sealed record TrailerStatStringValue
 
     /// <summary>The measured value. Spec-required.</summary>
     [JsonPropertyName("value")] public required string Value { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>TrailerStatDecorationResponseBody</c>) — the other metrics as of the
+    /// same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public TrailerStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>
@@ -298,6 +323,13 @@ public sealed record TrailerStatReeferState
 
     /// <summary>The reefer substate, if available (e.g. <c>Pretrip</c>, <c>Defrost</c>).</summary>
     [JsonPropertyName("substateValue")] public string? SubstateValue { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>TrailerStatDecorationResponseBody</c>) — the other metrics as of the
+    /// same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public TrailerStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>
@@ -324,6 +356,13 @@ public sealed record TrailerStatGps
 
     /// <summary>Reverse-geocoded address for the reading.</summary>
     [JsonPropertyName("reverseGeo")] public ReverseGeo? ReverseGeo { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>TrailerStatDecorationResponseBody</c>) — the other metrics as of the
+    /// same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public TrailerStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>
@@ -337,6 +376,13 @@ public sealed record TrailerStatReeferAlarms
 
     /// <summary>The alarms reported by the reefer. Spec-required.</summary>
     [JsonPropertyName("alarms")] public required IReadOnlyList<TrailerStatReeferAlarm> Alarms { get; init; }
+
+    /// <summary>
+    /// Decorated values captured alongside this sample (spec
+    /// <c>TrailerStatDecorationResponseBody</c>) — the other metrics as of the
+    /// same moment.
+    /// </summary>
+    [JsonPropertyName("decorations")] public TrailerStatDecorations? Decorations { get; init; }
 }
 
 /// <summary>A single reefer alarm on a <see cref="TrailerStatReeferAlarms"/> sample.</summary>
@@ -354,4 +400,88 @@ public sealed record TrailerStatReeferAlarm
     /// <summary>The severity of the alarm (<c>1</c>: ok to run, <c>2</c>: check as specified,
     /// <c>3</c>: take immediate action). Spec-required.</summary>
     [JsonPropertyName("severity")] public required long Severity { get; init; }
+}
+
+/// <summary>
+/// The other trailer metrics captured alongside a single stats sample. Mirrors
+/// the spec's <c>TrailerStatDecorationResponseBody</c>, which every
+/// <c>...WithDecorationsTypeResponseBody</c> hangs off its <c>decorations</c>
+/// property.
+/// </summary>
+/// <remarks>
+/// Unlike the vehicle-stats decorations, every trailer decoration entry keeps
+/// its own <c>{ time, value }</c> shape, so the leaf records are reused as-is.
+/// Everything here is nullable — a decoration is populated only when the caller
+/// asked for it via the <c>decorations</c> query parameter.
+/// </remarks>
+public sealed record TrailerStatDecorations
+{
+    /// <summary>Overall carrier reefer state.</summary>
+    [JsonPropertyName("carrierReeferState")] public TrailerStatReeferState? CarrierReeferState { get; init; }
+
+    /// <summary>GPS reading.</summary>
+    [JsonPropertyName("gps")] public TrailerStatGps? Gps { get; init; }
+
+    /// <summary>GPS-derived odometer, in meters.</summary>
+    [JsonPropertyName("gpsOdometerMeters")] public TrailerStatValue? GpsOdometerMeters { get; init; }
+
+    /// <summary>Alarms emitted by the reefer.</summary>
+    [JsonPropertyName("reeferAlarms")] public TrailerStatReeferAlarms? ReeferAlarms { get; init; }
+
+    /// <summary>Reefer ambient air temperature, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("reeferAmbientAirTemperatureMilliC")] public TrailerStatValue? ReeferAmbientAirTemperatureMilliC { get; init; }
+
+    /// <summary>Reefer door state for zone 1.</summary>
+    [JsonPropertyName("reeferDoorStateZone1")] public TrailerStatStringValue? ReeferDoorStateZone1 { get; init; }
+
+    /// <summary>Reefer door state for zone 2.</summary>
+    [JsonPropertyName("reeferDoorStateZone2")] public TrailerStatStringValue? ReeferDoorStateZone2 { get; init; }
+
+    /// <summary>Reefer door state for zone 3.</summary>
+    [JsonPropertyName("reeferDoorStateZone3")] public TrailerStatStringValue? ReeferDoorStateZone3 { get; init; }
+
+    /// <summary>Reefer fuel level, as a percentage.</summary>
+    [JsonPropertyName("reeferFuelPercent")] public TrailerStatValue? ReeferFuelPercent { get; init; }
+
+    /// <summary>Reefer OBD-reported engine seconds.</summary>
+    [JsonPropertyName("reeferObdEngineSeconds")] public TrailerStatValue? ReeferObdEngineSeconds { get; init; }
+
+    /// <summary>Reefer return air temperature for zone 1, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("reeferReturnAirTemperatureMilliCZone1")] public TrailerStatValue? ReeferReturnAirTemperatureMilliCZone1 { get; init; }
+
+    /// <summary>Reefer return air temperature for zone 2, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("reeferReturnAirTemperatureMilliCZone2")] public TrailerStatValue? ReeferReturnAirTemperatureMilliCZone2 { get; init; }
+
+    /// <summary>Reefer return air temperature for zone 3, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("reeferReturnAirTemperatureMilliCZone3")] public TrailerStatValue? ReeferReturnAirTemperatureMilliCZone3 { get; init; }
+
+    /// <summary>Reefer run mode.</summary>
+    [JsonPropertyName("reeferRunMode")] public TrailerStatStringValue? ReeferRunMode { get; init; }
+
+    /// <summary>Reefer set-point temperature for zone 1, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("reeferSetPointTemperatureMilliCZone1")] public TrailerStatValue? ReeferSetPointTemperatureMilliCZone1 { get; init; }
+
+    /// <summary>Reefer set-point temperature for zone 2, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("reeferSetPointTemperatureMilliCZone2")] public TrailerStatValue? ReeferSetPointTemperatureMilliCZone2 { get; init; }
+
+    /// <summary>Reefer set-point temperature for zone 3, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("reeferSetPointTemperatureMilliCZone3")] public TrailerStatValue? ReeferSetPointTemperatureMilliCZone3 { get; init; }
+
+    /// <summary>Reefer state for zone 1.</summary>
+    [JsonPropertyName("reeferStateZone1")] public TrailerStatReeferState? ReeferStateZone1 { get; init; }
+
+    /// <summary>Reefer state for zone 2.</summary>
+    [JsonPropertyName("reeferStateZone2")] public TrailerStatReeferState? ReeferStateZone2 { get; init; }
+
+    /// <summary>Reefer state for zone 3.</summary>
+    [JsonPropertyName("reeferStateZone3")] public TrailerStatReeferState? ReeferStateZone3 { get; init; }
+
+    /// <summary>Reefer supply air temperature for zone 1, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("reeferSupplyAirTemperatureMilliCZone1")] public TrailerStatValue? ReeferSupplyAirTemperatureMilliCZone1 { get; init; }
+
+    /// <summary>Reefer supply air temperature for zone 2, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("reeferSupplyAirTemperatureMilliCZone2")] public TrailerStatValue? ReeferSupplyAirTemperatureMilliCZone2 { get; init; }
+
+    /// <summary>Reefer supply air temperature for zone 3, in milli-degrees Celsius.</summary>
+    [JsonPropertyName("reeferSupplyAirTemperatureMilliCZone3")] public TrailerStatValue? ReeferSupplyAirTemperatureMilliCZone3 { get; init; }
 }

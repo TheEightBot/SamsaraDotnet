@@ -55,7 +55,11 @@ internal sealed class SamsaraClient : ISamsaraClient
         IRidershipClient ridership,
         IFunctionsClient functions,
         IReportsClient reports,
-        IBetaClient beta)
+        IBetaClient beta,
+        IAssetSharingClient assetSharing,
+        IGroundIntelligenceClient groundIntelligence,
+        IPartsClient parts,
+        IInstallerClient installer)
     {
         Tags = tags;
         Addresses = addresses;
@@ -110,6 +114,10 @@ internal sealed class SamsaraClient : ISamsaraClient
         Functions = functions;
         Reports = reports;
         Beta = beta;
+        AssetSharing = assetSharing;
+        GroundIntelligence = groundIntelligence;
+        Parts = parts;
+        Installer = installer;
     }
 
     public ITagsClient Tags { get; }
@@ -165,4 +173,8 @@ internal sealed class SamsaraClient : ISamsaraClient
     public IFunctionsClient Functions { get; }
     public IReportsClient Reports { get; }
     public IBetaClient Beta { get; }
+    public IAssetSharingClient AssetSharing { get; }
+    public IGroundIntelligenceClient GroundIntelligence { get; }
+    public IPartsClient Parts { get; }
+    public IInstallerClient Installer { get; }
 }

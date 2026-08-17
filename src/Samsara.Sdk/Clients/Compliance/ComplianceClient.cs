@@ -97,34 +97,44 @@ internal sealed class ComplianceClient : SamsaraServiceClientBase, IComplianceCl
             cancellationToken: cancellationToken);
 
     /// <summary>HOS authentication logs (v1 legacy, <c>GET /v1/fleet/hos_authentication_logs</c>).</summary>
-    public IAsyncEnumerable<object> V1ListHosAuthenticationLogsAsync(
+    /// <remarks>
+    /// The v1 body is an <c>{ authenticationLogs: [...] }</c> object (spec
+    /// <c>V1HosAuthenticationLogsResponse</c>) — it has neither a <c>data</c> array nor a
+    /// <c>pagination</c> block, so it must NOT be paginated. This mirrors
+    /// <c>TripsClient.ListAsync</c>: fetch the wrapper, return its array.
+    /// </remarks>
+    public async Task<IReadOnlyList<V1HosAuthenticationLog>> V1ListHosAuthenticationLogsAsync(
         long driverId,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
-            QueryBuilder.WithParams(
-                "v1/fleet/hos_authentication_logs",
-                ("driverId", driverId.ToString(CultureInfo.InvariantCulture)),
-                ("startMs", startTime?.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture)),
-                ("endMs", endTime?.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture))),
-            cancellationToken: cancellationToken);
+    {
+        var path = QueryBuilder.WithParams(
+            "v1/fleet/hos_authentication_logs",
+            ("driverId", driverId.ToString(CultureInfo.InvariantCulture)),
+            ("startMs", startTime?.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture)),
+            ("endMs", endTime?.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture)));
+
+        var response = await HttpClient.GetAsync<V1HosAuthenticationLogsResponse>(path, cancellationToken)
+            .ConfigureAwait(false);
+        return response.AuthenticationLogs ?? [];
+    }
 
     /// <summary>Set a driver's current duty status (v1 legacy,
     /// <c>POST /v1/fleet/drivers/{driverId}/hos/duty_status</c>).</summary>
-    public Task V1SetCurrentDutyStatusAsync(string driverId, object request, CancellationToken cancellationToken = default)
+    public Task V1SetCurrentDutyStatusAsync(string driverId, V1SetDutyStatusRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PostAsync($"v1/fleet/drivers/{Uri.EscapeDataString(driverId)}/hos/duty_status", request, cancellationToken);
 
     /// <summary>
     /// Update shipping-doc metadata on HOS daily logs (beta, <c>PATCH /hos/daily-logs/log-meta-data</c>).
     /// Both <paramref name="driverID"/> and <paramref name="hosDate"/> are required query parameters.
     /// </summary>
-    public Task<object> UpdateShippingDocsAsync(
+    public Task<HosDailyLogMetaData> UpdateShippingDocsAsync(
         string driverID,
         string hosDate,
-        object request,
+        UpdateShippingDocsRequest request,
         CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<object>(
+        => HttpClient.PatchDataAsync<HosDailyLogMetaData>(
             QueryBuilder.WithParams("hos/daily-logs/log-meta-data",
                 ("driverID", driverID),
                 ("hosDate", hosDate)),

@@ -620,3 +620,279 @@ public sealed record SafetyScoreSpeeding
     [JsonPropertyName("scoreImpact")]
     public required double ScoreImpact { get; init; }
 }
+
+/// <summary>
+/// Driver safety score as returned by the legacy
+/// <c>GET /v1/fleet/drivers/{driverId}/safety/score</c>. Mirrors the spec's
+/// <c>V1DriverSafetyScoreResponse</c>.
+/// </summary>
+/// <remarks>
+/// Distinct from <see cref="DriverSafetyScore"/>, which mirrors the v2
+/// <c>DriverSafetyScoreResponseBody</c> returned by
+/// <c>GET /safety-scores/drivers</c>: the legacy shape reports raw event counts
+/// and an embedded harsh-event list instead of behavior and speeding breakdowns.
+/// The endpoint returns the object directly — there is no <c>{ data: ... }</c>
+/// envelope. The spec marks nothing required on this schema.
+/// </remarks>
+public sealed record V1DriverSafetyScore
+{
+    /// <summary>Samsara ID of the driver.</summary>
+    [JsonPropertyName("driverId")]
+    public long? DriverId { get; init; }
+
+    /// <summary>The driver's safety score over the requested window.</summary>
+    [JsonPropertyName("safetyScore")]
+    public int? SafetyScore { get; init; }
+
+    /// <summary>Qualitative rank corresponding to the safety score.</summary>
+    [JsonPropertyName("safetyScoreRank")]
+    public string? SafetyScoreRank { get; init; }
+
+    /// <summary>Number of crashes in the window.</summary>
+    [JsonPropertyName("crashCount")]
+    public int? CrashCount { get; init; }
+
+    /// <summary>Number of harsh accelerations in the window.</summary>
+    [JsonPropertyName("harshAccelCount")]
+    public int? HarshAccelCount { get; init; }
+
+    /// <summary>Number of harsh braking events in the window.</summary>
+    [JsonPropertyName("harshBrakingCount")]
+    public int? HarshBrakingCount { get; init; }
+
+    /// <summary>Number of harsh turning events in the window.</summary>
+    [JsonPropertyName("harshTurningCount")]
+    public int? HarshTurningCount { get; init; }
+
+    /// <summary>Total number of harsh events in the window.</summary>
+    [JsonPropertyName("totalHarshEventCount")]
+    public int? TotalHarshEventCount { get; init; }
+
+    /// <summary>The individual harsh events in the window.</summary>
+    [JsonPropertyName("harshEvents")]
+    public IReadOnlyList<V1SafetyHarshEvent>? HarshEvents { get; init; }
+
+    /// <summary>Time spent over the speed limit, in milliseconds.</summary>
+    [JsonPropertyName("timeOverSpeedLimitMs")]
+    public long? TimeOverSpeedLimitMs { get; init; }
+
+    /// <summary>Total distance driven in the window, in meters.</summary>
+    [JsonPropertyName("totalDistanceDrivenMeters")]
+    public long? TotalDistanceDrivenMeters { get; init; }
+
+    /// <summary>Total time driven in the window, in milliseconds.</summary>
+    [JsonPropertyName("totalTimeDrivenMs")]
+    public long? TotalTimeDrivenMs { get; init; }
+}
+
+/// <summary>
+/// Vehicle safety score as returned by the legacy
+/// <c>GET /v1/fleet/vehicles/{vehicleId}/safety/score</c>. Mirrors the spec's
+/// <c>V1VehicleSafetyScoreResponse</c>.
+/// </summary>
+/// <remarks>
+/// Distinct from <see cref="VehicleSafetyScore"/>, which mirrors the v2
+/// <c>VehicleSafetyScoreResponseBody</c> returned by
+/// <c>GET /safety-scores/vehicles</c>. Property-identical to
+/// <see cref="V1DriverSafetyScore"/> except that it keys on <c>vehicleId</c>
+/// rather than <c>driverId</c>, so the two are modelled separately. The endpoint
+/// returns the object directly — there is no <c>{ data: ... }</c> envelope. The
+/// spec marks nothing required on this schema.
+/// </remarks>
+public sealed record V1VehicleSafetyScore
+{
+    /// <summary>Samsara ID of the vehicle.</summary>
+    [JsonPropertyName("vehicleId")]
+    public long? VehicleId { get; init; }
+
+    /// <summary>The vehicle's safety score over the requested window.</summary>
+    [JsonPropertyName("safetyScore")]
+    public int? SafetyScore { get; init; }
+
+    /// <summary>Qualitative rank corresponding to the safety score.</summary>
+    [JsonPropertyName("safetyScoreRank")]
+    public string? SafetyScoreRank { get; init; }
+
+    /// <summary>Number of crashes in the window.</summary>
+    [JsonPropertyName("crashCount")]
+    public int? CrashCount { get; init; }
+
+    /// <summary>Number of harsh accelerations in the window.</summary>
+    [JsonPropertyName("harshAccelCount")]
+    public int? HarshAccelCount { get; init; }
+
+    /// <summary>Number of harsh braking events in the window.</summary>
+    [JsonPropertyName("harshBrakingCount")]
+    public int? HarshBrakingCount { get; init; }
+
+    /// <summary>Number of harsh turning events in the window.</summary>
+    [JsonPropertyName("harshTurningCount")]
+    public int? HarshTurningCount { get; init; }
+
+    /// <summary>Total number of harsh events in the window.</summary>
+    [JsonPropertyName("totalHarshEventCount")]
+    public int? TotalHarshEventCount { get; init; }
+
+    /// <summary>The individual harsh events in the window.</summary>
+    [JsonPropertyName("harshEvents")]
+    public IReadOnlyList<V1SafetyHarshEvent>? HarshEvents { get; init; }
+
+    /// <summary>Time spent over the speed limit, in milliseconds.</summary>
+    [JsonPropertyName("timeOverSpeedLimitMs")]
+    public long? TimeOverSpeedLimitMs { get; init; }
+
+    /// <summary>Total distance driven in the window, in meters.</summary>
+    [JsonPropertyName("totalDistanceDrivenMeters")]
+    public long? TotalDistanceDrivenMeters { get; init; }
+
+    /// <summary>Total time driven in the window, in milliseconds.</summary>
+    [JsonPropertyName("totalTimeDrivenMs")]
+    public long? TotalTimeDrivenMs { get; init; }
+}
+
+/// <summary>
+/// A harsh event summarised on a legacy safety-score response. Mirrors the spec's
+/// <c>V1SafetyReportHarshEvent</c>, shared by
+/// <see cref="V1DriverSafetyScore.HarshEvents"/> and
+/// <see cref="V1VehicleSafetyScore.HarshEvents"/>.
+/// </summary>
+/// <remarks>
+/// Use <c>ILegacyApisClient.V1GetVehicleHarshEventAsync</c> with
+/// <see cref="VehicleId"/> and <see cref="TimestampMs"/> to fetch the full detail
+/// for one of these events. The spec marks nothing required on this schema.
+/// </remarks>
+public sealed record V1SafetyHarshEvent
+{
+    /// <summary>The kind of harsh event (e.g. <c>Harsh Brake</c>, <c>Harsh Turn</c>).</summary>
+    [JsonPropertyName("harshEventType")]
+    public string? HarshEventType { get; init; }
+
+    /// <summary>Time of the event, in Unix milliseconds since epoch.</summary>
+    [JsonPropertyName("timestampMs")]
+    public long? TimestampMs { get; init; }
+
+    /// <summary>Samsara ID of the vehicle the event occurred on.</summary>
+    [JsonPropertyName("vehicleId")]
+    public long? VehicleId { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>PATCH /safety-events/batch</c>. Mirrors the spec's
+/// <c>SafetyEventsV2PatchSafetyEventsV2BatchRequestBody</c>.
+/// </summary>
+public sealed record PatchSafetyEventsBatchRequest
+{
+    /// <summary>Samsara IDs of the safety events to update. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("safetyEventIds")]
+    public required IReadOnlyList<string> SafetyEventIds { get; init; }
+
+    /// <summary>
+    /// Behavior labels to add to each event (e.g. <c>Acceleration</c>,
+    /// <c>Braking</c>, <c>Speeding</c>). See the spec for the full enumeration.
+    /// </summary>
+    [JsonPropertyName("behaviorLabelsToAdd")]
+    public IReadOnlyList<string>? BehaviorLabelsToAdd { get; init; }
+
+    /// <summary>Behavior labels to remove from each event.</summary>
+    [JsonPropertyName("behaviorLabelsToRemove")]
+    public IReadOnlyList<string>? BehaviorLabelsToRemove { get; init; }
+
+    /// <summary>
+    /// Context labels to add to each event (e.g. <c>Congested</c>, <c>Night</c>,
+    /// <c>Raining</c>). See the spec for the full enumeration.
+    /// </summary>
+    [JsonPropertyName("contextLabelsToAdd")]
+    public IReadOnlyList<string>? ContextLabelsToAdd { get; init; }
+
+    /// <summary>Context labels to remove from each event.</summary>
+    [JsonPropertyName("contextLabelsToRemove")]
+    public IReadOnlyList<string>? ContextLabelsToRemove { get; init; }
+
+    /// <summary>
+    /// New coaching state for each event: <c>needsReview</c>, <c>reviewed</c>,
+    /// <c>needsCoaching</c>, <c>coached</c>, <c>dismissed</c>,
+    /// <c>needsRecognition</c> or <c>recognized</c>.
+    /// </summary>
+    [JsonPropertyName("eventState")]
+    public string? EventState { get; init; }
+
+    /// <summary>Why the events are being dismissed, when <c>eventState</c> is <c>dismissed</c>.</summary>
+    [JsonPropertyName("dismissalReason")]
+    public SafetyEventsBatchDismissalReason? DismissalReason { get; init; }
+}
+
+/// <summary>
+/// Dismissal reason supplied to <c>PATCH /safety-events/batch</c>. Mirrors the
+/// spec's <c>PatchSafetyEventsDismissalReasonBodyRequestBody</c>.
+/// </summary>
+/// <remarks>
+/// Distinct from <see cref="SafetyEventDismissalReason"/>, which is the
+/// response-side shape on a v2 safety event.
+/// </remarks>
+public sealed record SafetyEventsBatchDismissalReason
+{
+    /// <summary>
+    /// Reason code: <c>incorrect</c>, <c>minorEvent</c> or <c>other</c>. Spec
+    /// marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("code")]
+    public required string Code { get; init; }
+
+    /// <summary>Free-text comment accompanying the dismissal.</summary>
+    [JsonPropertyName("comment")]
+    public string? Comment { get; init; }
+}
+
+/// <summary>
+/// Result of <c>PATCH /safety-events/batch</c>. Mirrors the spec's
+/// <c>SafetyEventsV2PatchSafetyEventsV2BatchResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// This operation returns its payload at the top level — the spec defines no
+/// <c>{ data: ... }</c> envelope on it, unlike most v2 endpoints. Spec marks both
+/// properties REQUIRED; they stay nullable because this is a response record.
+/// </remarks>
+public sealed record SafetyEventsBatchResult
+{
+    /// <summary>Identifier of the batch request, for support follow-up. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("requestId")]
+    public string? RequestId { get; init; }
+
+    /// <summary>Per-event outcome, in the order the IDs were supplied. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("responses")]
+    public IReadOnlyList<SafetyEventsBatchResponseItem>? Responses { get; init; }
+}
+
+/// <summary>
+/// The outcome for one safety event in a batch update. Mirrors the spec's
+/// <c>PatchSafetyEventsResponseItemResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Spec marks both properties REQUIRED; they stay nullable because this is a
+/// response record.
+/// </remarks>
+public sealed record SafetyEventsBatchResponseItem
+{
+    /// <summary>HTTP-style status code for this event's update. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("status")]
+    public long? Status { get; init; }
+
+    /// <summary>Identifies which safety event this outcome applies to. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("data")]
+    public SafetyEventsBatchResponseItemData? Data { get; init; }
+}
+
+/// <summary>
+/// The safety event a batch-update outcome applies to. Mirrors the spec's
+/// <c>PatchSafetyEventsResponseItemDataResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Spec marks <c>safetyEventId</c> REQUIRED; it stays nullable because this is a
+/// response record.
+/// </remarks>
+public sealed record SafetyEventsBatchResponseItemData
+{
+    /// <summary>Samsara ID of the safety event. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("safetyEventId")]
+    public string? SafetyEventId { get; init; }
+}

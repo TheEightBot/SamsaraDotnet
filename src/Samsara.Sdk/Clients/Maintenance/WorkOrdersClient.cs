@@ -45,7 +45,7 @@ internal sealed class WorkOrdersClient : SamsaraServiceClientBase, IWorkOrdersCl
                 ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
             cancellationToken: cancellationToken);
 
-    /// <summary>Get work order templates (<c>GET /maintenance/work-order-templates</c>) — beta. Loosely typed.</summary>
-    public IAsyncEnumerable<object> GetWorkOrderTemplatesAsync(CancellationToken cancellationToken = default)
-        => PaginateAsync<object>("maintenance/work-order-templates", cancellationToken: cancellationToken);
+    /// <summary>Get work order templates (<c>GET /maintenance/work-order-templates</c>) — beta.</summary>
+    public IAsyncEnumerable<WorkOrderTemplate> GetWorkOrderTemplatesAsync(CancellationToken cancellationToken = default)
+        => PaginateAsync<WorkOrderTemplate>("maintenance/work-order-templates", cancellationToken: cancellationToken);
 }

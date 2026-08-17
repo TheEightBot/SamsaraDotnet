@@ -204,56 +204,117 @@ public sealed record DeleteDriverVehicleAssignmentsRequest
 }
 
 /// <summary>
-/// Represents a trailer assignment. This single record deserializes BOTH v1 wrapper
-/// shapes: the list endpoint (<c>GET /v1/fleet/trailers/assignments</c>) returns
-/// <c>{ pagination, trailers }</c>, while the per-trailer endpoint
-/// (<c>GET /v1/fleet/trailers/{trailerId}/assignments</c>) returns
-/// <c>{ id, name, trailerAssignments }</c>. Fields present in only one shape are
-/// therefore nullable.
+/// Response body of <c>GET /v1/fleet/trailers/assignments</c>: a top-level
+/// <c>trailers</c> array beside a top-level <c>pagination</c> block, with no
+/// <c>data</c> envelope. Mirrors the spec's <c>inline_response_200_7</c> schema.
 /// </summary>
-public sealed record TrailerAssignment
+/// <remarks>
+/// This is the page envelope, not the page item. The item is
+/// <see cref="V1TrailerWithAssignments"/> (spec <c>V1TrailerAssignmentsResponse</c>),
+/// which is also the entire body of the per-trailer endpoint
+/// <c>GET /v1/fleet/trailers/{trailerId}/assignments</c>.
+/// </remarks>
+public sealed record V1TrailerAssignmentsListResponse
 {
-    /// <summary>Trailer id (per-trailer endpoint shape). Spec type int64; absent on the list-wrapper shape.</summary>
+    /// <summary>The trailers on this page, each with its driver assignment rows.</summary>
+    [JsonPropertyName("trailers")]
+    public IReadOnlyList<V1TrailerWithAssignments>? Trailers { get; init; }
+
+    /// <summary>Bidirectional cursor pagination metadata (spec schema <c>V1Pagination</c>).
+    /// This endpoint's forward cursor is spent on the <c>startingAfter</c> query
+    /// parameter, not the v2 <c>after</c>.</summary>
+    [JsonPropertyName("pagination")]
+    public V1PaginationInfo? Pagination { get; init; }
+}
+
+/// <summary>
+/// A trailer and its driver assignment rows. This is both the item type of the
+/// <c>trailers</c> array on <c>GET /v1/fleet/trailers/assignments</c> and the whole
+/// (non-paginated) body of <c>GET /v1/fleet/trailers/{trailerId}/assignments</c>.
+/// Mirrors the spec's <c>V1TrailerAssignmentsResponse</c> schema (the composition of
+/// <c>V1TrailerBase</c> and <c>V1TrailerAssignmentsResponse_allOf</c>).
+/// </summary>
+/// <remarks>
+/// The <c>V1</c> prefix follows the existing legacy-model convention in this SDK
+/// (<c>V1Trip</c>, <c>V1Sensor</c>, <c>V1MessageSender</c>) and keeps this v1
+/// shape distinct from the v2 trailer models in
+/// <c>Samsara.Sdk.Models.Fleet</c>.
+/// </remarks>
+public sealed record V1TrailerWithAssignments
+{
+    /// <summary>ID of the trailer. Spec type is int64. Spec marks REQUIRED.</summary>
     [JsonPropertyName("id")]
     public long? Id { get; init; }
 
-    /// <summary>Trailer name (per-trailer endpoint shape); absent on the list-wrapper shape.</summary>
+    /// <summary>Trailer name, given when the trailer was created via the trailer
+    /// portal. Spec marks REQUIRED.</summary>
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
-    /// <summary>Per-trailer endpoint: the trailer's assignment rows.</summary>
+    /// <summary>The driver assignment rows for this trailer.</summary>
     [JsonPropertyName("trailerAssignments")]
-    public IReadOnlyList<object>? TrailerAssignments { get; init; }
+    public IReadOnlyList<V1TrailerAssignmentEntry>? TrailerAssignments { get; init; }
+}
 
-    /// <summary>List endpoint: pagination cursor object.</summary>
-    [JsonPropertyName("pagination")]
-    public object? Pagination { get; init; }
-
-    /// <summary>List endpoint: the trailers array.</summary>
-    [JsonPropertyName("trailers")]
-    public IReadOnlyList<object>? Trailers { get; init; }
-
-    // Not in current spec; retained for back-compat.
-    [JsonPropertyName("trailerId")]
-    public string? TrailerId { get; init; }
-
-    [JsonPropertyName("trailerName")]
-    public string? TrailerName { get; init; }
-
-    [JsonPropertyName("vehicleId")]
-    public string? VehicleId { get; init; }
-
-    [JsonPropertyName("vehicleName")]
-    public string? VehicleName { get; init; }
-
+/// <summary>
+/// A single driver-to-trailer assignment row on a v1 trailer assignments
+/// response. Mirrors the spec's <c>V1TrailerAssignmentResponse</c> schema.
+/// </summary>
+/// <remarks>
+/// Named <c>V1TrailerAssignmentEntry</c> rather than the stripped spec name
+/// <c>V1TrailerAssignment</c>, which would read as a sibling of the enclosing
+/// <see cref="V1TrailerWithAssignments"/> rather than as one of its rows.
+/// </remarks>
+public sealed record V1TrailerAssignmentEntry
+{
+    /// <summary>The ID of the driver associated with this trailer. Spec type is int64.</summary>
     [JsonPropertyName("driverId")]
-    public string? DriverId { get; init; }
+    public long? DriverId { get; init; }
 
-    [JsonPropertyName("startTime")]
-    public DateTimeOffset? StartTime { get; init; }
+    /// <summary>The time at which the driver started the assignment, in
+    /// milliseconds since the Unix epoch.</summary>
+    [JsonPropertyName("startMs")]
+    public long? StartMs { get; init; }
 
-    [JsonPropertyName("endTime")]
-    public DateTimeOffset? EndTime { get; init; }
+    /// <summary>The time at which the driver ended the assignment, in
+    /// milliseconds since the Unix epoch. Omitted while the assignment is
+    /// current.</summary>
+    [JsonPropertyName("endMs")]
+    public long? EndMs { get; init; }
+}
+
+/// <summary>
+/// Bidirectional cursor pagination metadata on a legacy v1 response. Mirrors the
+/// spec's <c>V1Pagination</c> schema.
+/// </summary>
+/// <remarks>
+/// Distinct from <c>Samsara.Sdk.Pagination.PaginationInfo</c>, which mirrors the
+/// v2 <c>paginationResponse</c> schema and carries only the forward cursor; the
+/// v1 shape adds <see cref="StartCursor"/> and <see cref="HasPrevPage"/>.
+/// </remarks>
+public sealed record V1PaginationInfo
+{
+    /// <summary>Cursor identifier representing the first element in the response,
+    /// for use with a subsequent request's <c>endingBefore</c> parameter. Spec
+    /// marks REQUIRED.</summary>
+    [JsonPropertyName("startCursor")]
+    public string? StartCursor { get; init; }
+
+    /// <summary>Cursor identifier representing the last element in the response,
+    /// for use with a subsequent request's <c>startingAfter</c> parameter. Spec
+    /// marks REQUIRED.</summary>
+    [JsonPropertyName("endCursor")]
+    public string? EndCursor { get; init; }
+
+    /// <summary>True if there are more pages of results after this response.
+    /// Spec marks REQUIRED.</summary>
+    [JsonPropertyName("hasNextPage")]
+    public bool? HasNextPage { get; init; }
+
+    /// <summary>True if there are more pages of results before this response.
+    /// Spec marks REQUIRED.</summary>
+    [JsonPropertyName("hasPrevPage")]
+    public bool? HasPrevPage { get; init; }
 }
 
 /// <summary>

@@ -93,9 +93,13 @@ public sealed record DriverRef
 /// <summary>A minified vehicle reference returned alongside a <see cref="Document"/>.</summary>
 public sealed record VehicleRef
 {
-    /// <summary>ID of the vehicle.</summary>
+    /// <summary>
+    /// ID of the vehicle. The spec lists it optional on the document's
+    /// <c>vehicle</c> object (unlike <see cref="DriverRef"/> and
+    /// <see cref="RouteRef"/>), so it is nullable here.
+    /// </summary>
     [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    public string? Id { get; init; }
 
     /// <summary>Name of the vehicle.</summary>
     [JsonPropertyName("name")]
@@ -161,34 +165,235 @@ public sealed record ConditionalFieldSection
 }
 
 /// <summary>
-/// A field within a document.
+/// A field within a document, as returned on <see cref="Document"/>. Mirrors the
+/// response half of the spec's document-field schema
+/// (<c>GET /fleet/documents</c> → <c>data.fields</c>).
 /// </summary>
+/// <remarks>
+/// <para>
+/// Spec marks <c>label</c>, <c>type</c> and <c>value</c> REQUIRED on the
+/// response, but response properties stay nullable here — the live API omits
+/// fields its own spec marks required and the SDK deserializes leniently. The
+/// request half, where <c>required</c> IS correct, lives on
+/// <see cref="DocumentFieldInput"/>.
+/// </para>
+/// <para>
+/// The 2026-08-17 spec-parity sweep removed the flat <c>photoValue</c>,
+/// <c>stringValue</c> and <c>numberValue</c> siblings: the spec nests all eight
+/// per-type values INSIDE <c>value</c> (<c>fieldObjectValueResponseBody</c>), so
+/// those properties bound nothing on the wire. They are now reachable as
+/// <c>Value.PhotoValue</c>, <c>Value.StringValue</c> and <c>Value.NumberValue</c>.
+/// </para>
+/// </remarks>
 public sealed record DocumentField
 {
+    /// <summary>The name of the field. Spec marks REQUIRED on the response.</summary>
     [JsonPropertyName("label")]
     public string? Label { get; init; }
 
+    /// <summary>
+    /// The type of field: <c>photo</c>, <c>string</c>, <c>number</c>,
+    /// <c>multipleChoice</c>, <c>signature</c>, <c>dateTime</c>,
+    /// <c>scannedDocument</c> or <c>barcode</c>. Spec marks REQUIRED on the response.
+    /// </summary>
     [JsonPropertyName("type")]
     public string? Type { get; init; }
 
+    /// <summary>
+    /// The value of the document field; which member of
+    /// <see cref="DocumentFieldValue"/> is populated depends on
+    /// <see cref="Type"/>. Spec marks REQUIRED on the response.
+    /// </summary>
     [JsonPropertyName("value")]
-    public object? Value { get; init; }
-
-    [JsonPropertyName("photoValue")]
-    public IReadOnlyList<DocumentPhoto>? PhotoValue { get; init; }
-
-    [JsonPropertyName("stringValue")]
-    public string? StringValue { get; init; }
-
-    [JsonPropertyName("numberValue")]
-    public double? NumberValue { get; init; }
+    public DocumentFieldValue? Value { get; init; }
 }
 
 /// <summary>
-/// A photo attached to a document field.
+/// A field posted as part of <see cref="CreateDocumentRequest"/>. Mirrors the
+/// spec's <c>DocumentFieldRequestBody</c> (<c>POST /fleet/documents</c> →
+/// <c>fields</c>).
+/// </summary>
+/// <remarks>
+/// Split from the response-side <see cref="DocumentField"/> during the
+/// 2026-08-17 spec-parity sweep: the spec requires <c>label</c> and <c>type</c>
+/// on the request but also requires <c>value</c> on the response, and
+/// <c>required</c> is only ever correct on a request DTO. Same precedent as
+/// <c>ServiceTaskInstanceInput</c> / <c>PartInstanceInput</c>.
+/// </remarks>
+public sealed record DocumentFieldInput
+{
+    /// <summary>The name of the field. Spec marks REQUIRED on the request.</summary>
+    [JsonPropertyName("label")]
+    public required string Label { get; init; }
+
+    /// <summary>
+    /// The type of field: <c>photo</c>, <c>string</c>, <c>number</c>,
+    /// <c>multipleChoice</c>, <c>signature</c>, <c>dateTime</c>,
+    /// <c>scannedDocument</c> or <c>barcode</c>. Spec marks REQUIRED on the request.
+    /// </summary>
+    [JsonPropertyName("type")]
+    public required string Type { get; init; }
+
+    /// <summary>
+    /// The value of the document field; which member of
+    /// <see cref="DocumentFieldValue"/> is populated depends on
+    /// <see cref="Type"/>. Optional on the request.
+    /// </summary>
+    /// <remarks>
+    /// The spec's request and response value schemas
+    /// (<c>fieldObjectValueRequestBody</c> and
+    /// <c>fieldObjectValueResponseBody</c>) are byte-identical — same eight
+    /// properties, none required on either side — so one record serves both
+    /// directions.
+    /// </remarks>
+    [JsonPropertyName("value")]
+    public DocumentFieldValue? Value { get; init; }
+}
+
+/// <summary>
+/// The value of a document field. Mirrors the spec's
+/// <c>fieldObjectValueResponseBody</c> / <c>fieldObjectValueRequestBody</c>
+/// (byte-identical twins, merged into one record).
+/// </summary>
+/// <remarks>
+/// This is a value union expressed as an object: exactly one member is
+/// populated, chosen by the owning field's <c>type</c>. The spec marks none of
+/// the eight members required, so all are nullable on both sides.
+/// </remarks>
+public sealed record DocumentFieldValue
+{
+    /// <summary>The value of a barcode scanning field. Only present for barcode fields.</summary>
+    [JsonPropertyName("barcodeValue")]
+    public IReadOnlyList<DocumentBarcodeValue>? BarcodeValue { get; init; }
+
+    /// <summary>The value of a date/time field. Only present for dateTime fields.</summary>
+    [JsonPropertyName("dateTimeValue")]
+    public DocumentDateTimeValue? DateTimeValue { get; init; }
+
+    /// <summary>The value of a multiple choice field. Only present for multipleChoice fields.</summary>
+    [JsonPropertyName("multipleChoiceValue")]
+    public IReadOnlyList<DocumentMultipleChoiceValue>? MultipleChoiceValue { get; init; }
+
+    /// <summary>The value of a number field. Only present for number fields.</summary>
+    [JsonPropertyName("numberValue")]
+    public double? NumberValue { get; init; }
+
+    /// <summary>The value of a photo field. Only present for photo fields.</summary>
+    [JsonPropertyName("photoValue")]
+    public IReadOnlyList<DocumentPhoto>? PhotoValue { get; init; }
+
+    /// <summary>
+    /// The value of a scanned document field. Only present for scannedDocument
+    /// fields.
+    /// </summary>
+    [JsonPropertyName("scannedDocumentValue")]
+    public IReadOnlyList<DocumentScannedDocument>? ScannedDocumentValue { get; init; }
+
+    /// <summary>The value of a signature field. Only present for signature fields.</summary>
+    [JsonPropertyName("signatureValue")]
+    public DocumentSignatureValue? SignatureValue { get; init; }
+
+    /// <summary>The value of a string field. Only present for string fields.</summary>
+    [JsonPropertyName("stringValue")]
+    public string? StringValue { get; init; }
+}
+
+/// <summary>
+/// A single scanned barcode on a document field. Mirrors the spec's
+/// <c>barcodeValueObjectResponseBody</c> / <c>barcodeValueObjectRequestBody</c>
+/// (byte-identical twins).
+/// </summary>
+public sealed record DocumentBarcodeValue
+{
+    /// <summary>The barcode type that was scanned (e.g. <c>org.gs1.EAN-13</c>).</summary>
+    [JsonPropertyName("barcodeType")]
+    public string? BarcodeType { get; init; }
+
+    /// <summary>The captured barcode value.</summary>
+    [JsonPropertyName("barcodeValue")]
+    public string? BarcodeValue { get; init; }
+}
+
+/// <summary>
+/// The date/time captured on a document field. Mirrors the spec's
+/// <c>dateTimeValueObjectResponseBody</c> / <c>dateTimeValueObjectRequestBody</c>
+/// (byte-identical twins).
+/// </summary>
+public sealed record DocumentDateTimeValue
+{
+    /// <summary>Date-time value in RFC 3339 format.</summary>
+    [JsonPropertyName("dateTime")]
+    public DateTimeOffset? DateTime { get; init; }
+}
+
+/// <summary>
+/// One multiple-choice option on a document field. Mirrors the spec's
+/// <c>multipleChoiceValueObjectResponseBody</c> /
+/// <c>multipleChoiceValueObjectRequestBody</c> (byte-identical twins).
+/// </summary>
+public sealed record DocumentMultipleChoiceValue
+{
+    /// <summary>Whether the choice has been selected.</summary>
+    [JsonPropertyName("selected")]
+    public bool? Selected { get; init; }
+
+    /// <summary>Description of the choice.</summary>
+    [JsonPropertyName("value")]
+    public string? Value { get; init; }
+}
+
+/// <summary>
+/// A photo attached to a document field. Mirrors the spec's
+/// <c>photoValueObjectResponseBody</c> / <c>photoValueObjectRequestBody</c>
+/// (byte-identical twins).
 /// </summary>
 public sealed record DocumentPhoto
 {
+    /// <summary>Id of the photo.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Url of the photo.</summary>
+    [JsonPropertyName("url")]
+    public string? Url { get; init; }
+}
+
+/// <summary>
+/// A scanned document attached to a document field. Mirrors the spec's
+/// <c>scannedDocumentValueObjectResponseBody</c> /
+/// <c>scannedDocumentValueObjectRequestBody</c> (byte-identical twins).
+/// </summary>
+public sealed record DocumentScannedDocument
+{
+    /// <summary>Id of the scanned document.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Url of the scanned document.</summary>
+    [JsonPropertyName("url")]
+    public string? Url { get; init; }
+}
+
+/// <summary>
+/// A signature captured on a document field. Mirrors the spec's
+/// <c>signatureValueObjectResponseBody</c> /
+/// <c>signatureValueObjectRequestBody</c> (byte-identical twins).
+/// </summary>
+public sealed record DocumentSignatureValue
+{
+    /// <summary>Id of the signature field.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Name of the signee.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>Time the signature was captured, RFC 3339.</summary>
+    [JsonPropertyName("signedAtTime")]
+    public DateTimeOffset? SignedAtTime { get; init; }
+
+    /// <summary>Url of the signature field's PNG signature image.</summary>
     [JsonPropertyName("url")]
     public string? Url { get; init; }
 }
@@ -216,27 +421,82 @@ public sealed record DocumentType
 }
 
 /// <summary>
-/// A field type within a document type.
+/// A field type within a document type. Mirrors the spec's document-type field
+/// schema (<c>GET /fleet/document-types</c> → <c>data.fieldTypes</c>).
 /// </summary>
+/// <remarks>
+/// The 2026-08-17 spec-parity sweep found this record modelled a shape the API
+/// never sends: <c>valueType</c> and <c>numberValueTypeMetadata</c> appear
+/// nowhere in the spec. The spec's names are <c>fieldType</c> and
+/// <c>numberFieldTypeMetaData</c>, and <c>requiredField</c> was missing entirely.
+/// Spec marks <c>fieldType</c>, <c>label</c> and <c>requiredField</c> REQUIRED;
+/// they stay nullable because this is a response record.
+/// </remarks>
 public sealed record DocumentFieldType
 {
+    /// <summary>The name of the field type. Spec marks REQUIRED.</summary>
     [JsonPropertyName("label")]
     public string? Label { get; init; }
 
-    [JsonPropertyName("valueType")]
-    public string? ValueType { get; init; }
+    /// <summary>
+    /// The type of value this field can have: <c>photo</c>, <c>string</c>,
+    /// <c>number</c>, <c>multipleChoice</c>, <c>signature</c>, <c>dateTime</c>,
+    /// <c>scannedDocument</c> or <c>barcode</c>. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("fieldType")]
+    public string? FieldType { get; init; }
 
-    [JsonPropertyName("numberValueTypeMetadata")]
-    public NumberValueTypeMetadata? NumberValueTypeMetadata { get; init; }
+    /// <summary>
+    /// Indicates whether the field is required on documents of this type.
+    /// Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("requiredField")]
+    public bool? RequiredField { get; init; }
+
+    /// <summary>The number field metadata, present for <c>number</c> field types.</summary>
+    [JsonPropertyName("numberFieldTypeMetaData")]
+    public NumberFieldTypeMetaData? NumberFieldTypeMetaData { get; init; }
+
+    /// <summary>The multiple choice option labels, present for <c>multipleChoice</c> field types.</summary>
+    [JsonPropertyName("multipleChoiceFieldTypeMetaData")]
+    public IReadOnlyList<MultipleChoiceFieldTypeMetaData>? MultipleChoiceFieldTypeMetaData { get; init; }
+
+    /// <summary>The signature field metadata, present for <c>signature</c> field types.</summary>
+    [JsonPropertyName("signatureFieldTypeMetaData")]
+    public SignatureFieldTypeMetaData? SignatureFieldTypeMetaData { get; init; }
 }
 
 /// <summary>
-/// Metadata for a number-type document field.
+/// Metadata for a <c>number</c> document-type field. Mirrors the spec's
+/// <c>numberFieldTypeMetaData</c> object.
 /// </summary>
-public sealed record NumberValueTypeMetadata
+public sealed record NumberFieldTypeMetaData
 {
-    [JsonPropertyName("numDecimalPlaces")]
-    public int? NumDecimalPlaces { get; init; }
+    /// <summary>Number of decimal places the field accepts.</summary>
+    [JsonPropertyName("numberOfDecimalPlaces")]
+    public long? NumberOfDecimalPlaces { get; init; }
+}
+
+/// <summary>
+/// One multiple-choice option on a document-type field. Mirrors an item of the
+/// spec's <c>multipleChoiceFieldTypeMetaData</c> array.
+/// </summary>
+public sealed record MultipleChoiceFieldTypeMetaData
+{
+    /// <summary>Label of the multiple choice option.</summary>
+    [JsonPropertyName("label")]
+    public string? Label { get; init; }
+}
+
+/// <summary>
+/// Metadata for a <c>signature</c> document-type field. Mirrors the spec's
+/// <c>signatureFieldTypeMetaData</c> object.
+/// </summary>
+public sealed record SignatureFieldTypeMetaData
+{
+    /// <summary>Legal text displayed above the signature field.</summary>
+    [JsonPropertyName("legalText")]
+    public string? LegalText { get; init; }
 }
 
 /// <summary>
@@ -272,7 +532,7 @@ public sealed record CreateDocumentRequest
 
     /// <summary>The fields associated with this document.</summary>
     [JsonPropertyName("fields")]
-    public IReadOnlyList<DocumentField>? Fields { get; init; }
+    public IReadOnlyList<DocumentFieldInput>? Fields { get; init; }
 
     /// <summary>Notes on the document.</summary>
     [JsonPropertyName("notes")]

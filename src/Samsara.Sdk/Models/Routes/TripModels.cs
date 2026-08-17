@@ -92,22 +92,76 @@ public sealed record TripLocation
 
     /// <summary>The matched geofence for this location, if any.</summary>
     [JsonPropertyName("geofence")]
-    public System.Text.Json.JsonElement? Geofence { get; init; }
+    public TripGeofence? Geofence { get; init; }
 }
 
 /// <summary>
-/// The matched address on a <see cref="TripLocation"/>. Mirrors the spec's
-/// <c>AddressResponseResponseBody</c>.
+/// The closest address the trip location's GPS coordinates match to. Mirrors the
+/// spec's <c>AddressResponseResponseBody</c> — a purely descriptive, unkeyed
+/// address breakdown, <em>not</em> a reference to a saved Samsara address.
 /// </summary>
+/// <remarks>
+/// BREAKING (2026-08-17 spec-parity sweep): this record previously declared
+/// <c>id</c> and <c>name</c>, neither of which exists in
+/// <c>AddressResponseResponseBody</c>. There was zero overlap with the wire
+/// shape, so every trip address deserialized to an all-null instance. The
+/// <c>{ id, name }</c> pair it modelled belongs to the unrelated legacy v1
+/// schemas <c>V1TripResponse_startAddress</c> / <c>_endAddress</c>, which are
+/// now modelled by <see cref="V1TripAddress"/>.
+/// </remarks>
 public sealed record TripLocationAddress
 {
-    /// <summary>Samsara ID of the address.</summary>
+    /// <summary>The name of the city.</summary>
+    [JsonPropertyName("city")]
+    public string? City { get; init; }
+
+    /// <summary>The country.</summary>
+    [JsonPropertyName("country")]
+    public string? Country { get; init; }
+
+    /// <summary>The name of the neighborhood, if one exists.</summary>
+    [JsonPropertyName("neighborhood")]
+    public string? Neighborhood { get; init; }
+
+    /// <summary>A point that may be of interest to the user.</summary>
+    [JsonPropertyName("pointOfInterest")]
+    public string? PointOfInterest { get; init; }
+
+    /// <summary>The zip / postal code.</summary>
+    [JsonPropertyName("postalCode")]
+    public string? PostalCode { get; init; }
+
+    /// <summary>The name of the state.</summary>
+    [JsonPropertyName("state")]
+    public string? State { get; init; }
+
+    /// <summary>The street name.</summary>
+    [JsonPropertyName("street")]
+    public string? Street { get; init; }
+
+    /// <summary>The street number of the address.</summary>
+    [JsonPropertyName("streetNumber")]
+    public string? StreetNumber { get; init; }
+}
+
+/// <summary>
+/// The closest geofence to a <see cref="TripLocation"/>, based on a 1000 meter
+/// radial search. Mirrors the spec's <c>GeofenceResponseResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Named <c>TripGeofence</c> rather than <c>Geofence</c> because
+/// <c>Samsara.Sdk.Models.Addresses.Geofence</c> already exists and models a
+/// different, much richer schema (the geofence definition on an address).
+/// </remarks>
+public sealed record TripGeofence
+{
+    /// <summary>Unique ID of the geofence object.</summary>
     [JsonPropertyName("id")]
     public string? Id { get; init; }
 
-    /// <summary>Name of the address.</summary>
-    [JsonPropertyName("name")]
-    public string? Name { get; init; }
+    /// <summary>A map of external ids for the geofence.</summary>
+    [JsonPropertyName("externalIds")]
+    public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
 
 /// <summary>
@@ -165,21 +219,64 @@ public sealed record V1Trip
     [JsonPropertyName("endLocation")]
     public string? EndLocation { get; init; }
 
-    /// <summary>Structured start address.</summary>
+    /// <summary>Structured start address (nearest identifiable location to the start coordinates).</summary>
     [JsonPropertyName("startAddress")]
-    public System.Text.Json.JsonElement? StartAddress { get; init; }
+    public V1TripAddress? StartAddress { get; init; }
 
-    /// <summary>Structured end address.</summary>
+    /// <summary>Structured end address (nearest identifiable location to the end coordinates).</summary>
     [JsonPropertyName("endAddress")]
-    public System.Text.Json.JsonElement? EndAddress { get; init; }
+    public V1TripAddress? EndAddress { get; init; }
 
     /// <summary>Start GPS coordinates.</summary>
     [JsonPropertyName("startCoordinates")]
-    public System.Text.Json.JsonElement? StartCoordinates { get; init; }
+    public V1TripCoordinates? StartCoordinates { get; init; }
 
     /// <summary>End GPS coordinates.</summary>
     [JsonPropertyName("endCoordinates")]
-    public System.Text.Json.JsonElement? EndCoordinates { get; init; }
+    public V1TripCoordinates? EndCoordinates { get; init; }
+}
+
+/// <summary>
+/// The nearest identifiable location to a legacy <see cref="V1Trip"/> endpoint's
+/// start or end coordinates. Mirrors the spec's identical
+/// <c>V1TripResponse_startAddress</c> and <c>V1TripResponse_endAddress</c>
+/// schemas, merged into a single record because the two are byte-identical.
+/// </summary>
+public sealed record V1TripAddress
+{
+    /// <summary>
+    /// The ID of the address. Modelled as <c>double</c> rather than <c>long</c>
+    /// because the spec declares this property <c>type: number</c> (with an
+    /// <c>int64</c> format hint) instead of <c>type: integer</c>, unlike every
+    /// other identifier on the legacy v1 trip shape.
+    /// </summary>
+    [JsonPropertyName("id")]
+    public double? Id { get; init; }
+
+    /// <summary>The name of the address.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>The formatted address.</summary>
+    [JsonPropertyName("address")]
+    public string? Address { get; init; }
+}
+
+/// <summary>
+/// Start or end coordinates, in decimal degrees, on a legacy <see cref="V1Trip"/>.
+/// Mirrors the spec's identical <c>V1TripResponse_startCoordinates</c> and
+/// <c>V1TripResponse_endCoordinates</c> schemas, merged into a single record
+/// because the two are byte-identical.
+/// </summary>
+public sealed record V1TripCoordinates
+{
+    /// <summary>Latitude in decimal degrees.</summary>
+    [JsonPropertyName("latitude")]
+    public double? Latitude { get; init; }
+
+    /// <summary>Longitude in decimal degrees.</summary>
+    [JsonPropertyName("longitude")]
+    public double? Longitude { get; init; }
 }
 
 /// <summary>

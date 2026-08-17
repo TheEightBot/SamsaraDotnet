@@ -1,12 +1,13 @@
 namespace Samsara.Sdk.Clients;
 
 using Samsara.Sdk.Http;
+using Samsara.Sdk.Models.Routes;
 
 /// <summary>Real-time route-event stream (<c>/route-events/stream</c>).</summary>
 public interface IRouteEventsClient
 {
     /// <summary>Stream route events (<c>GET /route-events/stream</c>).</summary>
-    IAsyncEnumerable<object> GetStreamAsync(
+    IAsyncEnumerable<RouteEvent> GetStreamAsync(
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
         bool? includeExternalIds = null,
@@ -17,12 +18,12 @@ internal sealed class RouteEventsClient : SamsaraServiceClientBase, IRouteEvents
 {
     public RouteEventsClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
-    public IAsyncEnumerable<object> GetStreamAsync(
+    public IAsyncEnumerable<RouteEvent> GetStreamAsync(
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
         bool? includeExternalIds = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
+        => PaginateAsync<RouteEvent>(
             QueryBuilder.WithParams(
                 QueryBuilder.WithTimeRange("route-events/stream", startTime, endTime),
                 ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),

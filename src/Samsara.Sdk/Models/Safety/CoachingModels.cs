@@ -109,12 +109,60 @@ public sealed record CoachingBehavior
 
     /// <summary>
     /// Coachable events for the behavior. Only returned when
-    /// <c>includeCoachableEvents=true</c>. Modeled as <c>object</c> because the
-    /// spec's <c>coachableEventResponseBody</c> is not strongly modeled in the
-    /// SDK.
+    /// <c>includeCoachableEvents=true</c>. Each item mirrors the spec's
+    /// <c>coachableEventResponseBody</c>.
     /// </summary>
     [JsonPropertyName("coachableEvents")]
-    public IReadOnlyList<object>? CoachableEvents { get; init; }
+    public IReadOnlyList<CoachableEvent>? CoachableEvents { get; init; }
+}
+
+/// <summary>
+/// An event within a coachable behavior. Mirrors the spec's
+/// <c>coachableEventResponseBody</c>
+/// (<c>GET /coaching/sessions/stream</c> → <c>data.behaviors.coachableEvents</c>).
+/// </summary>
+/// <remarks>
+/// Spec marks <c>id</c> REQUIRED; it stays nullable because this is a response
+/// record.
+/// </remarks>
+public sealed record CoachableEvent
+{
+    /// <summary>
+    /// Unique ID for an event within the item in a coaching session. Spec marks
+    /// REQUIRED.
+    /// </summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Join key with the upstream data source backing this event.</summary>
+    [JsonPropertyName("linkage")]
+    public CoachableEventLinkage? Linkage { get; init; }
+}
+
+/// <summary>
+/// The join key linking a coachable event back to its upstream data source.
+/// Mirrors the spec's <c>coachableEventLinkageResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Spec marks both properties REQUIRED; they stay nullable because this is a
+/// response record.
+/// </remarks>
+public sealed record CoachableEventLinkage
+{
+    /// <summary>
+    /// Unique identifier in the upstream data source. For safety events this is
+    /// the event uuid. Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("sourceId")]
+    public string? SourceId { get; init; }
+
+    /// <summary>
+    /// Upstream data source backing this coachable event. Valid values:
+    /// <c>triageEvent</c>, <c>hosViolation</c>, <c>idling</c>. Spec marks
+    /// REQUIRED.
+    /// </summary>
+    [JsonPropertyName("sourceType")]
+    public string? SourceType { get; init; }
 }
 
 /// <summary>

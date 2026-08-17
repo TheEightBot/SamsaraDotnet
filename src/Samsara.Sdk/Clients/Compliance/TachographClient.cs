@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Diagnostics.CodeAnalysis;
 using Samsara.Sdk.Http;
 using Samsara.Sdk.Models.Compliance;
 
@@ -36,15 +37,23 @@ internal sealed class TachographClient : SamsaraServiceClientBase, ITachographCl
             cancellationToken: cancellationToken);
 
     /// <summary>Latest tachograph live-data (beta, <c>GET /fleet/tachograph-live-data/latest</c>).</summary>
-    public IAsyncEnumerable<object> ListLiveDataAsync(
+    public IAsyncEnumerable<TachographLiveData> ListLiveDataAsync(
         string? driverIds = null,
         string? vehicleIds = null,
         DateTimeOffset? startTime = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<object>(
+        => PaginateAsync<TachographLiveData>(
             QueryBuilder.WithParams("fleet/tachograph-live-data/latest",
                 ("driverIds", driverIds),
                 ("vehicleIds", vehicleIds),
                 ("startTime", startTime?.ToString("O"))),
             cancellationToken: cancellationToken);
+
+    /// <summary>Create a tachograph file upload (<c>POST /fleet/tachograph/file-uploads</c>).</summary>
+    [Experimental("SAMSARA001")]
+    public Task<TachographFileUpload> CreateFileUploadAsync(
+        CreateTachographFileUploadRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<TachographFileUpload>(
+            "fleet/tachograph/file-uploads", request, cancellationToken);
 }

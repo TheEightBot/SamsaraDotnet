@@ -121,6 +121,7 @@ def diff_endpoints(old: dict, new: dict) -> dict:
     changed = {}
     deprecated_added = {}
     deprecated_removed = {}
+    summary_only = {}
 
     for k in old_keys & new_keys:
         o, n = old[k], new[k]
@@ -132,11 +133,19 @@ def diff_endpoints(old: dict, new: dict) -> dict:
             deprecated_removed[k] = n
 
         # Check for meaningful changes
+        # `summary` is prose, not contract. Samsara rewords descriptions constantly
+        # without touching behaviour, so a summary edit must NOT read as structural
+        # drift — it is tracked separately and classified as cosmetic.
+        if o["summary"] != n["summary"]:
+            summary_only[k] = {
+                "old": o["summary"],
+                "new": n["summary"],
+                "endpoint": n,
+            }
+
         changes = []
         if o["operationId"] != n["operationId"]:
             changes.append(f"operationId: `{o['operationId']}` → `{n['operationId']}`")
-        if o["summary"] != n["summary"]:
-            changes.append(f"summary: `{o['summary']}` → `{n['summary']}`")
         if o["hasBody"] != n["hasBody"]:
             changes.append(f"requestBody: `{o['hasBody']}` → `{n['hasBody']}`")
 
@@ -162,6 +171,7 @@ def diff_endpoints(old: dict, new: dict) -> dict:
         "changed": changed,
         "deprecated_added": deprecated_added,
         "deprecated_removed": deprecated_removed,
+        "summary_only": summary_only,
     }
 
 
@@ -227,6 +237,105 @@ def content_fingerprint(spec: dict) -> dict:
         "ops": ops,
         "schemas": len(schemas),
         "hash": hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:12],
+    }
+
+
+def classify(endpoint_diff: dict, schema_diff: dict, old_fp: dict, new_fp: dict) -> str:
+    """Classify drift as 'none', 'cosmetic', or 'structural'.
+
+    structural = anything that can change how the SDK must call the API or shape
+                 its records: an operation added/removed/changed, a deprecation
+                 flip, a schema added/removed, or a property/required delta on a
+                 schema present in both specs.
+    cosmetic   = the content hash moved but nothing structural did. In practice
+                 this is summary/description/example churn, which Samsara ships
+                 continuously under the frozen 2025-10-23 info.version.
+    none       = identical content.
+
+    The distinction is what lets the daily workflow absorb cosmetic churn
+    automatically while never auto-absorbing a real contract change.
+    """
+    structural = (
+        endpoint_diff["added"]
+        or endpoint_diff["removed"]
+        or endpoint_diff["changed"]
+        or endpoint_diff["deprecated_added"]
+        or endpoint_diff["deprecated_removed"]
+        or schema_diff["added"]
+        or schema_diff["removed"]
+        or schema_diff["changed"]
+    )
+    if structural:
+        return "structural"
+    if old_fp["hash"] != new_fp["hash"]:
+        return "cosmetic"
+    return "none"
+
+
+def build_summary(
+    spec_source: str,
+    old_version: str,
+    new_version: str,
+    endpoint_diff: dict,
+    schema_diff: dict,
+    old_fp: dict,
+    new_fp: dict,
+) -> dict:
+    """Machine-readable drift summary consumed by render-drift-report.py."""
+
+    def ep(key: str, data: dict) -> dict:
+        return {
+            "key": key,
+            "operationId": data.get("operationId", ""),
+            "tags": data.get("tags", []),
+            "summary": data.get("summary", ""),
+            "deprecated": data.get("deprecated", False),
+        }
+
+    return {
+        "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "spec_source": spec_source,
+        "old_version": old_version,
+        "new_version": new_version,
+        "old_fingerprint": old_fp,
+        "new_fingerprint": new_fp,
+        "classification": classify(endpoint_diff, schema_diff, old_fp, new_fp),
+        "counts": {
+            "added": len(endpoint_diff["added"]),
+            "removed": len(endpoint_diff["removed"]),
+            "changed": len(endpoint_diff["changed"]),
+            "deprecated_added": len(endpoint_diff["deprecated_added"]),
+            "deprecated_removed": len(endpoint_diff["deprecated_removed"]),
+            "summary_only": len(endpoint_diff["summary_only"]),
+            "schemas_added": len(schema_diff["added"]),
+            "schemas_removed": len(schema_diff["removed"]),
+            "schemas_changed": len(schema_diff["changed"]),
+        },
+        "endpoints": {
+            "added": sorted(
+                (ep(k, v) for k, v in endpoint_diff["added"].items()),
+                key=lambda e: (e["tags"][0] if e["tags"] else "", e["key"]),
+            ),
+            "removed": sorted(
+                (ep(k, v) for k, v in endpoint_diff["removed"].items()),
+                key=lambda e: e["key"],
+            ),
+            "changed": sorted(
+                (
+                    {**ep(k, v["endpoint"]), "details": v["details"]}
+                    for k, v in endpoint_diff["changed"].items()
+                ),
+                key=lambda e: e["key"],
+            ),
+            "deprecated_added": sorted(endpoint_diff["deprecated_added"]),
+            "deprecated_removed": sorted(endpoint_diff["deprecated_removed"]),
+            "summary_only": sorted(endpoint_diff["summary_only"]),
+        },
+        "schemas": {
+            "added": schema_diff["added"],
+            "removed": schema_diff["removed"],
+            "changed": schema_diff["changed"],
+        },
     }
 
 
@@ -389,7 +498,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Compare Samsara OpenAPI spec against a cached baseline."
     )
-    parser.add_argument("--spec-url", default=SPEC_URL, help="URL to the OpenAPI spec")
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument("--spec-url", help=f"URL to the OpenAPI spec (default: {SPEC_URL})")
+    source.add_argument(
+        "--spec-file",
+        type=Path,
+        help="Read the spec from a local file instead of fetching it (hermetic)",
+    )
     parser.add_argument(
         "--baseline",
         type=Path,
@@ -403,6 +518,16 @@ def main() -> None:
         help="Path for the diff report output",
     )
     parser.add_argument(
+        "--no-report",
+        action="store_true",
+        help="Do not write the Markdown report (keeps the working tree clean)",
+    )
+    parser.add_argument(
+        "--summary-json",
+        type=Path,
+        help="Write a machine-readable drift summary to this path",
+    )
+    parser.add_argument(
         "--update-baseline",
         action="store_true",
         help="Save the fetched spec as the new baseline",
@@ -410,11 +535,24 @@ def main() -> None:
     parser.add_argument(
         "--fail-on-diff",
         action="store_true",
-        help="Exit with code 1 if differences are found",
+        help="Exit with code 1 if any differences are found (including cosmetic)",
+    )
+    parser.add_argument(
+        "--fail-on-structural",
+        action="store_true",
+        help="Exit with code 1 only on structural drift; cosmetic churn exits 0",
     )
     args = parser.parse_args()
 
-    new_spec = fetch_spec(args.spec_url)
+    if args.spec_file:
+        spec_source = str(args.spec_file)
+        new_spec = load_spec(args.spec_file)
+        if new_spec is None:
+            print(f"ERROR: spec file not found: {args.spec_file}", file=sys.stderr)
+            sys.exit(2)
+    else:
+        spec_source = args.spec_url or SPEC_URL
+        new_spec = fetch_spec(spec_source)
     old_spec = load_spec(args.baseline)
 
     new_version = new_spec.get("info", {}).get("version", "unknown")
@@ -422,7 +560,33 @@ def main() -> None:
     if old_spec is None:
         print(f"No baseline found at {args.baseline}. Saving current spec as baseline.")
         save_spec(new_spec, args.baseline)
-        print(f"Baseline saved. Re-run to compare against it.")
+        print("Baseline saved. Re-run to compare against it.")
+        # Still emit the summary. Callers (the daily workflow) read this file
+        # unconditionally in their next step; exiting without writing it turns a
+        # recoverable "no baseline yet" into a FileNotFoundError crash.
+        if args.summary_json:
+            fp = content_fingerprint(new_spec)
+            empty_diff = {
+                k: {}
+                for k in (
+                    "added", "removed", "changed",
+                    "deprecated_added", "deprecated_removed", "summary_only",
+                )
+            }
+            summary = build_summary(
+                spec_source,
+                new_version,
+                new_version,
+                empty_diff,
+                {"added": [], "removed": [], "changed": {}},
+                fp,
+                fp,
+            )
+            summary["baseline_created"] = True
+            args.summary_json.parent.mkdir(parents=True, exist_ok=True)
+            with open(args.summary_json, "w") as f:
+                json.dump(summary, f, indent=2)
+            print(f"Summary written to {args.summary_json}")
         sys.exit(0)
 
     old_version = old_spec.get("info", {}).get("version", "unknown")
@@ -453,15 +617,33 @@ def main() -> None:
             f"hash {old_fp['hash']} → {new_fp['hash']}"
         )
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    report = format_report(
-        old_version, new_version, endpoint_diff, schema_diff, timestamp, old_fp, new_fp
-    )
+    classification = classify(endpoint_diff, schema_diff, old_fp, new_fp)
+    print(f"Drift classification: {classification}")
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    with open(args.output, "w") as f:
-        f.write(report)
-    print(f"Report written to {args.output}")
+    if args.summary_json:
+        summary = build_summary(
+            spec_source,
+            old_version,
+            new_version,
+            endpoint_diff,
+            schema_diff,
+            old_fp,
+            new_fp,
+        )
+        args.summary_json.parent.mkdir(parents=True, exist_ok=True)
+        with open(args.summary_json, "w") as f:
+            json.dump(summary, f, indent=2)
+        print(f"Summary written to {args.summary_json}")
+
+    if not args.no_report:
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        report = format_report(
+            old_version, new_version, endpoint_diff, schema_diff, timestamp, old_fp, new_fp
+        )
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        with open(args.output, "w") as f:
+            f.write(report)
+        print(f"Report written to {args.output}")
 
     if total_ep_changes > 0 or total_schema_changes > 0:
         print(
@@ -475,6 +657,13 @@ def main() -> None:
         print(f"   Schema additions:  {len(schema_diff['added'])}")
         print(f"   Schema removals:   {len(schema_diff['removed'])}")
         print(f"   Schema changed:    {len(schema_diff['changed'])}")
+        print(f"   Summary-only:      {len(endpoint_diff['summary_only'])} (cosmetic)")
+    elif classification == "cosmetic":
+        print(
+            f"\n📝 Cosmetic drift only: content hash {old_fp['hash']} → {new_fp['hash']} "
+            f"with no endpoint or schema-property changes "
+            f"({len(endpoint_diff['summary_only'])} summary edit(s))."
+        )
     else:
         print("\n✅ No changes detected.")
 
@@ -482,7 +671,10 @@ def main() -> None:
         save_spec(new_spec, args.baseline)
         print(f"Baseline updated to version {new_version}")
 
-    if args.fail_on_diff and (total_ep_changes > 0 or total_schema_changes > 0):
+    if args.fail_on_structural and classification == "structural":
+        sys.exit(1)
+
+    if args.fail_on_diff and classification != "none":
         sys.exit(1)
 
 

@@ -39,6 +39,24 @@ public sealed record ReadingDefinition
     /// type structure including <c>dataType</c>, <c>unit</c>, <c>enumValues</c>,
     /// <c>fields</c>, etc. Spec marks REQUIRED on the response.</summary>
     [JsonPropertyName("type")] public required JsonElement Type { get; init; }
+
+    /// <summary>The grouping this reading belongs to. Readings sharing a
+    /// grouping measure the same property across different positions or
+    /// components.</summary>
+    [JsonPropertyName("grouping")] public ReadingGrouping? Grouping { get; init; }
+}
+
+/// <summary>The grouping a <see cref="ReadingDefinition"/> belongs to. Mirrors
+/// the spec's <c>ReadingGroupingResponseBody</c>.</summary>
+public sealed record ReadingGrouping
+{
+    /// <summary>The ID of the grouping (e.g. <c>brakeLiningRemaining</c>). Spec
+    /// marks REQUIRED; nullable because this is a response record.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
+
+    /// <summary>The user-facing label for the grouping (translated to English).
+    /// Spec marks REQUIRED; nullable because this is a response record.</summary>
+    [JsonPropertyName("label")] public string? Label { get; init; }
 }
 
 /// <summary>Enumeration value attached to a <see cref="ReadingDefinition"/>.
@@ -94,4 +112,51 @@ public sealed record ReadingSnapshot
 
     /// <summary>The value of the reading.</summary>
     [JsonPropertyName("value")] public JsonElement? Value { get; init; }
+}
+
+/// <summary>Request body for <c>POST /readings</c>. Mirrors the spec's
+/// <c>ReadingsPostReadingsRequestBody</c>: a <c>data</c> array of up to 1000
+/// data points.</summary>
+public sealed record CreateReadingsRequest
+{
+    /// <summary>The readings data points to create. Spec marks REQUIRED, with
+    /// <c>maxItems: 1000</c>.</summary>
+    [JsonPropertyName("data")] public required IReadOnlyList<ReadingDatapoint> Data { get; init; }
+}
+
+/// <summary>A single reading data point submitted to <c>POST /readings</c>.
+/// Mirrors the spec's <c>ReadingDatapointRequestBody</c>.</summary>
+/// <remarks>
+/// Exactly one of <see cref="EntityId"/> and <see cref="ExternalId"/> must be
+/// supplied; the spec marks neither required because either satisfies the other.
+/// Ingestion is only accepted for assets created through <c>POST /assets</c> with
+/// <c>readingsIngestionEnabled</c> set.
+/// </remarks>
+public sealed record ReadingDatapoint
+{
+    /// <summary>Samsara entity ID (for an asset, its assetId). Required if
+    /// <see cref="ExternalId"/> is not provided.</summary>
+    [JsonPropertyName("entityId")] public string? EntityId { get; init; }
+
+    /// <summary>The type of the entity. Valid value: <c>asset</c>. Spec marks
+    /// REQUIRED.</summary>
+    [JsonPropertyName("entityType")] public required string EntityType { get; init; }
+
+    /// <summary>An external ID in <c>key:value</c> format. Required if
+    /// <see cref="EntityId"/> is not provided.</summary>
+    [JsonPropertyName("externalId")] public string? ExternalId { get; init; }
+
+    /// <summary>When the reading happened, in RFC 3339 format. Must not be older
+    /// than the last known reading for the same series. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("happenedAtTime")] public required DateTimeOffset HappenedAtTime { get; init; }
+
+    /// <summary>The ID of the reading, from <c>GET /readings/definitions</c>.
+    /// Spec marks REQUIRED.</summary>
+    [JsonPropertyName("readingId")] public required string ReadingId { get; init; }
+
+    /// <summary>The value of the reading. The spec declares this a free-form
+    /// <c>{type: object}</c> because the shape depends on the reading — a scalar for
+    /// <c>engineRpm</c>, an enum string for <c>engineState</c>, or
+    /// <c>{latitude, longitude, speed}</c> for <c>gps</c>. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("value")] public required JsonElement Value { get; init; }
 }

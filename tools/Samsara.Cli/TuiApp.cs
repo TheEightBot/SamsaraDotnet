@@ -983,7 +983,7 @@ internal sealed class TuiApp
                         await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching maintenance DVIRs...[/]", async _ =>
                         {
                             var items = await CollectAsync(_client.Maintenance.GetDvirsStreamAsync(mDvirStart, mDvirEnd, cancellationToken: Timeout60s()));
-                            ResultRenderer.RenderList(items, "Maintenance DVIRs", d => [d.Id, d.Vehicle?.Id ?? "", d.Type ?? ""], ["ID", "Vehicle ID", "Type"]);
+                            ResultRenderer.RenderList(items, "Maintenance DVIRs", d => [d.Id ?? "", d.Vehicle?.Id ?? "", d.Type ?? ""], ["ID", "Vehicle ID", "Type"]);
                         });
                         break;
                     case "Get DVIR by ID":
@@ -1518,7 +1518,11 @@ internal sealed class TuiApp
                     await AnsiConsole.Status().Spinner(Spinner.Known.Dots).StartAsync("[yellow]Fetching trailer assignments...[/]", async _ =>
                     {
                         var items = await CollectAsync(_client.TrailerAssignments.ListAsync(cancellationToken: Timeout60s()));
-                        ResultRenderer.RenderList(items, "Trailer Assignments", a => [a.Id?.ToString() ?? "", a.TrailerId ?? "", a.VehicleId ?? ""], ["ID", "Trailer ID", "Vehicle ID"]);
+                        ResultRenderer.RenderList(
+                            items,
+                            "Trailer Assignments",
+                            a => [a.Id?.ToString() ?? "", a.Name ?? "", (a.TrailerAssignments?.Count ?? 0).ToString()],
+                            ["Trailer ID", "Trailer Name", "Assignments"]);
                     });
                 }
             }

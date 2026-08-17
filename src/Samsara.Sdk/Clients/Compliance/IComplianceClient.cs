@@ -100,15 +100,15 @@ public interface IComplianceClient
     /// <param name="endTime">End of the time range. Converted to milliseconds for the v1
     /// query parameter <c>endMs</c>.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    IAsyncEnumerable<object> V1ListHosAuthenticationLogsAsync(
+    Task<IReadOnlyList<V1HosAuthenticationLog>> V1ListHosAuthenticationLogsAsync(
         long driverId,
         DateTimeOffset? startTime = null,
         DateTimeOffset? endTime = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>Set a driver's current duty status (v1 legacy).</summary>
-    Task V1SetCurrentDutyStatusAsync(string driverId, object request, CancellationToken cancellationToken = default);
+    Task V1SetCurrentDutyStatusAsync(string driverId, V1SetDutyStatusRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>Update shipping-doc metadata on HOS daily logs (beta).</summary>
-    Task<object> UpdateShippingDocsAsync(string driverID, string hosDate, object request, CancellationToken cancellationToken = default);
+    Task<HosDailyLogMetaData> UpdateShippingDocsAsync(string driverID, string hosDate, UpdateShippingDocsRequest request, CancellationToken cancellationToken = default);
 }

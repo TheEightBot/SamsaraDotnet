@@ -32,7 +32,18 @@ public sealed class TripsContractTests
                         latitude = 37.7749,
                         longitude = -122.4194,
                         headingDegrees = 90L,
-                        address = new { id = "addr-1", name = "HQ" },
+                        // The v2 trip address is a postal address, not an {id,name}
+                        // reference — see AddressResponseResponseBody in the spec.
+                        address = new
+                        {
+                            streetNumber = "1",
+                            street = "Market St",
+                            city = "San Francisco",
+                            state = "CA",
+                            postalCode = "94105",
+                            country = "US",
+                            neighborhood = "Embarcadero",
+                        },
                     },
                     endLocation = new { latitude = 37.8044, longitude = -122.2712, headingDegrees = 45L },
                     tripStartTime = "2024-01-01T08:00:00Z",
@@ -54,7 +65,13 @@ public sealed class TripsContractTests
         trip.CompletionStatus.Should().Be("completed");
         trip.StartLocation.Should().NotBeNull();
         trip.StartLocation!.Latitude.Should().Be(37.7749);
-        trip.StartLocation.Address!.Name.Should().Be("HQ");
+        // Regression guard: this assertion previously read `.Name`, because
+        // TripLocationAddress modelled {id, name} — a shape with ZERO overlap with
+        // the spec, so every trip address deserialized all-null and the test still
+        // passed against a fixture that encoded the same mistake.
+        trip.StartLocation.Address!.City.Should().Be("San Francisco");
+        trip.StartLocation.Address.Street.Should().Be("Market St");
+        trip.StartLocation.Address.PostalCode.Should().Be("94105");
         trip.EndLocation!.Longitude.Should().Be(-122.2712);
 
         var url = handler.LastRequest.RequestUri!.PathAndQuery;

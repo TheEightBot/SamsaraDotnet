@@ -569,3 +569,974 @@ public sealed record MachineVibration
     [JsonPropertyName("time")]
     public long? Time { get; init; }
 }
+
+// ---------------------------------------------------------------------------
+// Industrial asset write bodies — POST /industrial/assets,
+// PATCH /industrial/assets/{id}, PATCH /industrial/assets/{id}/data-outputs.
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// Request body for <c>POST /industrial/assets</c>. Mirrors the spec's
+/// <c>AssetCreate</c> schema.
+/// </summary>
+/// <remarks>
+/// Split from <see cref="UpdateIndustrialAssetRequest"/> (spec <c>AssetPatch</c>)
+/// because the two differ in required-ness: create marks <c>name</c> REQUIRED,
+/// patch marks nothing required.
+/// </remarks>
+public sealed record CreateIndustrialAssetRequest
+{
+    /// <summary>The name of the asset. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+
+    /// <summary>The id of the parent asset that the asset belongs to.</summary>
+    [JsonPropertyName("parentId")]
+    public string? ParentId { get; init; }
+
+    /// <summary>The ids of the tags that the asset should belong to.</summary>
+    [JsonPropertyName("tagIds")]
+    public IReadOnlyList<string>? TagIds { get; init; }
+
+    /// <summary>
+    /// The custom fields of the asset (spec schema <c>CustomMetadata</c>, an
+    /// object whose additional properties are strings).
+    /// </summary>
+    [JsonPropertyName("customMetadata")]
+    public IReadOnlyDictionary<string, string>? CustomMetadata { get; init; }
+
+    /// <summary>
+    /// The asset's location. For <c>locationType</c> <c>point</c>, latitude and
+    /// longitude are required; for <c>address</c>, <c>formattedAddress</c> must
+    /// be supplied.
+    /// </summary>
+    [JsonPropertyName("location")]
+    public IndustrialAssetLocation? Location { get; init; }
+
+    /// <summary>
+    /// The format of the location; required when a location is provided. Valid
+    /// values: <c>point</c>, <c>address</c>, <c>dataInput</c>.
+    /// </summary>
+    [JsonPropertyName("locationType")]
+    public string? LocationType { get; init; }
+
+    /// <summary>
+    /// Required when <c>locationType</c> is <c>dataInput</c>: the id of the
+    /// location data input that determines the asset's location.
+    /// </summary>
+    [JsonPropertyName("locationDataInputId")]
+    public string? LocationDataInputId { get; init; }
+
+    /// <summary>
+    /// The asset's <c>isRunning</c> status will be <c>true</c> when the
+    /// associated data input's value is 1.
+    /// </summary>
+    [JsonPropertyName("runningStatusDataInputId")]
+    public string? RunningStatusDataInputId { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>PATCH /industrial/assets/{id}</c>. Mirrors the spec's
+/// <c>AssetPatch</c> schema — the same members as
+/// <see cref="CreateIndustrialAssetRequest"/>, none of them required.
+/// </summary>
+public sealed record UpdateIndustrialAssetRequest
+{
+    /// <summary>The name of the asset.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>
+    /// The id of the parent asset that the asset belongs to. Pass an empty
+    /// string to remove the asset from its parent.
+    /// </summary>
+    [JsonPropertyName("parentId")]
+    public string? ParentId { get; init; }
+
+    /// <summary>The ids of the tags that the asset should belong to.</summary>
+    [JsonPropertyName("tagIds")]
+    public IReadOnlyList<string>? TagIds { get; init; }
+
+    /// <summary>
+    /// The custom fields of the asset (spec schema <c>CustomMetadata</c>, an
+    /// object whose additional properties are strings).
+    /// </summary>
+    [JsonPropertyName("customMetadata")]
+    public IReadOnlyDictionary<string, string>? CustomMetadata { get; init; }
+
+    /// <summary>The asset's location.</summary>
+    [JsonPropertyName("location")]
+    public IndustrialAssetLocation? Location { get; init; }
+
+    /// <summary>
+    /// The format of the location; required when a location is provided. Valid
+    /// values: <c>point</c>, <c>address</c>, <c>dataInput</c>.
+    /// </summary>
+    [JsonPropertyName("locationType")]
+    public string? LocationType { get; init; }
+
+    /// <summary>
+    /// Required when <c>locationType</c> is <c>dataInput</c>: the id of the
+    /// location data input that determines the asset's location.
+    /// </summary>
+    [JsonPropertyName("locationDataInputId")]
+    public string? LocationDataInputId { get; init; }
+
+    /// <summary>
+    /// The asset's <c>isRunning</c> status will be <c>true</c> when the
+    /// associated data input's value is 1.
+    /// </summary>
+    [JsonPropertyName("runningStatusDataInputId")]
+    public string? RunningStatusDataInputId { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>PATCH /industrial/assets/{id}/data-outputs</c>. Mirrors
+/// the spec's <c>AssetDataOutputsPatchAssetDataOutputsRequestBody</c> schema.
+/// </summary>
+public sealed record UpdateIndustrialAssetDataOutputsRequest
+{
+    /// <summary>
+    /// A map of data output IDs to values. All data outputs must belong to the
+    /// same asset; only the specified IDs are written. Spec marks REQUIRED.
+    /// </summary>
+    /// <remarks>
+    /// The spec declares <c>values</c> as a bare <c>{ type: object }</c> with no
+    /// <c>properties</c> — the value type depends on the data output's
+    /// configured type — so the map's value stays a
+    /// <see cref="System.Text.Json.JsonElement"/>.
+    /// </remarks>
+    [JsonPropertyName("values")]
+    public required IReadOnlyDictionary<string, System.Text.Json.JsonElement> Values { get; init; }
+}
+
+// ---------------------------------------------------------------------------
+// Legacy v1 Vision API — GET /v1/industrial/vision/*.
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// A vision camera installed in the organization. Mirrors the item schema of the
+/// spec's <c>V1VisionCamerasResponse</c> array
+/// (<c>GET /v1/industrial/vision/cameras</c>).
+/// </summary>
+public sealed record V1VisionCamera
+{
+    /// <summary>The camera's identifier.</summary>
+    [JsonPropertyName("cameraId")]
+    public long? CameraId { get; init; }
+
+    /// <summary>The camera's display name.</summary>
+    [JsonPropertyName("cameraName")]
+    public string? CameraName { get; init; }
+
+    /// <summary>The camera's ethernet IP address.</summary>
+    [JsonPropertyName("ethernetIp")]
+    public string? EthernetIp { get; init; }
+
+    /// <summary>The camera's Wi-Fi IP address.</summary>
+    [JsonPropertyName("wifiIp")]
+    public string? WifiIp { get; init; }
+}
+
+/// <summary>
+/// A program configured on a vision camera. Mirrors the item schema of the
+/// spec's <c>V1ProgramsForTheCameraResponse</c> array
+/// (<c>GET /v1/industrial/vision/cameras/{camera_id}/programs</c>).
+/// </summary>
+public sealed record V1VisionProgram
+{
+    /// <summary>The program's identifier.</summary>
+    [JsonPropertyName("programId")]
+    public long? ProgramId { get; init; }
+
+    /// <summary>The program's display name.</summary>
+    [JsonPropertyName("programName")]
+    public string? ProgramName { get; init; }
+}
+
+/// <summary>
+/// Response body of <c>GET /v1/industrial/vision/runs</c>. Mirrors the spec's
+/// <c>V1VisionRunsResponse</c> schema, whose only member is
+/// <c>visionRuns</c>.
+/// </summary>
+public sealed record V1VisionRunsResponse
+{
+    /// <summary>The vision runs in the requested window.</summary>
+    [JsonPropertyName("visionRuns")]
+    public IReadOnlyList<V1VisionRun>? VisionRuns { get; init; }
+}
+
+/// <summary>
+/// A vision run summary. Mirrors the item schema of the spec's
+/// <c>V1VisionRunsResponse.visionRuns</c> array.
+/// </summary>
+/// <remarks>
+/// Distinct from <see cref="V1VisionCameraRun"/>: this shape identifies its
+/// program by bare <c>programId</c>, whereas the per-camera endpoint returns a
+/// nested <c>program</c> object.
+/// </remarks>
+public sealed record V1VisionRun
+{
+    /// <summary>The identifier of the camera that produced the run.</summary>
+    [JsonPropertyName("deviceId")]
+    public long? DeviceId { get; init; }
+
+    /// <summary>The identifier of the program the run executed.</summary>
+    [JsonPropertyName("programId")]
+    public long? ProgramId { get; init; }
+
+    /// <summary>Run start time, in Unix milliseconds since epoch.</summary>
+    [JsonPropertyName("startedAtMs")]
+    public long? StartedAtMs { get; init; }
+
+    /// <summary>Run end time, in Unix milliseconds since epoch.</summary>
+    [JsonPropertyName("endedAtMs")]
+    public long? EndedAtMs { get; init; }
+
+    /// <summary>Aggregate counts for the run.</summary>
+    [JsonPropertyName("reportMetadata")]
+    public V1VisionRunSummary? ReportMetadata { get; init; }
+}
+
+/// <summary>
+/// A vision run for one camera. Mirrors the item schema of the spec's
+/// <c>V1VisionRunsByCameraResponse</c> array
+/// (<c>GET /v1/industrial/vision/runs/{camera_id}</c>).
+/// </summary>
+public sealed record V1VisionCameraRun
+{
+    /// <summary>The identifier of the camera that produced the run.</summary>
+    [JsonPropertyName("deviceId")]
+    public long? DeviceId { get; init; }
+
+    /// <summary>The program the run executed.</summary>
+    [JsonPropertyName("program")]
+    public V1VisionProgramReference? Program { get; init; }
+
+    /// <summary>Run start time, in Unix milliseconds since epoch.</summary>
+    [JsonPropertyName("startedAtMs")]
+    public long? StartedAtMs { get; init; }
+
+    /// <summary>Run end time, in Unix milliseconds since epoch.</summary>
+    [JsonPropertyName("endedAtMs")]
+    public long? EndedAtMs { get; init; }
+
+    /// <summary>Aggregate counts for the run.</summary>
+    [JsonPropertyName("reportMetadata")]
+    public V1VisionRunSummary? ReportMetadata { get; init; }
+}
+
+/// <summary>
+/// The most recent vision run for a camera, as returned by
+/// <c>GET /v1/industrial/vision/run/camera/{camera_id}</c>. Mirrors the spec's
+/// <c>V1VisionRunByCameraResponse</c> schema.
+/// </summary>
+public sealed record V1VisionLatestRun
+{
+    /// <summary>The identifier of the camera that produced the run.</summary>
+    [JsonPropertyName("cameraId")]
+    public long? CameraId { get; init; }
+
+    /// <summary>The program the run executed.</summary>
+    [JsonPropertyName("program")]
+    public V1VisionProgramReference? Program { get; init; }
+
+    /// <summary>Run start time, in Unix milliseconds since epoch.</summary>
+    [JsonPropertyName("startedAtMs")]
+    public long? StartedAtMs { get; init; }
+
+    /// <summary>Run end time, in Unix milliseconds since epoch.</summary>
+    [JsonPropertyName("endedAtMs")]
+    public long? EndedAtMs { get; init; }
+
+    /// <summary>Whether the run is still in progress.</summary>
+    [JsonPropertyName("isOngoing")]
+    public bool? IsOngoing { get; init; }
+
+    /// <summary>Aggregate counts for the run.</summary>
+    [JsonPropertyName("runSummary")]
+    public V1VisionRunSummary? RunSummary { get; init; }
+
+    /// <summary>The per-item inspection results captured during the run.</summary>
+    [JsonPropertyName("inspectionResults")]
+    public IReadOnlyList<V1VisionInspectionResult>? InspectionResults { get; init; }
+}
+
+/// <summary>
+/// A vision run for one camera-and-program pair, as returned by
+/// <c>GET /v1/industrial/vision/runs/{camera_id}/{program_id}/{started_at_ms}</c>.
+/// Mirrors the spec's <c>V1VisionRunsByCameraAndProgramResponse</c> schema.
+/// </summary>
+public sealed record V1VisionProgramRun
+{
+    /// <summary>The identifier of the camera that produced the run.</summary>
+    [JsonPropertyName("deviceId")]
+    public long? DeviceId { get; init; }
+
+    /// <summary>The identifier of the program the run executed.</summary>
+    [JsonPropertyName("programId")]
+    public long? ProgramId { get; init; }
+
+    /// <summary>Run start time, in Unix milliseconds since epoch.</summary>
+    [JsonPropertyName("startedAtMs")]
+    public long? StartedAtMs { get; init; }
+
+    /// <summary>Run end time, in Unix milliseconds since epoch.</summary>
+    [JsonPropertyName("endedAtMs")]
+    public long? EndedAtMs { get; init; }
+
+    /// <summary>Aggregate counts for the run.</summary>
+    [JsonPropertyName("reportMetadata")]
+    public V1VisionRunSummary? ReportMetadata { get; init; }
+
+    /// <summary>The per-item inspection results captured during the run.</summary>
+    [JsonPropertyName("results")]
+    public IReadOnlyList<V1VisionInspectionResult>? Results { get; init; }
+}
+
+/// <summary>
+/// A reference to a vision program by id and name. Mirrors the spec's
+/// <c>V1VisionRunByCameraResponse_program</c> schema (and the structurally
+/// identical inline <c>program</c> object on
+/// <c>V1VisionRunsByCameraResponse</c>).
+/// </summary>
+/// <remarks>
+/// Not modelled with the shared <c>EntityReference</c> because the v1 vision
+/// identifier is an int64, not a string.
+/// </remarks>
+public sealed record V1VisionProgramReference
+{
+    /// <summary>The program's identifier.</summary>
+    [JsonPropertyName("id")]
+    public long? Id { get; init; }
+
+    /// <summary>The program's display name.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+}
+
+/// <summary>
+/// Aggregate counts for a vision run. One record serves the spec's
+/// <c>V1VisionRunByCameraResponse_runSummary</c> and
+/// <c>V1VisionRunsResponse_reportMetadata</c> schemas, which are structurally
+/// identical.
+/// </summary>
+public sealed record V1VisionRunSummary
+{
+    /// <summary>Average scanned items per minute. Supersedes the deprecated <c>scanRate</c>.</summary>
+    [JsonPropertyName("itemsPerMinute")]
+    public double? ItemsPerMinute { get; init; }
+
+    /// <summary>No-read count for the run. Supersedes the deprecated <c>noReadScansCount</c>.</summary>
+    [JsonPropertyName("noReadCount")]
+    public long? NoReadCount { get; init; }
+
+    /// <summary>Reject count for the run. Supersedes the deprecated <c>failedScansCount</c>.</summary>
+    [JsonPropertyName("rejectCount")]
+    public long? RejectCount { get; init; }
+
+    /// <summary>Success count for the run. Supersedes the deprecated <c>successfulScansCount</c>.</summary>
+    [JsonPropertyName("successCount")]
+    public long? SuccessCount { get; init; }
+}
+
+/// <summary>
+/// One item inspection captured during a vision run. Mirrors the spec's
+/// <c>V1VisionRunByCameraResponse_inspectionResults</c> schema.
+/// </summary>
+public sealed record V1VisionInspectionResult
+{
+    /// <summary>Capture time, in Unix milliseconds since epoch.</summary>
+    [JsonPropertyName("captureAtMs")]
+    public double? CaptureAtMs { get; init; }
+
+    /// <summary>The overall inspection result.</summary>
+    [JsonPropertyName("result")]
+    public string? Result { get; init; }
+
+    /// <summary>The per-step results that make up the inspection.</summary>
+    [JsonPropertyName("stepResults")]
+    public IReadOnlyList<V1VisionStepResult>? StepResults { get; init; }
+}
+
+/// <summary>
+/// One step within a vision inspection. Mirrors the item schema of the spec's
+/// <c>V1VisionStepResults</c> array.
+/// </summary>
+/// <remarks>
+/// Exactly one of the tool-specific members is populated per step; which one
+/// depends on the tool the step was configured with.
+/// </remarks>
+public sealed record V1VisionStepResult
+{
+    /// <summary>The step's name.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>The step's result.</summary>
+    [JsonPropertyName("result")]
+    public string? Result { get; init; }
+
+    /// <summary>Result of an angle-check tool step.</summary>
+    [JsonPropertyName("angleCheck")]
+    public V1VisionAngleCheckResult? AngleCheck { get; init; }
+
+    /// <summary>Results of a barcode tool step.</summary>
+    [JsonPropertyName("barcode")]
+    public IReadOnlyList<V1VisionBarcodeResult>? Barcode { get; init; }
+
+    /// <summary>Result of a boolean-logic tool step.</summary>
+    [JsonPropertyName("booleanLogic")]
+    public V1VisionBooleanLogicResult? BooleanLogic { get; init; }
+
+    /// <summary>Result of a caliper tool step.</summary>
+    [JsonPropertyName("caliper")]
+    public V1VisionCaliperResult? Caliper { get; init; }
+
+    /// <summary>Result of a contour tool step.</summary>
+    [JsonPropertyName("contour")]
+    public V1VisionContourResult? Contour { get; init; }
+
+    /// <summary>Result of a distance tool step.</summary>
+    [JsonPropertyName("distance")]
+    public V1VisionDistanceResult? Distance { get; init; }
+
+    /// <summary>Result of an expiration-date tool step.</summary>
+    [JsonPropertyName("expirationDate")]
+    public V1VisionExpirationDateResult? ExpirationDate { get; init; }
+
+    /// <summary>Result of a find-copies tool step.</summary>
+    [JsonPropertyName("findCopies")]
+    public V1VisionFindCopiesResult? FindCopies { get; init; }
+
+    /// <summary>Result of a find-edge tool step.</summary>
+    [JsonPropertyName("findEdge")]
+    public V1VisionFindEdgeResult? FindEdge { get; init; }
+
+    /// <summary>Result of a find-shapes tool step.</summary>
+    [JsonPropertyName("findShapes")]
+    public V1VisionFindShapesResult? FindShapes { get; init; }
+
+    /// <summary>Result of a fixture tool step.</summary>
+    [JsonPropertyName("fixture")]
+    public V1VisionFixtureResult? Fixture { get; init; }
+
+    /// <summary>Result of a label-match tool step.</summary>
+    [JsonPropertyName("labelMatch")]
+    public V1VisionLabelMatchResult? LabelMatch { get; init; }
+
+    /// <summary>Result of a presence/absence tool step.</summary>
+    [JsonPropertyName("presenceAbsence")]
+    public V1VisionPresenceAbsenceResult? PresenceAbsence { get; init; }
+
+    /// <summary>Result of a text-match tool step.</summary>
+    [JsonPropertyName("textMatch")]
+    public V1VisionTextMatchResult? TextMatch { get; init; }
+}
+
+/// <summary>
+/// A configured low/high allowance range on a vision step result. One record
+/// serves every <c>{ high, low }</c> object in the spec's
+/// <c>V1VisionStepResults</c> schema (angle, contrast, sharpness, straightness
+/// and the six presence/absence colour ranges).
+/// </summary>
+public sealed record V1VisionRange
+{
+    /// <summary>The lower bound of the configured range.</summary>
+    [JsonPropertyName("low")]
+    public long? Low { get; init; }
+
+    /// <summary>The upper bound of the configured range.</summary>
+    [JsonPropertyName("high")]
+    public long? High { get; init; }
+}
+
+/// <summary>Result of an angle-check vision step.</summary>
+public sealed record V1VisionAngleCheckResult
+{
+    /// <summary>The configured angle allowance range, in degrees.</summary>
+    [JsonPropertyName("angleConfigured")]
+    public V1VisionRange? AngleConfigured { get; init; }
+
+    /// <summary>The counter-clockwise angle detected from the first edge to the second edge.</summary>
+    [JsonPropertyName("angleFound")]
+    public long? AngleFound { get; init; }
+
+    /// <summary>The name of the first reference step used to check the angle.</summary>
+    [JsonPropertyName("startStepName")]
+    public string? StartStepName { get; init; }
+
+    /// <summary>The name of the second reference step used to check the angle.</summary>
+    [JsonPropertyName("endStepName")]
+    public string? EndStepName { get; init; }
+}
+
+/// <summary>A single barcode read by a barcode vision step.</summary>
+public sealed record V1VisionBarcodeResult
+{
+    /// <summary>The decoded barcode contents.</summary>
+    [JsonPropertyName("contents")]
+    public string? Contents { get; init; }
+
+    /// <summary>The configured string the contents are matched against.</summary>
+    [JsonPropertyName("matchString")]
+    public string? MatchString { get; init; }
+
+    /// <summary>The barcode symbology.</summary>
+    [JsonPropertyName("type")]
+    public string? Type { get; init; }
+}
+
+/// <summary>Result of a boolean-logic vision step.</summary>
+public sealed record V1VisionBooleanLogicResult
+{
+    /// <summary>The logical operator applied across the referenced steps.</summary>
+    [JsonPropertyName("operator")]
+    public string? Operator { get; init; }
+
+    /// <summary>The steps the operator was applied to.</summary>
+    [JsonPropertyName("steps")]
+    public IReadOnlyList<V1VisionBooleanLogicStep>? Steps { get; init; }
+}
+
+/// <summary>One operand of a boolean-logic vision step.</summary>
+public sealed record V1VisionBooleanLogicStep
+{
+    /// <summary>The referenced step's name.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>The referenced step's result.</summary>
+    [JsonPropertyName("result")]
+    public string? Result { get; init; }
+}
+
+/// <summary>Result of a caliper vision step.</summary>
+public sealed record V1VisionCaliperResult
+{
+    /// <summary>The configured angle allowance range.</summary>
+    [JsonPropertyName("angleRange")]
+    public V1VisionRange? AngleRange { get; init; }
+
+    /// <summary>The configured contrast allowance range.</summary>
+    [JsonPropertyName("contrastRange")]
+    public V1VisionRange? ContrastRange { get; init; }
+
+    /// <summary>The configured sharpness allowance range.</summary>
+    [JsonPropertyName("sharpnessRange")]
+    public V1VisionRange? SharpnessRange { get; init; }
+
+    /// <summary>The configured straightness allowance range.</summary>
+    [JsonPropertyName("straightnessRange")]
+    public V1VisionRange? StraightnessRange { get; init; }
+
+    /// <summary>The distance found between the found edges.</summary>
+    [JsonPropertyName("distanceFound")]
+    public double? DistanceFound { get; init; }
+
+    /// <summary>The minimum allowed distance threshold.</summary>
+    [JsonPropertyName("minDistance")]
+    public double? MinDistance { get; init; }
+
+    /// <summary>The maximum allowed distance threshold.</summary>
+    [JsonPropertyName("maxDistance")]
+    public double? MaxDistance { get; init; }
+
+    /// <summary>
+    /// The configured polarity for finding edges. Valid values:
+    /// <c>LIGHT TO DARK</c>, <c>DARK TO LIGHT</c>.
+    /// </summary>
+    [JsonPropertyName("filterPolarity")]
+    public string? FilterPolarity { get; init; }
+
+    /// <summary>The measurement unit of the distances reported by this step.</summary>
+    [JsonPropertyName("unit")]
+    public string? Unit { get; init; }
+}
+
+/// <summary>Result of a contour vision step.</summary>
+public sealed record V1VisionContourResult
+{
+    /// <summary>The rotation angle found.</summary>
+    [JsonPropertyName("angleDegrees")]
+    public long? AngleDegrees { get; init; }
+
+    /// <summary>The rotation angle allowance.</summary>
+    [JsonPropertyName("angleTolerance")]
+    public long? AngleTolerance { get; init; }
+
+    /// <summary>The contour match percentage against the configured contour.</summary>
+    [JsonPropertyName("matchPercentage")]
+    public long? MatchPercentage { get; init; }
+
+    /// <summary>The configured match threshold for contours.</summary>
+    [JsonPropertyName("matchThreshold")]
+    public long? MatchThreshold { get; init; }
+}
+
+/// <summary>Result of a distance vision step.</summary>
+public sealed record V1VisionDistanceResult
+{
+    /// <summary>The distance found between the start and end references.</summary>
+    [JsonPropertyName("distanceFound")]
+    public long? DistanceFound { get; init; }
+
+    /// <summary>The minimum allowed distance threshold.</summary>
+    [JsonPropertyName("minDistance")]
+    public long? MinDistance { get; init; }
+
+    /// <summary>The maximum allowed distance threshold.</summary>
+    [JsonPropertyName("maxDistance")]
+    public long? MaxDistance { get; init; }
+
+    /// <summary>The name of the first reference step the distance is measured from.</summary>
+    [JsonPropertyName("startStepName")]
+    public string? StartStepName { get; init; }
+
+    /// <summary>The name of the second reference step the distance is measured to.</summary>
+    [JsonPropertyName("endStepName")]
+    public string? EndStepName { get; init; }
+
+    /// <summary>Whether an offset angle range is enforced.</summary>
+    [JsonPropertyName("enforceOffsetAngleRange")]
+    public bool? EnforceOffsetAngleRange { get; init; }
+
+    /// <summary>
+    /// The minimum angle allowance, in degrees, when
+    /// <c>enforceOffsetAngleRange</c> is <c>true</c>.
+    /// </summary>
+    [JsonPropertyName("minOffsetAngle")]
+    public long? MinOffsetAngle { get; init; }
+
+    /// <summary>
+    /// The maximum angle allowance, in degrees, when
+    /// <c>enforceOffsetAngleRange</c> is <c>true</c>.
+    /// </summary>
+    [JsonPropertyName("maxOffsetAngle")]
+    public long? MaxOffsetAngle { get; init; }
+
+    /// <summary>
+    /// The counter-clockwise angle, in degrees, found between the horizontal
+    /// axis of the start reference step and the end reference step.
+    /// </summary>
+    [JsonPropertyName("offsetAngleFound")]
+    public long? OffsetAngleFound { get; init; }
+
+    /// <summary>The measurement unit of the distances reported by this step.</summary>
+    [JsonPropertyName("unit")]
+    public string? Unit { get; init; }
+}
+
+/// <summary>Result of an expiration-date vision step.</summary>
+public sealed record V1VisionExpirationDateResult
+{
+    /// <summary>The configured offset applied to the matched date.</summary>
+    [JsonPropertyName("dateOffset")]
+    public long? DateOffset { get; init; }
+
+    /// <summary>The date read from the item.</summary>
+    [JsonPropertyName("foundDate")]
+    public string? FoundDate { get; init; }
+
+    /// <summary>The date the read value was matched against.</summary>
+    [JsonPropertyName("matchDate")]
+    public string? MatchDate { get; init; }
+}
+
+/// <summary>Result of a find-copies vision step.</summary>
+public sealed record V1VisionFindCopiesResult
+{
+    /// <summary>The orientation angle tolerance, in degrees.</summary>
+    [JsonPropertyName("angleTolerance")]
+    public long? AngleTolerance { get; init; }
+
+    /// <summary>The number of copies found.</summary>
+    [JsonPropertyName("foundCount")]
+    public long? FoundCount { get; init; }
+
+    /// <summary>The minimum number of copies allowed.</summary>
+    [JsonPropertyName("minCount")]
+    public long? MinCount { get; init; }
+
+    /// <summary>The maximum number of copies allowed.</summary>
+    [JsonPropertyName("maxCount")]
+    public long? MaxCount { get; init; }
+
+    /// <summary>
+    /// The minimum required similarity, in percent, of a found copy compared to
+    /// the configured match region.
+    /// </summary>
+    [JsonPropertyName("threshold")]
+    public long? Threshold { get; init; }
+}
+
+/// <summary>Result of a find-edge vision step.</summary>
+public sealed record V1VisionFindEdgeResult
+{
+    /// <summary>The detected angle, in degrees.</summary>
+    [JsonPropertyName("angleFound")]
+    public long? AngleFound { get; init; }
+
+    /// <summary>The configured angle allowance range.</summary>
+    [JsonPropertyName("angleRange")]
+    public V1VisionRange? AngleRange { get; init; }
+
+    /// <summary>The detected contrast percentage.</summary>
+    [JsonPropertyName("contrastPercent")]
+    public long? ContrastPercent { get; init; }
+
+    /// <summary>The configured contrast allowance range.</summary>
+    [JsonPropertyName("contrastRange")]
+    public V1VisionRange? ContrastRange { get; init; }
+
+    /// <summary>The detected sharpness percentage.</summary>
+    [JsonPropertyName("sharpnessPercent")]
+    public long? SharpnessPercent { get; init; }
+
+    /// <summary>The configured sharpness allowance range.</summary>
+    [JsonPropertyName("sharpnessRange")]
+    public V1VisionRange? SharpnessRange { get; init; }
+
+    /// <summary>The detected straightness percentage.</summary>
+    [JsonPropertyName("straightnessFound")]
+    public long? StraightnessFound { get; init; }
+
+    /// <summary>The configured straightness allowance range.</summary>
+    [JsonPropertyName("straightnessRange")]
+    public V1VisionRange? StraightnessRange { get; init; }
+
+    /// <summary>
+    /// The configured polarity for finding edges. Valid values:
+    /// <c>LIGHT TO DARK</c>, <c>DARK TO LIGHT</c>.
+    /// </summary>
+    [JsonPropertyName("filterPolarity")]
+    public string? FilterPolarity { get; init; }
+}
+
+/// <summary>Result of a find-shapes vision step.</summary>
+public sealed record V1VisionFindShapesResult
+{
+    /// <summary>The number of shapes found.</summary>
+    [JsonPropertyName("foundCount")]
+    public long? FoundCount { get; init; }
+
+    /// <summary>The minimum number of shapes allowed.</summary>
+    [JsonPropertyName("minCount")]
+    public long? MinCount { get; init; }
+
+    /// <summary>The maximum number of shapes allowed.</summary>
+    [JsonPropertyName("maxCount")]
+    public long? MaxCount { get; init; }
+}
+
+/// <summary>Result of a fixture vision step.</summary>
+public sealed record V1VisionFixtureResult
+{
+    /// <summary>The coordinates at which the fixture was located.</summary>
+    [JsonPropertyName("coordinates")]
+    public V1VisionFixtureCoordinates? Coordinates { get; init; }
+
+    /// <summary>Whether the fixture was found.</summary>
+    [JsonPropertyName("found")]
+    public bool? Found { get; init; }
+
+    /// <summary>The fixture's rotation, in degrees.</summary>
+    [JsonPropertyName("rotationDegrees")]
+    public long? RotationDegrees { get; init; }
+}
+
+/// <summary>Pixel coordinates at which a vision fixture was located.</summary>
+public sealed record V1VisionFixtureCoordinates
+{
+    /// <summary>The horizontal coordinate.</summary>
+    [JsonPropertyName("x")]
+    public long? X { get; init; }
+
+    /// <summary>The vertical coordinate.</summary>
+    [JsonPropertyName("y")]
+    public long? Y { get; init; }
+}
+
+/// <summary>Result of a label-match vision step.</summary>
+public sealed record V1VisionLabelMatchResult
+{
+    /// <summary>The match score achieved.</summary>
+    [JsonPropertyName("score")]
+    public long? Score { get; init; }
+
+    /// <summary>The configured score threshold.</summary>
+    [JsonPropertyName("threshold")]
+    public long? Threshold { get; init; }
+}
+
+/// <summary>Result of a presence/absence vision step.</summary>
+public sealed record V1VisionPresenceAbsenceResult
+{
+    /// <summary>Whether the step checks for absence rather than presence.</summary>
+    [JsonPropertyName("checkForAbsence")]
+    public bool? CheckForAbsence { get; init; }
+
+    /// <summary>The match score achieved.</summary>
+    [JsonPropertyName("score")]
+    public long? Score { get; init; }
+
+    /// <summary>The configured score threshold.</summary>
+    [JsonPropertyName("threshold")]
+    public long? Threshold { get; init; }
+
+    /// <summary>The configured grayscale allowance range.</summary>
+    [JsonPropertyName("grayscaleRange")]
+    public V1VisionRange? GrayscaleRange { get; init; }
+
+    /// <summary>The configured hue allowance range.</summary>
+    [JsonPropertyName("hueRange")]
+    public V1VisionRange? HueRange { get; init; }
+
+    /// <summary>The configured saturation allowance range.</summary>
+    [JsonPropertyName("saturationRange")]
+    public V1VisionRange? SaturationRange { get; init; }
+
+    /// <summary>The configured value (brightness) allowance range.</summary>
+    [JsonPropertyName("valueRange")]
+    public V1VisionRange? ValueRange { get; init; }
+
+    /// <summary>The configured red-channel allowance range.</summary>
+    [JsonPropertyName("redRange")]
+    public V1VisionRange? RedRange { get; init; }
+
+    /// <summary>The configured green-channel allowance range.</summary>
+    [JsonPropertyName("greenRange")]
+    public V1VisionRange? GreenRange { get; init; }
+
+    /// <summary>The configured blue-channel allowance range.</summary>
+    [JsonPropertyName("blueRange")]
+    public V1VisionRange? BlueRange { get; init; }
+}
+
+/// <summary>Result of a text-match vision step.</summary>
+public sealed record V1VisionTextMatchResult
+{
+    /// <summary>The text read from the item.</summary>
+    [JsonPropertyName("foundText")]
+    public string? FoundText { get; init; }
+
+    /// <summary>The configured string the text is matched against.</summary>
+    [JsonPropertyName("matchString")]
+    public string? MatchString { get; init; }
+}
+
+// ---------------------------------------------------------------------------
+// Legacy v1 Machines API — POST /v1/machines/list, POST /v1/machines/history.
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// Response body of <c>POST /v1/machines/list</c>. Mirrors the spec's
+/// <c>inline_response_200_8</c> schema, whose only member is <c>machines</c>.
+/// </summary>
+public sealed record V1MachineListResponse
+{
+    /// <summary>The organization's industrial machines.</summary>
+    [JsonPropertyName("machines")]
+    public IReadOnlyList<V1Machine>? Machines { get; init; }
+}
+
+/// <summary>
+/// An industrial machine on the legacy v1 API. Mirrors the spec's
+/// <c>V1Machine</c> schema.
+/// </summary>
+public sealed record V1Machine
+{
+    /// <summary>ID of the machine. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public long? Id { get; init; }
+
+    /// <summary>Name of the machine.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>Notes about the machine.</summary>
+    [JsonPropertyName("notes")]
+    public string? Notes { get; init; }
+}
+
+/// <summary>
+/// Request body of <c>POST /v1/machines/history</c>. Mirrors the inline request
+/// schema of that operation, which requires both bounds.
+/// </summary>
+public sealed record V1MachineHistoryRequest
+{
+    /// <summary>Beginning of the time range, in Unix milliseconds. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("startMs")]
+    public required long StartMs { get; init; }
+
+    /// <summary>End of the time range, in Unix milliseconds. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("endMs")]
+    public required long EndMs { get; init; }
+}
+
+/// <summary>
+/// Response body of <c>POST /v1/machines/history</c>. Mirrors the spec's
+/// <c>V1MachineHistoryResponse</c> schema, whose only member is
+/// <c>machines</c>.
+/// </summary>
+public sealed record V1MachineHistoryResponse
+{
+    /// <summary>The machines and their vibration history.</summary>
+    [JsonPropertyName("machines")]
+    public IReadOnlyList<V1MachineHistoryEntry>? Machines { get; init; }
+}
+
+/// <summary>
+/// One machine's vibration history. Mirrors the spec's
+/// <c>V1MachineHistoryResponse_machines</c> schema.
+/// </summary>
+/// <remarks>
+/// Supersedes the orphaned <see cref="MachineHistoryEntry"/> record, which was
+/// never wired to a client method and spelled its identifier
+/// <c>machineId</c> — a name the spec does not define.
+/// </remarks>
+public sealed record V1MachineHistoryEntry
+{
+    /// <summary>Machine ID.</summary>
+    [JsonPropertyName("id")]
+    public long? Id { get; init; }
+
+    /// <summary>Machine name.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>
+    /// Vibration datapoints, each with a timestamp and an x/y/z measurement in
+    /// mm/s.
+    /// </summary>
+    [JsonPropertyName("vibrations")]
+    public IReadOnlyList<V1MachineVibrationSample>? Vibrations { get; init; }
+}
+
+/// <summary>
+/// A single machine vibration datapoint. Mirrors the spec's
+/// <c>V1MachineHistoryResponse_vibrations</c> schema.
+/// </summary>
+/// <remarks>
+/// The spec spells the axis members with capital letters (<c>X</c>, <c>Y</c>,
+/// <c>Z</c>), unlike the orphaned <see cref="MachineVibration"/> record this
+/// supersedes.
+/// </remarks>
+public sealed record V1MachineVibrationSample
+{
+    /// <summary>Vibration on the x axis, in mm/s.</summary>
+    [JsonPropertyName("X")]
+    public double? X { get; init; }
+
+    /// <summary>Vibration on the y axis, in mm/s.</summary>
+    [JsonPropertyName("Y")]
+    public double? Y { get; init; }
+
+    /// <summary>Vibration on the z axis, in mm/s.</summary>
+    [JsonPropertyName("Z")]
+    public double? Z { get; init; }
+
+    /// <summary>Timestamp in Unix milliseconds since epoch.</summary>
+    [JsonPropertyName("time")]
+    public long? Time { get; init; }
+}
