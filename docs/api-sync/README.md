@@ -16,7 +16,7 @@ operations and a mis-homed path.
 > **Baseline spec**: `2025-10-23`, content hash `ddbd93d89c05`, 382 operations, 5345 schemas (`.github/cache/samsara-api-baseline.json`)
 > **Endpoint coverage**: 324 / 380 spec operations implemented (85.3%) · 0 mismatched · 0 unresolved · 326 SDK endpoints parsed
 > **Fabrication**: 0 duplicate-coverage · 0 client↔tag drift
-> **Model parity**: 0 CRITICAL · 0 HIGH · 187 MEDIUM · 8 LOW active · 14 allowlisted (each with a spec pointer)
+> **Model parity**: 0 CRITICAL · 0 HIGH · 176 MEDIUM · 8 LOW active · 14 allowlisted (each with a spec pointer)
 > **Weak-typed endpoint bodies**: 101 (whole-body `object` request/response)
 > _Generated — run `python3 tools/render-sync-status.py --write` after any change that moves these numbers._
 <!-- sync-status:end -->
