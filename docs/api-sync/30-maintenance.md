@@ -151,6 +151,59 @@ See `src/Samsara.Sdk/Models/Maintenance/MaintenanceModels.cs` for model definiti
 `GET /maintenance/work-order-templates` was also added in the same sync — see
 [`56-work-orders.md`](56-work-orders.md). All three follow the beta weak-typing convention.
 
+**2026-08-17 — `MaintenanceDvirAssetRef` covers four spec schemas; split deferred, casing must not be "fixed":**
+
+`MaintenanceDvirAssetRef` is one record standing in for four schemas, reached from four
+properties — `MaintenanceDvir.Trailer`/`.Vehicle` and `DefectRecord.Trailer`/`.Vehicle`:
+
+| Spec schema | Shape | Reached from |
+|---|---|---|
+| `trailerTinyResponse` | `{id, name}` — **no external IDs at all** | v1 `Dvir.trailer` (via `DvirTrailer` allOf), `Defect.trailer` |
+| `vehicleTinyResponse` | `{ExternalIds, id, name}` — **capital E** | v1 `Dvir.vehicle` (via `DvirVehicle` allOf), `Defect.vehicle` |
+| `TrailerDvirObjectResponseBody` = `DefectTrailerResponseResponseBody` | `{externalIds, id}` — **no name** | v2 `trailer` |
+| `VehicleDvirObjectResponseBody` = `DefectVehicleResponseResponseBody` | `{externalIds, id}` — **no name** | v2 `vehicle` |
+
+**Upstream typo.** `vehicleTinyResponse` is the **only** one of the 123 spec schemas carrying an
+external-ID map that spells it `ExternalIds`; the other 122 use `externalIds` — including its own
+siblings `VehicleDvirObjectResponseBody`, `GoaVehicleTinyResponseResponseBody` and
+`VehicleWithGatewayTinyResponseResponseBody`. Within a single `Defect`, the `trailer` and `vehicle`
+siblings disagree. Near-certainly a Samsara spec typo. It is harmless on reads because
+`SamsaraJsonContext` sets `PropertyNameCaseInsensitive`, so either spelling binds.
+
+(If you grep the spec for `ExternalIds` you get three hits, not one: `vehicleTinyResponse.properties`,
+its verbatim inline copy under `dvirTrailerDefectsItems.vehicle.allOf[1]`, and a dead
+`components.schemas.ExternalIds` alias of `VehicleExternalIds` that nothing `$ref`s. Only the first
+two are property spellings.)
+
+**Why the per-schema split was not done.** `MaintenanceDvir` is the response type for both the v1
+`Dvir` schema (`POST /fleet/dvirs`, `PATCH /fleet/dvirs/{id}`) and the v2
+`DvirStreamResponseDataResponseBody` (`GET /dvirs/stream`, `GET /dvirs/{id}`); `DefectRecord`
+likewise covers v1 `Defect` (`PATCH /fleet/defects/{id}`) and v2
+`DefectsResponseDataResponseBody`/`DvirDefectGetDefectResponseBody`. So there are four C# properties
+for eight schema slots, and one property cannot have two types. Splitting the leaf per-schema
+therefore requires first splitting those two parent records into v1/v2 pairs — which the 2026-08-17
+spec-parity plan (§2.3) explicitly records as accepted dual shapes that "must not be 'fixed'". That
+is a separate, larger decision; **it has not been taken.** Until it is, the union is the only shape
+that loses no data: dropping `Name` blanks it on every v1 response, dropping `ExternalIds` blanks it
+on every v2 response.
+
+**Do not "correct" the casing.** Measured, not assumed: flipping
+`MaintenanceDvirAssetRef.ExternalIds` to the capital-E spelling leaves `check-model-sync` at exactly
+184 findings and merely moves the `missing-optional` finding from the v1 endpoints
+(`POST /fleet/dvirs`, `PATCH /fleet/defects/{id}`) to the v2 ones (`GET /dvirs/stream`,
+`GET /defects/stream`). Because the checker matches property names case-sensitively, **any** single
+record serving both spellings produces exactly one such finding; the only way to zero is the parent
+split above. The finding is MEDIUM, the gate is HIGH, and it is deliberately **not** allowlisted so
+it stays visible.
+
+`DvirDefectVehicle` mirrors the same `vehicleTinyResponse` shape but is reached only from the
+v1-only `Dvir.trailerDefects[]`/`vehicleDefects[]` site, so it can and does spell the property
+`ExternalIds` verbatim. It is not a duplicate to consolidate away — it is the one place the verbatim
+spelling is safe.
+
+Five contract tests in `tests/Samsara.Sdk.Tests/MaintenanceContractTests.cs` pin all four shapes so
+a future split cannot silently drop a field.
+
 **Model audit (2025-05-13):** DVIR models were completely wrong (v1 API fields). Both models fully replaced.
 
 - `CreateDvirRequest`: replaced v1 fields (`inspectorName`, `odometer`, `safeToOperate`, `trailerIds`) with correct v2 fields: `authorId` (required), `safetyStatus` (required), `type` (required), plus optional `vehicleId`, `trailerId`, `licensePlate`, `location`, `mechanicNotes`, `odometerMeters`, `resolvedDefectIds`.

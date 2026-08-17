@@ -252,6 +252,224 @@ public sealed class MaintenanceContractTests
         photo.CreatedAtTime.Should().Be("2024-01-01T08:00:00Z");
     }
 
+    // ── MaintenanceDvirAssetRef: the v1 and v2 asset shapes bind independently ──
+    //
+    // MaintenanceDvir and DefectRecord each answer both a v1 and a v2 endpoint, so
+    // their trailer/vehicle properties must bind four different spec schemas:
+    //
+    //   trailerTinyResponse            {id, name}              v1  no external IDs
+    //   vehicleTinyResponse            {ExternalIds, id, name} v1  capital E (spec typo)
+    //   TrailerDvirObjectResponseBody  {externalIds, id}       v2  no name
+    //   VehicleDvirObjectResponseBody  {externalIds, id}       v2  no name
+    //
+    // These tests pin all four so a future per-schema split cannot silently drop a
+    // field, and so the capital-E casing is not "corrected" without noticing that
+    // the v1 payload stops binding.
+
+    /// <summary>
+    /// <c>POST /fleet/dvirs</c> returns the v1 <c>Dvir</c> shape, whose
+    /// <c>vehicle</c> is <c>vehicleTinyResponse</c> — <c>{ExternalIds, id, name}</c>,
+    /// with the external-ID map spelled with a capital E. The SDK declares the
+    /// property as <c>externalIds</c>; it still populates because deserialization is
+    /// case-insensitive.
+    /// </summary>
+    [Fact]
+    public async Task CreateDvirAsync_V1VehicleWithCapitalExternalIds_PopulatesTheMap()
+    {
+        var resp = new
+        {
+            data = new
+            {
+                id = "dvir-1",
+                safetyStatus = "safe",
+                vehicle = new
+                {
+                    id = "veh-1",
+                    name = "Midwest Truck #4",
+                    ExternalIds = new Dictionary<string, string>
+                    {
+                        ["maintenanceId"] = "250020",
+                        ["payrollId"] = "ABFS18600",
+                    },
+                },
+            },
+        };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new MaintenanceClient(TestFactory.CreateHttpClient(handler));
+
+        var dvir = await client.CreateDvirAsync(new CreateDvirRequest
+        {
+            AuthorId = "usr-1",
+            SafetyStatus = "safe",
+            Type = "mechanic",
+        });
+
+        dvir.Vehicle.Should().NotBeNull();
+        dvir.Vehicle!.Id.Should().Be("veh-1");
+        // Present only on the v1 schema.
+        dvir.Vehicle.Name.Should().Be("Midwest Truck #4");
+        // Capital-E payload binds the lowercase-declared property.
+        dvir.Vehicle.ExternalIds.Should().NotBeNull();
+        dvir.Vehicle.ExternalIds!["maintenanceId"].Should().Be("250020");
+        dvir.Vehicle.ExternalIds["payrollId"].Should().Be("ABFS18600");
+    }
+
+    /// <summary>
+    /// <c>PATCH /fleet/dvirs/{id}</c> also returns the v1 <c>Dvir</c> shape, whose
+    /// <c>trailer</c> is <c>trailerTinyResponse</c> — <c>{id, name}</c> with no
+    /// external-ID map at all.
+    /// </summary>
+    [Fact]
+    public async Task UpdateDvirAsync_V1Trailer_BindsNameAndHasNoExternalIds()
+    {
+        var resp = new
+        {
+            data = new
+            {
+                id = "dvir-1",
+                safetyStatus = "resolved",
+                trailer = new { id = "trl-1", name = "Midwest Trailer #5" },
+            },
+        };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new MaintenanceClient(TestFactory.CreateHttpClient(handler));
+
+        var dvir = await client.UpdateDvirAsync("dvir-1", new UpdateDvirRequest
+        {
+            AuthorId = "usr-1",
+            IsResolved = true,
+        });
+
+        dvir.Trailer.Should().NotBeNull();
+        dvir.Trailer!.Id.Should().Be("trl-1");
+        dvir.Trailer.Name.Should().Be("Midwest Trailer #5");
+        // trailerTinyResponse carries no external IDs — the property exists on the
+        // shared record only to serve the v2 shape.
+        dvir.Trailer.ExternalIds.Should().BeNull();
+
+        handler.LastRequestBody.Should().Contain("\"authorId\":\"usr-1\"");
+    }
+
+    /// <summary>
+    /// <c>GET /dvirs/{id}</c> returns the v2 <c>DvirStreamResponseDataResponseBody</c>,
+    /// whose <c>trailer</c>/<c>vehicle</c> are <c>{externalIds, id}</c> — lowercase,
+    /// and with no <c>name</c> to bind.
+    /// </summary>
+    [Fact]
+    public async Task GetDvirByIdAsync_V2AssetRefs_BindLowercaseExternalIdsAndNoName()
+    {
+        var resp = new
+        {
+            data = new
+            {
+                id = "dvir-1",
+                type = "mechanic",
+                updatedAtTime = "2024-01-01T08:05:00Z",
+                vehicle = new
+                {
+                    id = "494123",
+                    externalIds = new Dictionary<string, string> { ["maintenanceId"] = "250020" },
+                },
+                trailer = new
+                {
+                    id = "494124",
+                    externalIds = new Dictionary<string, string> { ["payrollId"] = "ABFS18600" },
+                },
+            },
+        };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new MaintenanceClient(TestFactory.CreateHttpClient(handler));
+
+        var dvir = await client.GetDvirByIdAsync("dvir-1");
+
+        dvir.Vehicle!.Id.Should().Be("494123");
+        dvir.Vehicle.ExternalIds!["maintenanceId"].Should().Be("250020");
+        dvir.Vehicle.Name.Should().BeNull("VehicleDvirObjectResponseBody has no name");
+
+        dvir.Trailer!.Id.Should().Be("494124");
+        dvir.Trailer.ExternalIds!["payrollId"].Should().Be("ABFS18600");
+        dvir.Trailer.Name.Should().BeNull("TrailerDvirObjectResponseBody has no name");
+    }
+
+    /// <summary>
+    /// <c>PATCH /fleet/defects/{id}</c> returns the v1 <c>Defect</c> shape, where
+    /// <c>trailer</c> and <c>vehicle</c> disagree within a single object:
+    /// <c>trailerTinyResponse</c> has no external IDs, while
+    /// <c>vehicleTinyResponse</c> spells them with a capital E.
+    /// </summary>
+    [Fact]
+    public async Task UpdateDefectAsync_V1AssetRefs_BindBothSpellingsInOneObject()
+    {
+        var resp = new
+        {
+            data = new
+            {
+                id = "def-1",
+                isResolved = true,
+                comment = "Air Compressor not working",
+                defectType = "Air Compressor",
+                trailer = new { id = "trl-1", name = "Midwest Trailer #5" },
+                vehicle = new
+                {
+                    id = "veh-1",
+                    name = "Midwest Truck #4",
+                    ExternalIds = new Dictionary<string, string> { ["maintenanceId"] = "250020" },
+                },
+            },
+        };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new MaintenanceClient(TestFactory.CreateHttpClient(handler));
+
+        var defect = await client.UpdateDefectAsync("def-1", new UpdateDefectRequest
+        {
+            IsResolved = true,
+            ResolvedBy = new UpdateDefectResolvedBy { Id = "mech-1", Type = "mechanic" },
+        });
+
+        defect.Trailer!.Name.Should().Be("Midwest Trailer #5");
+        defect.Trailer.ExternalIds.Should().BeNull();
+
+        defect.Vehicle!.Name.Should().Be("Midwest Truck #4");
+        defect.Vehicle.ExternalIds!["maintenanceId"].Should().Be("250020");
+    }
+
+    /// <summary>
+    /// <c>GET /defects/stream</c> returns the v2 shape, whose <c>trailer</c> is
+    /// <c>DefectTrailerResponseResponseBody</c> — <c>{externalIds, id}</c>, byte-identical
+    /// to the v2 DVIR trailer and with no <c>name</c>.
+    /// </summary>
+    [Fact]
+    public async Task GetDefectsStreamAsync_V2TrailerRef_BindsExternalIdsAndNoName()
+    {
+        var resp = new
+        {
+            data = new[]
+            {
+                new
+                {
+                    id = "def-1",
+                    dvirId = "dvir-1",
+                    comment = "Cracked windshield",
+                    isResolved = false,
+                    trailer = new
+                    {
+                        id = "494123",
+                        externalIds = new Dictionary<string, string> { ["maintenanceId"] = "250020" },
+                    },
+                },
+            },
+            pagination = new { hasNextPage = false },
+        };
+        var handler = MockHttpMessageHandler.WithJsonResponse(resp);
+        var client = new MaintenanceClient(TestFactory.CreateHttpClient(handler));
+
+        var defect = (await CollectAsync(client.GetDefectsStreamAsync(includeExternalIds: true)))[0];
+
+        defect.Trailer!.Id.Should().Be("494123");
+        defect.Trailer.ExternalIds!["maintenanceId"].Should().Be("250020");
+        defect.Trailer.Name.Should().BeNull("DefectTrailerResponseResponseBody has no name");
+    }
+
     private static async Task<IReadOnlyList<T>> CollectAsync<T>(IAsyncEnumerable<T> source)
     {
         var list = new List<T>();

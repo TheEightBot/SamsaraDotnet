@@ -99,8 +99,13 @@ public sealed record MaintenanceDvir
     [JsonPropertyName("thirdSignature")]
     public MaintenanceDvirSignature? ThirdSignature { get; init; }
 
-    /// <summary>Trailer associated with the DVIR. Mirrors the spec's
-    /// <c>TrailerDvirObjectResponseBody</c>.</summary>
+    /// <summary>
+    /// Trailer associated with the DVIR. Resolves to <c>trailerTinyResponse</c>
+    /// (<c>{id, name}</c>) on the v1 endpoints and
+    /// <c>TrailerDvirObjectResponseBody</c> (<c>{id, externalIds}</c>) on the v2
+    /// stream/get endpoints — see the remarks on
+    /// <see cref="MaintenanceDvirAssetRef"/>.
+    /// </summary>
     [JsonPropertyName("trailer")]
     public MaintenanceDvirAssetRef? Trailer { get; init; }
 
@@ -115,8 +120,13 @@ public sealed record MaintenanceDvir
     [JsonPropertyName("trailerName")]
     public string? TrailerName { get; init; }
 
-    /// <summary>Vehicle associated with the DVIR. Mirrors the spec's
-    /// <c>VehicleDvirObjectResponseBody</c>.</summary>
+    /// <summary>
+    /// Vehicle associated with the DVIR. Resolves to <c>vehicleTinyResponse</c>
+    /// (<c>{ExternalIds, id, name}</c>) on the v1 endpoints and
+    /// <c>VehicleDvirObjectResponseBody</c> (<c>{id, externalIds}</c>) on the v2
+    /// stream/get endpoints — see the remarks on
+    /// <see cref="MaintenanceDvirAssetRef"/>.
+    /// </summary>
     [JsonPropertyName("vehicle")]
     public MaintenanceDvirAssetRef? Vehicle { get; init; }
 
@@ -215,12 +225,24 @@ public sealed record DvirDefect
 /// <c>allOf</c>.
 /// </summary>
 /// <remarks>
-/// This is NOT <c>vehicleTinyResponse</c>: the inlined schema spells the
-/// external-id map <c>ExternalIds</c> with a capital E, unlike every other
-/// vehicle tiny in the spec. The <c>JsonPropertyName</c> mirrors the spec
-/// verbatim; the SDK's serializer options set
-/// <c>PropertyNameCaseInsensitive</c>, so the property binds whichever casing
-/// the live API actually sends.
+/// <para>
+/// The inlined schema is byte-identical to <c>vehicleTinyResponse</c>, including
+/// its capital-E <c>ExternalIds</c> — that spelling is <c>vehicleTinyResponse</c>'s
+/// own, not something the inlining introduced. It is the only one of the 123 spec
+/// schemas carrying an external-ID map that spells it that way, and is believed to
+/// be an upstream typo in Samsara's spec.
+/// </para>
+/// <para>
+/// The <c>JsonPropertyName</c> mirrors the spec verbatim, which is safe here
+/// because this record is reached only from a v1-only site
+/// (<c>Dvir.trailerDefects[]</c>/<c>vehicleDefects[]</c> on
+/// <c>POST /fleet/dvirs</c> and <c>PATCH /fleet/dvirs/{id}</c>) and so never has
+/// to serve a v2 schema spelling it lowercase. The SDK's serializer options set
+/// <c>PropertyNameCaseInsensitive</c>, so the property binds whichever casing the
+/// live API actually sends. Contrast <see cref="MaintenanceDvirAssetRef"/>, whose
+/// usage sites straddle v1 and v2 and which therefore cannot mirror either
+/// spelling verbatim.
+/// </para>
 /// </remarks>
 public sealed record DvirDefectVehicle
 {
@@ -286,27 +308,99 @@ public sealed record DefectPhoto
 }
 
 /// <summary>
-/// A trailer or vehicle reference on a DVIR or defect. Mirrors the spec's
-/// <c>TrailerDvirObjectResponseBody</c> / <c>VehicleDvirObjectResponseBody</c>
-/// (and the equivalent <c>DefectTrailerResponseResponseBody</c> /
-/// <c>DefectVehicleResponseResponseBody</c> on the defects endpoints).
+/// A trailer or vehicle reference on a DVIR or defect. Deliberately the union of
+/// the four spec schemas the four usage sites resolve to, because
+/// <see cref="MaintenanceDvir"/> and <see cref="DefectRecord"/> each serve both a
+/// v1 and a v2 endpoint (see the remarks).
 /// </summary>
+/// <remarks>
+/// <para>
+/// The four schemas this record stands in for, resolved through
+/// <c>responses.200 -> data/items -> $ref</c>:
+/// </para>
+/// <list type="table">
+///   <item>
+///     <term><c>trailerTinyResponse</c> — <c>{id, name}</c>, no external IDs</term>
+///     <description>v1 <c>Dvir.trailer</c> (via <c>DvirTrailer</c> allOf) and
+///     <c>Defect.trailer</c>: <c>POST /fleet/dvirs</c>,
+///     <c>PATCH /fleet/dvirs/{id}</c>, <c>PATCH /fleet/defects/{id}</c>.</description>
+///   </item>
+///   <item>
+///     <term><c>vehicleTinyResponse</c> — <c>{ExternalIds, id, name}</c></term>
+///     <description>v1 <c>Dvir.vehicle</c> (via <c>DvirVehicle</c> allOf) and
+///     <c>Defect.vehicle</c>, same three endpoints.</description>
+///   </item>
+///   <item>
+///     <term><c>TrailerDvirObjectResponseBody</c> /
+///     <c>DefectTrailerResponseResponseBody</c> — <c>{externalIds, id}</c>, no name</term>
+///     <description>v2 <c>trailer</c>: <c>GET /dvirs/stream</c>,
+///     <c>GET /dvirs/{id}</c>, <c>GET /defects/stream</c>, <c>GET /defects/{id}</c>.</description>
+///   </item>
+///   <item>
+///     <term><c>VehicleDvirObjectResponseBody</c> /
+///     <c>DefectVehicleResponseResponseBody</c> — <c>{externalIds, id}</c>, no name</term>
+///     <description>v2 <c>vehicle</c>, same four endpoints.</description>
+///   </item>
+/// </list>
+/// <para>
+/// <b>Why this is not split one-record-per-schema.</b> The usage sites are
+/// <see cref="MaintenanceDvir.Trailer"/>/<see cref="MaintenanceDvir.Vehicle"/> and
+/// <see cref="DefectRecord.Trailer"/>/<see cref="DefectRecord.Vehicle"/> — four
+/// C# properties, not eight. <see cref="MaintenanceDvir"/> is the response type
+/// for both the v1 <c>Dvir</c> schema (<c>POST</c>/<c>PATCH /fleet/dvirs</c>) and
+/// the v2 <c>DvirStreamResponseDataResponseBody</c>; <see cref="DefectRecord"/>
+/// likewise covers v1 <c>Defect</c> and v2 <c>DefectsResponseDataResponseBody</c>.
+/// These parents are accepted dual v1/v2 shapes (see the 2026-08-17 spec-parity
+/// plan, §2.3). One property cannot have two types, so a per-schema split of this
+/// record requires splitting those parents first — a separate, larger decision.
+/// Until then the union is the only shape that loses no data: dropping
+/// <see cref="Name"/> would blank it on every v1 response, and dropping
+/// <see cref="ExternalIds"/> would blank it on every v2 response.
+/// </para>
+/// <para>
+/// <b>The <c>ExternalIds</c> casing.</b> <c>vehicleTinyResponse</c> is the only
+/// one of the 123 spec schemas carrying an external-ID map that spells it with a
+/// capital E; the other 122 — including its own siblings
+/// <c>VehicleDvirObjectResponseBody</c>, <c>GoaVehicleTinyResponseResponseBody</c>
+/// and <c>VehicleWithGatewayTinyResponseResponseBody</c>, and including
+/// <c>trailerTinyResponse</c>'s v2 counterpart — use <c>externalIds</c>. Within a
+/// single <c>Defect</c> the <c>trailer</c> and <c>vehicle</c> siblings disagree.
+/// It is near-certainly an upstream typo in Samsara's spec. This record keeps the
+/// lowercase spelling because that is what three of the four schemas say and what
+/// the v2 endpoints (the modern path) send; deserialization is case-insensitive
+/// (<c>SamsaraJsonContext</c> sets <c>PropertyNameCaseInsensitive</c>), so a v1
+/// payload spelling it <c>ExternalIds</c> still binds. <b>Do not "fix" the casing
+/// either way</b> — measurement shows it only moves the
+/// <c>check-model-sync</c> <c>missing-optional</c> finding between the v1 and v2
+/// endpoints, it cannot remove it. <see cref="DvirDefectVehicle"/> mirrors the
+/// same <c>vehicleTinyResponse</c> shape but is reached from a v1-only site, so
+/// it can and does spell the property verbatim.
+/// </para>
+/// </remarks>
 public sealed record MaintenanceDvirAssetRef
 {
-    /// <summary>Samsara ID of the asset.</summary>
+    /// <summary>Samsara ID of the asset. Present on all four schemas.</summary>
     [JsonPropertyName("id")]
     public string? Id { get; init; }
 
     /// <summary>
-    /// Name of the asset. Returned by the v1 DVIR endpoints
-    /// (<c>POST /fleet/dvirs</c>, <c>PATCH /fleet/dvirs/{id}</c>), whose
-    /// <c>trailer</c>/<c>vehicle</c> resolve to <c>trailerTinyResponse</c> /
-    /// <c>vehicleTinyResponse</c>; the v2 stream shape omits it.
+    /// Name of the asset. Present only on the v1 schemas
+    /// (<c>trailerTinyResponse</c> / <c>vehicleTinyResponse</c>), i.e.
+    /// <c>POST /fleet/dvirs</c>, <c>PATCH /fleet/dvirs/{id}</c> and
+    /// <c>PATCH /fleet/defects/{id}</c>. Always <see langword="null"/> on the v2
+    /// stream/get endpoints, which omit it.
     /// </summary>
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
-    /// <summary>A map of external IDs for the asset.</summary>
+    /// <summary>
+    /// A map of external IDs for the asset. Absent from <c>trailerTinyResponse</c>
+    /// entirely, so always <see langword="null"/> for a <c>trailer</c> on the v1
+    /// endpoints. Spelled <c>ExternalIds</c> (capital E) on
+    /// <c>vehicleTinyResponse</c> and <c>externalIds</c> everywhere else; both
+    /// bind here because deserialization is case-insensitive. See the remarks on
+    /// the record before changing the <c>JsonPropertyName</c>.
+    /// </summary>
     [JsonPropertyName("externalIds")]
     public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
 }
@@ -470,8 +564,14 @@ public sealed record DefectRecord
     [JsonPropertyName("resolvedBy")]
     public DefectResolvedBy? ResolvedBy { get; init; }
 
-    /// <summary>Trailer the defect was reported against. Mirrors the spec's
-    /// <c>DefectTrailerResponseResponseBody</c>.</summary>
+    /// <summary>
+    /// Trailer the defect was reported against. Resolves to
+    /// <c>trailerTinyResponse</c> (<c>{id, name}</c>) on
+    /// <c>PATCH /fleet/defects/{id}</c> and
+    /// <c>DefectTrailerResponseResponseBody</c> (<c>{id, externalIds}</c>) on
+    /// <c>GET /defects/stream</c> and <c>GET /defects/{id}</c> — see the remarks
+    /// on <see cref="MaintenanceDvirAssetRef"/>.
+    /// </summary>
     [JsonPropertyName("trailer")]
     public MaintenanceDvirAssetRef? Trailer { get; init; }
 
@@ -479,8 +579,14 @@ public sealed record DefectRecord
     [JsonPropertyName("updatedAtTime")]
     public string? UpdatedAtTime { get; init; }
 
-    /// <summary>Vehicle the defect was reported against. Mirrors the spec's
-    /// <c>DefectVehicleResponseResponseBody</c>.</summary>
+    /// <summary>
+    /// Vehicle the defect was reported against. Resolves to
+    /// <c>vehicleTinyResponse</c> (<c>{ExternalIds, id, name}</c>) on
+    /// <c>PATCH /fleet/defects/{id}</c> and
+    /// <c>DefectVehicleResponseResponseBody</c> (<c>{id, externalIds}</c>) on
+    /// <c>GET /defects/stream</c> and <c>GET /defects/{id}</c> — see the remarks
+    /// on <see cref="MaintenanceDvirAssetRef"/>.
+    /// </summary>
     [JsonPropertyName("vehicle")]
     public MaintenanceDvirAssetRef? Vehicle { get; init; }
 
