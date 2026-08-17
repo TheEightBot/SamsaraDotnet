@@ -127,6 +127,47 @@
 - [ ] JSON serialization context updated (`SamsaraJsonContext.cs`)
 - [ ] Unit/integration test coverage
 
+### ✅ `GET /maintenance/time-entries/stream`
+**Operation ID**: `listTimeEntries` — tagged `Beta APIs`  
+**Summary**: [beta] List technician time entries (change feed, including deletion tombstones).  
+**Parameters**: `startTime`\*, `endTime`, `after`, `limit`  
+**Request Body**: No  
+
+- [x] Method defined in `IMaintenanceClient` (`GetTimeEntriesStreamAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (if applicable) — n/a
+- [x] Response model(s) defined (`MaintenanceTimeEntry`, `MaintenanceTimeEntryLocation`; `hourlyRate` reuses `MaintenanceMoney`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`PreventiveMaintenanceContractTests`)
+
+### ✅ `PATCH /maintenance/preventive/upcoming`
+**Operation ID**: `updateUpcomingPreventiveMaintenance` — tagged `Beta APIs`  
+**Summary**: [beta] Patch the due-target and last-resolved values on the open PM instance.  
+**Parameters**: `assetId`, `scheduleId` (both **query**, not body)  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`UpdateUpcomingPreventiveMaintenanceAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`UpdateUpcomingPreventiveMaintenanceRequest`)
+- [x] Response model(s) defined (`UpdatedUpcomingPreventiveMaintenance` — a strict superset of the GET list item, so it is a separate record)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`PreventiveMaintenanceContractTests`)
+
+### ✅ `POST /maintenance/preventive/resolve`
+**Operation ID**: `resolvePreventiveMaintenance` — tagged `Beta APIs`  
+**Summary**: [beta] Resolve the open PM instance and create the next due record.  
+**Parameters**: `assetId`, `scheduleId` (both **query**, not body)  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`ResolvePreventiveMaintenanceAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`ResolvePreventiveMaintenanceRequest`)
+- [x] Response model(s) defined — returns `JsonElement`: the spec's
+      `ResolvePreventiveMaintenanceResponseObjectTypeResponseBody` is a bare `{ type: object }`
+      with no properties, one of the few genuinely free-form payloads in the spec
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`PreventiveMaintenanceContractTests`)
+
 ---
 
 ## Models

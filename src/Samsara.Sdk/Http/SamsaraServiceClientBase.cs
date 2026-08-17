@@ -44,4 +44,26 @@ public abstract class SamsaraServiceClientBase
             (cursor, ct) => HttpClient.GetPageAsync<TData, TItem>(path, selectItems, cursor, limit, ct),
             cancellationToken);
     }
+
+    /// <summary>
+    /// Enumerates all items across all pages of a paginated endpoint whose page items sit in a
+    /// <b>top-level named array</b> beside a top-level <c>pagination</c> block — the legacy v1
+    /// shape <c>{ "vehicles": [...], "pagination": {...} }</c> — rather than under <c>data</c>.
+    /// </summary>
+    /// <remarks>
+    /// The two-argument overload above expects the v2 <c>{ "data": { ... }, "pagination": {...} }</c>
+    /// envelope and would find no <c>data</c> member on these v1 bodies, so this overload takes an
+    /// explicit projection for both the items and the cursor.
+    /// </remarks>
+    protected IAsyncEnumerable<TItem> PaginateAsync<TResponse, TItem>(
+        string path,
+        Func<TResponse, IReadOnlyList<TItem>?> selectItems,
+        Func<TResponse, PaginationInfo?> selectPagination,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        return PaginationExtensions.PaginateAsync<TItem>(
+            (cursor, ct) => HttpClient.GetPageFromAsync(path, selectItems, selectPagination, cursor, limit, ct),
+            cancellationToken);
+    }
 }

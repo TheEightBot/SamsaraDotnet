@@ -98,6 +98,38 @@ internal sealed class SamsaraHttpClient
     }
 
     /// <summary>
+    /// Sends a GET request for a paginated list endpoint whose page items sit in a
+    /// <b>top-level named array</b> beside a top-level <c>pagination</c> block — the legacy
+    /// v1 shape <c>{ "vehicles": [...], "pagination": {...} }</c> — rather than under
+    /// <c>data</c>. <paramref name="selectItems"/> extracts the page's items and
+    /// <paramref name="selectPagination"/> its cursor from the deserialized envelope.
+    /// </summary>
+    /// <remarks>
+    /// Distinct from <see cref="GetPageAsync{TData, TItem}"/>, which handles the v2
+    /// <c>{ "data": { "media": [...] }, "pagination": {...} }</c> shape. Using either
+    /// envelope helper on the other shape yields a null <c>data</c> member and an empty
+    /// enumeration, so the choice must follow the spec's response schema.
+    /// </remarks>
+    public async Task<PagedResponse<TItem>> GetPageFromAsync<TResponse, TItem>(
+        string path,
+        Func<TResponse, IReadOnlyList<TItem>?> selectItems,
+        Func<TResponse, PaginationInfo?> selectPagination,
+        string? cursor = null,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        var url = AppendPaginationParams(path, cursor, limit);
+
+        var envelope = await GetAsync<TResponse>(url, cancellationToken).ConfigureAwait(false);
+
+        return new PagedResponse<TItem>
+        {
+            Data = selectItems(envelope) ?? [],
+            Pagination = selectPagination(envelope),
+        };
+    }
+
+    /// <summary>
     /// Sends a POST request with a JSON body and deserializes the <c>{ "data": T }</c> response.
     /// </summary>
     public async Task<T> PostDataAsync<T>(string path, object body, CancellationToken cancellationToken = default)

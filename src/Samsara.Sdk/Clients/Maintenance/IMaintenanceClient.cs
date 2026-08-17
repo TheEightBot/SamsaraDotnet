@@ -1,5 +1,7 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using Samsara.Sdk.Models.Maintenance;
 
 /// <summary>
@@ -80,4 +82,58 @@ public interface IMaintenanceClient
 
     /// <summary>List upcoming preventive maintenance (<c>GET /maintenance/preventive/upcoming</c>) — beta.</summary>
     IAsyncEnumerable<UpcomingPreventiveMaintenance> ListUpcomingPreventiveMaintenanceAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Stream technician time entries (<c>GET /maintenance/time-entries/stream</c>,
+    /// <c>listTimeEntries</c>) — beta. Pagination is handled transparently.
+    /// </summary>
+    /// <param name="startTime">RFC 3339 lower bound on <c>updatedAtTime</c>. REQUIRED by the spec.</param>
+    /// <param name="endTime">Optional RFC 3339 upper bound on <c>updatedAtTime</c>.</param>
+    /// <param name="cancellationToken">Token to cancel enumeration.</param>
+    /// <remarks>
+    /// The feed includes deletion tombstones: a deleted entry carries only its id,
+    /// <c>deletedAtTime</c> and (when known) <c>deletedByUserId</c>.
+    /// </remarks>
+    [Experimental("SAMSARA001")]
+    IAsyncEnumerable<MaintenanceTimeEntry> GetTimeEntriesStreamAsync(
+        DateTimeOffset startTime,
+        DateTimeOffset? endTime = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Update the open upcoming preventive-maintenance instance for an asset and schedule
+    /// (<c>PATCH /maintenance/preventive/upcoming</c>,
+    /// <c>updateUpcomingPreventiveMaintenance</c>) — beta. Only the fields set on
+    /// <paramref name="request"/> are changed.
+    /// </summary>
+    /// <param name="assetId">Samsara ID for the asset (query parameter).</param>
+    /// <param name="scheduleId">ID of the preventive-maintenance schedule (query parameter).</param>
+    /// <param name="request">The due-target and last-resolved values to patch.</param>
+    /// <param name="cancellationToken">Token to cancel the request.</param>
+    [Experimental("SAMSARA001")]
+    Task<UpdatedUpcomingPreventiveMaintenance> UpdateUpcomingPreventiveMaintenanceAsync(
+        string assetId,
+        string scheduleId,
+        UpdateUpcomingPreventiveMaintenanceRequest request,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resolve the open preventive-maintenance instance for an asset and schedule
+    /// (<c>POST /maintenance/preventive/resolve</c>, <c>resolvePreventiveMaintenance</c>) —
+    /// beta. The next due record is created automatically from the schedule's intervals.
+    /// </summary>
+    /// <param name="assetId">Samsara ID of the asset the instance is resolved for (query parameter).</param>
+    /// <param name="scheduleId">ID of the preventive-maintenance schedule to resolve (query parameter).</param>
+    /// <param name="request">Resolution time and meter readings; all members are optional.</param>
+    /// <param name="cancellationToken">Token to cancel the request.</param>
+    /// <returns>
+    /// The response's <c>data</c> member verbatim. The spec declares it as a bare
+    /// <c>{ type: object }</c> with no properties, so there is no shape to model.
+    /// </returns>
+    [Experimental("SAMSARA001")]
+    Task<JsonElement> ResolvePreventiveMaintenanceAsync(
+        string assetId,
+        string scheduleId,
+        ResolvePreventiveMaintenanceRequest request,
+        CancellationToken cancellationToken = default);
 }

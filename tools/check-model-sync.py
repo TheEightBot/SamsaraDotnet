@@ -148,6 +148,33 @@ ALLOWLIST: dict[tuple[str, str, str], str] = {
         "spec components.schemas.ReadingHistoryResponseBody.properties.value is free-form {type: object} — value shape depends on the reading's dataType",
     ("ReadingSnapshot", "value", "weak-typing"):
         "spec components.schemas.ReadingSnapshotResponseBody.properties.value is free-form {type: object} — value shape depends on the reading's dataType",
+
+    # --- Attributes: the spec contradicts itself; the SDK follows the request side ---
+    # The ONLY deviation of its kind in the SDK, and it is one concrete property.
+    # Response side: components.schemas.AttributeEntity.properties.entityId is
+    # {type: integer, format: int64} with NO description and NO example.
+    # Request side, same resource: components.schemas.CreateAttributeRequest_entities
+    # .properties.entityId is {type: string} — "Entity id, based on the entity type."
+    # Those two describe the SAME field on the SAME object, in contradictory types.
+    # Every other entityId in the spec is a string, response side included:
+    # components.schemas.ReadingHistoryResponseBody.properties.entityId,
+    # components.schemas.ReadingSnapshotResponseBody.properties.entityId and
+    # components.schemas.ReadingDatapointRequestBody.properties.entityId are all
+    # {type: string} (4 string vs this 1 integer across the whole spec).
+    # Retyping AttributeEntity.entityId to long would (a) break symmetry with the
+    # SDK's own AttributeEntityInput.entityId, which POST/PATCH /attributes must
+    # keep as string to match the request schema, and (b) risk a hard JsonException
+    # on every GET /attributes response if the live API sends the documented-
+    # elsewhere string. The SDK keeps `string?`; see the remarks on
+    # Models/Tags/AttributeModels.cs (AttributeEntity.EntityId).
+    ("AttributeEntity", "entityId", "type-mismatch"):
+        "spec self-contradiction: response-side components.schemas.AttributeEntity.properties.entityId "
+        "is {type: integer, format: int64} with no description/example, while the request-side sibling "
+        "components.schemas.CreateAttributeRequest_entities.properties.entityId is {type: string} "
+        "('Entity id, based on the entity type'). Every other entityId in the spec is a string, "
+        "response side included (ReadingHistoryResponseBody / ReadingSnapshotResponseBody / "
+        "ReadingDatapointRequestBody .properties.entityId). SDK keeps string? so request and response "
+        "records agree and a string id cannot throw JsonException at runtime.",
 }
 
 
@@ -319,15 +346,37 @@ class SpecResolver:
         descend into the wrapper's single list/object and return its item schema
         so we compare against the shape the SDK actually models.
 
+        A sibling `pagination` key does not disqualify the pattern. The legacy v1
+        page bodies put their items in a TOP-LEVEL named array beside a top-level
+        cursor — { vehicles: [...], pagination: {...} }
+        (FleetLocationsGetFleetLocationsResponseBody),
+        { assets: [...], pagination: {...} }, { trailers: [...], pagination: {...} }
+        — with no `data` envelope for unwrap_envelope() to peel. The cursor is
+        consumed by the HTTP/pagination layer, exactly as it is for the `{ data: [...],
+        pagination: {...} }` shape, so the schema the SDK's item record must match is
+        the named array's ITEM. Counting `pagination` as a second key made those
+        bodies look like multi-key objects and compared the item record against the
+        whole envelope, which reported the envelope's own members as missing. The
+        `only_key in sdk_prop_names` guard below still wins for records that
+        deliberately model the envelope itself (e.g. TrailerAssignment), and a
+        record that models `pagination` is likewise left comparing against the
+        envelope.
+
         Returns (schema, required_set).
         """
         d = self.deref(inner)
         if not isinstance(d, dict):
             return inner, set()
         props = d.get("properties")
-        if not (isinstance(props, dict) and len(props) == 1 and "pagination" not in props):
+        if not isinstance(props, dict):
             return d, set(d.get("required", []) or [])
-        (only_key, only_val), = props.items()
+        named = {k: v for k, v in props.items() if k != "pagination"}
+        if len(named) != 1:
+            return d, set(d.get("required", []) or [])
+        if "pagination" in props and "pagination" in sdk_prop_names:
+            # SDK models the page envelope itself -> compare against the envelope.
+            return d, set(d.get("required", []) or [])
+        (only_key, only_val), = named.items()
         # SDK models the wrapper directly -> compare against the wrapper object.
         if only_key in sdk_prop_names:
             return d, set(d.get("required", []) or [])

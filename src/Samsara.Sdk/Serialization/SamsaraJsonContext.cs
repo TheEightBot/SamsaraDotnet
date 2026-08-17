@@ -1261,6 +1261,17 @@ using Samsara.Sdk.Pagination;
 [JsonSerializable(typeof(Samsara.Sdk.Models.Preview.WarrantyClaimReimbursementInput))]
 [JsonSerializable(typeof(Samsara.Sdk.Models.Preview.CreateWarrantyClaimRequest))]
 [JsonSerializable(typeof(Samsara.Sdk.Models.Preview.UpdateWarrantyClaimRequest))]
+// Maintenance — technician time entries and preventive-maintenance actions
+// (GET /maintenance/time-entries/stream, PATCH /maintenance/preventive/upcoming,
+// POST /maintenance/preventive/resolve), v0.5.0 sweep.
+[JsonSerializable(typeof(MaintenanceTimeEntry))]
+[JsonSerializable(typeof(MaintenanceTimeEntryLocation))]
+[JsonSerializable(typeof(UpdateUpcomingPreventiveMaintenanceRequest))]
+[JsonSerializable(typeof(UpdatedUpcomingPreventiveMaintenance))]
+[JsonSerializable(typeof(ResolvePreventiveMaintenanceRequest))]
+// Fleet — legacy v1 vehicle locations (GET /v1/fleet/locations), v0.5.0 sweep.
+[JsonSerializable(typeof(V1FleetLocationsResponse))]
+[JsonSerializable(typeof(V1VehicleLocation))]
 internal sealed partial class SamsaraJsonContext : JsonSerializerContext
 {
 }

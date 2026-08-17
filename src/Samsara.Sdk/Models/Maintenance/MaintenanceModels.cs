@@ -1188,3 +1188,284 @@ public sealed record V1PassengerDiagnosticTroubleCode
     [JsonPropertyName("dtcShortCode")]
     public string? DtcShortCode { get; init; }
 }
+
+/// <summary>
+/// A technician time entry — the <c>data[]</c> item of
+/// <c>GET /maintenance/time-entries/stream</c> (beta). Mirrors the spec's
+/// <c>EntityListTimeEntriesTypeResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// <para>
+/// The feed is a change stream: it also emits <b>deletion tombstones</b>. A deleted
+/// record carries only <see cref="Id"/>, <see cref="DeletedAtTime"/> and (when known)
+/// <see cref="DeletedByUserId"/>; every other member is absent.
+/// </para>
+/// <para>
+/// Distinct from <c>WorkOrderTimeEntry</c>, which mirrors the far smaller
+/// <c>...TimeEntryTypeResponseBody</c> nested inside a work order's service tasks.
+/// The spec marks nothing required on this schema, and every timestamp is a bare
+/// <c>type: string</c> with no <c>format</c>, so they are surfaced as strings
+/// exactly as the spec declares them (matching
+/// <see cref="UpcomingPreventiveMaintenance"/>).
+/// </para>
+/// </remarks>
+public sealed record MaintenanceTimeEntry
+{
+    /// <summary>Stable unique identifier for the time entry.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>Dashboard user ID of the technician. Omitted when the technician is not linked to a dashboard user.</summary>
+    [JsonPropertyName("userId")]
+    public string? UserId { get; init; }
+
+    /// <summary>Work order associated with the time entry. Omitted for non-repair activities.</summary>
+    [JsonPropertyName("workOrderId")]
+    public string? WorkOrderId { get; init; }
+
+    /// <summary>Work-order service-task instance associated with the time entry, when present.</summary>
+    [JsonPropertyName("serviceTaskId")]
+    public string? ServiceTaskId { get; init; }
+
+    /// <summary>Non-repair activity associated with the time entry. Omitted for work-order time.</summary>
+    [JsonPropertyName("activityType")]
+    public string? ActivityType { get; init; }
+
+    /// <summary>Whether the time entry is in progress or completed.</summary>
+    [JsonPropertyName("timeEntryStatus")]
+    public string? TimeEntryStatus { get; init; }
+
+    /// <summary>Time when the technician clocked in (RFC 3339).</summary>
+    [JsonPropertyName("clockInAtTime")]
+    public string? ClockInAtTime { get; init; }
+
+    /// <summary>Surface that recorded the clock-in.</summary>
+    [JsonPropertyName("clockInSource")]
+    public string? ClockInSource { get; init; }
+
+    /// <summary>Location captured at clock-in.</summary>
+    [JsonPropertyName("clockInLocation")]
+    public MaintenanceTimeEntryLocation? ClockInLocation { get; init; }
+
+    /// <summary>Time when the technician clocked out (RFC 3339). Omitted while the entry is in progress.</summary>
+    [JsonPropertyName("clockOutAtTime")]
+    public string? ClockOutAtTime { get; init; }
+
+    /// <summary>Surface that recorded the clock-out.</summary>
+    [JsonPropertyName("clockOutSource")]
+    public string? ClockOutSource { get; init; }
+
+    /// <summary>Method that ended the time entry.</summary>
+    [JsonPropertyName("clockOutMethodType")]
+    public string? ClockOutMethodType { get; init; }
+
+    /// <summary>Location captured at clock-out.</summary>
+    [JsonPropertyName("clockOutLocation")]
+    public MaintenanceTimeEntryLocation? ClockOutLocation { get; init; }
+
+    /// <summary>Samsara Place linked to the work order's maintenance site, captured at clock-in.</summary>
+    [JsonPropertyName("placeId")]
+    public string? PlaceId { get; init; }
+
+    /// <summary>The technician's hourly rate for this entry.</summary>
+    /// <remarks>
+    /// The spec schema is <c>ListTimeEntriesEntityTimeEntryMoneyTypeResponseBody</c>,
+    /// property-identical to the rest of the maintenance money family, so it shares
+    /// <see cref="MaintenanceMoney"/>.
+    /// </remarks>
+    [JsonPropertyName("hourlyRate")]
+    public MaintenanceMoney? HourlyRate { get; init; }
+
+    /// <summary>Time when the time entry was created (RFC 3339).</summary>
+    [JsonPropertyName("createdAtTime")]
+    public string? CreatedAtTime { get; init; }
+
+    /// <summary>Time when the time entry was last updated (RFC 3339). The feed window and ordering operate on this field.</summary>
+    [JsonPropertyName("updatedAtTime")]
+    public string? UpdatedAtTime { get; init; }
+
+    /// <summary>Time when the time entry was deleted (RFC 3339); set only on tombstones.</summary>
+    [JsonPropertyName("deletedAtTime")]
+    public string? DeletedAtTime { get; init; }
+
+    /// <summary>Dashboard user ID that deleted the time entry, when available.</summary>
+    [JsonPropertyName("deletedByUserId")]
+    public string? DeletedByUserId { get; init; }
+}
+
+/// <summary>
+/// The point at which a technician clocked in or out. Mirrors the spec's
+/// <c>ListTimeEntriesEntityTimeEntryTimeEntryLocationTypeResponseBody</c>.
+/// </summary>
+/// <remarks>Both members are optional in the spec; this is a response record.</remarks>
+public sealed record MaintenanceTimeEntryLocation
+{
+    /// <summary>Latitude in decimal degrees.</summary>
+    [JsonPropertyName("latitude")]
+    public double? Latitude { get; init; }
+
+    /// <summary>Longitude in decimal degrees.</summary>
+    [JsonPropertyName("longitude")]
+    public double? Longitude { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>PATCH /maintenance/preventive/upcoming</c> (beta) — patches the
+/// due-target and last-resolved values on the open preventive-maintenance instance for a
+/// schedule and asset. Mirrors the spec's
+/// <c>EntityUpcomingPreventativeMaintenancesServiceUpdateUpcomingPreventiveMaintenanceRequestBody</c>.
+/// </summary>
+/// <remarks>
+/// Only the fields set are updated; the spec marks none of them required, so every member
+/// is optional. The asset and schedule are identified by <b>query string</b>, not by body.
+/// </remarks>
+public sealed record UpdateUpcomingPreventiveMaintenanceRequest
+{
+    /// <summary>Date and time when the prior instance was resolved (RFC 3339).</summary>
+    [JsonPropertyName("lastResolvedAt")]
+    public string? LastResolvedAt { get; init; }
+
+    /// <summary>Engine hours at the time the prior instance was resolved.</summary>
+    [JsonPropertyName("lastResolvedAtEngineHours")]
+    public long? LastResolvedAtEngineHours { get; init; }
+
+    /// <summary>Odometer reading at the time the prior instance was resolved. Measured in meters.</summary>
+    [JsonPropertyName("lastResolvedAtOdometer")]
+    public long? LastResolvedAtOdometer { get; init; }
+
+    /// <summary>The next engine hour value at which the vehicle is scheduled to be serviced.</summary>
+    [JsonPropertyName("nextEngineHours")]
+    public long? NextEngineHours { get; init; }
+
+    /// <summary>The next odometer value at which the vehicle is scheduled to be serviced. Measured in meters.</summary>
+    [JsonPropertyName("nextOdometer")]
+    public long? NextOdometer { get; init; }
+
+    /// <summary>The next time the vehicle is scheduled to be serviced, for a date-based PM (RFC 3339).</summary>
+    [JsonPropertyName("nextTime")]
+    public string? NextTime { get; init; }
+}
+
+/// <summary>
+/// The upcoming preventive-maintenance instance returned by
+/// <c>PATCH /maintenance/preventive/upcoming</c> (beta). Mirrors the spec's
+/// <c>EntityUpdateUpcomingPreventiveMaintenanceTypeResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Deliberately separate from <see cref="UpcomingPreventiveMaintenance"/> (the
+/// <c>GET</c> list item, spec schema
+/// <c>EntityListUpcomingPreventiveMaintenanceTypeResponseBody</c>): the update
+/// response is a strict superset, adding <see cref="CurrentOdometerMiles"/>,
+/// <see cref="DueInOdometerMiles"/>, <see cref="NextOdometerMiles"/> and
+/// <see cref="Priority"/>. Records are merged in this SDK only when the two spec
+/// schemas are property-identical, which these two are not. The three <c>{ id }</c>
+/// references are property-identical to the list shape's and so share
+/// <see cref="PreventiveMaintenanceRef"/>. The spec marks nothing required.
+/// </remarks>
+public sealed record UpdatedUpcomingPreventiveMaintenance
+{
+    /// <summary>The asset the maintenance is due on.</summary>
+    [JsonPropertyName("asset")]
+    public PreventiveMaintenanceRef? Asset { get; init; }
+
+    /// <summary>The schedule that produced this occurrence.</summary>
+    [JsonPropertyName("schedule")]
+    public PreventiveMaintenanceRef? Schedule { get; init; }
+
+    /// <summary>The work order opened for this occurrence, if any.</summary>
+    [JsonPropertyName("workOrder")]
+    public PreventiveMaintenanceRef? WorkOrder { get; init; }
+
+    /// <summary>Status of the preventive maintenance schedule.</summary>
+    [JsonPropertyName("status")]
+    public string? Status { get; init; }
+
+    /// <summary>Current engine hours for the asset at the time of query.</summary>
+    [JsonPropertyName("currentEngineHours")]
+    public long? CurrentEngineHours { get; init; }
+
+    /// <summary>Current odometer reading for the asset at the time of query. Measured in meters.</summary>
+    [JsonPropertyName("currentOdometer")]
+    public long? CurrentOdometer { get; init; }
+
+    /// <summary>Current odometer reading for the asset at the time of query. Measured in miles.</summary>
+    [JsonPropertyName("currentOdometerMiles")]
+    public long? CurrentOdometerMiles { get; init; }
+
+    /// <summary>The number of days until the next scheduled service, for a date-based PM.</summary>
+    [JsonPropertyName("dueInDays")]
+    public long? DueInDays { get; init; }
+
+    /// <summary>The number of engine hours until the next scheduled service.</summary>
+    [JsonPropertyName("dueInEngineHours")]
+    public long? DueInEngineHours { get; init; }
+
+    /// <summary>The odometer distance until the next scheduled service. Measured in meters.</summary>
+    [JsonPropertyName("dueInOdometer")]
+    public long? DueInOdometer { get; init; }
+
+    /// <summary>The odometer distance until the next scheduled service. Measured in miles.</summary>
+    [JsonPropertyName("dueInOdometerMiles")]
+    public long? DueInOdometerMiles { get; init; }
+
+    /// <summary>Date and time when the prior instance was resolved (RFC 3339).</summary>
+    [JsonPropertyName("lastResolvedAt")]
+    public string? LastResolvedAt { get; init; }
+
+    /// <summary>Engine hours at the time the prior instance was resolved.</summary>
+    [JsonPropertyName("lastResolvedAtEngineHours")]
+    public long? LastResolvedAtEngineHours { get; init; }
+
+    /// <summary>Odometer reading at the time the prior instance was resolved. Measured in meters.</summary>
+    [JsonPropertyName("lastResolvedAtOdometer")]
+    public long? LastResolvedAtOdometer { get; init; }
+
+    /// <summary>The next engine hour value at which the vehicle is scheduled to be serviced.</summary>
+    [JsonPropertyName("nextEngineHours")]
+    public long? NextEngineHours { get; init; }
+
+    /// <summary>The next odometer value at which the vehicle is scheduled to be serviced. Measured in meters.</summary>
+    [JsonPropertyName("nextOdometer")]
+    public long? NextOdometer { get; init; }
+
+    /// <summary>The next odometer value at which the vehicle is scheduled to be serviced. Measured in miles.</summary>
+    [JsonPropertyName("nextOdometerMiles")]
+    public long? NextOdometerMiles { get; init; }
+
+    /// <summary>The next time the vehicle is scheduled to be serviced, for a date-based PM (RFC 3339).</summary>
+    [JsonPropertyName("nextTime")]
+    public string? NextTime { get; init; }
+
+    /// <summary>
+    /// Estimated number of days until the next scheduled service, calculated by converting
+    /// mileage and engine-hour schedules to approximate daily rates. For schedules with
+    /// multiple interval types the minimum value is used.
+    /// </summary>
+    [JsonPropertyName("priority")]
+    public long? Priority { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>POST /maintenance/preventive/resolve</c> (beta) — resolves the
+/// current open preventive-maintenance instance for a schedule and asset. Mirrors the
+/// spec's
+/// <c>ResolvePreventiveMaintenanceActionServiceResolvePreventiveMaintenanceRequestBody</c>.
+/// </summary>
+/// <remarks>
+/// The spec marks no member required. The asset and schedule are identified by
+/// <b>query string</b>, not by body.
+/// </remarks>
+public sealed record ResolvePreventiveMaintenanceRequest
+{
+    /// <summary>RFC 3339 time when the maintenance was resolved. Defaults to the current time when omitted.</summary>
+    [JsonPropertyName("resolvedAt")]
+    public string? ResolvedAt { get; init; }
+
+    /// <summary>Engine hours reading at the time of resolution.</summary>
+    [JsonPropertyName("resolvedAtEngineHours")]
+    public long? ResolvedAtEngineHours { get; init; }
+
+    /// <summary>Odometer reading at the time of resolution. Measured in meters.</summary>
+    [JsonPropertyName("resolvedAtOdometer")]
+    public long? ResolvedAtOdometer { get; init; }
+}

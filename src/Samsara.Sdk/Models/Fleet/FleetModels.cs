@@ -2341,3 +2341,105 @@ public sealed record EquipmentDigitalOutputState
     /// </summary>
     [JsonPropertyName("durationSeconds")] public int? DurationSeconds { get; init; }
 }
+
+/// <summary>
+/// The page envelope returned by the legacy <c>GET /v1/fleet/locations</c>
+/// endpoint. Mirrors the spec's <c>FleetLocationsGetFleetLocationsResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This v1 endpoint does <b>not</b> use the v2 <c>{ data: [...], pagination: {...} }</c>
+/// envelope: its page items sit in a <b>top-level</b> <c>vehicles</c> array beside a
+/// top-level <c>pagination</c> block. Deserializing it with the standard
+/// <c>SamsaraListResponse&lt;T&gt;</c> would silently find no <c>data</c> member, which
+/// is why <c>VehiclesClient.V1GetFleetLocationsAsync</c> paginates through this record
+/// instead. Consumers normally never see it — the client surfaces
+/// <see cref="V1VehicleLocation"/> items directly.
+/// </para>
+/// <para>Spec marks both members REQUIRED; they stay nullable because this is a response record.</para>
+/// </remarks>
+public sealed record V1FleetLocationsResponse
+{
+    /// <summary>List of vehicle locations on this page. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("vehicles")]
+    public IReadOnlyList<V1VehicleLocation>? Vehicles { get; init; }
+
+    /// <summary>
+    /// Cursor pagination for the page (spec schema <c>FleetLocationsPaginationResponseBody</c>,
+    /// property-identical to every other Samsara pagination block). Spec marks REQUIRED.
+    /// </summary>
+    [JsonPropertyName("pagination")]
+    public Samsara.Sdk.Pagination.PaginationInfo? Pagination { get; init; }
+}
+
+/// <summary>
+/// The current location of a vehicle as returned by the legacy
+/// <c>GET /v1/fleet/locations</c> endpoint. Mirrors the spec's
+/// <c>VehicleLocationResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Distinct from the v2 <see cref="VehicleLocation"/> returned by
+/// <c>/fleet/vehicles/locations</c>: this v1 shape types every id as an
+/// <c>integer/int64</c>, flattens latitude/longitude/heading/speed onto the vehicle
+/// itself rather than nesting them under a <c>location</c> object, and reports its
+/// timestamp as Unix milliseconds. Spec marks only <c>id</c> required; it stays
+/// nullable because this is a response record.
+/// </remarks>
+public sealed record V1VehicleLocation
+{
+    /// <summary>ID of the vehicle. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public long? Id { get; init; }
+
+    /// <summary>Name of the vehicle.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>Vehicle Identification Number (VIN) of the vehicle.</summary>
+    [JsonPropertyName("vin")]
+    public string? Vin { get; init; }
+
+    /// <summary>The ID of the driver currently assigned to this vehicle.</summary>
+    [JsonPropertyName("driverId")]
+    public long? DriverId { get; init; }
+
+    /// <summary>Latitude in decimal degrees.</summary>
+    [JsonPropertyName("latitude")]
+    public double? Latitude { get; init; }
+
+    /// <summary>Longitude in decimal degrees.</summary>
+    [JsonPropertyName("longitude")]
+    public double? Longitude { get; init; }
+
+    /// <summary>Text representation of the nearest identifiable location to the coordinates.</summary>
+    [JsonPropertyName("location")]
+    public string? Location { get; init; }
+
+    /// <summary>Heading in degrees.</summary>
+    [JsonPropertyName("heading")]
+    public double? Heading { get; init; }
+
+    /// <summary>Speed in miles per hour.</summary>
+    [JsonPropertyName("speed")]
+    public double? Speed { get; init; }
+
+    /// <summary>The number of meters reported by the odometer.</summary>
+    [JsonPropertyName("odometerMeters")]
+    public long? OdometerMeters { get; init; }
+
+    /// <summary>The source of <see cref="OdometerMeters"/> — <c>GPS</c> or <c>OBD</c>.</summary>
+    [JsonPropertyName("odometerType")]
+    public string? OdometerType { get; init; }
+
+    /// <summary>Whether a trip is currently in progress for this vehicle.</summary>
+    [JsonPropertyName("onTrip")]
+    public bool? OnTrip { get; init; }
+
+    /// <summary>Currently active route IDs the vehicle is in.</summary>
+    [JsonPropertyName("routeIds")]
+    public IReadOnlyList<long>? RouteIds { get; init; }
+
+    /// <summary>The time the reported location was logged, as a Unix timestamp in milliseconds.</summary>
+    [JsonPropertyName("time")]
+    public long? Time { get; init; }
+}

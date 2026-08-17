@@ -853,6 +853,37 @@
 - [ ] JSON serialization context updated (`SamsaraJsonContext.cs`)
 - [ ] Unit/integration test coverage
 
+### ✅ `GET /maintenance/time-entries/stream`
+**Operation ID**: `listTimeEntries`  
+**Summary**: [beta] List technician time entries.  
+**Request Body**: No  
+Implemented on `IMaintenanceClient` — full checklist in [`30-maintenance.md`](30-maintenance.md).
+
+- [x] Method defined / implemented (`MaintenanceClient.GetTimeEntriesStreamAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Fully typed request/response models, registered in `SamsaraJsonContext.cs`
+- [x] Unit test coverage
+
+### ✅ `PATCH /maintenance/preventive/upcoming`
+**Operation ID**: `updateUpcomingPreventiveMaintenance`  
+**Summary**: [beta] Update an upcoming preventive maintenance instance.  
+**Request Body**: Yes  
+Implemented on `IMaintenanceClient` — full checklist in [`30-maintenance.md`](30-maintenance.md).
+
+- [x] Method defined / implemented (`MaintenanceClient.UpdateUpcomingPreventiveMaintenanceAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Fully typed request/response models, registered in `SamsaraJsonContext.cs`
+- [x] Unit test coverage
+
+### ✅ `POST /maintenance/preventive/resolve`
+**Operation ID**: `resolvePreventiveMaintenance`  
+**Summary**: [beta] Resolve a preventive maintenance instance.  
+**Request Body**: Yes  
+Implemented on `IMaintenanceClient` — full checklist in [`30-maintenance.md`](30-maintenance.md).
+
+- [x] Method defined / implemented (`MaintenanceClient.ResolvePreventiveMaintenanceAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Typed request model; the response payload is the spec's one genuinely free-form
+      `{ type: object }`, surfaced as `JsonElement`
+- [x] Unit test coverage
+
 ---
 
 ## Models

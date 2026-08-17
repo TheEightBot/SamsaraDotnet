@@ -142,4 +142,25 @@ internal sealed class VehiclesClient : SamsaraServiceClientBase, IVehiclesClient
     /// </remarks>
     public Task UpdateImmobilizerStateAsync(string id, UpdateEngineImmobilizerStateRequest request, CancellationToken cancellationToken = default)
         => HttpClient.PatchAsync($"beta/fleet/vehicles/{Uri.EscapeDataString(id)}/immobilizer", request, cancellationToken);
+
+    /// <summary>
+    /// Current locations of vehicles (legacy v1, <c>GET /v1/fleet/locations</c>).
+    /// </summary>
+    /// <remarks>
+    /// The v1 body puts its page items in a top-level <c>vehicles</c> array beside a top-level
+    /// <c>pagination</c> block (spec <c>FleetLocationsGetFleetLocationsResponseBody</c>) — not
+    /// under <c>data</c> — so this paginates through <see cref="V1FleetLocationsResponse"/>
+    /// rather than the v2 <c>{ data: [...] }</c> helper, which would find no items.
+    /// </remarks>
+    public IAsyncEnumerable<V1VehicleLocation> V1GetFleetLocationsAsync(
+        IReadOnlyList<string>? vehicleIds = null,
+        IReadOnlyList<string>? tagIds = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<V1FleetLocationsResponse, V1VehicleLocation>(
+            QueryBuilder.WithParams("v1/fleet/locations",
+                ("vehicleIds", vehicleIds is null ? null : string.Join(",", vehicleIds)),
+                ("tagIds", tagIds is null ? null : string.Join(",", tagIds))),
+            static page => page.Vehicles,
+            static page => page.Pagination,
+            cancellationToken: cancellationToken);
 }

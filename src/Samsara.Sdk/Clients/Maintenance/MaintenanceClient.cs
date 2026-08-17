@@ -1,5 +1,7 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using Samsara.Sdk.Http;
 using Samsara.Sdk.Models.Maintenance;
 
@@ -107,4 +109,70 @@ internal sealed class MaintenanceClient : SamsaraServiceClientBase, IMaintenance
     /// <summary>List upcoming preventive maintenance (<c>GET /maintenance/preventive/upcoming</c>) — beta.</summary>
     public IAsyncEnumerable<UpcomingPreventiveMaintenance> ListUpcomingPreventiveMaintenanceAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<UpcomingPreventiveMaintenance>("maintenance/preventive/upcoming", cancellationToken: cancellationToken);
+
+    /// <summary>
+    /// Stream technician time entries (<c>GET /maintenance/time-entries/stream</c>) — beta.
+    /// </summary>
+    /// <remarks>
+    /// The response is the standard <c>{ data: [...], pagination: {...} }</c> envelope, so
+    /// pagination is handled transparently. <paramref name="startTime"/> is REQUIRED by the
+    /// spec. The feed also emits deletion tombstones — see <see cref="MaintenanceTimeEntry"/>.
+    /// </remarks>
+    [Experimental("SAMSARA001")]
+    public IAsyncEnumerable<MaintenanceTimeEntry> GetTimeEntriesStreamAsync(
+        DateTimeOffset startTime,
+        DateTimeOffset? endTime = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<MaintenanceTimeEntry>(
+            QueryBuilder.WithParams("maintenance/time-entries/stream",
+                ("startTime", startTime.ToString("O")),
+                ("endTime", endTime?.ToString("O"))),
+            cancellationToken: cancellationToken);
+
+    /// <summary>
+    /// Update the open upcoming preventive-maintenance instance for an asset and schedule
+    /// (<c>PATCH /maintenance/preventive/upcoming</c>) — beta.
+    /// </summary>
+    /// <remarks>
+    /// Both identifiers travel in the <b>query string</b>, not the body. The response is a
+    /// <c>{ data: T }</c> envelope whose payload is a strict superset of the list item — see
+    /// <see cref="UpdatedUpcomingPreventiveMaintenance"/>.
+    /// </remarks>
+    [Experimental("SAMSARA001")]
+    public Task<UpdatedUpcomingPreventiveMaintenance> UpdateUpcomingPreventiveMaintenanceAsync(
+        string assetId,
+        string scheduleId,
+        UpdateUpcomingPreventiveMaintenanceRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<UpdatedUpcomingPreventiveMaintenance>(
+            QueryBuilder.WithParams("maintenance/preventive/upcoming",
+                ("assetId", assetId),
+                ("scheduleId", scheduleId)),
+            request,
+            cancellationToken);
+
+    /// <summary>
+    /// Resolve the open preventive-maintenance instance for an asset and schedule
+    /// (<c>POST /maintenance/preventive/resolve</c>) — beta. Samsara automatically creates the
+    /// next due record from the schedule's intervals.
+    /// </summary>
+    /// <remarks>
+    /// Both identifiers travel in the <b>query string</b>, not the body. The spec declares the
+    /// success payload as
+    /// <c>ResolvePreventiveMaintenanceResponseObjectTypeResponseBody</c>, a bare
+    /// <c>{ type: object }</c> with no properties, so the <c>data</c> member is surfaced
+    /// verbatim as a <see cref="JsonElement"/> rather than being modelled or discarded.
+    /// </remarks>
+    [Experimental("SAMSARA001")]
+    public Task<JsonElement> ResolvePreventiveMaintenanceAsync(
+        string assetId,
+        string scheduleId,
+        ResolvePreventiveMaintenanceRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<JsonElement>(
+            QueryBuilder.WithParams("maintenance/preventive/resolve",
+                ("assetId", assetId),
+                ("scheduleId", scheduleId)),
+            request,
+            cancellationToken);
 }
