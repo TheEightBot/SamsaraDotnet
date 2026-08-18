@@ -90760,8 +90760,9 @@
       "RoutesPatchRouteRequestBody": {
         "properties": {
           "driverId": {
-            "description": "ID of the driver. Can be either a unique Samsara ID or an [external ID](https://developers.samsara.com/docs/external-ids) for the driver.",
+            "description": "ID of the driver. Can be either a unique Samsara ID or an [external ID](https://developers.samsara.com/docs/external-ids) for the driver. Set to null to unassign the driver from the route.",
             "example": "1234",
+            "nullable": true,
             "type": "string"
           },
           "externalIds": {
@@ -90810,8 +90811,9 @@
             "type": "array"
           },
           "vehicleId": {
-            "description": "ID of the vehicle. Can be either a unique Samsara ID or an [external ID](https://developers.samsara.com/docs/external-ids) for the vehicle.",
+            "description": "ID of the vehicle. Can be either a unique Samsara ID or an [external ID](https://developers.samsara.com/docs/external-ids) for the vehicle. Set to null to unassign the vehicle from the route.",
             "example": "453546",
+            "nullable": true,
             "type": "string"
           }
         },
