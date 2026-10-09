@@ -110,4 +110,20 @@ public interface IAssetSharingClient
     Task<IReadOnlyList<SharedAsset>> UpdateSharedAssetsBatchAsync(
         UpdateSharedAssetsBatchRequest request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Batch-cancel shared assets
+    /// (<c>POST /fleet/asset-sharing/agreements/assets/cancel/batch</c>,
+    /// <c>cancelSharedAssetsBatch</c>).
+    /// </summary>
+    /// <param name="request">The shared assets to cancel, wrapped in the spec's <c>{ data: [...] }</c> envelope.</param>
+    /// <param name="cancellationToken">Token to cancel the request.</param>
+    /// <returns>
+    /// One outcome per shared asset. The call succeeds as a whole even when individual
+    /// cancellations fail, so check each <see cref="CancelSharedAssetBatchItem.Status"/>.
+    /// </returns>
+    [Experimental("SAMSARA001")]
+    Task<CancelSharedAssetsBatchResult> CancelSharedAssetsBatchAsync(
+        CancelSharedAssetsBatchRequest request,
+        CancellationToken cancellationToken = default);
 }

@@ -99,6 +99,18 @@
 - [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
 - [x] Unit/integration test coverage
 
+### ✅ `POST /maintenance/work-orders/attachments`
+**Operation ID**: `postWorkOrderAttachment`  
+**Summary**: [beta] Attach a file to a work order.  
+**Request Body**: Yes  
+
+- [x] Method defined in `IWorkOrdersClient` (`PostWorkOrderAttachmentAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `WorkOrdersClient.cs`
+- [x] Request model(s) defined (`PostWorkOrderAttachmentRequest`, `WorkOrderAttachmentFile`)
+- [x] Response model(s) defined (`MaintenanceAttachment`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`SpecDriftModelContractTests`)
+
 ---
 
 ## Models

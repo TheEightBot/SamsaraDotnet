@@ -52,6 +52,49 @@ public sealed record MaintenanceEntityRef
 }
 
 /// <summary>
+/// A <c>{ id }</c> reference supplied on a maintenance request body. Mirrors the
+/// spec's <c>...ValueInputTypeRequestBody</c> shapes, which mark <c>id</c> REQUIRED.
+/// </summary>
+public sealed record MaintenanceEntityRefInput
+{
+    /// <summary>The ID of the referenced entity. Spec REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+}
+
+/// <summary>
+/// A customer-supplied <c>{ key, value }</c> external identifier on a maintenance
+/// resource. Mirrors the spec's <c>...ExternalIdTypeResponseBody</c> variants on vendors,
+/// vendor groups and maintenance sites.
+/// </summary>
+public sealed record MaintenanceExternalId
+{
+    /// <summary>External identifier key.</summary>
+    [JsonPropertyName("key")]
+    public string? Key { get; init; }
+
+    /// <summary>External identifier value.</summary>
+    [JsonPropertyName("value")]
+    public string? Value { get; init; }
+}
+
+/// <summary>
+/// A <c>{ key, value }</c> external identifier supplied on a maintenance request body.
+/// Mirrors the spec's <c>...ExternalIdInputTypeRequestBody</c> variants, which mark both
+/// members REQUIRED.
+/// </summary>
+public sealed record MaintenanceExternalIdInput
+{
+    /// <summary>External identifier key. Spec REQUIRED.</summary>
+    [JsonPropertyName("key")]
+    public required string Key { get; init; }
+
+    /// <summary>External identifier value. Spec REQUIRED.</summary>
+    [JsonPropertyName("value")]
+    public required string Value { get; init; }
+}
+
+/// <summary>
 /// A part definition (beta). Mirrors the spec's
 /// <c>EntityListPartsTypeResponseBody</c> and its byte-identical create/update
 /// twins, so one record serves <c>GET</c>, <c>POST</c> and <c>PATCH</c>
@@ -127,6 +170,14 @@ public sealed record Part
     [JsonPropertyName("unitCost")]
     public MaintenanceMoney? UnitCost { get; init; }
 
+    /// <summary>The preferred vendor for this part definition.</summary>
+    [JsonPropertyName("preferredVendor")]
+    public MaintenanceEntityRef? PreferredVendor { get; init; }
+
+    /// <summary>The preferred vendor's part number for this part definition.</summary>
+    [JsonPropertyName("preferredVendorPartNumber")]
+    public string? PreferredVendorPartNumber { get; init; }
+
     /// <summary>Time when the part was created.</summary>
     [JsonPropertyName("createdAtTime")]
     public string? CreatedAtTime { get; init; }
@@ -193,6 +244,14 @@ public sealed record CreatePartRequest
     /// <summary>Default unit cost for the part.</summary>
     [JsonPropertyName("unitCost")]
     public MaintenanceMoneyInput? UnitCost { get; init; }
+
+    /// <summary>Unique identifier for the preferred vendor for this part definition.</summary>
+    [JsonPropertyName("preferredVendorId")]
+    public string? PreferredVendorId { get; init; }
+
+    /// <summary>The preferred vendor's part number for this part definition.</summary>
+    [JsonPropertyName("preferredVendorPartNumber")]
+    public string? PreferredVendorPartNumber { get; init; }
 }
 
 /// <summary>
@@ -245,6 +304,14 @@ public sealed record UpdatePartRequest
     /// <summary>Default unit cost for the part.</summary>
     [JsonPropertyName("unitCost")]
     public MaintenanceMoneyInput? UnitCost { get; init; }
+
+    /// <summary>Unique identifier for the preferred vendor for this part definition.</summary>
+    [JsonPropertyName("preferredVendorId")]
+    public string? PreferredVendorId { get; init; }
+
+    /// <summary>The preferred vendor's part number for this part definition.</summary>
+    [JsonPropertyName("preferredVendorPartNumber")]
+    public string? PreferredVendorPartNumber { get; init; }
 }
 
 /// <summary>
@@ -313,6 +380,10 @@ public sealed record PartInventoryLocation
     /// <summary>Whether the available quantity is greater than zero and at or below the reorder threshold.</summary>
     [JsonPropertyName("isLowStock")]
     public bool? IsLowStock { get; init; }
+
+    /// <summary>Whether the part is tracked at this location without stock management.</summary>
+    [JsonPropertyName("isNonStock")]
+    public bool? IsNonStock { get; init; }
 
     /// <summary>Whether costing is tracked at this location.</summary>
     [JsonPropertyName("isCostTracked")]
@@ -388,12 +459,17 @@ public sealed record CreatePartInventoryLocationRequest
 /// <summary>
 /// Request body for <c>PATCH /maintenance/parts/inventory-location</c>
 /// (<c>updatePartInventoryLocation</c>, beta). Mirrors the spec's
-/// <c>EntityPartInventoryLocationsServiceUpdatePartInventoryLocationRequestBody</c>,
-/// which — unlike the create body — has no <c>currentQuantity</c> member
-/// (stock levels change only through stock movements).
+/// <c>EntityPartInventoryLocationsServiceUpdatePartInventoryLocationRequestBody</c>.
 /// </summary>
 public sealed record UpdatePartInventoryLocationRequest
 {
+    /// <summary>
+    /// Total physical quantity on hand at this location. The spec documents it as settable
+    /// only when the record is created; thereafter stock changes through stock movements.
+    /// </summary>
+    [JsonPropertyName("currentQuantity")]
+    public double? CurrentQuantity { get; init; }
+
     /// <summary>Aisle within the location where the part is stored.</summary>
     [JsonPropertyName("aisle")]
     public string? Aisle { get; init; }

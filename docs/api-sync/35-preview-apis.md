@@ -54,6 +54,17 @@
 `POST /gateways/pair`. Implemented as `IGatewaysClient.PairGatewaysAsync` — see
 [`19-gateways.md`](19-gateways.md).
 
+### ➡️ `/preview/maintenance/warranties*` and `/preview/maintenance/warranty-claims` — REMOVED (graduated)
+**Operation IDs**: `listWarranties`, `createWarranty`, `updateWarranty`, `deleteWarranty`,
+`replaceWarrantyAssetAssignments`, `listWarrantyClaims`, `createWarrantyClaim`,
+`updateWarrantyClaim`, `deleteWarrantyClaim`  
+**Summary**: Removed from the spec in content `2445b573294b`; the same operations, with the same
+schemas, are now served under `/maintenance/*` (tag `Maintenance`). Implemented on
+`IMaintenanceClient` — see [`30-maintenance.md`](30-maintenance.md). The nine
+`IPreviewApisClient` members are `[Obsolete]` forwarders to those methods (the old paths return
+`404`) and will be removed in the next major release. Covered by
+`WarrantyGraduationContractTests`.
+
 ### ✅ `POST /preview/fleet/tachograph/file-uploads`
 **Operation ID**: `postTachographFileUpload`  
 **Summary**: [preview] Create a tachograph file upload  

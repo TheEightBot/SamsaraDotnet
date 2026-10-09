@@ -192,8 +192,8 @@ builder.Services.AddSamsaraClient(options =>
 
 | Client | Property | Key Operations |
 |---|---|---|
-| `IMaintenanceClient` | `samsara.Maintenance` | `ListAlertsAsync`, `ListDvirsAsync`, `CreateDvirAsync`, `UpdateDvirAsync`, `GetDvirsStreamAsync`, `GetDefectsStreamAsync`, `UpdateDefectAsync` |
-| `IWorkOrdersClient` | `samsara.WorkOrders` | `ListAsync`, `CreateAsync`, `UpdateAsync`, `GetStreamAsync`, `ListServiceTasksAsync`, `ListInvoiceScansAsync` |
+| `IMaintenanceClient` | `samsara.Maintenance` | `ListAlertsAsync`, `ListDvirsAsync`, `CreateDvirAsync`, `UpdateDvirAsync`, `GetDvirsStreamAsync`, `GetDefectsStreamAsync`, `UpdateDefectAsync`, `ListWarrantiesAsync`, `ListWarrantyClaimsAsync`, `ListVendorGroupsAsync`, `ListTechnicianShiftsAsync`, `ListSitesAsync` |
+| `IWorkOrdersClient` | `samsara.WorkOrders` | `ListAsync`, `CreateAsync`, `UpdateAsync`, `GetStreamAsync`, `ListServiceTasksAsync`, `ListInvoiceScansAsync`, `PostWorkOrderAttachmentAsync` |
 | `IIssuesClient` | `samsara.Issues` | `ListAsync`, `GetAsync`, `CreateAsync`, `UpdateAsync`, `GetStreamAsync` |
 | `IFuelClient` | `samsara.Fuel` | `ListPurchasesAsync`, `ListEnergyAsync` |
 

@@ -9,6 +9,7 @@ internal sealed class AssetSharingClient : SamsaraServiceClientBase, IAssetShari
     private const string BasePath = "fleet/asset-sharing/agreements";
     private const string AssetsPath = "fleet/asset-sharing/agreements/assets";
     private const string AssetsBatchPath = "fleet/asset-sharing/agreements/assets/batch";
+    private const string AssetsCancelBatchPath = "fleet/asset-sharing/agreements/assets/cancel/batch";
 
     public AssetSharingClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
@@ -78,4 +79,15 @@ internal sealed class AssetSharingClient : SamsaraServiceClientBase, IAssetShari
         UpdateSharedAssetsBatchRequest request,
         CancellationToken cancellationToken = default)
         => HttpClient.PatchDataAsync<IReadOnlyList<SharedAsset>>(AssetsBatchPath, request, cancellationToken);
+
+    /// <summary>Batch-cancel shared assets (<c>POST /fleet/asset-sharing/agreements/assets/cancel/batch</c>).</summary>
+    /// <remarks>
+    /// The response is a bare <c>{ requestId, responses }</c> object, not a <c>{ data: ... }</c>
+    /// envelope, so it is read with the unwrapped <c>PostAsync&lt;T&gt;</c>.
+    /// </remarks>
+    [Experimental("SAMSARA001")]
+    public Task<CancelSharedAssetsBatchResult> CancelSharedAssetsBatchAsync(
+        CancelSharedAssetsBatchRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostAsync<CancelSharedAssetsBatchResult>(AssetsCancelBatchPath, request, cancellationToken);
 }

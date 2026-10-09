@@ -168,6 +168,305 @@
 - [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
 - [x] Unit/integration test coverage (`PreventiveMaintenanceContractTests`)
 
+### ✅ `GET /maintenance/warranties`
+**Operation ID**: `listWarranties`  
+**Summary**: List warranties  
+**Parameters**: `warrantyIds`, `name`, `after`, `limit`, `includeExternalIds`  
+**Request Body**: No  
+
+- [x] Method defined in `IMaintenanceClient` (`ListWarrantiesAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (—)
+- [x] Response model(s) defined (`Warranty`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`WarrantyGraduationContractTests`)
+
+### ✅ `POST /maintenance/warranties`
+**Operation ID**: `createWarranty`  
+**Summary**: Create a warranty  
+**Parameters**: —  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`CreateWarrantyAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`CreateWarrantyRequest`)
+- [x] Response model(s) defined (`Warranty`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`WarrantyGraduationContractTests`)
+
+### ✅ `PATCH /maintenance/warranties`
+**Operation ID**: `updateWarranty`  
+**Summary**: Update a warranty  
+**Parameters**: `id`  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`UpdateWarrantyAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`UpdateWarrantyRequest`)
+- [x] Response model(s) defined (`Warranty`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`WarrantyGraduationContractTests`)
+
+### ✅ `DELETE /maintenance/warranties`
+**Operation ID**: `deleteWarranty`  
+**Summary**: Delete a warranty  
+**Parameters**: `id`  
+**Request Body**: No  
+
+- [x] Method defined in `IMaintenanceClient` (`DeleteWarrantyAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (—)
+- [x] Response model(s) defined (— (`204`))
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`WarrantyGraduationContractTests`)
+
+### ✅ `GET /maintenance/warranties/assets`
+**Operation ID**: `listWarrantyAssetAssignments`  
+**Summary**: List warranty asset assignments  
+**Parameters**: `warrantyId`, `after`, `limit`  
+**Request Body**: No  
+
+- [x] Method defined in `IMaintenanceClient` (`ListWarrantyAssetAssignmentsAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (—)
+- [x] Response model(s) defined (`WarrantyAssetAssignmentListItem`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`WarrantyGraduationContractTests`)
+
+### ✅ `POST /maintenance/warranties/assets/replace`
+**Operation ID**: `replaceWarrantyAssetAssignments`  
+**Summary**: Replace warranty asset assignments  
+**Parameters**: `warrantyId`  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`ReplaceWarrantyAssetAssignmentsAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`ReplaceWarrantyAssetAssignmentsRequest`)
+- [x] Response model(s) defined (`WarrantyAssetAssignmentReplaceResult`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`WarrantyGraduationContractTests`)
+
+### ✅ `GET /maintenance/warranty-claims`
+**Operation ID**: `listWarrantyClaims`  
+**Summary**: List warranty claims  
+**Parameters**: `warrantyClaimIds`, `assetIds`, `claimStatus`, `warrantyIds`, `after`, `limit`, `includeExternalIds`  
+**Request Body**: No  
+
+- [x] Method defined in `IMaintenanceClient` (`ListWarrantyClaimsAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (—)
+- [x] Response model(s) defined (`WarrantyClaim`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`WarrantyGraduationContractTests`)
+
+### ✅ `POST /maintenance/warranty-claims`
+**Operation ID**: `createWarrantyClaim`  
+**Summary**: Create a warranty claim  
+**Parameters**: —  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`CreateWarrantyClaimAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`CreateWarrantyClaimRequest`)
+- [x] Response model(s) defined (`WarrantyClaim`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`WarrantyGraduationContractTests`)
+
+### ✅ `PATCH /maintenance/warranty-claims`
+**Operation ID**: `updateWarrantyClaim`  
+**Summary**: Update a warranty claim  
+**Parameters**: `id`  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`UpdateWarrantyClaimAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`UpdateWarrantyClaimRequest`)
+- [x] Response model(s) defined (`WarrantyClaim`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`WarrantyGraduationContractTests`)
+
+### ✅ `DELETE /maintenance/warranty-claims`
+**Operation ID**: `deleteWarrantyClaim`  
+**Summary**: Delete a warranty claim  
+**Parameters**: `id`  
+**Request Body**: No  
+
+- [x] Method defined in `IMaintenanceClient` (`DeleteWarrantyClaimAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (—)
+- [x] Response model(s) defined (— (`204`))
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`WarrantyGraduationContractTests`)
+
+### ✅ `POST /fleet/maintenance/vendors`
+**Operation ID**: `createVendor`  
+**Summary**: [beta] Create a maintenance vendor  
+**Parameters**: `includeExternalIds`  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`CreateVendorAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`CreateMaintenanceVendorRequest`)
+- [x] Response model(s) defined (`MaintenanceVendorDetails`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
+### ✅ `PATCH /fleet/maintenance/vendors`
+**Operation ID**: `updateVendor`  
+**Summary**: [beta] Update a maintenance vendor  
+**Parameters**: `id`, `includeExternalIds`  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`UpdateVendorAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`UpdateMaintenanceVendorRequest`)
+- [x] Response model(s) defined (`MaintenanceVendorDetails`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
+### ✅ `DELETE /fleet/maintenance/vendors`
+**Operation ID**: `deleteVendor`  
+**Summary**: [beta] Delete a maintenance vendor  
+**Parameters**: `id`  
+**Request Body**: No  
+
+- [x] Method defined in `IMaintenanceClient` (`DeleteVendorAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (—)
+- [x] Response model(s) defined (— (`204`))
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
+### ✅ `GET /fleet/maintenance/vendor-groups`
+**Operation ID**: `listVendorGroups`  
+**Summary**: [beta] List vendor groups  
+**Parameters**: `ids`, `after`, `limit`, `includeExternalIds`  
+**Request Body**: No  
+
+- [x] Method defined in `IMaintenanceClient` (`ListVendorGroupsAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (—)
+- [x] Response model(s) defined (`MaintenanceVendorGroup`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
+### ✅ `POST /fleet/maintenance/vendor-groups`
+**Operation ID**: `createVendorGroup`  
+**Summary**: [beta] Create vendor groups  
+**Parameters**: `includeExternalIds`  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`CreateVendorGroupAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`CreateMaintenanceVendorGroupRequest`)
+- [x] Response model(s) defined (`MaintenanceVendorGroup`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
+### ✅ `PATCH /fleet/maintenance/vendor-groups`
+**Operation ID**: `updateVendorGroup`  
+**Summary**: [beta] Update vendor groups  
+**Parameters**: `id`, `includeExternalIds`  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`UpdateVendorGroupAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`UpdateMaintenanceVendorGroupRequest`)
+- [x] Response model(s) defined (`MaintenanceVendorGroup`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
+### ✅ `DELETE /fleet/maintenance/vendor-groups`
+**Operation ID**: `deleteVendorGroup`  
+**Summary**: [beta] Delete a vendor group  
+**Parameters**: `id`  
+**Request Body**: No  
+
+- [x] Method defined in `IMaintenanceClient` (`DeleteVendorGroupAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (—)
+- [x] Response model(s) defined (— (`204`))
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
+### ✅ `GET /maintenance/technician-shifts`
+**Operation ID**: `listTechnicianShifts`  
+**Summary**: [beta] List technician shifts  
+**Parameters**: `ids`, `userIds`, `externalTechnicianIds` (all `explode=true`), `startTime`, `endTime`, `after`, `limit`, `includeExternalIds`  
+**Request Body**: No  
+
+- [x] Method defined in `IMaintenanceClient` (`ListTechnicianShiftsAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (—)
+- [x] Response model(s) defined (`TechnicianShift`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
+### ✅ `POST /maintenance/technician-shifts`
+**Operation ID**: `createTechnicianShift`  
+**Summary**: [beta] Create a technician shift  
+**Parameters**: `includeExternalIds`  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`CreateTechnicianShiftAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`CreateTechnicianShiftRequest`)
+- [x] Response model(s) defined (`TechnicianShift`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
+### ✅ `PATCH /maintenance/technician-shifts`
+**Operation ID**: `patchTechnicianShift`  
+**Summary**: [beta] Update a technician shift  
+**Parameters**: `id`, `includeExternalIds`  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`UpdateTechnicianShiftAsync`, `[Experimental("SAMSARA001")]`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`UpdateTechnicianShiftRequest`)
+- [x] Response model(s) defined (`TechnicianShift`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
+### ✅ `GET /maintenance/sites`
+**Operation ID**: `listMaintenanceSites`  
+**Summary**: List maintenance sites  
+**Parameters**: `ids`, `isArchived`, `placeIds`, `after`, `limit`, `includeExternalIds`  
+**Request Body**: No  
+
+- [x] Method defined in `IMaintenanceClient` (`ListSitesAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (—)
+- [x] Response model(s) defined (`MaintenanceSite`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
+### ✅ `POST /maintenance/sites`
+**Operation ID**: `createMaintenanceSite`  
+**Summary**: Create a maintenance site  
+**Parameters**: —  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`CreateSiteAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`CreateMaintenanceSiteRequest`)
+- [x] Response model(s) defined (`MaintenanceSite`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
+### ✅ `PATCH /maintenance/sites`
+**Operation ID**: `updateMaintenanceSite`  
+**Summary**: Update a maintenance site  
+**Parameters**: `id`  
+**Request Body**: Yes  
+
+- [x] Method defined in `IMaintenanceClient` (`UpdateSiteAsync`)
+- [x] Method implemented in `MaintenanceClient.cs`
+- [x] Request model(s) defined (`UpdateMaintenanceSiteRequest`)
+- [x] Response model(s) defined (`MaintenanceSite`)
+- [x] JSON serialization context updated (`SamsaraJsonContext.cs`)
+- [x] Unit/integration test coverage (`MaintenanceSpecDriftContractTests`)
+
 ---
 
 ## Models
@@ -183,6 +482,15 @@ See `src/Samsara.Sdk/Models/Maintenance/MaintenanceModels.cs` for model definiti
 ---
 
 ## Notes
+
+**Spec drift `94654d38db61` → `2445b573294b` (2026-10):** Samsara removed the nine
+`/preview/maintenance/*` warranty and warranty-claim operations and re-published them unchanged
+under `/maintenance/*` (tag `Maintenance`), so the `IPreviewApisClient` members were calling paths
+that now return `404`. The operations moved here; the preview members are `[Obsolete]` forwarders
+to them (see [`35-preview-apis.md`](35-preview-apis.md)). The same drift added
+`GET /maintenance/warranties/assets`, vendor writes, vendor groups, technician shifts and
+maintenance sites. Maintenance sites carry their own `Maintenance Sites` tag and are kept on this
+client with the rest of the maintenance domain (`tools/sdk-client-tags.json` records the tag).
 
 **2026-06-22 sync — preventive maintenance added (beta, loosely typed `object`):**
 

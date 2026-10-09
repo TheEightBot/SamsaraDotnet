@@ -270,7 +270,7 @@
 ### ⚠️ `GET /fleet/maintenance/vendors`
 **Operation ID**: `listMaintenanceVendors`  
 **Summary**: [beta] List all maintenance vendors.  
-**Parameters**: `ids`, `includeExternalIds`, `after`  
+**Parameters**: `ids`, `externalIds`, `includeResolvedSettings`, `includeExternalIds`, `after`  
 **Request Body**: No  
 
 - [ ] Method defined in `multiple`

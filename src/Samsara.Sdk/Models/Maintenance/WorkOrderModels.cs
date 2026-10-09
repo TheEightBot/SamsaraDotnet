@@ -37,6 +37,14 @@ public sealed record WorkOrder
     [JsonPropertyName("vendorUuid")] public string? VendorUuid { get; init; }
     [JsonPropertyName("attachments")] public IReadOnlyList<WorkOrderAttachment>? Attachments { get; init; }
 
+    /// <summary>The time work started on the work order.</summary>
+    [JsonPropertyName("startedAtTime")] public DateTimeOffset? StartedAtTime { get; init; }
+
+    /// <summary>Dashboard users assigned to the work order. Only returned for organizations with
+    /// multiple work order assignees enabled; technicians backed only by a driver are not
+    /// represented.</summary>
+    [JsonPropertyName("assignees")] public IReadOnlyList<MaintenanceAssignee>? Assignees { get; init; }
+
     /// <summary>IDs of the work order template(s) this work order was created from.</summary>
     [JsonPropertyName("workOrderTemplateIds")] public IReadOnlyList<string>? WorkOrderTemplateIds { get; init; }
 }
@@ -62,6 +70,24 @@ public sealed record CreateWorkOrderRequest
     [JsonPropertyName("serviceTaskInstances")] public IReadOnlyList<ServiceTaskInstanceInput>? ServiceTaskInstances { get; init; }
     [JsonPropertyName("tax")] public WorkOrderTax? Tax { get; init; }
     [JsonPropertyName("vendorUuid")] public string? VendorUuid { get; init; }
+
+    /// <summary>The initial status of the work order. Defaults to <c>Open</c> when omitted. Valid
+    /// values: <c>Assigned</c>, <c>Cancelled</c>, <c>Closed</c>, <c>Completed</c>, <c>Estimate</c>,
+    /// <c>In Progress</c>, <c>On Hold</c>, <c>Open</c>, <c>Pending Approval</c>,
+    /// <c>Pending Parts</c>, <c>Planning</c>.</summary>
+    [JsonPropertyName("status")] public string? Status { get; init; }
+
+    /// <summary>The historical time work started. Set automatically for an in-progress status
+    /// when omitted.</summary>
+    [JsonPropertyName("startedAtTime")] public DateTimeOffset? StartedAtTime { get; init; }
+
+    /// <summary>The historical time the work order was completed. Set automatically for
+    /// <c>Closed</c> or <c>Completed</c> when omitted.</summary>
+    [JsonPropertyName("completedAtTime")] public DateTimeOffset? CompletedAtTime { get; init; }
+
+    /// <summary>The historical time the work order was archived (closed or cancelled). Set
+    /// automatically for <c>Closed</c> or <c>Cancelled</c> when omitted.</summary>
+    [JsonPropertyName("archivedAtTime")] public DateTimeOffset? ArchivedAtTime { get; init; }
 }
 
 /// <summary>Request body for updating a work order. Mirrors the spec's
@@ -88,6 +114,15 @@ public sealed record UpdateWorkOrderRequest
     [JsonPropertyName("status")] public string? Status { get; init; }
     [JsonPropertyName("tax")] public WorkOrderTax? Tax { get; init; }
     [JsonPropertyName("vendorUuid")] public string? VendorUuid { get; init; }
+
+    /// <summary>The historical time work started. Set automatically when the status changes to
+    /// an in-progress status and this is omitted.</summary>
+    [JsonPropertyName("startedAtTime")] public DateTimeOffset? StartedAtTime { get; init; }
+
+    /// <summary>The historical time the work order was archived (closed or cancelled). Set
+    /// automatically when the status changes to <c>Closed</c> or <c>Cancelled</c> and this is
+    /// omitted.</summary>
+    [JsonPropertyName("archivedAtTime")] public DateTimeOffset? ArchivedAtTime { get; init; }
 }
 
 /// <summary>Request body for deleting work orders.</summary>
@@ -133,6 +168,38 @@ public sealed record InvoiceScanFile
     /// <summary>MIME type of the file. Supported: <c>application/pdf</c>, <c>image/jpeg</c>,
     /// <c>image/png</c>. Spec-required.</summary>
     [JsonPropertyName("contentType")] public required string ContentType { get; init; }
+}
+
+/// <summary>Request body for <c>POST /maintenance/work-orders/attachments</c>
+/// (<c>postWorkOrderAttachment</c>, beta). Mirrors the spec's
+/// <c>WorkOrdersPostWorkOrderAttachmentRequestBody</c>.</summary>
+public sealed record PostWorkOrderAttachmentRequest
+{
+    /// <summary>ID of the work order to attach the file to. Spec-required.</summary>
+    [JsonPropertyName("workOrderId")] public required string WorkOrderId { get; init; }
+
+    /// <summary>The file to attach. Spec-required.</summary>
+    [JsonPropertyName("file")] public required WorkOrderAttachmentFile File { get; init; }
+}
+
+/// <summary>File payload for <c>POST /maintenance/work-orders/attachments</c>. Mirrors the spec's
+/// <c>WorkOrderAttachmentFileRequestBody</c>.</summary>
+public sealed record WorkOrderAttachmentFile
+{
+    /// <summary>Base64-encoded file content. Spec-required.</summary>
+    [JsonPropertyName("base64Content")] public required string Base64Content { get; init; }
+
+    /// <summary>MIME type of the file. Spec-required.</summary>
+    [JsonPropertyName("contentType")] public required string ContentType { get; init; }
+}
+
+/// <summary>The attachment created by <c>POST /maintenance/work-orders/attachments</c>. Mirrors
+/// the spec's <c>MaintenanceAttachmentObjectResponseBody</c>. Once processed, the file appears
+/// in <see cref="WorkOrder.Attachments"/> under the same ID.</summary>
+public sealed record MaintenanceAttachment
+{
+    /// <summary>ID of the created attachment. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("id")] public string? Id { get; init; }
 }
 
 /// <summary>The maintenance site (inventory location) where work is performed. Mirrors the spec's
@@ -278,6 +345,21 @@ public sealed record ServiceTaskInstance
     /// <c>ServiceTaskInstanceWithTimeEntriesObjectResponseBody</c>) and only for organizations with
     /// maintenance time tracking enabled.</summary>
     [JsonPropertyName("timeEntries")] public IReadOnlyList<WorkOrderTimeEntry>? TimeEntries { get; init; }
+
+    /// <summary>Dashboard users assigned to the service task. Only returned for organizations with
+    /// service task assignees enabled; technicians backed only by a driver are not
+    /// represented.</summary>
+    [JsonPropertyName("assignees")] public IReadOnlyList<MaintenanceAssignee>? Assignees { get; init; }
+}
+
+/// <summary>A dashboard user assigned to a <see cref="WorkOrder"/> or a
+/// <see cref="ServiceTaskInstance"/>. Mirrors the spec's structurally identical
+/// <c>WorkOrderAssigneeObjectResponseBody</c> and
+/// <c>ServiceTaskAssigneeObjectResponseBody</c>.</summary>
+public sealed record MaintenanceAssignee
+{
+    /// <summary>ID of the assigned user. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("userId")] public string? UserId { get; init; }
 }
 
 /// <summary>A part used by a service task on a work order. Mirrors the spec's

@@ -4,9 +4,17 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Samsara.Sdk.Http;
 using Samsara.Sdk.Models.Maintenance;
+using Samsara.Sdk.Models.Preview;
 
 internal sealed class MaintenanceClient : SamsaraServiceClientBase, IMaintenanceClient
 {
+    private const string VendorsPath = "fleet/maintenance/vendors";
+    private const string VendorGroupsPath = "fleet/maintenance/vendor-groups";
+    private const string TechnicianShiftsPath = "maintenance/technician-shifts";
+    private const string WarrantiesPath = "maintenance/warranties";
+    private const string WarrantyClaimsPath = "maintenance/warranty-claims";
+    private const string SitesPath = "maintenance/sites";
+
     public MaintenanceClient(SamsaraHttpClient httpClient) : base(httpClient) { }
 
     public IAsyncEnumerable<MaintenanceDvir> GetDvirsStreamAsync(
@@ -91,10 +99,14 @@ internal sealed class MaintenanceClient : SamsaraServiceClientBase, IMaintenance
     public IAsyncEnumerable<MaintenanceVendor> ListVendorsAsync(
         IReadOnlyList<string>? ids = null,
         bool? includeExternalIds = null,
+        IReadOnlyList<string>? externalIds = null,
+        bool? includeResolvedSettings = null,
         CancellationToken cancellationToken = default)
         => PaginateAsync<MaintenanceVendor>(
-            QueryBuilder.WithParams("fleet/maintenance/vendors",
+            QueryBuilder.WithParams(VendorsPath,
                 ("ids", ids is null ? null : string.Join(",", ids)),
+                ("externalIds", externalIds is null ? null : string.Join(",", externalIds)),
+                ("includeResolvedSettings", includeResolvedSettings?.ToString().ToLowerInvariant()),
                 ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
             cancellationToken: cancellationToken);
 
@@ -175,4 +187,241 @@ internal sealed class MaintenanceClient : SamsaraServiceClientBase, IMaintenance
                 ("scheduleId", scheduleId)),
             request,
             cancellationToken);
+
+    // ---------------------------------------------------------------- Vendors
+
+    [Experimental("SAMSARA001")]
+    public Task<MaintenanceVendorDetails> CreateVendorAsync(
+        CreateMaintenanceVendorRequest request,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<MaintenanceVendorDetails>(
+            QueryBuilder.WithParams(VendorsPath,
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            request,
+            cancellationToken);
+
+    [Experimental("SAMSARA001")]
+    public Task<MaintenanceVendorDetails> UpdateVendorAsync(
+        string id,
+        UpdateMaintenanceVendorRequest request,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<MaintenanceVendorDetails>(
+            QueryBuilder.WithParams(VendorsPath,
+                ("id", id),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            request,
+            cancellationToken);
+
+    [Experimental("SAMSARA001")]
+    public Task DeleteVendorAsync(string id, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync(QueryBuilder.WithParams(VendorsPath, ("id", id)), cancellationToken);
+
+    // ---------------------------------------------------------- Vendor groups
+
+    [Experimental("SAMSARA001")]
+    public IAsyncEnumerable<MaintenanceVendorGroup> ListVendorGroupsAsync(
+        IReadOnlyList<string>? ids = null,
+        bool? includeExternalIds = null,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<MaintenanceVendorGroup>(
+            QueryBuilder.WithParams(VendorGroupsPath,
+                ("ids", ids is null ? null : string.Join(",", ids)),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            limit,
+            cancellationToken);
+
+    [Experimental("SAMSARA001")]
+    public Task<MaintenanceVendorGroup> CreateVendorGroupAsync(
+        CreateMaintenanceVendorGroupRequest request,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<MaintenanceVendorGroup>(
+            QueryBuilder.WithParams(VendorGroupsPath,
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            request,
+            cancellationToken);
+
+    [Experimental("SAMSARA001")]
+    public Task<MaintenanceVendorGroup> UpdateVendorGroupAsync(
+        string id,
+        UpdateMaintenanceVendorGroupRequest request,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<MaintenanceVendorGroup>(
+            QueryBuilder.WithParams(VendorGroupsPath,
+                ("id", id),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            request,
+            cancellationToken);
+
+    [Experimental("SAMSARA001")]
+    public Task DeleteVendorGroupAsync(string id, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync(QueryBuilder.WithParams(VendorGroupsPath, ("id", id)), cancellationToken);
+
+    // ----------------------------------------------------- Technician shifts
+
+    [Experimental("SAMSARA001")]
+    public IAsyncEnumerable<TechnicianShift> ListTechnicianShiftsAsync(
+        IReadOnlyList<string>? ids = null,
+        IReadOnlyList<string>? userIds = null,
+        IReadOnlyList<string>? externalTechnicianIds = null,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        bool? includeExternalIds = null,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new List<(string Key, string? Value)>();
+        AddExploded(parameters, "ids", ids);
+        AddExploded(parameters, "userIds", userIds);
+        AddExploded(parameters, "externalTechnicianIds", externalTechnicianIds);
+        parameters.Add(("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant()));
+
+        return PaginateAsync<TechnicianShift>(
+            QueryBuilder.WithParams(
+                QueryBuilder.WithTimeRange(TechnicianShiftsPath, startTime, endTime),
+                parameters.ToArray()),
+            limit,
+            cancellationToken);
+    }
+
+    [Experimental("SAMSARA001")]
+    public Task<TechnicianShift> CreateTechnicianShiftAsync(
+        CreateTechnicianShiftRequest request,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<TechnicianShift>(
+            QueryBuilder.WithParams(TechnicianShiftsPath,
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            request,
+            cancellationToken);
+
+    [Experimental("SAMSARA001")]
+    public Task<TechnicianShift> UpdateTechnicianShiftAsync(
+        string id,
+        UpdateTechnicianShiftRequest request,
+        bool? includeExternalIds = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<TechnicianShift>(
+            QueryBuilder.WithParams(TechnicianShiftsPath,
+                ("id", id),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            request,
+            cancellationToken);
+
+    // ------------------------------------------------------------ Warranties
+
+    public IAsyncEnumerable<Warranty> ListWarrantiesAsync(
+        string? warrantyIds = null,
+        string? name = null,
+        bool? includeExternalIds = null,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<Warranty>(
+            QueryBuilder.WithParams(WarrantiesPath,
+                ("warrantyIds", warrantyIds),
+                ("name", name),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            limit,
+            cancellationToken);
+
+    public Task<Warranty> CreateWarrantyAsync(CreateWarrantyRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<Warranty>(WarrantiesPath, request, cancellationToken);
+
+    public Task<Warranty> UpdateWarrantyAsync(string id, UpdateWarrantyRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<Warranty>(
+            QueryBuilder.WithParams(WarrantiesPath, ("id", id)), request, cancellationToken);
+
+    public Task DeleteWarrantyAsync(string id, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync(QueryBuilder.WithParams(WarrantiesPath, ("id", id)), cancellationToken);
+
+    public IAsyncEnumerable<WarrantyAssetAssignmentListItem> ListWarrantyAssetAssignmentsAsync(
+        string warrantyId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<WarrantyAssetAssignmentListItem>(
+            QueryBuilder.WithParams($"{WarrantiesPath}/assets", ("warrantyId", warrantyId)),
+            limit,
+            cancellationToken);
+
+    public Task<WarrantyAssetAssignmentReplaceResult> ReplaceWarrantyAssetAssignmentsAsync(
+        ReplaceWarrantyAssetAssignmentsRequest request,
+        string? warrantyId = null,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<WarrantyAssetAssignmentReplaceResult>(
+            QueryBuilder.WithParams($"{WarrantiesPath}/assets/replace", ("warrantyId", warrantyId)),
+            request,
+            cancellationToken);
+
+    // ------------------------------------------------------- Warranty claims
+
+    public IAsyncEnumerable<WarrantyClaim> ListWarrantyClaimsAsync(
+        string? warrantyClaimIds = null,
+        string? assetIds = null,
+        string? claimStatus = null,
+        string? warrantyIds = null,
+        bool? includeExternalIds = null,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<WarrantyClaim>(
+            QueryBuilder.WithParams(WarrantyClaimsPath,
+                ("warrantyClaimIds", warrantyClaimIds),
+                ("assetIds", assetIds),
+                ("claimStatus", claimStatus),
+                ("warrantyIds", warrantyIds),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            limit,
+            cancellationToken);
+
+    public Task<WarrantyClaim> CreateWarrantyClaimAsync(
+        CreateWarrantyClaimRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<WarrantyClaim>(WarrantyClaimsPath, request, cancellationToken);
+
+    public Task<WarrantyClaim> UpdateWarrantyClaimAsync(
+        string id,
+        UpdateWarrantyClaimRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<WarrantyClaim>(
+            QueryBuilder.WithParams(WarrantyClaimsPath, ("id", id)), request, cancellationToken);
+
+    public Task DeleteWarrantyClaimAsync(string id, CancellationToken cancellationToken = default)
+        => HttpClient.DeleteAsync(QueryBuilder.WithParams(WarrantyClaimsPath, ("id", id)), cancellationToken);
+
+    // ----------------------------------------------------- Maintenance sites
+
+    public IAsyncEnumerable<MaintenanceSite> ListSitesAsync(
+        string? ids = null,
+        string? placeIds = null,
+        bool? isArchived = null,
+        bool? includeExternalIds = null,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+        => PaginateAsync<MaintenanceSite>(
+            QueryBuilder.WithParams(SitesPath,
+                ("ids", ids),
+                ("placeIds", placeIds),
+                ("isArchived", isArchived?.ToString().ToLowerInvariant()),
+                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
+            limit,
+            cancellationToken);
+
+    public Task<MaintenanceSite> CreateSiteAsync(CreateMaintenanceSiteRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<MaintenanceSite>(SitesPath, request, cancellationToken);
+
+    public Task<MaintenanceSite> UpdateSiteAsync(string id, UpdateMaintenanceSiteRequest request, CancellationToken cancellationToken = default)
+        => HttpClient.PatchDataAsync<MaintenanceSite>(
+            QueryBuilder.WithParams(SitesPath, ("id", id)), request, cancellationToken);
+
+    private static void AddExploded(List<(string Key, string? Value)> parameters, string key, IReadOnlyList<string>? values)
+    {
+        if (values is null) return;
+        foreach (var value in values)
+        {
+            parameters.Add((key, value));
+        }
+    }
 }

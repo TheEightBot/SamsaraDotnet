@@ -59,7 +59,8 @@
     "Forms"
   ],
   "FuelClient.cs": [
-    "Fuel and Energy"
+    "Fuel and Energy",
+    "Legacy APIs"
   ],
   "FunctionsClient.cs": [
     "Beta APIs"
@@ -100,7 +101,9 @@
   ],
   "MaintenanceClient.cs": [
     "Beta APIs",
-    "Maintenance"
+    "Maintenance",
+    "Maintenance Sites",
+    "Preventive Maintenance"
   ],
   "MediaClient.cs": [
     "Media"
@@ -112,13 +115,14 @@
     "Organization Info"
   ],
   "PartsClient.cs": [
-    "Beta APIs"
+    "Beta APIs",
+    "Maintenance"
   ],
   "PlacesClient.cs": [
     "Beta APIs"
   ],
   "PreferredStationsClient.cs": [
-    "Beta APIs"
+    "Fuel and Energy"
   ],
   "PreviewApisClient.cs": [
     "Preview APIs"

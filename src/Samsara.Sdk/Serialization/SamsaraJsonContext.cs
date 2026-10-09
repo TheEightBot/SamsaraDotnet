@@ -1274,6 +1274,43 @@ using Samsara.Sdk.Pagination;
 // Fleet — legacy v1 vehicle locations (GET /v1/fleet/locations), v0.5.0 sweep.
 [JsonSerializable(typeof(V1FleetLocationsResponse))]
 [JsonSerializable(typeof(V1VehicleLocation))]
+// Spec drift 94654d38db61 -> 2445b573294b: graduated warranties, vendor and vendor-group
+// writes, technician shifts, maintenance sites, work-order attachments, shared-asset
+// cancellation, and the new members on parts, purchase orders, work orders and trips.
+[JsonSerializable(typeof(Samsara.Sdk.Models.Preview.WarrantyAssetAssignmentListItem))]
+[JsonSerializable(typeof(MaintenanceEntityRefInput))]
+[JsonSerializable(typeof(MaintenanceExternalId))]
+[JsonSerializable(typeof(MaintenanceExternalIdInput))]
+[JsonSerializable(typeof(MaintenanceAssignee))]
+[JsonSerializable(typeof(PurchaseOrderTaxAdjustment))]
+[JsonSerializable(typeof(PurchaseOrderTaxAdjustmentInput))]
+[JsonSerializable(typeof(VendorAssetAttributeSelection))]
+[JsonSerializable(typeof(VendorAssetAttributeSelectionInput))]
+[JsonSerializable(typeof(VendorResolvedSettings))]
+[JsonSerializable(typeof(MaintenanceVendorContact))]
+[JsonSerializable(typeof(MaintenanceVendorContactInput))]
+[JsonSerializable(typeof(MaintenanceVendorDetails))]
+[JsonSerializable(typeof(CreateMaintenanceVendorRequest))]
+[JsonSerializable(typeof(UpdateMaintenanceVendorRequest))]
+[JsonSerializable(typeof(MaintenanceVendorGroup))]
+[JsonSerializable(typeof(MaintenanceVendorGroupContactInput))]
+[JsonSerializable(typeof(CreateMaintenanceVendorGroupRequest))]
+[JsonSerializable(typeof(UpdateMaintenanceVendorGroupRequest))]
+[JsonSerializable(typeof(TechnicianShift))]
+[JsonSerializable(typeof(CreateTechnicianShiftRequest))]
+[JsonSerializable(typeof(UpdateTechnicianShiftRequest))]
+[JsonSerializable(typeof(MaintenanceSite))]
+[JsonSerializable(typeof(MaintenanceSiteCustomAddress))]
+[JsonSerializable(typeof(MaintenanceSiteCustomAddressInput))]
+[JsonSerializable(typeof(CreateMaintenanceSiteRequest))]
+[JsonSerializable(typeof(UpdateMaintenanceSiteRequest))]
+[JsonSerializable(typeof(PostWorkOrderAttachmentRequest))]
+[JsonSerializable(typeof(WorkOrderAttachmentFile))]
+[JsonSerializable(typeof(MaintenanceAttachment))]
+[JsonSerializable(typeof(SharedAssetReference))]
+[JsonSerializable(typeof(CancelSharedAssetsBatchRequest))]
+[JsonSerializable(typeof(CancelSharedAssetsBatchResult))]
+[JsonSerializable(typeof(CancelSharedAssetBatchItem))]
 internal sealed partial class SamsaraJsonContext : JsonSerializerContext
 {
 }

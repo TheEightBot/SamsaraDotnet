@@ -3,11 +3,15 @@ namespace Samsara.Sdk.Models.Preview;
 using System.Text.Json.Serialization;
 using Samsara.Sdk.Models.Maintenance;
 
+// These records keep the Samsara.Sdk.Models.Preview namespace they shipped in so existing
+// callers keep compiling: the operations graduated out of /preview and now live on
+// IMaintenanceClient, but moving the types would be a breaking change on its own.
+
 /// <summary>
-/// A maintenance warranty (preview). Mirrors the spec's
+/// A maintenance warranty. Mirrors the spec's
 /// <c>EntityListWarrantiesTypeResponseBody</c> and its byte-identical
 /// create/update twins, so one record serves <c>GET</c>, <c>POST</c> and
-/// <c>PATCH</c> <c>/preview/maintenance/warranties</c>.
+/// <c>PATCH</c> <c>/maintenance/warranties</c>.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -298,7 +302,7 @@ public sealed record WarrantyCoverageInput
 }
 
 /// <summary>
-/// Request body for <c>POST /preview/maintenance/warranties</c>
+/// Request body for <c>POST /maintenance/warranties</c>
 /// (<c>createWarranty</c>). Mirrors the spec's
 /// <c>EntityWarrantiesServiceCreateWarrantyRequestBody</c>.
 /// </summary>
@@ -355,7 +359,7 @@ public sealed record CreateWarrantyRequest
 }
 
 /// <summary>
-/// Request body for <c>PATCH /preview/maintenance/warranties</c>
+/// Request body for <c>PATCH /maintenance/warranties</c>
 /// (<c>updateWarranty</c>). Mirrors the spec's
 /// <c>EntityWarrantiesServiceUpdateWarrantyRequestBody</c>, which — unlike the
 /// create body — marks nothing required.
@@ -414,7 +418,7 @@ public sealed record UpdateWarrantyRequest
 
 /// <summary>
 /// One asset covered by a warranty, supplied on
-/// <c>POST /preview/maintenance/warranties/assets/replace</c>. Mirrors the
+/// <c>POST /maintenance/warranties/assets/replace</c>. Mirrors the
 /// spec's
 /// <c>EntityReplaceWarrantyAssetAssignmentsWarrantyAssetAssignmentInputTypeRequestBody</c>.
 /// </summary>
@@ -438,7 +442,7 @@ public sealed record WarrantyAssetAssignmentInput
 }
 
 /// <summary>
-/// Request body for <c>POST /preview/maintenance/warranties/assets/replace</c>
+/// Request body for <c>POST /maintenance/warranties/assets/replace</c>
 /// (<c>replaceWarrantyAssetAssignments</c>). The list replaces the warranty's
 /// entire asset set.
 /// </summary>
@@ -492,7 +496,52 @@ public sealed record WarrantyAssetAssignment
 }
 
 /// <summary>
-/// The payload of <c>POST /preview/maintenance/warranties/assets/replace</c>.
+/// One asset covered by a warranty, as listed by <c>GET /maintenance/warranties/assets</c>
+/// (<c>listWarrantyAssetAssignments</c>). Mirrors the spec's
+/// <c>EntityListWarrantyAssetAssignmentsTypeResponseBody</c>.
+/// </summary>
+/// <remarks>
+/// Not the same shape as <see cref="WarrantyAssetAssignment"/>: the list operation returns
+/// the asset and warranty as <c>{ id }</c> references, where the replace operation returns
+/// flat <c>assetId</c> / <c>warrantyId</c> strings.
+/// </remarks>
+public sealed record WarrantyAssetAssignmentListItem
+{
+    /// <summary>Identifier for the assignment.</summary>
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+
+    /// <summary>The warranty the asset is assigned to.</summary>
+    [JsonPropertyName("warranty")]
+    public MaintenanceEntityRef? Warranty { get; init; }
+
+    /// <summary>The asset covered by the warranty.</summary>
+    [JsonPropertyName("asset")]
+    public MaintenanceEntityRef? Asset { get; init; }
+
+    /// <summary>When coverage starts for this asset.</summary>
+    [JsonPropertyName("startTime")]
+    public string? StartTime { get; init; }
+
+    /// <summary>Asset engine hours at coverage start.</summary>
+    [JsonPropertyName("startEngineHours")]
+    public long? StartEngineHours { get; init; }
+
+    /// <summary>Asset odometer reading at coverage start, in meters.</summary>
+    [JsonPropertyName("startOdometerMeters")]
+    public long? StartOdometerMeters { get; init; }
+
+    /// <summary>When the assignment was created.</summary>
+    [JsonPropertyName("createdAtTime")]
+    public string? CreatedAtTime { get; init; }
+
+    /// <summary>When the assignment was last updated.</summary>
+    [JsonPropertyName("updatedAtTime")]
+    public string? UpdatedAtTime { get; init; }
+}
+
+/// <summary>
+/// The payload of <c>POST /maintenance/warranties/assets/replace</c>.
 /// Mirrors the spec's
 /// <c>ReplaceWarrantyAssetAssignmentsResponseObjectTypeResponseBody</c>, which
 /// nests a second <c>data</c> array inside the standard <c>{ data: ... }</c>
@@ -506,10 +555,10 @@ public sealed record WarrantyAssetAssignmentReplaceResult
 }
 
 /// <summary>
-/// A warranty claim (preview). Mirrors the spec's
+/// A warranty claim. Mirrors the spec's
 /// <c>EntityListWarrantyClaimsTypeResponseBody</c> and its byte-identical
 /// create/update twins, so one record serves <c>GET</c>, <c>POST</c> and
-/// <c>PATCH</c> <c>/preview/maintenance/warranty-claims</c>.
+/// <c>PATCH</c> <c>/maintenance/warranty-claims</c>.
 /// </summary>
 public sealed record WarrantyClaim
 {
@@ -798,7 +847,7 @@ public sealed record WarrantyClaimReimbursementInput
 }
 
 /// <summary>
-/// Request body for <c>POST /preview/maintenance/warranty-claims</c>
+/// Request body for <c>POST /maintenance/warranty-claims</c>
 /// (<c>createWarrantyClaim</c>). Mirrors the spec's
 /// <c>EntityWarrantyClaimsServiceCreateWarrantyClaimRequestBody</c>.
 /// </summary>
@@ -892,7 +941,7 @@ public sealed record CreateWarrantyClaimRequest
 }
 
 /// <summary>
-/// Request body for <c>PATCH /preview/maintenance/warranty-claims</c>
+/// Request body for <c>PATCH /maintenance/warranty-claims</c>
 /// (<c>updateWarrantyClaim</c>). Mirrors the spec's
 /// <c>EntityWarrantyClaimsServiceUpdateWarrantyClaimRequestBody</c>, which —
 /// unlike the create body — marks nothing required.

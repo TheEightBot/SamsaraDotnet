@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Spec drift `94654d38db61` → `2445b573294b` (396 operations)
+
+#### Fixed
+
+- **The warranty and warranty-claim methods 404 against the live API — they now work.** Samsara
+  removed all nine `/preview/maintenance/warranties*` and `/preview/maintenance/warranty-claims`
+  operations and serves them, unchanged, under `/maintenance/*` (tag `Maintenance`). The
+  `IPreviewApisClient` members kept calling the removed paths. They now live on
+  `IMaintenanceClient` (`ListWarrantiesAsync`, `CreateWarrantyAsync`, `UpdateWarrantyAsync`,
+  `DeleteWarrantyAsync`, `ReplaceWarrantyAssetAssignmentsAsync`, `ListWarrantyClaimsAsync`,
+  `CreateWarrantyClaimAsync`, `UpdateWarrantyClaimAsync`, `DeleteWarrantyClaimAsync`), and the
+  `IPreviewApisClient` members are `[Obsolete]` forwarders to them — existing callers keep
+  compiling (with a CS0618 warning instead of the SAMSARA001 opt-in) and start working again. The
+  request/response schemas are byte-identical apart from new enum lists, so the existing
+  `Samsara.Sdk.Models.Preview` warranty records are reused as-is.
+
+#### Added
+
+- `GET /maintenance/warranties/assets` → `IMaintenanceClient.ListWarrantyAssetAssignmentsAsync`
+  (new `WarrantyAssetAssignmentListItem`, which carries `{ id }` refs where the replace result
+  carries flat ids).
+- Vendor writes (beta): `CreateVendorAsync`, `UpdateVendorAsync`, `DeleteVendorAsync` on
+  `IMaintenanceClient`. The write operations return a different shape from the list item, so they
+  get `MaintenanceVendorDetails`. `ListVendorsAsync` gains the spec's new `externalIds` and
+  `includeResolvedSettings` filters, and `MaintenanceVendor` gains `name`, `status`,
+  `vendorGroupId`, `isMobile`, `isPreferred`, `defaultLaborRatePerHour`,
+  `assetAttributeSelections` and `resolvedSettings` (`VendorResolvedSettings`).
+- Vendor groups (beta): `ListVendorGroupsAsync`, `CreateVendorGroupAsync`,
+  `UpdateVendorGroupAsync`, `DeleteVendorGroupAsync` with `MaintenanceVendorGroup`.
+- Technician shifts (beta): `ListTechnicianShiftsAsync`, `CreateTechnicianShiftAsync`,
+  `UpdateTechnicianShiftAsync` with `TechnicianShift`. The list's ID filters are
+  `style=form, explode=true`, so they are sent as repeated keys; `UpdateTechnicianShiftRequest`
+  requires the `version` the spec uses for optimistic concurrency.
+- Maintenance sites: `ListSitesAsync`, `CreateSiteAsync`, `UpdateSiteAsync` with
+  `MaintenanceSite`.
+- `POST /maintenance/work-orders/attachments` → `IWorkOrdersClient.PostWorkOrderAttachmentAsync`
+  (beta).
+- `POST /fleet/asset-sharing/agreements/assets/cancel/batch` →
+  `IAssetSharingClient.CancelSharedAssetsBatchAsync` (beta). The response is a bare
+  `{ requestId, responses }` object with a per-asset status, not a `{ data }` envelope.
+- New members: `Part.preferredVendor`/`preferredVendorPartNumber` (and `preferredVendorId` on the
+  create/update requests), `PartInventoryLocation.isNonStock`,
+  `UpdatePartInventoryLocationRequest.currentQuantity`, `PurchaseOrder.tax`/`taxTotal` and line
+  `tax` (`PurchaseOrderTaxAdjustment`), `WorkOrder.assignees`/`startedAtTime`,
+  `ServiceTaskInstance.assignees`, the historical `startedAtTime`/`completedAtTime`/
+  `archivedAtTime` and initial `status` on the work-order requests, and
+  `Trip.finalDistanceMeters`/`tripPurpose`.
+
+#### Changed
+
+- `UpdateDriverVehicleAssignmentRequest.DriverId`, `VehicleId` and `StartTime` are no longer
+  `required`: the spec now lets `metadata.sourceName` identify the assignment instead. `StartTime`
+  is `DateTimeOffset?`.
+- **Source-breaking for positional callers:** `IMaintenanceClient.ListVendorsAsync` inserts the
+  two new optional filters before `cancellationToken`; pass the token by name.
+- `tools/sdk-client-tags.json` refreshed: Samsara retagged parts (`Beta APIs` → `Maintenance`),
+  preventive maintenance (→ `Preventive Maintenance`), preferred stations (→ `Fuel and Energy`) and
+  driver efficiency (→ `Legacy APIs`).
+
 > ### ⚠️ Migration to v0.5.0 — breaking changes summary
 >
 > This release batches the **full spec-parity sweep**: every one of the spec's **380 operations

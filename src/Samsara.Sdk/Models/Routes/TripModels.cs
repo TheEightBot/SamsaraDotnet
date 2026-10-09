@@ -40,6 +40,21 @@ public sealed record Trip
     /// <summary>Time the trip record was last updated, in RFC 3339 format.</summary>
     [JsonPropertyName("updatedAtTime")]
     public DateTimeOffset? UpdatedAtTime { get; init; }
+
+    /// <summary>
+    /// Final distance driven in meters, calculated from GPS data. Only populated once the
+    /// trip has completed; later corrections are not signalled by <see cref="UpdatedAtTime"/>.
+    /// </summary>
+    [JsonPropertyName("finalDistanceMeters")]
+    public long? FinalDistanceMeters { get; init; }
+
+    /// <summary>
+    /// The driver-assigned purpose of the trip: <c>unknown</c>, <c>unassigned</c>,
+    /// <c>personal</c>, <c>business</c> or <c>commute</c>. Only populated for completed trips
+    /// when the organization is licensed for mileage reporting.
+    /// </summary>
+    [JsonPropertyName("tripPurpose")]
+    public string? TripPurpose { get; init; }
 }
 
 /// <summary>

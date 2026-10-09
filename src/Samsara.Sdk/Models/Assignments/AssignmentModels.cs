@@ -154,19 +154,27 @@ public sealed record CreateDriverVehicleAssignmentRequest
 }
 
 /// <summary>
-/// Request body for <c>PATCH /fleet/driver-vehicle-assignments</c>. The composite identifier
-/// (driverId + vehicleId + startTime) lives in the body.
+/// Request body for <c>PATCH /fleet/driver-vehicle-assignments</c>. The assignment is
+/// identified in the body, either by the composite (driverId + vehicleId + startTime) or by
+/// <c>metadata.sourceName</c>.
 /// </summary>
 public sealed record UpdateDriverVehicleAssignmentRequest
 {
+    /// <summary>
+    /// ID (or external ID) of the driver. Together with <see cref="VehicleId"/> and
+    /// <see cref="StartTime"/> it identifies the assignment to update, unless
+    /// <c>metadata.sourceName</c> is supplied instead — so none of the three is spec-required.
+    /// </summary>
     [JsonPropertyName("driverId")]
-    public required string DriverId { get; init; }
+    public string? DriverId { get; init; }
 
+    /// <summary>ID (or external ID) of the vehicle. See <see cref="DriverId"/>.</summary>
     [JsonPropertyName("vehicleId")]
-    public required string VehicleId { get; init; }
+    public string? VehicleId { get; init; }
 
+    /// <summary>Start time of the assignment to update. See <see cref="DriverId"/>.</summary>
     [JsonPropertyName("startTime")]
-    public required DateTimeOffset StartTime { get; init; }
+    public DateTimeOffset? StartTime { get; init; }
 
     [JsonPropertyName("assignedAtTime")]
     public DateTimeOffset? AssignedAtTime { get; init; }

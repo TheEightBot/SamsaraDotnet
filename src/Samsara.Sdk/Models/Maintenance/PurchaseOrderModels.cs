@@ -52,6 +52,14 @@ public sealed record PurchaseOrder
     [JsonPropertyName("otherCost")]
     public MaintenanceMoney? OtherCost { get; init; }
 
+    /// <summary>Tax applied to the purchase order as a whole.</summary>
+    [JsonPropertyName("tax")]
+    public PurchaseOrderTaxAdjustment? Tax { get; init; }
+
+    /// <summary>Total tax across the purchase order and its part lines.</summary>
+    [JsonPropertyName("taxTotal")]
+    public MaintenanceMoney? TaxTotal { get; init; }
+
     /// <summary>General ledger code associated with this purchase order.</summary>
     [JsonPropertyName("glCode")]
     public string? GlCode { get; init; }
@@ -142,6 +150,43 @@ public sealed record PurchaseOrderPart
     /// <summary>The returnable-core charge attached to this line, when any.</summary>
     [JsonPropertyName("coreCharge")]
     public PurchaseOrderCoreCharge? CoreCharge { get; init; }
+
+    /// <summary>Tax applied to this line.</summary>
+    [JsonPropertyName("tax")]
+    public PurchaseOrderTaxAdjustment? Tax { get; init; }
+}
+
+/// <summary>
+/// A tax adjustment on a <see cref="PurchaseOrder"/> or one of its
+/// <see cref="PurchaseOrderPart"/> lines. Mirrors the spec's
+/// <c>...PurchaseOrderTaxAdjustmentTypeResponseBody</c> variants: the tax is either
+/// a fixed <see cref="Money"/> amount or a rate in <see cref="BasisPoints"/>.
+/// </summary>
+public sealed record PurchaseOrderTaxAdjustment
+{
+    /// <summary>Tax rate in basis points (1/100th of a percent).</summary>
+    [JsonPropertyName("basisPoints")]
+    public long? BasisPoints { get; init; }
+
+    /// <summary>Fixed tax amount.</summary>
+    [JsonPropertyName("money")]
+    public MaintenanceMoney? Money { get; init; }
+}
+
+/// <summary>
+/// A tax adjustment supplied on a purchase-order request body. Mirrors the spec's
+/// <c>...PurchaseOrderTaxAdjustmentInputTypeRequestBody</c> variants. Set exactly one of
+/// <see cref="Money"/> or <see cref="BasisPoints"/>.
+/// </summary>
+public sealed record PurchaseOrderTaxAdjustmentInput
+{
+    /// <summary>Tax rate in basis points (1/100th of a percent).</summary>
+    [JsonPropertyName("basisPoints")]
+    public long? BasisPoints { get; init; }
+
+    /// <summary>Fixed tax amount.</summary>
+    [JsonPropertyName("money")]
+    public MaintenanceMoneyInput? Money { get; init; }
 }
 
 /// <summary>
@@ -291,6 +336,10 @@ public sealed record PurchaseOrderPartInput
     /// <summary>The returnable-core charge attached to this line, when any.</summary>
     [JsonPropertyName("coreCharge")]
     public PurchaseOrderCoreChargeInput? CoreCharge { get; init; }
+
+    /// <summary>Tax applied to this line.</summary>
+    [JsonPropertyName("tax")]
+    public PurchaseOrderTaxAdjustmentInput? Tax { get; init; }
 }
 
 /// <summary>
@@ -323,6 +372,10 @@ public sealed record CreatePurchaseOrderRequest
     /// <summary>Costs on the purchase order not attributable to a part line.</summary>
     [JsonPropertyName("otherCost")]
     public MaintenanceMoneyInput? OtherCost { get; init; }
+
+    /// <summary>Tax applied to the purchase order as a whole.</summary>
+    [JsonPropertyName("tax")]
+    public PurchaseOrderTaxAdjustmentInput? Tax { get; init; }
 
     /// <summary>General ledger code associated with this purchase order.</summary>
     [JsonPropertyName("glCode")]
@@ -365,6 +418,10 @@ public sealed record UpdatePurchaseOrderRequest
     /// <summary>Costs on the purchase order not attributable to a part line.</summary>
     [JsonPropertyName("otherCost")]
     public MaintenanceMoneyInput? OtherCost { get; init; }
+
+    /// <summary>Tax applied to the purchase order as a whole.</summary>
+    [JsonPropertyName("tax")]
+    public PurchaseOrderTaxAdjustmentInput? Tax { get; init; }
 
     /// <summary>General ledger code associated with this purchase order.</summary>
     [JsonPropertyName("glCode")]

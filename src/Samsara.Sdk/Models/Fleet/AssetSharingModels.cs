@@ -245,3 +245,65 @@ public sealed record UpdateSharedAssetsBatchRequest
     [JsonPropertyName("data")]
     public required IReadOnlyList<UpdateSharedAssetInput> Data { get; init; }
 }
+
+/// <summary>
+/// One shared asset to cancel, as an element of <see cref="CancelSharedAssetsBatchRequest"/>.
+/// Mirrors the spec's <c>IDReferenceObjectRequestBody</c>.
+/// </summary>
+public sealed record SharedAssetReference
+{
+    /// <summary>The unique identifier of the shared asset. Spec REQUIRED.</summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+}
+
+/// <summary>
+/// Request body for <c>POST /fleet/asset-sharing/agreements/assets/cancel/batch</c>
+/// (<c>cancelSharedAssetsBatch</c>). The spec wraps the array in a
+/// <c>{ data: [...] }</c> envelope.
+/// </summary>
+public sealed record CancelSharedAssetsBatchRequest
+{
+    /// <summary>The shared assets to cancel. Spec REQUIRED.</summary>
+    [JsonPropertyName("data")]
+    public required IReadOnlyList<SharedAssetReference> Data { get; init; }
+}
+
+/// <summary>
+/// The response of <c>POST /fleet/asset-sharing/agreements/assets/cancel/batch</c>. Mirrors the
+/// spec's <c>AssetSharingAgreementsCancelSharedAssetsBatchResponseBody</c>, which is <b>not</b>
+/// a <c>{ data: ... }</c> envelope: it reports a per-asset outcome, so one cancellation can fail
+/// while the others succeed.
+/// </summary>
+/// <remarks>
+/// Spec marks both members REQUIRED; they stay nullable because this is a response record.
+/// </remarks>
+public sealed record CancelSharedAssetsBatchResult
+{
+    /// <summary>Identifier of the batch request.</summary>
+    [JsonPropertyName("requestId")]
+    public string? RequestId { get; init; }
+
+    /// <summary>One outcome per requested shared asset.</summary>
+    [JsonPropertyName("responses")]
+    public IReadOnlyList<CancelSharedAssetBatchItem>? Responses { get; init; }
+}
+
+/// <summary>
+/// The outcome for one shared asset in a <see cref="CancelSharedAssetsBatchResult"/>. Mirrors the
+/// spec's <c>CancelSharedAssetBatchResponseItemResponseBody</c>.
+/// </summary>
+public sealed record CancelSharedAssetBatchItem
+{
+    /// <summary>HTTP status code for this item. Spec marks REQUIRED.</summary>
+    [JsonPropertyName("status")]
+    public long? Status { get; init; }
+
+    /// <summary>Error message, when this item failed.</summary>
+    [JsonPropertyName("message")]
+    public string? Message { get; init; }
+
+    /// <summary>The cancelled shared asset, when this item succeeded.</summary>
+    [JsonPropertyName("data")]
+    public SharedAsset? Data { get; init; }
+}

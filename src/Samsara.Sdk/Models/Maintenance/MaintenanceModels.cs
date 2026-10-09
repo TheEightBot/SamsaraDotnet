@@ -1000,6 +1000,43 @@ public sealed record MaintenanceVendor
     /// <summary>A map of external IDs for the vendor.</summary>
     [JsonPropertyName("externalIds")]
     public IReadOnlyDictionary<string, string>? ExternalIds { get; init; }
+
+    /// <summary>The name of the vendor.</summary>
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+
+    /// <summary>Own lifecycle status: <c>active</c>, <c>inactive</c> or <c>unknown</c>.</summary>
+    [JsonPropertyName("status")]
+    public string? Status { get; init; }
+
+    /// <summary>Parent vendor group ID, when configured.</summary>
+    [JsonPropertyName("vendorGroupId")]
+    public string? VendorGroupId { get; init; }
+
+    /// <summary>Explicit mobile-service override; omitted when inherited.</summary>
+    [JsonPropertyName("isMobile")]
+    public bool? IsMobile { get; init; }
+
+    /// <summary>Explicit preferred override; omitted when inherited.</summary>
+    [JsonPropertyName("isPreferred")]
+    public bool? IsPreferred { get; init; }
+
+    /// <summary>Explicit default hourly labor rate; omitted when inherited.</summary>
+    [JsonPropertyName("defaultLaborRatePerHour")]
+    public MaintenanceMoney? DefaultLaborRatePerHour { get; init; }
+
+    /// <summary>
+    /// Configured asset attributes. An empty list is explicit; omission inherits.
+    /// </summary>
+    [JsonPropertyName("assetAttributeSelections")]
+    public IReadOnlyList<VendorAssetAttributeSelection>? AssetAttributeSelections { get; init; }
+
+    /// <summary>
+    /// The effective settings after vendor-group and system defaults are applied. Only
+    /// returned when the request sets <c>includeResolvedSettings</c>.
+    /// </summary>
+    [JsonPropertyName("resolvedSettings")]
+    public VendorResolvedSettings? ResolvedSettings { get; init; }
 }
 
 /// <summary>

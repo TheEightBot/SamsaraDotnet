@@ -1,5 +1,6 @@
 namespace Samsara.Sdk.Clients;
 
+using System.Diagnostics.CodeAnalysis;
 using Samsara.Sdk.Http;
 using Samsara.Sdk.Models.Maintenance;
 
@@ -48,4 +49,11 @@ internal sealed class WorkOrdersClient : SamsaraServiceClientBase, IWorkOrdersCl
     /// <summary>Get work order templates (<c>GET /maintenance/work-order-templates</c>) — beta.</summary>
     public IAsyncEnumerable<WorkOrderTemplate> GetWorkOrderTemplatesAsync(CancellationToken cancellationToken = default)
         => PaginateAsync<WorkOrderTemplate>("maintenance/work-order-templates", cancellationToken: cancellationToken);
+
+    /// <summary>Attach a file to a work order (<c>POST /maintenance/work-orders/attachments</c>) — beta.</summary>
+    [Experimental("SAMSARA001")]
+    public Task<MaintenanceAttachment> PostWorkOrderAttachmentAsync(
+        PostWorkOrderAttachmentRequest request,
+        CancellationToken cancellationToken = default)
+        => HttpClient.PostDataAsync<MaintenanceAttachment>($"{BasePath}/attachments", request, cancellationToken);
 }

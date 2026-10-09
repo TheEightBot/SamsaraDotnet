@@ -22,7 +22,7 @@ using Samsara.Sdk.Models.Preview;
 /// <para>
 /// Members are grouped as: vehicles · drivers · tachograph (graduated) ·
 /// <b>orders</b> (<c>/preview/fleet/orders*</c>) · <b>warranties</b> and
-/// <b>warranty claims</b> (<c>/preview/maintenance/*</c>).
+/// <b>warranty claims</b> (graduated to <see cref="IMaintenanceClient"/>).
 /// </para>
 /// </remarks>
 public interface IPreviewApisClient
@@ -139,19 +139,17 @@ public interface IPreviewApisClient
         CancellationToken cancellationToken = default);
 
     // ----------------------------------------------------------- Warranties
-    // Domain: maintenance warranties. Spec paths: /preview/maintenance/warranties*.
+    // Graduated: Samsara removed every /preview/maintenance/* operation and now serves them
+    // under /maintenance/* (tag "Maintenance"). Each member below forwards to IMaintenanceClient.
 
-    /// <summary>
-    /// <b>Warranties</b> — list warranties
-    /// (<c>GET /preview/maintenance/warranties</c>, <c>listWarranties</c>).
-    /// Pagination is handled transparently.
-    /// </summary>
-    /// <param name="warrantyIds">Optional comma-separated list of warranty IDs.</param>
-    /// <param name="name">Optional comma-separated list of names.</param>
-    /// <param name="includeExternalIds">Include <c>externalIds</c> in each response object.</param>
-    /// <param name="limit">Page size; default and max is 200.</param>
-    /// <param name="cancellationToken">Token to cancel enumeration.</param>
-    [Experimental("SAMSARA001")]
+    /// <summary><b>Warranties</b> — list warranties — <b>moved</b>.</summary>
+    /// <remarks>
+    /// This operation graduated out of <c>/preview</c>: it is now
+    /// <c>GET /maintenance/warranties</c> and lives on
+    /// <see cref="IMaintenanceClient.ListWarrantiesAsync"/>. This member forwards there (the old
+    /// <c>/preview</c> path returns <c>404</c>) and will be removed in the next major release.
+    /// </remarks>
+    [Obsolete(WarrantyShimMessage.ListWarranties, error: false)]
     IAsyncEnumerable<Warranty> ListWarrantiesAsync(
         string? warrantyIds = null,
         string? name = null,
@@ -159,65 +157,39 @@ public interface IPreviewApisClient
         int? limit = null,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// <b>Warranties</b> — create a warranty
-    /// (<c>POST /preview/maintenance/warranties</c>, <c>createWarranty</c>).
-    /// Responds <c>201 Created</c>.
-    /// </summary>
-    [Experimental("SAMSARA001")]
+    /// <summary><b>Warranties</b> — create a warranty — <b>moved</b>.</summary>
+    /// <remarks>Forwards to <see cref="IMaintenanceClient.CreateWarrantyAsync"/>
+    /// (<c>POST /maintenance/warranties</c>).</remarks>
+    [Obsolete(WarrantyShimMessage.CreateWarranty, error: false)]
     Task<Warranty> CreateWarrantyAsync(CreateWarrantyRequest request, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// <b>Warranties</b> — update a warranty
-    /// (<c>PATCH /preview/maintenance/warranties</c>, <c>updateWarranty</c>).
-    /// </summary>
-    /// <param name="id">Unique identifier for the warranty. Required by the spec (query param).</param>
-    /// <param name="request">The fields to change.</param>
-    /// <param name="cancellationToken">Token to cancel the request.</param>
-    [Experimental("SAMSARA001")]
+    /// <summary><b>Warranties</b> — update a warranty — <b>moved</b>.</summary>
+    /// <remarks>Forwards to <see cref="IMaintenanceClient.UpdateWarrantyAsync"/>
+    /// (<c>PATCH /maintenance/warranties</c>).</remarks>
+    [Obsolete(WarrantyShimMessage.UpdateWarranty, error: false)]
     Task<Warranty> UpdateWarrantyAsync(string id, UpdateWarrantyRequest request, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// <b>Warranties</b> — delete a warranty
-    /// (<c>DELETE /preview/maintenance/warranties</c>, <c>deleteWarranty</c>).
-    /// Returns <c>204 No Content</c>.
-    /// </summary>
-    /// <param name="id">Unique identifier for the warranty. Required by the spec (query param).</param>
-    /// <param name="cancellationToken">Token to cancel the request.</param>
-    [Experimental("SAMSARA001")]
+    /// <summary><b>Warranties</b> — delete a warranty — <b>moved</b>.</summary>
+    /// <remarks>Forwards to <see cref="IMaintenanceClient.DeleteWarrantyAsync"/>
+    /// (<c>DELETE /maintenance/warranties</c>).</remarks>
+    [Obsolete(WarrantyShimMessage.DeleteWarranty, error: false)]
     Task DeleteWarrantyAsync(string id, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// <b>Warranties</b> — replace a warranty's asset assignments
-    /// (<c>POST /preview/maintenance/warranties/assets/replace</c>,
-    /// <c>replaceWarrantyAssetAssignments</c>). The supplied list becomes the
-    /// warranty's entire asset set.
-    /// </summary>
-    /// <param name="request">The full desired asset set.</param>
-    /// <param name="warrantyId">ID of the warranty whose asset set to replace (query param).</param>
-    /// <param name="cancellationToken">Token to cancel the request.</param>
-    [Experimental("SAMSARA001")]
+    /// <summary><b>Warranties</b> — replace a warranty's asset assignments — <b>moved</b>.</summary>
+    /// <remarks>Forwards to <see cref="IMaintenanceClient.ReplaceWarrantyAssetAssignmentsAsync"/>
+    /// (<c>POST /maintenance/warranties/assets/replace</c>).</remarks>
+    [Obsolete(WarrantyShimMessage.ReplaceWarrantyAssetAssignments, error: false)]
     Task<WarrantyAssetAssignmentReplaceResult> ReplaceWarrantyAssetAssignmentsAsync(
         ReplaceWarrantyAssetAssignmentsRequest request,
         string? warrantyId = null,
         CancellationToken cancellationToken = default);
 
     // ------------------------------------------------------ Warranty claims
-    // Domain: maintenance warranty claims. Spec paths: /preview/maintenance/warranty-claims.
 
-    /// <summary>
-    /// <b>Warranty claims</b> — list warranty claims
-    /// (<c>GET /preview/maintenance/warranty-claims</c>,
-    /// <c>listWarrantyClaims</c>). Pagination is handled transparently.
-    /// </summary>
-    /// <param name="warrantyClaimIds">Optional comma-separated list of claim IDs.</param>
-    /// <param name="assetIds">Optional comma-separated list of asset IDs.</param>
-    /// <param name="claimStatus">Optional comma-separated list of claim statuses.</param>
-    /// <param name="warrantyIds">Optional comma-separated list of warranty IDs.</param>
-    /// <param name="includeExternalIds">Include <c>externalIds</c> in each response object.</param>
-    /// <param name="limit">Page size; default and max is 200.</param>
-    /// <param name="cancellationToken">Token to cancel enumeration.</param>
-    [Experimental("SAMSARA001")]
+    /// <summary><b>Warranty claims</b> — list warranty claims — <b>moved</b>.</summary>
+    /// <remarks>Forwards to <see cref="IMaintenanceClient.ListWarrantyClaimsAsync"/>
+    /// (<c>GET /maintenance/warranty-claims</c>).</remarks>
+    [Obsolete(WarrantyShimMessage.ListWarrantyClaims, error: false)]
     IAsyncEnumerable<WarrantyClaim> ListWarrantyClaimsAsync(
         string? warrantyClaimIds = null,
         string? assetIds = null,
@@ -227,48 +199,40 @@ public interface IPreviewApisClient
         int? limit = null,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// <b>Warranty claims</b> — create a warranty claim
-    /// (<c>POST /preview/maintenance/warranty-claims</c>,
-    /// <c>createWarrantyClaim</c>). Responds <c>201 Created</c>.
-    /// </summary>
-    [Experimental("SAMSARA001")]
+    /// <summary><b>Warranty claims</b> — create a warranty claim — <b>moved</b>.</summary>
+    /// <remarks>Forwards to <see cref="IMaintenanceClient.CreateWarrantyClaimAsync"/>
+    /// (<c>POST /maintenance/warranty-claims</c>).</remarks>
+    [Obsolete(WarrantyShimMessage.CreateWarrantyClaim, error: false)]
     Task<WarrantyClaim> CreateWarrantyClaimAsync(
         CreateWarrantyClaimRequest request,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// <b>Warranty claims</b> — update a warranty claim
-    /// (<c>PATCH /preview/maintenance/warranty-claims</c>,
-    /// <c>updateWarrantyClaim</c>).
-    /// </summary>
-    /// <param name="id">Unique identifier for the claim. Required by the spec (query param).</param>
-    /// <param name="request">The fields to change.</param>
-    /// <param name="cancellationToken">Token to cancel the request.</param>
-    [Experimental("SAMSARA001")]
+    /// <summary><b>Warranty claims</b> — update a warranty claim — <b>moved</b>.</summary>
+    /// <remarks>Forwards to <see cref="IMaintenanceClient.UpdateWarrantyClaimAsync"/>
+    /// (<c>PATCH /maintenance/warranty-claims</c>).</remarks>
+    [Obsolete(WarrantyShimMessage.UpdateWarrantyClaim, error: false)]
     Task<WarrantyClaim> UpdateWarrantyClaimAsync(
         string id,
         UpdateWarrantyClaimRequest request,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// <b>Warranty claims</b> — delete a warranty claim
-    /// (<c>DELETE /preview/maintenance/warranty-claims</c>,
-    /// <c>deleteWarrantyClaim</c>). Returns <c>204 No Content</c>.
-    /// </summary>
-    /// <param name="id">Unique identifier for the claim. Required by the spec (query param).</param>
-    /// <param name="cancellationToken">Token to cancel the request.</param>
-    [Experimental("SAMSARA001")]
+    /// <summary><b>Warranty claims</b> — delete a warranty claim — <b>moved</b>.</summary>
+    /// <remarks>Forwards to <see cref="IMaintenanceClient.DeleteWarrantyClaimAsync"/>
+    /// (<c>DELETE /maintenance/warranty-claims</c>).</remarks>
+    [Obsolete(WarrantyShimMessage.DeleteWarrantyClaim, error: false)]
     Task DeleteWarrantyClaimAsync(string id, CancellationToken cancellationToken = default);
 }
 
 internal sealed class PreviewApisClient : SamsaraServiceClientBase, IPreviewApisClient
 {
     private const string OrdersPath = "preview/fleet/orders";
-    private const string WarrantiesPath = "preview/maintenance/warranties";
-    private const string WarrantyClaimsPath = "preview/maintenance/warranty-claims";
 
-    public PreviewApisClient(SamsaraHttpClient httpClient) : base(httpClient) { }
+    private readonly MaintenanceClient _maintenance;
+
+    public PreviewApisClient(SamsaraHttpClient httpClient) : base(httpClient)
+    {
+        _maintenance = new MaintenanceClient(httpClient);
+    }
 
     public Task LockVehicleAsync(string id, CancellationToken cancellationToken = default)
         => HttpClient.PutDataAsync<object>($"preview/fleet/vehicles/{Uri.EscapeDataString(id)}/lock", new { }, cancellationToken);
@@ -337,54 +301,38 @@ internal sealed class PreviewApisClient : SamsaraServiceClientBase, IPreviewApis
                 ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
             cancellationToken: cancellationToken);
 
-    /// <summary>Warranties — list warranties (<c>GET /preview/maintenance/warranties</c>).</summary>
-    [Experimental("SAMSARA001")]
+    // Forwarding shims. They delegate to MaintenanceClient rather than repeating the paths, so
+    // the graduated operations have a single implementation and the old /preview paths (which
+    // 404) are no longer reachable from the SDK.
+    [Obsolete(WarrantyShimMessage.ListWarranties, error: false)]
     public IAsyncEnumerable<Warranty> ListWarrantiesAsync(
         string? warrantyIds = null,
         string? name = null,
         bool? includeExternalIds = null,
         int? limit = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<Warranty>(
-            QueryBuilder.WithParams(WarrantiesPath,
-                ("warrantyIds", warrantyIds),
-                ("name", name),
-                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
-            limit,
-            cancellationToken);
+        => _maintenance.ListWarrantiesAsync(warrantyIds, name, includeExternalIds, limit, cancellationToken);
 
-    /// <summary>Warranties — create a warranty (<c>POST /preview/maintenance/warranties</c>).</summary>
-    [Experimental("SAMSARA001")]
+    [Obsolete(WarrantyShimMessage.CreateWarranty, error: false)]
     public Task<Warranty> CreateWarrantyAsync(CreateWarrantyRequest request, CancellationToken cancellationToken = default)
-        => HttpClient.PostDataAsync<Warranty>(WarrantiesPath, request, cancellationToken);
+        => _maintenance.CreateWarrantyAsync(request, cancellationToken);
 
-    /// <summary>Warranties — update a warranty (<c>PATCH /preview/maintenance/warranties</c>).</summary>
-    [Experimental("SAMSARA001")]
+    [Obsolete(WarrantyShimMessage.UpdateWarranty, error: false)]
     public Task<Warranty> UpdateWarrantyAsync(string id, UpdateWarrantyRequest request, CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<Warranty>(
-            QueryBuilder.WithParams(WarrantiesPath, ("id", id)), request, cancellationToken);
+        => _maintenance.UpdateWarrantyAsync(id, request, cancellationToken);
 
-    /// <summary>Warranties — delete a warranty (<c>DELETE /preview/maintenance/warranties</c>).</summary>
-    [Experimental("SAMSARA001")]
+    [Obsolete(WarrantyShimMessage.DeleteWarranty, error: false)]
     public Task DeleteWarrantyAsync(string id, CancellationToken cancellationToken = default)
-        => HttpClient.DeleteAsync(QueryBuilder.WithParams(WarrantiesPath, ("id", id)), cancellationToken);
+        => _maintenance.DeleteWarrantyAsync(id, cancellationToken);
 
-    /// <summary>
-    /// Warranties — replace a warranty's asset assignments
-    /// (<c>POST /preview/maintenance/warranties/assets/replace</c>).
-    /// </summary>
-    [Experimental("SAMSARA001")]
+    [Obsolete(WarrantyShimMessage.ReplaceWarrantyAssetAssignments, error: false)]
     public Task<WarrantyAssetAssignmentReplaceResult> ReplaceWarrantyAssetAssignmentsAsync(
         ReplaceWarrantyAssetAssignmentsRequest request,
         string? warrantyId = null,
         CancellationToken cancellationToken = default)
-        => HttpClient.PostDataAsync<WarrantyAssetAssignmentReplaceResult>(
-            QueryBuilder.WithParams($"{WarrantiesPath}/assets/replace", ("warrantyId", warrantyId)),
-            request,
-            cancellationToken);
+        => _maintenance.ReplaceWarrantyAssetAssignmentsAsync(request, warrantyId, cancellationToken);
 
-    /// <summary>Warranty claims — list claims (<c>GET /preview/maintenance/warranty-claims</c>).</summary>
-    [Experimental("SAMSARA001")]
+    [Obsolete(WarrantyShimMessage.ListWarrantyClaims, error: false)]
     public IAsyncEnumerable<WarrantyClaim> ListWarrantyClaimsAsync(
         string? warrantyClaimIds = null,
         string? assetIds = null,
@@ -393,34 +341,42 @@ internal sealed class PreviewApisClient : SamsaraServiceClientBase, IPreviewApis
         bool? includeExternalIds = null,
         int? limit = null,
         CancellationToken cancellationToken = default)
-        => PaginateAsync<WarrantyClaim>(
-            QueryBuilder.WithParams(WarrantyClaimsPath,
-                ("warrantyClaimIds", warrantyClaimIds),
-                ("assetIds", assetIds),
-                ("claimStatus", claimStatus),
-                ("warrantyIds", warrantyIds),
-                ("includeExternalIds", includeExternalIds?.ToString().ToLowerInvariant())),
-            limit,
-            cancellationToken);
+        => _maintenance.ListWarrantyClaimsAsync(
+            warrantyClaimIds, assetIds, claimStatus, warrantyIds, includeExternalIds, limit, cancellationToken);
 
-    /// <summary>Warranty claims — create a claim (<c>POST /preview/maintenance/warranty-claims</c>).</summary>
-    [Experimental("SAMSARA001")]
+    [Obsolete(WarrantyShimMessage.CreateWarrantyClaim, error: false)]
     public Task<WarrantyClaim> CreateWarrantyClaimAsync(
         CreateWarrantyClaimRequest request,
         CancellationToken cancellationToken = default)
-        => HttpClient.PostDataAsync<WarrantyClaim>(WarrantyClaimsPath, request, cancellationToken);
+        => _maintenance.CreateWarrantyClaimAsync(request, cancellationToken);
 
-    /// <summary>Warranty claims — update a claim (<c>PATCH /preview/maintenance/warranty-claims</c>).</summary>
-    [Experimental("SAMSARA001")]
+    [Obsolete(WarrantyShimMessage.UpdateWarrantyClaim, error: false)]
     public Task<WarrantyClaim> UpdateWarrantyClaimAsync(
         string id,
         UpdateWarrantyClaimRequest request,
         CancellationToken cancellationToken = default)
-        => HttpClient.PatchDataAsync<WarrantyClaim>(
-            QueryBuilder.WithParams(WarrantyClaimsPath, ("id", id)), request, cancellationToken);
+        => _maintenance.UpdateWarrantyClaimAsync(id, request, cancellationToken);
 
-    /// <summary>Warranty claims — delete a claim (<c>DELETE /preview/maintenance/warranty-claims</c>).</summary>
-    [Experimental("SAMSARA001")]
+    [Obsolete(WarrantyShimMessage.DeleteWarrantyClaim, error: false)]
     public Task DeleteWarrantyClaimAsync(string id, CancellationToken cancellationToken = default)
-        => HttpClient.DeleteAsync(QueryBuilder.WithParams(WarrantyClaimsPath, ("id", id)), cancellationToken);
+        => _maintenance.DeleteWarrantyClaimAsync(id, cancellationToken);
+}
+
+/// <summary>
+/// <c>[Obsolete]</c> messages for the warranty members of
+/// <see cref="IPreviewApisClient"/> that graduated to <see cref="IMaintenanceClient"/>.
+/// </summary>
+internal static class WarrantyShimMessage
+{
+    private const string Suffix = " — the endpoint graduated out of /preview (the old path returns 404). This member will be removed in the next major release.";
+
+    public const string ListWarranties = "Moved to IMaintenanceClient.ListWarrantiesAsync" + Suffix;
+    public const string CreateWarranty = "Moved to IMaintenanceClient.CreateWarrantyAsync" + Suffix;
+    public const string UpdateWarranty = "Moved to IMaintenanceClient.UpdateWarrantyAsync" + Suffix;
+    public const string DeleteWarranty = "Moved to IMaintenanceClient.DeleteWarrantyAsync" + Suffix;
+    public const string ReplaceWarrantyAssetAssignments = "Moved to IMaintenanceClient.ReplaceWarrantyAssetAssignmentsAsync" + Suffix;
+    public const string ListWarrantyClaims = "Moved to IMaintenanceClient.ListWarrantyClaimsAsync" + Suffix;
+    public const string CreateWarrantyClaim = "Moved to IMaintenanceClient.CreateWarrantyClaimAsync" + Suffix;
+    public const string UpdateWarrantyClaim = "Moved to IMaintenanceClient.UpdateWarrantyClaimAsync" + Suffix;
+    public const string DeleteWarrantyClaim = "Moved to IMaintenanceClient.DeleteWarrantyClaimAsync" + Suffix;
 }
